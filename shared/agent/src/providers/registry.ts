@@ -71,7 +71,7 @@ import {
 	UpdateThirdPartyStatusResponse,
 } from "@codestream/protocols/agent";
 import { CSMe } from "@codestream/protocols/api";
-import { differenceWith } from "lodash-es";
+import { differenceWith } from "lodash";
 import semver from "semver";
 import { URI } from "vscode-uri";
 

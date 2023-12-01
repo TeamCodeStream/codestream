@@ -5,7 +5,7 @@ import {
 	CSMe,
 	CSRepository,
 } from "@codestream/protocols/api";
-import { sortBy } from "lodash-es";
+import { sortBy } from "lodash";
 import { WorkspaceFolder } from "vscode-languageserver";
 
 import { SessionContainer } from "../../container";

@@ -27,7 +27,7 @@ async function webBuild(args: Args) {
 			},
 			{
 				from: path.resolve(target, "index.js.map"),
-				to: dist
+				to: `${dist}/index.js.map`
 			}
 		]
 	});
@@ -61,7 +61,7 @@ async function extensionBuild(args: Args) {
 		},
 		{
 			from: path.resolve(__dirname, "../shared/webviews/newrelic-browser.js"),
-			to: dist
+			to: `${dist}/newrelic-browser.js`
 		}
 	];
 

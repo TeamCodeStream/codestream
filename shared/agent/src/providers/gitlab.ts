@@ -5,7 +5,7 @@ import * as nodeUrl from "url";
 import { parsePatch } from "diff";
 import { print } from "graphql";
 import { GraphQLClient } from "graphql-request";
-import { groupBy, merge } from "lodash-es";
+import { groupBy, merge } from "lodash";
 import { Response } from "undici";
 import semver from "semver";
 import { URI } from "vscode-uri";

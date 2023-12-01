@@ -2,7 +2,7 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import { memoize } from "lodash-es";
+import { memoize } from "lodash";
 import { URI } from "vscode-uri";
 
 import { Logger } from "../logger";

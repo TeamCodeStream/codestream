@@ -2,7 +2,7 @@
 // (eg. Pubnub, SocketCluster) to receive messages in real-time
 "use strict";
 import { Agent as HttpsAgent } from "https";
-import HttpsProxyAgent from "https-proxy-agent";
+import { HttpsProxyAgent } from "https-proxy-agent";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
 import { ApiProvider } from "../api/apiProvider";
 import { PubnubConnection } from "./pubnubConnection";
@@ -59,7 +59,7 @@ export interface BroadcasterInitializer {
 	lastMessageReceivedAt?: number; // should persist across sessions, interruptions in service will retrieve messages since this time
 	testMode?: boolean; // whether we emit test-mode statuses, not normally used in production
 	debug?(msg: string, info?: any): void; // for debug messages
-	httpsAgent?: HttpsAgent | HttpsProxyAgent;
+	httpsAgent?: HttpsAgent | HttpsProxyAgent<string>;
 	socketCluster?: {
 		host: string;
 		port: string;
@@ -161,7 +161,7 @@ export class Broadcaster {
 
 	constructor(
 		private readonly _api: ApiProvider,
-		private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined
+		private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent<string> | undefined
 	) {}
 
 	// initialize BroadcasterConnection

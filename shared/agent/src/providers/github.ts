@@ -3,7 +3,7 @@ import { performance } from "perf_hooks";
 import * as qs from "querystring";
 
 import { GraphQLClient } from "graphql-request";
-import { isEmpty as _isEmpty } from "lodash-es";
+import { isEmpty as _isEmpty } from "lodash";
 import { Headers, Response } from "undici";
 import semver from "semver";
 import { URI } from "vscode-uri";

@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { ParsedDiff } from "diff";
-import { groupBy, last, orderBy } from "lodash-es";
+import { groupBy, last, orderBy } from "lodash";
 import { compressToBase64 } from "lz-string";
 import sizeof from "object-sizeof";
 import {

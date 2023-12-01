@@ -30,7 +30,7 @@
  */
 import { setInterval } from "timers";
 
-import { debounce as _debounce, memoize as _memoize } from "lodash-es";
+import { debounce as _debounce, memoize as _memoize } from "lodash";
 import { CancellationToken } from "vscode-jsonrpc";
 
 export interface IDeferrable {

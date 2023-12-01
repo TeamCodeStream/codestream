@@ -4,7 +4,7 @@ import { Agent as HttpsAgent } from "https";
 import { ConnectionStatus } from "@codestream/protocols/agent";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
 
-import HttpsProxyAgent from "https-proxy-agent";
+import { HttpsProxyAgent } from "https-proxy-agent";
 import {
 	Broadcaster,
 	BroadcasterStatus,
@@ -70,7 +70,7 @@ export interface BroadcasterEventsInitializer {
 		ignoreHttps?: boolean;
 	};
 	strictSSL: boolean;
-	httpsAgent?: HttpsAgent | HttpsProxyAgent;
+	httpsAgent?: HttpsAgent | HttpsProxyAgent<string>;
 	supportsEcho?: boolean;
 }
 

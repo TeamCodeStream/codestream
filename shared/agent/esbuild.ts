@@ -1,127 +1,142 @@
 import * as path from "path";
+import * as os from "os";
+import * as fs from "fs-extra";
 
 import graphqlLoaderPlugin from "@luckycatfactory/esbuild-graphql-loader";
 import { BuildOptions } from "esbuild";
-import ignorePlugin from "esbuild-plugin-ignore";
 
 import { copyPlugin, CopyStuff } from "../build/src/copyPlugin";
 import { commonEsbuildOptions, processArgs, startEsbuild } from "../build/src/esbuildCommon";
 import { nativeNodeModulesPlugin } from "../build/src/nativeNodeModulesPlugin";
 import { statsPlugin } from "../build/src/statsPlugin";
+import { promisify } from "util";
 
-// Latest newrelic agent doesn't support bundling with esbuild due to use of require-in-the-middle, so we are
-// making newrelic and all its deps external. Note that each new release of newrelic may require us to add or
-// remove modules from this list (ノಠ益ಠ)ノ彡┻━┻.
-// The current list was done by hand as to not include any modules that aren't actually used.
-// undici is external because the newrelic agent can instrument it if it isn't bundled.
-// fsevents is external because it has a native module
-const externals = [
-	"fsevents",
-	"undici",
-	"sync-rpc",
-	"sync-request",
-	"newrelic",
-	"import-in-the-middle",
-	"require-in-the-middle",
-	"semver",
-	"json-stringify-safe",
-	"readable-stream",
-	"inherits",
-	"util-deprecate",
-	"resolve",
-	"is-core-module",
-	"has",
-	"concat-stream",
-	"function-bind",
-	"debug",
-	"buffer-from",
-	"module-details-from-path",
-	"json-bigint",
-	"@fastify/busboy",
-	"bignumber.js",
-];
+const exec = promisify(require("child_process").exec);
+
 const outputDir = path.resolve(__dirname, "dist");
 
-const ignore = ignorePlugin([
-	{
-		resourceRegExp: /vm2$/,
-	},
-]);
+let prodDepsDir: string | undefined;
 
-const postBuildCopy: CopyStuff[] = [
-	{
-		from: "node_modules/opn/**/xdg-open",
-		to: outputDir,
-	},
-	{
-		// VS Code
-		from: `${outputDir}/agent.*`,
-		to: path.resolve(__dirname, "../../vscode/dist/"),
-	},
-	{
-		// Visual Studio 2019
-		from: `${outputDir}/agent-vs-2019.js`,
-		to: path.resolve(__dirname, "../../vs/src/CodeStream.VisualStudio.Vsix.x86/agent"),
-		options: { rename: "agent.js" },
-	},
-	{
-		// Visual Studio 2019
-		from: `${outputDir}/agent-vs-2019.js.map`,
-		to: path.resolve(__dirname, "../../vs/src/CodeStream.VisualStudio.Vsix.x86/agent"),
-		options: { rename: "agent.js.map" },
-	},
-	{
-		// Visual Studio 2022
-		from: `${outputDir}/agent.*`,
-		to: path.resolve(__dirname, "../../vs/src/CodeStream.VisualStudio.Vsix.x64/agent/"),
-	},
-	...externals.map(e => ({
-		from: path.resolve(__dirname, `node_modules/${e}/**`),
-		to: path.resolve(`${outputDir}/node_modules/${e}`),
-	})),
-	{
-		from: path.resolve(`${outputDir}/node_modules/**`),
-		to: path.resolve(__dirname, "../../vscode/dist/node_modules/"),
-	},
-	{
-		from: path.resolve(`${outputDir}/node_modules/**`),
-		to: path.resolve(
-			__dirname,
-			"../../vs/src/CodeStream.VisualStudio.Vsix.x86/agent/node_modules/"
-		),
-	},
-	{
-		from: path.resolve(`${outputDir}/node_modules/**`),
-		to: path.resolve(
-			__dirname,
-			"../../vs/src/CodeStream.VisualStudio.Vsix.x64/agent/node_modules/"
-		),
-	},
-];
+function getProdDepsDir(): string {
+	if (!prodDepsDir) {
+		throw new Error("Could not resolve prod deps directory");
+	}
+	return prodDepsDir;
+}
+
+function getPostBuildCopy(): CopyStuff[] {
+	return [
+		{
+			from: "node_modules/opn/**/xdg-open",
+			to: outputDir,
+		},
+		{
+			// VS Code
+			from: path.join(outputDir, "agent.*"),
+			to: path.resolve(__dirname, "../../vscode/dist/"),
+		},
+		{
+			// Visual Studio 2019
+			from: path.join(outputDir, "agent-vs-2019.js"),
+			to: path.resolve(__dirname, "../../vs/src/CodeStream.VisualStudio.Vsix.x86/agent"),
+			options: { rename: "agent.js" },
+		},
+		{
+			// Visual Studio 2019
+			from: path.join(outputDir, "agent-vs-2019.js.map"),
+			to: path.join(__dirname, "../../vs/src/CodeStream.VisualStudio.Vsix.x86/agent"),
+			options: { rename: "agent.js.map" },
+		},
+		{
+			// Visual Studio 2022
+			from: path.join(outputDir, "agent.*"),
+			to: path.join(__dirname, "../../vs/src/CodeStream.VisualStudio.Vsix.x64/agent/"),
+		},
+		{
+			from: path.join(getProdDepsDir(), `node_modules/**`),
+			to: path.join(outputDir, "node_modules"),
+		},
+		{
+			from: path.join(outputDir, "node_modules/**"),
+			to: path.resolve(__dirname, "../../vscode/dist/node_modules/"),
+		},
+		{
+			from: path.join(outputDir, "node_modules/**"),
+			to: path.resolve(
+				__dirname,
+				"../../vs/src/CodeStream.VisualStudio.Vsix.x86/agent/node_modules/"
+			),
+		},
+		{
+			from: path.join(outputDir, "node_modules/**"),
+			to: path.resolve(
+				__dirname,
+				"../../vs/src/CodeStream.VisualStudio.Vsix.x64/agent/node_modules/"
+			),
+		},
+	];
+}
+
+// No need to package up the dev dependencies - copy minimal files so that `npm i --production works` and copy the
+// smaller node_modules
+async function installProdDeps(tmpDir: string) {
+	await fs.copyFile("package.json", path.join(tmpDir, "package.json"));
+	await fs.copyFile("package-lock.json", path.join(tmpDir, "package-lock.json"));
+	await fs.copyFile("prepare.js", path.join(tmpDir, "prepare.js"));
+	const patchDir = path.join(__dirname, "patches");
+	await fs.copy(patchDir, path.join(tmpDir, "patches"));
+
+	const currentDir = process.cwd();
+	process.chdir(tmpDir);
+	const { error, stdout, stderr } = await exec("npm i --production");
+	if (stderr || error) {
+		console.error(`stdout: ${stdout}\nstderr: ${stderr}\n ${error?.message}`);
+		if (error) {
+			throw new Error("Unable to npm i --production");
+		}
+	}
+	console.log(stdout);
+	process.chdir(currentDir);
+}
 
 (async function () {
-	const args = processArgs();
-	const buildOptions: BuildOptions = {
-		...commonEsbuildOptions(false, args),
-		entryPoints: {
-			agent: "./src/main.ts",
-			"agent-vs-2019": "./src/main-vs-2019.ts",
-		},
-		external: externals,
-		plugins: [
-			graphqlLoaderPlugin(),
-			nativeNodeModulesPlugin,
-			statsPlugin,
-			ignore,
-			copyPlugin({ onEnd: postBuildCopy }),
-		],
-		format: "cjs",
-		platform: "node",
-		target: "node16.17",
-		outdir: outputDir,
-		sourceRoot: args.ide === "vs" ? path.resolve(__dirname, "../agent/dist") : undefined,
-		sourcesContent: args.mode === "development" && args.ide !== "vs",
-	};
+	try {
+		prodDepsDir = await fs.mkdtemp(path.join(os.tmpdir(), "agent-esbuild"));
+		console.log(`Created temp dir ${prodDepsDir}`);
+		await installProdDeps(prodDepsDir);
+		const args = processArgs();
+		const buildOptions: BuildOptions = {
+			...commonEsbuildOptions(false, args),
+			entryPoints: {
+				agent: "./src/main.ts",
+				"agent-vs-2019": "./src/main-vs-2019.ts",
+			},
+			// The newrelic agent doesn't support bundling.
+			packages: "external",
+			plugins: [
+				graphqlLoaderPlugin(),
+				nativeNodeModulesPlugin,
+				statsPlugin,
+				copyPlugin({ onEnd: getPostBuildCopy() }),
+			],
+			format: "cjs",
+			platform: "node",
+			target: "node18.15",
+			outdir: outputDir,
+			sourceRoot: args.ide === "vs" ? path.resolve(__dirname, "../agent/dist") : undefined,
+			sourcesContent: args.mode === "development" && args.ide !== "vs",
+		};
 
-	await startEsbuild(args, buildOptions);
+		await startEsbuild(args, buildOptions);
+	} finally {
+		try {
+			if (prodDepsDir) {
+				await fs.rm(prodDepsDir, { recursive: true });
+			}
+		} catch (e) {
+			console.error(
+				`An error has occurred while removing the temp folder at ${prodDepsDir}. Please remove it manually. Error: ${e}`
+			);
+		}
+	}
 })();

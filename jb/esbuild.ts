@@ -18,11 +18,11 @@ const copy = copyPlugin({
 		},
 		{
 			from: path.resolve(target, "index.js.map"),
-			to: agentTarget,
+			to: `${agentTarget}/index.js.map`,
 		},
 		{
 			from: path.resolve(target, "index.js.map"),
-			to: agentDistTarget,
+			to: `${agentDistTarget}/index.js.map`,
 		}
 	]
 });

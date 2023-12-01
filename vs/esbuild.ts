@@ -1,4 +1,4 @@
-import {  BuildOptions } from "esbuild";
+import { BuildOptions } from "esbuild";
 import * as path from "path";
 import { copyPlugin } from "../shared/build/src/copyPlugin";
 import { commonEsbuildOptions, processArgs, startEsbuild } from "../shared/build/src/esbuildCommon";
@@ -12,16 +12,16 @@ const copy = copyPlugin({
 	onEnd: [
 		{
 			from: path.resolve(__dirname, "../shared/webviews/newrelic-browser.js"),
-			to: path.resolve(__dirname, "src/resources/webview"),
+			to: path.join(__dirname, "src/resources/webview/newrelic-browser.js"),
 		},
 		{
-			from: path.resolve(context, "index.html"),
+			from: path.join(context, "index.html"),
 			to: target,
 			options: { rename: "webview.html" },
 		},
 		{
 			from: path.resolve(target, "index.js.map"),
-			to: agentDistTarget,
+			to: path.join(agentDistTarget, "index.js.map"),
 		},
 	]
 });

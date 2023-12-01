@@ -363,7 +363,7 @@
 		"@typescript-eslint/parser": "6.0.0",
 		"@vscode/test-electron": "2.1.2",
 		"babel-plugin-styled-components": "2.0.2",
-		"esbuild": "0.18.12",
+		"esbuild": "0.19.8",
 		"eslint": "8.44.0",
 		"eslint-filtered-fix": "0.3.0",
 		"eslint-import-resolver-typescript": "3.5.5",
@@ -379,7 +379,7 @@
 		"rimraf": "3.0.2",
 		"sinon": "14.0.0",
 		"tsc-alias": "1.8.7",
-		"tsx": "3.12.7",
+		"tsx": "4.6.2",
 		"typescript": "5.1.6",
 		"vsce": "2.6.7"
 	},

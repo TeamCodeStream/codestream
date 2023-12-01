@@ -298,7 +298,7 @@ class AgentService(private val project: Project) : Disposable {
             val resourceList = reflections.getResources(".*")
             logger.info("Copying ${resourceList.size} files to node_modules")
             resourceList.forEach {
-                val destStr = it.replace("agent/", "")
+                val destStr = it.replaceFirst("agent/", "")
                 val dest = targetDir.resolve(destStr)
                 if (!dest.parentFile.exists()) {
                     Files.createDirectories(dest.parentFile.toPath())

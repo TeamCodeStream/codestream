@@ -5,7 +5,7 @@ import {
 	ReportMessageRequest,
 	WebviewErrorRequest,
 } from "@codestream/protocols/agent";
-import Cache from "timed-cache";
+import Cache from "@codestream/utils/system/timedCache";
 import path from "path";
 import fs from "fs";
 import { fromJSON } from "convert-source-map";

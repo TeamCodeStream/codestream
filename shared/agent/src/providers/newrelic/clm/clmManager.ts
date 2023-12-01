@@ -25,7 +25,7 @@ import { ReviewsManager } from "../../../managers/reviewsManager";
 import path, { join, relative, sep } from "path";
 import { URI } from "vscode-uri";
 import { ContextLogger, INewRelicProvider } from "../../newrelic";
-import Cache from "timed-cache";
+import Cache from "@codestream/utils/system/timedCache";
 import { GitRepository } from "../../../git/models/repository";
 import { FLTStrategyFactory } from "./FLTStrategy";
 

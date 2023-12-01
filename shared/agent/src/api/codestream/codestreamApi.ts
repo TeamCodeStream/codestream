@@ -310,7 +310,7 @@ import {
 	TriggerMsTeamsProactiveMessageResponse,
 } from "@codestream/protocols/api";
 
-import HttpsProxyAgent from "https-proxy-agent";
+import { HttpsProxyAgent } from "https-proxy-agent";
 import { ServerError } from "../../agentError";
 import { Team, User } from "../../api/extensions";
 import { HistoryFetchInfo } from "../../broadcaster/broadcaster";
@@ -380,7 +380,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	constructor(
 		public baseUrl: string,
 		private readonly _version: VersionInfo,
-		private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | HttpAgent | undefined,
+		private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent<string> | HttpAgent | undefined,
 		private readonly _strictSSL: boolean
 	) {}
 

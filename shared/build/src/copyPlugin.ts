@@ -1,10 +1,10 @@
-import cpy, { Options } from "cpy";
 import { Plugin, PluginBuild } from "esbuild";
+import { CopyFileOptions, globycopy } from "./globycopy";
 
 export interface CopyStuff {
 	from: string;
 	to: string;
-	options?: Options;
+	options?: CopyFileOptions;
 }
 
 export interface CopyOptions {
@@ -17,7 +17,7 @@ export const copyPlugin = (options: CopyOptions): Plugin => ({
 	setup(build: PluginBuild) {
 		const doCopy = async (stuff: CopyStuff[]) => {
 			for (const entry of stuff) {
-				await cpy(entry.from, entry.to, entry.options);
+				await globycopy(entry.from, entry.to, entry.options);
 			}
 		};
 
@@ -35,8 +35,8 @@ export const copyPlugin = (options: CopyOptions): Plugin => ({
 				const start = Date.now();
 				await doCopy(options.onEnd);
 				const elapsed = Date.now() - start;
-				console.info(`copyPlugin onEnd copied ${options.onEnd.length} files in ${elapsed}ms`);
+				console.info(`copyPlugin onEnd copied ${options.onEnd.length} sources in ${elapsed}ms`);
 			}
 		});
-	},
+	}
 });

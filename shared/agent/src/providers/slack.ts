@@ -16,7 +16,7 @@ import {
 	CSSlackProviderInfo,
 	StreamType,
 } from "@codestream/protocols/api";
-import { flatten, sortBy } from "lodash-es";
+import { flatten, sortBy } from "lodash";
 
 import { CodeStreamApiProvider } from "api/codestream/codestreamApi";
 import { SlackSharingApiProvider } from "../api/slack/slackSharingApi";

@@ -17,7 +17,7 @@ import {
 } from "@codestream/protocols/agent";
 import { CSLinearProviderInfo } from "@codestream/protocols/api";
 import { GraphQLClient } from "graphql-request";
-import Cache from "timed-cache";
+import Cache from "@codestream/utils/system/timedCache";
 
 import { Logger } from "../logger";
 import { log, lspProvider } from "../system";

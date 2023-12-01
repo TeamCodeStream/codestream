@@ -5,7 +5,7 @@ import { Mutex } from "async-mutex";
 import { GraphQLClient } from "graphql-request";
 import { Headers, Response } from "undici";
 
-import HttpsProxyAgent from "https-proxy-agent";
+import { HttpsProxyAgent } from "https-proxy-agent";
 import { InternalError, ReportSuppressedMessages } from "../agentError";
 import {
 	AddEnterpriseProviderRequest,
@@ -37,7 +37,7 @@ export abstract class ThirdPartyProviderBase<
 {
 	private _readyPromise: Promise<void> | undefined;
 	protected _ensuringConnection: Promise<void> | undefined;
-	protected _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined;
+	protected _httpsAgent: HttpsAgent | HttpsProxyAgent<string> | undefined;
 	protected _client: GraphQLClient | undefined;
 	private _refreshLock = new Mutex();
 

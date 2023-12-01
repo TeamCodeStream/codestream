@@ -1,4 +1,4 @@
-import Cache from "timed-cache";
+import Cache from "@codestream/utils/system/timedCache";
 import { runCommand } from "../git/shell";
 import { Logger } from "../logger";
 

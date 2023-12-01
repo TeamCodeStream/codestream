@@ -36,7 +36,7 @@ import { CommitsChangedData, RepoMap, WorkspaceChangedData } from "@codestream/p
 import { FileStatus } from "@codestream/protocols/api";
 import { Iterables } from "@codestream/utils/system/iterable";
 import { createPatch, ParsedDiff, parsePatch } from "diff";
-import { memoize } from "lodash-es";
+import { memoize } from "lodash";
 import { Disposable, Event, Range } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 

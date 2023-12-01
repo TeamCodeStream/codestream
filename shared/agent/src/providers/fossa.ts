@@ -1,4 +1,4 @@
-import Cache from "timed-cache";
+import Cache from "@codestream/utils/system/timedCache";
 import * as qs from "querystring";
 import {
 	FetchThirdPartyCodeAnalyzersRequest,

@@ -2,7 +2,7 @@
 // messages in real-time
 "use strict";
 import { Agent as HttpsAgent } from "https";
-import HttpsProxyAgent from "https-proxy-agent";
+import { HttpsProxyAgent } from "https-proxy-agent";
 import Pubnub from "pubnub";
 import { inspect } from "util";
 import { Disposable } from "vscode-languageserver";
@@ -43,7 +43,7 @@ export interface PubnubInitializer {
 	authKey: string; // unique Pubnub token provided in the login response
 	userId: string; // ID of the current user
 	debug?(msg: string, info?: any): void; // for debug messages
-	httpsAgent?: HttpsAgent | HttpsProxyAgent;
+	httpsAgent?: HttpsAgent | HttpsProxyAgent<string>;
 	onMessage: MessageCallback;
 	onStatus: StatusCallback;
 	onFetchHistory?: HistoryFetchCallback;

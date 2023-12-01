@@ -128,8 +128,8 @@ import {
 	memoize,
 	uniq as _uniq,
 	uniqBy as _uniqBy,
-} from "lodash-es";
-import Cache from "timed-cache";
+} from "lodash";
+import Cache from "@codestream/utils/system/timedCache";
 import { ResponseError } from "vscode-jsonrpc/lib/messages";
 import { URI } from "vscode-uri";
 

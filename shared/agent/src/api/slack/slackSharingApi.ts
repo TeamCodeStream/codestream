@@ -32,11 +32,11 @@ import {
 	WebClient,
 	WebClientEvent,
 } from "@slack/web-api";
-import { orderBy, take, uniq } from "lodash-es";
+import { orderBy, take, uniq } from "lodash";
 import asyncPool from "tiny-async-pool";
 import * as Strings from "@codestream/utils/system/string";
 
-import HttpsProxyAgent from "https-proxy-agent";
+import { HttpsProxyAgent } from "https-proxy-agent";
 import { Container, SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import { debug, Functions, log } from "../../system";
@@ -112,7 +112,7 @@ export class SlackSharingApiProvider {
 		private _codestream: CodeStreamApiProvider,
 		providerInfo: CSSlackProviderInfo,
 		private readonly _codestreamTeamId: string,
-		private readonly _proxyAgent: HttpsAgent | HttpsProxyAgent | undefined
+		private readonly _proxyAgent: HttpsAgent | HttpsProxyAgent<string> | undefined
 	) {
 		this._slackToken = providerInfo.accessToken;
 		this._slack = this.newWebClient();

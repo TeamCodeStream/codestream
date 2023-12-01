@@ -21,7 +21,7 @@ import {
 } from "@codestream/protocols/agent";
 import { CSJiraProviderInfo } from "@codestream/protocols/api";
 import { Iterables } from "@codestream/utils/system/iterable";
-import { sortBy } from "lodash-es";
+import { sortBy } from "lodash";
 
 import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";
@@ -96,7 +96,7 @@ export const makeCardFromJira = (
 				({
 					name: transition.name,
 					id: transition.id,
-				} as TransitionsEntity)
+				}) as TransitionsEntity
 		),
 		priorityName: fields.priority ? fields.priority.name : "",
 		priorityIcon: fields.priority ? fields.priority.iconUrl : "",

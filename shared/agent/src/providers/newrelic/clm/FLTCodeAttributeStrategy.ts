@@ -3,7 +3,7 @@
 import { FLTStrategy } from "./FLTStrategy";
 import { GetFileLevelTelemetryRequest } from "@codestream/protocols/agent";
 import { INewRelicProvider } from "../../newrelic";
-import { groupBy as _groupBy } from "lodash-es";
+import { groupBy as _groupBy } from "lodash";
 import { AdditionalMetadataInfo, FunctionInfo, MetricTimeslice, Span } from "../newrelic.types";
 import { generateSpanQuery, spanQueryTypes } from "../spanQuery";
 import { Logger } from "../../../logger";

@@ -1,7 +1,7 @@
 "use strict";
 import * as qs from "querystring";
 
-import { flatten } from "lodash-es";
+import { flatten } from "lodash";
 import { URI } from "vscode-uri";
 import {
 	BitbucketBoard,
@@ -1029,7 +1029,7 @@ export class BitbucketProvider
 		const openRepos = await getOpenedRepos<BitbucketRepo>(
 			r => r.domain === "bitbucket.org",
 			p => this.get<BitbucketRepo>(`/repositories/${p}`),
-			this._knownRepos,
+			this._knownRepos
 		);
 
 		let boards: BitbucketBoard[];
@@ -1050,12 +1050,12 @@ export class BitbucketProvider
 				let apiResponse = await this.get<BitbucketValues<BitbucketPermission[]>>(
 					`/user/permissions/repositories?${qs.stringify({
 						fields: "+values.repository.has_issues",
-					})}`,
+					})}`
 				);
 				bitbucketRepos = apiResponse.body.values.map(p => p.repository);
 				while (apiResponse.body.next) {
 					apiResponse = await this.get<BitbucketValues<BitbucketPermission[]>>(
-						apiResponse.body.next,
+						apiResponse.body.next
 					);
 					bitbucketRepos = bitbucketRepos.concat(apiResponse.body.values.map(p => p.repository));
 				}
@@ -1081,7 +1081,7 @@ export class BitbucketProvider
 
 	// FIXME -- implement this
 	async getCardWorkflow(
-		request: FetchThirdPartyCardWorkflowRequest,
+		request: FetchThirdPartyCardWorkflowRequest
 	): Promise<FetchThirdPartyCardWorkflowResponse> {
 		return { workflow: [] };
 	}
@@ -1095,7 +1095,7 @@ export class BitbucketProvider
 		await Promise.all(
 			this._reposWithIssues.map(async repo => {
 				const { body } = await this.get<{ uuid: string; [key: string]: any }>(
-					`/repositories/${repo.full_name}/issues`,
+					`/repositories/${repo.full_name}/issues`
 				);
 				// @ts-ignore
 				body.values.forEach(card => {
@@ -1108,7 +1108,7 @@ export class BitbucketProvider
 						body: card.content ? card.content.raw : "",
 					});
 				});
-			}),
+			})
 		);
 		return { cards };
 	}
@@ -1130,7 +1130,7 @@ export class BitbucketProvider
 		}
 		const response = await this.post<{}, BitbucketCreateCardResponse>(
 			`/repositories/${data.repoName}/issues`,
-			cardData,
+			cardData
 		);
 		let card = response.body;
 		let issueResponse;
@@ -1166,7 +1166,7 @@ export class BitbucketProvider
 			if (repoResponse.body.owner.type === "team") {
 				let members: BitbucketUser[] = [];
 				let apiResponse = await this.get<BitbucketValues<BitbucketUser[]>>(
-					`/users/${repoResponse.body.owner.username}/members`,
+					`/users/${repoResponse.body.owner.username}/members`
 				);
 				members = apiResponse.body.values;
 				while (apiResponse.body.next) {
@@ -1190,7 +1190,7 @@ export class BitbucketProvider
 
 	@log()
 	async getAssignableUsersAutocomplete(
-		request: FetchAssignableUsersAutocompleteRequest,
+		request: FetchAssignableUsersAutocompleteRequest
 	): Promise<FetchAssignableUsersResponse> {
 		return { users: [] };
 	}
@@ -1212,7 +1212,7 @@ export class BitbucketProvider
 
 	@log()
 	async getPullRequest(
-		request: FetchThirdPartyPullRequestRequest,
+		request: FetchThirdPartyPullRequestRequest
 	): Promise<FetchThirdPartyPullRequestResponse> {
 		await this.ensureConnected();
 
@@ -1231,28 +1231,28 @@ export class BitbucketProvider
 			const workspace = repoSplit[0];
 
 			const prResponse = this.get<BitbucketPullRequest>(
-				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}`,
+				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}`
 			);
 
 			const commentsResponse = this.get<BitbucketValues<BitbucketPullRequestComment[]>>(
-				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments?pagelen=100`,
+				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments?pagelen=100`
 			);
 
 			const timelineResponse = this.get<BitbucketValues<TimelineItem[]>>(
-				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/activity?pagelen=50`,
+				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/activity?pagelen=50`
 			);
 
 			const commitsResponse = this.get<BitbucketValues<BitbucketPullRequestCommit[]>>(
-				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/commits`,
+				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/commits`
 			);
 
 			const diffstatResponse = this.get<BitbucketValues<BitbucketDiffStat[]>>(
-				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/diffstat`,
+				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/diffstat`
 			);
 
 			//get all repos where the user has a permission of greater than read
 			const permissionsResponse = this.get<BitbucketValues<BitbucketUserPermissionsRequest[]>>(
-				`/user/permissions/repositories?q=permission>"read"`,
+				`/user/permissions/repositories?q=permission>"read"`
 			);
 
 			const userResponseResponse = this.getCurrentUser();
@@ -1280,7 +1280,7 @@ export class BitbucketProvider
 
 			try {
 				membersResponse = await this.get<BitbucketValues<BitbucketWorkspaceMembers[]>>(
-					`/workspaces/${workspace}/members`,
+					`/workspaces/${workspace}/members`
 				);
 			} catch (ex) {
 				Logger.log(ex);
@@ -1293,7 +1293,7 @@ export class BitbucketProvider
 			}
 
 			const filteredRepos = permissions.body.values.filter(
-				_ => _.repository.full_name === repoWithOwner,
+				_ => _.repository.full_name === repoWithOwner
 			);
 
 			const isViewerCanUpdate = () => {
@@ -1323,7 +1323,7 @@ export class BitbucketProvider
 			const commit_count = commits.body.values.length;
 
 			const listToTree: any = (
-				arr: { id: string; replies: any[]; parent: { id: string } }[] = [],
+				arr: { id: string; replies: any[]; parent: { id: string } }[] = []
 			) => {
 				let map: any = {};
 				let res: any = [];
@@ -1366,7 +1366,7 @@ export class BitbucketProvider
 				});
 			mappedTimelineItems.sort(
 				(a: { createdAt: string }, b: { createdAt: string }) =>
-					new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+					new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
 			);
 
 			const { repos } = SessionContainer.instance();
@@ -1505,7 +1505,7 @@ export class BitbucketProvider
 			const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 			const response = await this.post<BitbucketMergeRequest, BitbucketMergeRequestResponse>(
 				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/merge`,
-				payload,
+				payload
 			);
 
 			const directives: Directive[] = [
@@ -1551,7 +1551,7 @@ export class BitbucketProvider
 
 			const response2 = await this.post<BitbucketDeclinePullRequest, BitbucketMergeRequestResponse>(
 				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/decline`,
-				payload2,
+				payload2
 			);
 
 			directives = [
@@ -1577,7 +1577,7 @@ export class BitbucketProvider
 
 			const response = await this.post<BitbucketDeclinePullRequest, BitbucketMergeRequestResponse>(
 				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/decline`,
-				payload,
+				payload
 			);
 
 			directives = [
@@ -1612,7 +1612,7 @@ export class BitbucketProvider
 		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 		const response = await this.put<BitbucketUpdateDescription, BitbucketPullRequest>(
 			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}`,
-			payload,
+			payload
 		);
 		const directives: Directive[] = [
 			{
@@ -1650,7 +1650,7 @@ export class BitbucketProvider
 		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 		const response = await this.put<BitbucketUpdateTitleRequest, BitbucketPullRequest>(
 			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}`,
-			payload,
+			payload
 		);
 		const directives: Directive[] = [
 			{
@@ -1684,7 +1684,7 @@ export class BitbucketProvider
 		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 		// DELETE /2.0/repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}/comments/{comment_id}
 		const response = await this.delete<BitBucketCreateCommentRequest>(
-			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments/${request.id}`,
+			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments/${request.id}`
 		);
 
 		const directives: Directive[] = [
@@ -1731,7 +1731,7 @@ export class BitbucketProvider
 		// PUT /2.0/repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}/comments/{comment_id}
 		const response = await this.put<BitBucketCreateCommentRequest, BitbucketPullRequestComment>(
 			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments/${request.id}`,
-			payload,
+			payload
 		);
 		const directives: Directive[] = [
 			{
@@ -1774,7 +1774,7 @@ export class BitbucketProvider
 		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 		const response = await this.post<BitBucketCreateCommentRequest, BitbucketPullRequestComment>(
 			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`,
-			payload,
+			payload
 		);
 
 		const directives: Directive[] = [
@@ -1805,7 +1805,7 @@ export class BitbucketProvider
 	}): Promise<FetchThirdPartyPullRequestCommitsResponse[]> {
 		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 		const items = await this.get<BitbucketValues<BitbucketPullRequestCommit[]>>(
-			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/commits`,
+			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/commits`
 		);
 
 		const response = items.body.values.map(commit => {
@@ -1843,7 +1843,7 @@ export class BitbucketProvider
 		fullname: string;
 	}): Promise<Directives> {
 		const pr = await this.get<BitbucketPullRequest>(
-			`/repositories/${request.fullname}/pullrequests/${request.pullRequestId}`,
+			`/repositories/${request.fullname}/pullrequests/${request.pullRequestId}`
 		);
 
 		let newReviewers: BitbucketReviewers[] = [];
@@ -1869,7 +1869,7 @@ export class BitbucketProvider
 
 		const response = await this.put<BitbucketUpdateReviewerRequest, BitbucketPullRequest>(
 			`/repositories/${request.fullname}/pullrequests/${request.pullRequestId}`,
-			payload,
+			payload
 		);
 
 		const selectedParticipant = pr.body.participants.find(_ => _.user.uuid === request.reviewerId);
@@ -1913,7 +1913,7 @@ export class BitbucketProvider
 		fullname: string;
 	}): Promise<Directives> {
 		const pr = await this.get<BitbucketPullRequest>(
-			`/repositories/${request.fullname}/pullrequests/${request.pullRequestId}`,
+			`/repositories/${request.fullname}/pullrequests/${request.pullRequestId}`
 		);
 
 		const repoSplit = request.fullname.split("/");
@@ -1924,7 +1924,7 @@ export class BitbucketProvider
 		//access workspace members in order to get add new reviewer info
 		try {
 			members = await this.get<BitbucketValues<BitbucketWorkspaceMembers[]>>(
-				`/workspaces/${workspace}/members`,
+				`/workspaces/${workspace}/members`
 			);
 		} catch (ex) {
 			Logger.log(ex);
@@ -1957,7 +1957,7 @@ export class BitbucketProvider
 
 		const response = await this.put<BitbucketUpdateReviewerRequest, BitbucketPullRequest>(
 			`/repositories/${request.fullname}/pullrequests/${request.pullRequestId}`,
-			payload,
+			payload
 		);
 
 		const selectedParticipant = response.body.participants.find(_ => _.user.uuid === selectedUser);
@@ -2020,7 +2020,7 @@ export class BitbucketProvider
 		if (request.eventType === "changes-requested") {
 			//to un-request changes you have to run a delete
 			response = await this.delete<BitbucketSubmitReviewRequest>(
-				`/repositories/${request.repoWithOwner}/pullrequests/${request.pullRequestId}/request-changes`,
+				`/repositories/${request.repoWithOwner}/pullrequests/${request.pullRequestId}/request-changes`
 			);
 			//bitbucket doesn't return anything on this delete
 			return this.handleResponse(request.pullRequestId, {
@@ -2053,7 +2053,7 @@ export class BitbucketProvider
 				BitbucketSubmitReviewRequestResponse
 			>(
 				`/repositories/${request.repoWithOwner}/pullrequests/${request.pullRequestId}/${request.eventType}`,
-				payload,
+				payload
 			);
 
 			return this.handleResponse(request.pullRequestId, {
@@ -2090,7 +2090,7 @@ export class BitbucketProvider
 		if (request.eventType === "unapprove") {
 			//to unapprove you have to run a delete
 			response = await this.delete<BitbucketSubmitReviewRequest>(
-				`/repositories/${request.repoWithOwner}/pullrequests/${request.pullRequestId}/approve`,
+				`/repositories/${request.repoWithOwner}/pullrequests/${request.pullRequestId}/approve`
 			);
 			//bitbucket doesn't return anything on this delete
 			return this.handleResponse(request.pullRequestId, {
@@ -2123,7 +2123,7 @@ export class BitbucketProvider
 				BitbucketSubmitReviewRequestResponse
 			>(
 				`/repositories/${request.repoWithOwner}/pullrequests/${request.pullRequestId}/${request.eventType}`,
-				payload,
+				payload
 			);
 
 			return this.handleResponse(request.pullRequestId, {
@@ -2163,7 +2163,7 @@ export class BitbucketProvider
 	async getPullRequestLastUpdated(request: { pullRequestId: string }) {
 		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 		const pr = await this.get<BitbucketPullRequest>(
-			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}`,
+			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}`
 		);
 
 		return {
@@ -2177,11 +2177,11 @@ export class BitbucketProvider
 		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 
 		const items = await this.get<BitbucketValues<BitbucketDiffStat[]>>(
-			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/diffstat`,
+			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/diffstat`
 		);
 
 		const commits = await this.get<BitbucketValues<BitbucketPullRequestCommit[]>>(
-			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/commits`,
+			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/commits`
 		);
 
 		const response = items.body.values.map(file => {
@@ -2203,7 +2203,7 @@ export class BitbucketProvider
 
 	private mapComment(
 		_: BitbucketPullRequestComment,
-		viewerId: string,
+		viewerId: string
 	): BitbucketPullRequestComment2 {
 		const viewerCanUpdate = () => {
 			if (_.user.uuid === viewerId) {
@@ -2267,7 +2267,7 @@ export class BitbucketProvider
 		const remotePaths = await getRemotePaths(
 			repo,
 			this.getIsMatchingRemotePredicate(),
-			_projectsByRemotePath,
+			_projectsByRemotePath
 		);
 		return remotePaths;
 	}
@@ -2306,13 +2306,13 @@ export class BitbucketProvider
 
 	async getPullRequestsContainigSha(
 		repoIdentifier: { owner: string; name: string }[],
-		sha: string,
+		sha: string
 	): Promise<any[]> {
 		return [];
 	}
 
 	async createPullRequest(
-		request: ProviderCreatePullRequestRequest,
+		request: ProviderCreatePullRequestRequest
 	): Promise<ProviderCreatePullRequestResponse | undefined> {
 		void (await this.ensureConnected());
 
@@ -2393,7 +2393,7 @@ export class BitbucketProvider
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
 			const repoResponse = await this.get<BitbucketRepo>(`/repositories/${owner}/${name}`);
 			const pullRequestResponse = await this.get<BitbucketValues<BitbucketPullRequest[]>>(
-				`/repositories/${owner}/${name}/pullrequests?state=OPEN`,
+				`/repositories/${owner}/${name}/pullrequests?state=OPEN`
 			);
 			let pullRequests: ProviderPullRequestInfo[] = [];
 			if (pullRequestResponse && pullRequestResponse.body && pullRequestResponse.body.values) {
@@ -2440,17 +2440,17 @@ export class BitbucketProvider
 			const branchesByProjectId = new Map<string, any[]>();
 			if (repoResponse.body.parent) {
 				const branchesResponse = await this.get<any[]>(
-					`/repositories/${repoResponse.body.parent.full_name}/refs`,
+					`/repositories/${repoResponse.body.parent.full_name}/refs`
 				);
 				branchesByProjectId.set(repoResponse.body.parent.uuid, branchesResponse.body.values as any);
 			}
 			const branchesResponse = await this.get<any[]>(
-				`/repositories/${repoResponse.body.full_name}/refs`,
+				`/repositories/${repoResponse.body.full_name}/refs`
 			);
 			branchesByProjectId.set(repoResponse.body.uuid, branchesResponse.body.values as any);
 
 			const forksResponse = await this.get<any>(
-				`/repositories/${parentOrSelfProject.full_name}/forks`,
+				`/repositories/${parentOrSelfProject.full_name}/forks`
 			);
 
 			for (const project of forksResponse.body.values) {
@@ -2539,7 +2539,7 @@ export class BitbucketProvider
 		let response;
 		try {
 			response = await this.get<BitbucketValues<BitbucketRepositoryPermissionsResponse[]>>(
-				`/user/permissions/repositories`,
+				`/user/permissions/repositories`
 			);
 			//values.workspace.slug
 		} catch (ex) {
@@ -2606,24 +2606,24 @@ export class BitbucketProvider
 	private async _getDefaultReviewers(
 		fullnameArr: { fullname: string }[],
 		usernameResponse: ApiResponse<BitbucketUser>,
-		query: string,
+		query: string
 	): Promise<GetMyPullRequestsResponse[]> {
 		let array: BitbucketPullRequests[] = [];
 		for (let i = 0; i < fullnameArr.length; i++) {
 			const pullrequests = await this.get<BitbucketValues<BitbucketPullRequests[]>>(
-				`/repositories/${fullnameArr[i].fullname}/pullrequests?${query}`,
+				`/repositories/${fullnameArr[i].fullname}/pullrequests?${query}`
 			);
 
 			for (let j = 0; j < pullrequests.body.values.length; j++) {
 				const PRid = pullrequests.body.values[j].id;
 				const individualPRs = await this.get<BitbucketValues<BitbucketPullRequest>>(
-					`/repositories/${fullnameArr[i].fullname}/pullrequests/${PRid}`,
+					`/repositories/${fullnameArr[i].fullname}/pullrequests/${PRid}`
 				);
 				//@ts-ignore
 				if (individualPRs.body.reviewers?.length) {
 					//@ts-ignore
 					const foundSelf = individualPRs.body.reviewers?.find(
-						(_: { uuid: string }) => _.uuid === usernameResponse.body.uuid,
+						(_: { uuid: string }) => _.uuid === usernameResponse.body.uuid
 					);
 					if (foundSelf) {
 						array.push(pullrequests.body.values[j]);
@@ -2641,12 +2641,12 @@ export class BitbucketProvider
 
 	private async _getRecents(
 		fullnameArr: { fullname: string }[],
-		query: string,
+		query: string
 	): Promise<GetMyPullRequestsResponse[]> {
 		let array: any[] = [];
 		for (let i = 0; i < fullnameArr.length; i++) {
 			const recents = await this.get<BitbucketValues<BitbucketPullRequests[]>>(
-				`/repositories/${fullnameArr[i].fullname}/pullrequests?${query}`,
+				`/repositories/${fullnameArr[i].fullname}/pullrequests?${query}`
 			);
 
 			if (recents.body.values.length > 1) {
@@ -2671,7 +2671,7 @@ export class BitbucketProvider
 	private async _getPRsByMe(username: string, query: string): Promise<GetMyPullRequestsResponse[]> {
 		const array: BitbucketPullRequests[] = [];
 		const createdByMe = await this.get<BitbucketValues<BitbucketPullRequests[]>>(
-			`/pullrequests/${username}?${query}`,
+			`/pullrequests/${username}?${query}`
 		);
 		createdByMe.body.values.forEach(_ => {
 			array.push(_);
@@ -2684,15 +2684,15 @@ export class BitbucketProvider
 	private async _PRsByMeinCurrentRepo(
 		fullNames: { fullname: string }[],
 		usernameResponse: ApiResponse<BitbucketUser>,
-		query: string,
+		query: string
 	): Promise<GetMyPullRequestsResponse[]> {
 		const array = [];
 		for (let i = 0; i < fullNames.length; i++) {
 			const pullrequests = await this.get<BitbucketValues<BitbucketPullRequests[]>>(
-				`/repositories/${fullNames[i].fullname}/pullrequests?${query}`, //note this is hardcoded
+				`/repositories/${fullNames[i].fullname}/pullrequests?${query}` //note this is hardcoded
 			);
 			const foundSelf = pullrequests.body.values.find(
-				(_: { author: { uuid: string } }) => _.author.uuid === usernameResponse.body.uuid,
+				(_: { author: { uuid: string } }) => _.author.uuid === usernameResponse.body.uuid
 			);
 			if (foundSelf) {
 				array.push(foundSelf);
@@ -2704,7 +2704,7 @@ export class BitbucketProvider
 	}
 
 	async getMyPullRequests(
-		request: GetMyPullRequestsRequest,
+		request: GetMyPullRequestsRequest
 	): Promise<GetMyPullRequestsResponse[][] | undefined> {
 		void (await this.ensureConnected());
 		// call to /user to get the username
@@ -2734,7 +2734,7 @@ export class BitbucketProvider
 
 		const username = usernameResponse.body.username;
 		const queriesSafe = request.prQueries.map(query =>
-			query.query.replace(/["']/g, '\\"').replace("@me", username),
+			query.query.replace(/["']/g, '\\"').replace("@me", username)
 		);
 
 		let reposWithOwners: string[] = [];
@@ -2760,12 +2760,12 @@ export class BitbucketProvider
 			const defaultReviewerPRs = await this._getDefaultReviewers(
 				fullNames,
 				usernameResponse,
-				queriesSafe[0],
+				queriesSafe[0]
 			); //NOTE: this is hardcoded, so if the order of the queries changes this should change too
 			const byMeinCurrentRepo = await this._PRsByMeinCurrentRepo(
 				fullNames,
 				usernameResponse,
-				queriesSafe[1],
+				queriesSafe[1]
 			);
 			const fiveMostRecentPRs = await this._getRecents(fullNames, queriesSafe[2]); //NOTE: this is hardcoded, so if the order of the queries changes this should change too
 			response.push(defaultReviewerPRs);
@@ -2776,7 +2776,7 @@ export class BitbucketProvider
 			const defaultReviewerPRs = await this._getDefaultReviewers(
 				fullNames,
 				usernameResponse,
-				queriesSafe[0],
+				queriesSafe[0]
 			); //NOTE: this is hardcoded, so if the order of the queries changes this should change too
 			const PRsByMe = await this._getPRsByMe(username, queriesSafe[1]); //note this is hardcoded
 			const fiveMostRecentPRs = await this._getRecents(fullNames, queriesSafe[2]); //NOTE: this is hardcoded, so if the order of the queries changes this should change too
@@ -2822,7 +2822,7 @@ export class BitbucketProvider
 		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 		const response = await this.post<BitBucketCreateCommentRequest, BitbucketPullRequestComment>(
 			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`,
-			payload,
+			payload
 		);
 
 		const directives: Directive[] = [
@@ -2874,7 +2874,7 @@ export class BitbucketProvider
 		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 		const response = await this.post<BitBucketCreateCommentRequest, BitbucketPullRequestComment>(
 			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`,
-			payload,
+			payload
 		);
 
 		const directives: Directive[] = [
@@ -3170,7 +3170,7 @@ export class BitbucketProvider
 				pr.comments = pr.comments || [];
 				const findParent = function (
 					items: { id: number; replies: any[] }[],
-					data: { parent: { id: number } },
+					data: { parent: { id: number } }
 				) {
 					for (const item of items) {
 						if (item.id === data.parent.id) {
