@@ -382,11 +382,6 @@ export const upgradePendingCodeError =
 					}
 					return undefined;
 				}
-				HostApi.instance.track("Error Created", {
-					"Error Group ID": objectId,
-					"NR Account ID": newCodeError.accountId,
-					Trigger: source,
-				});
 
 				// remove the pending codeError
 				if (isPending) {
