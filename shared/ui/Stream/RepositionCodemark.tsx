@@ -49,7 +49,7 @@ export const RepositionCodemark = (props: Props) => {
 			if (textEditorUri !== docMarker.textDocument.uri) location = "Different File";
 			// how do we compare repos if docMarker doesn't have that property?
 			// if (scmInfo.scm.repoPath !== docMarker.newRepoPath) location = "Different Repo";
-			HostApi.instance.track("Reposition Codemark", { "New Location": location });
+
 			const payload = {
 				markerId: props.markerId,
 				code: scmInfo.contents,

@@ -315,10 +315,6 @@ export const MessageInput = (props: MessageInputProps) => {
 					attachment.status = "error";
 					replaceAttachment(file, index);
 				}
-				HostApi.instance.track("File Attached", {
-					"File Type": file.type,
-					Parent: props.attachmentContainerType,
-				});
 			} catch (e) {
 				console.warn("Error uploading file: ", e);
 				attachment.status = "error";

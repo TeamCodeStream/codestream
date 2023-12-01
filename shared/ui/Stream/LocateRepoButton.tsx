@@ -1,4 +1,4 @@
-import { MapReposRequestType, RepoMap, TelemetryRequestType } from "@codestream/protocols/agent";
+import { MapReposRequestType, RepoMap } from "@codestream/protocols/agent";
 import React from "react";
 import { ShellPromptFolderRequestType } from "../ipc/host.protocol";
 import { HostApi } from "../webview-api";
@@ -20,8 +20,6 @@ export class LocateRepoButton extends React.Component<Props, State> {
 	mounted = false;
 
 	async locateCode() {
-		HostApi.instance.send(TelemetryRequestType, { eventName: "Locate Repo" });
-
 		const { repoId, repoName } = this.props;
 		if (!repoId) return;
 

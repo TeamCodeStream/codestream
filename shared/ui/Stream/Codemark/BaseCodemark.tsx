@@ -95,11 +95,6 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 
 	const resolve = () => {
 		dispatch(setCodemarkStatus(codemark.id, CodemarkStatus.Closed));
-		HostApi.instance.track("Codemark Resolved", {
-			"Codemark ID": codemark.id,
-			"Codemark Type": codemark.type,
-			Archived: false,
-		});
 	};
 
 	const reopen = () => dispatch(setCodemarkStatus(codemark.id, CodemarkStatus.Open));
@@ -462,7 +457,7 @@ export const MetaSectionCollapsed = styled.div`
 		cursor: pointer;
 		margin-bottom: 0px;
 		&:last-of-type {
-			margin-right: ;
+			margin-right:;
 		}
 	}
 

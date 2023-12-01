@@ -252,10 +252,6 @@ class MarkerActions extends React.Component<Props, State> {
 
 	handleClickJump = async event => {
 		event.preventDefault();
-		HostApi.instance.send(TelemetryRequestType, {
-			eventName: "Jumped To Code",
-			properties: {},
-		});
 
 		await this.jump(this.props.marker);
 	};

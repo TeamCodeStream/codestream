@@ -1,4 +1,4 @@
-import { CodemarkPlus, TelemetryRequestType } from "@codestream/protocols/agent";
+import { CodemarkPlus } from "@codestream/protocols/agent";
 import { CSMarker, CSUser } from "@codestream/protocols/api";
 import { InsertTextRequestType } from "@codestream/protocols/webview";
 import cx from "classnames";
@@ -65,10 +65,6 @@ export const InjectAsComment = (connect(mapStateToProps, { fetchThread }) as any
 				marker => marker.id === props.markerId
 			)!;
 
-			HostApi.instance.send(TelemetryRequestType, {
-				eventName: "InjectAsComment",
-				properties: { "Author?": false },
-			});
 			HostApi.instance.send(InsertTextRequestType, {
 				marker: marker,
 				text: codemarkAsCommentString(),

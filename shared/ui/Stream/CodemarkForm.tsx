@@ -1446,10 +1446,6 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (relatedCodemarkIds[codemark.id]) delete relatedCodemarkIds[codemark.id];
 		else {
 			relatedCodemarkIds[codemark.id] = codemark;
-			HostApi.instance.track("Related Codemark Added", {
-				"Codemark ID": this.props.editingCodemark ? this.props.editingCodemark.id : undefined,
-				"Sibling Status": this.props.isEditing ? "Existing Codemark" : "New Codemark",
-			});
 		}
 		this.setState({ relatedCodemarkIds });
 	};

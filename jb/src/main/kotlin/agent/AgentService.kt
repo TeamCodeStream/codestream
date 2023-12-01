@@ -470,7 +470,7 @@ class AgentService(private val project: Project) : Disposable {
                             params["Crash Details"] = agentCrashDetails.details
                             params["Crash Date"] = agentCrashDetails.dateTime.toString()
                         }
-                        agent.telemetry(TelemetryParams("Agent Restarted", params))
+                        
                     }
                 }
             }

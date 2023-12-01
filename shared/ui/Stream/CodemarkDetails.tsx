@@ -147,11 +147,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		if (this.props.setUserPreference) {
 			this.props.setUserPreference({ prefPath: ["defaultResolveAction"], value: type });
 		}
-		HostApi.instance.track("Codemark Resolved", {
-			"Codemark ID": this.props.codemark.id,
-			"Codemark Type": this.props.codemark.type,
-			Archived: type === "archive",
-		});
+
 		this.props.setCurrentCodemark();
 
 		const thing = text ? "" : " this discussion";

@@ -228,9 +228,6 @@ export const ObservabilityAnomalyPanel = () => {
 						title="Code-Level Metrics"
 						label="Select the service on New Relic that is built from this repository to see how it's performing."
 						onSuccess={async e => {
-							// HostApi.instance.track("MLT Repo Association", {
-							// 	"NR Account ID": derivedState.currentMethodLevelTelemetry.newRelicAccountId + "",
-							// });
 							HostApi.instance.send(RefreshEditorsCodeLensRequestType, {});
 							HostApi.instance.emit(DidChangeObservabilityDataNotificationType.method, {
 								type: "RepositoryAssociation",

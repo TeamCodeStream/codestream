@@ -120,10 +120,6 @@ export const ActivityPanel = () => {
 		dispatch(
 			setUserPreference({ prefPath: [derivedState.currentTeamId, "activityFilter"], value: data })
 		);
-
-		HostApi.instance.track("Activity Feed Filtered", {
-			"Selected Filter": src,
-		});
 	};
 
 	const activity = useMemo(() => {

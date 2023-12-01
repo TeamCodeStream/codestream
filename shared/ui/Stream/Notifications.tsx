@@ -5,7 +5,6 @@ import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { Checkbox } from "../src/components/Checkbox";
 import { RadioGroup, Radio } from "../src/components/RadioGroup";
 import { setUserPreference, closeModal } from "./actions";
-import { HostApi } from "../webview-api";
 import {
 	CSNotificationDeliveryPreference,
 	CSNotificationPreference,
@@ -57,7 +56,6 @@ export const Notifications = props => {
 
 	const handleChangeNotifyPerformanceIssues = async (value: boolean) => {
 		setLoadingNotifyPerformanceIssues(true);
-		HostApi.instance.track("Notify Performance Issues Changed", { Value: value });
 		dispatch(setUserPreference({ prefPath: ["notifyPerformanceIssues"], value }));
 		setLoadingNotifyPerformanceIssues(false);
 	};
