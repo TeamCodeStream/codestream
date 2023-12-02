@@ -3114,6 +3114,41 @@ export class NewRelicProvider
 				}
 			}`;
 
+			const testQuery = [
+				"SELECT",
+				"count(*) AS 'count'",
+				"FROM Deployment",
+				"WHERE entity.guid = MXxBUE18QVBQTElDQVRJT058MjgwODIzMjY",
+			].join(" ");
+
+			const testResponse = await this.query<{
+				actor: {
+					account: {
+						nrql: {
+							results: {}[];
+						};
+					};
+				};
+			}>(
+				`query fetchErrorRate($accountId:Int!) {
+					actor {
+						account(id: $accountId) {
+							nrql(
+								options: { eventNamespaces: "Marker" }
+								query: "${testQuery}"
+							) { nrql results }
+						}
+					}
+				}`,
+				{
+					accountId: 1,
+				}
+			);
+
+			console.log(testResponse);
+
+			//
+
 			const entityGoldenMetricsResults = await this.query<EntityGoldenMetricsResults>(gmQuery);
 			const metricResults = entityGoldenMetricsResults?.actor?.entity;
 
