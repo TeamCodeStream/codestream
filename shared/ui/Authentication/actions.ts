@@ -258,7 +258,6 @@ export const authenticate =
 		}
 
 		api.track("Signed In", {
-			"Auth Type": "Email",
 			Source: context.pendingProtocolHandlerQuery?.src,
 		});
 
@@ -583,7 +582,6 @@ export const validateSignup =
 			const signupStatus = response.loginResponse?.signupStatus;
 
 			let trackingInfo = {
-				"Auth Type": provider,
 				"Org Created": false,
 				"User Created": false,
 				"Open in IDE Flow": false,
@@ -595,7 +593,6 @@ export const validateSignup =
 			}
 			if (signupStatus === "userCreated") trackingInfo["User Created"] = true;
 			if (!_isEmpty(context.pendingProtocolHandlerUrl)) trackingInfo["Open in IDE Flow"] = true;
-			if (provider === "New Relic") trackingInfo["Auth Type"] = "Email";
 			HostApi.instance.track("Signed In", trackingInfo);
 			if (localStore.get("enablingRealTime") === true) {
 				localStore.delete("enablingRealTime");

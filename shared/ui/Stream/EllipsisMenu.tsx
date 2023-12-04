@@ -211,7 +211,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				<>
 					{hasInvites ? (
 						<>
-							<span>Switch Organization</span>
+							<span>Switch Users</span>
 							<Icon
 								style={{
 									background: "var(--text-color-info-muted)",
@@ -224,7 +224,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 							/>
 						</>
 					) : (
-						<span>Switch Organization</span>
+						<span>Switch Users</span>
 					)}
 				</>
 			),
