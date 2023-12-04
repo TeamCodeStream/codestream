@@ -1478,12 +1478,9 @@ export interface CodeLevelMetrics {
 	errorRate?: number;
 }
 
-export const GetClmRequestType = new RequestType<
-	GetClmRequest,
-	GetClmResponse,
-	void,
-	void
->("codestream/newrelic/clm");
+export const GetClmRequestType = new RequestType<GetClmRequest, GetClmResponse, void, void>(
+	"codestream/newrelic/clm"
+);
 
 export interface GetObservabilityResponseTimesRequest {
 	fileUri: string;
@@ -2438,18 +2435,9 @@ export const DidDetectObservabilityAnomaliesNotificationType = new NotificationT
 	void
 >("codestream/didDetectObservabilityAnomalies");
 
-export interface LogRequestFilter {
-	message?: string;
-	levels?: string[];
-	codes?: string[];
-
-	missing?: string[];
-	has?: string[];
-}
-
 export interface GetLogsRequest {
 	entityGuid: string;
-	filters: LogRequestFilter;
+	filterText: string;
 	order: {
 		field: string;
 		direction: string;
