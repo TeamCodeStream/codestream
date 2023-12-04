@@ -172,12 +172,23 @@ const prettyDateDayTime = function (time, abbreviated?: boolean) {
 	}
 };
 
-const prettyTime = function (time) {
+const prettyTime = function (time, expandedTime = false) {
 	try {
 		var prettyTime;
-		// time = this.adjustedTime(time, options.timezone_info);
-		prettyTime = new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit" }).format(time);
+		if (expandedTime) {
+			prettyTime = new Intl.DateTimeFormat("en", {
+				hour: "2-digit",
+				minute: "2-digit",
+				second: "2-digit",
+			}).format(time);
+		} else {
+			prettyTime = new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit" }).format(
+				time
+			);
+		}
+
 		prettyTime = prettyTime.replace(/^0:/, "12:");
+
 		return prettyTime;
 	} catch (ex) {
 		console.error(ex, time);
@@ -206,6 +217,7 @@ interface Props {
 	abbreviated?: boolean;
 	showTooltip?: boolean;
 	placement?: Placement;
+	expandedTime?: boolean;
 }
 
 const StyledTime = styled.time`
@@ -249,7 +261,7 @@ export default function Timestamp(props: PropsWithChildren<Props>) {
 			</StyledTime>
 		);
 	} else {
-		const timeText = prettyTime(time);
+		const timeText = prettyTime(time, props.expandedTime);
 		const timeDetails = prettyDateDay(time, props.abbreviated);
 
 		if (props.dateOnly)

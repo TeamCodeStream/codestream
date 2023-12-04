@@ -9,7 +9,6 @@ import {
 	GetLogFieldDefinitionsRequestType,
 	GetLogsRequestType,
 	LogFieldDefinition,
-	LogRequestFilter,
 	LogResult,
 	isNRErrorResponse,
 } from "../../util/src/protocol/agent/agent.protocol.providers";
@@ -18,7 +17,6 @@ import { closePanel } from "./actions";
 import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import Button from "./Button";
 import Select from "react-select";
-import { ObservabilityLoadingLogs } from "./ObservabilityLoading";
 import Timestamp from "./Timestamp";
 import { Link } from "./Link";
 
@@ -26,47 +24,6 @@ interface SelectedOption {
 	value: string;
 	label: string;
 }
-
-const GridContainer = styled.div`
-	display: grid;
-	grid-template-rows: auto;
-	overflow-x: auto;
-`;
-
-const GridHeaderRow = styled.div`
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-	grid-auto-rows: minmax(50px, auto);
-	overflow-x: auto;
-	white-space: nowrap;
-`;
-
-const GridDataRow = styled.div`
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-	grid-auto-rows: minmax(50px, auto);
-	overflow-x: auto;
-	white-space: nowrap;
-`;
-
-const GridHeaderItem = styled.div`
-	border: 1px solid #ccc;
-	text-align: center;
-	padding: 10px;
-	background-color: #f1f1f1;
-	font-weight: bold;
-	overflow: visible;
-	white-space: nowrap;
-`;
-
-const GridRowItem = styled.div`
-	border: 1px solid #ccc;
-	text-align: center;
-	padding: 10px;
-	overflow: visible;
-	white-space: nowrap;
-	width: fit-content;
-`;
 
 const LogSeverity = styled.span`
 	border-radius: 1px;
@@ -153,6 +110,7 @@ export default function ObservabilityLogsPanel() {
 	const [sortedFieldDefinitions, setSortedFieldDefinitions] = useState<string[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [query, setQuery] = useState<string>("");
+	const [hasSearched, setHasSearched] = useState<boolean>(false);
 
 	const [selectedSinceOption, setSelectedSinceOption] = useState<SelectedOption | undefined>(
 		undefined
@@ -219,16 +177,16 @@ export default function ObservabilityLogsPanel() {
 
 	const fetchLogs = async (entityGuid?: string) => {
 		try {
+			setHasSearched(true);
 			setIsLoading(true);
 
 			if (entityGuid) {
 				setResults([]);
 				setTotalItems(0);
 
-				const filters = parseFilters();
 				const response = await HostApi.instance.send(GetLogsRequestType, {
 					entityGuid,
-					filters,
+					filterText: query,
 					limit: "MAX",
 					since: selectedSinceOption?.value || "30 MINUTES AGO",
 					order: {
@@ -261,44 +219,6 @@ export default function ObservabilityLogsPanel() {
 		} finally {
 			setIsLoading(false);
 		}
-	};
-
-	const parseFilters = () => {
-		let text = query || "";
-		const filters: LogRequestFilter = {};
-		let match;
-
-		while ((match = text.match(/\blevel:\"(.*?)\"(\s|$)/))) {
-			if (!filters.levels) filters.levels = [];
-			filters.levels.push(match[1]);
-			text = text.replace(/\s*level:\"(.*?)\"\s*/, " ");
-		}
-
-		while ((match = text.match(/\bcode:\"(.*?)\"(\s|$)/))) {
-			if (!filters.codes) filters.codes = [];
-			filters.codes.push(match[1]);
-			text = text.replace(/\s*code:\"(.*?)\"\s*/, " ");
-		}
-
-		while ((match = text.match(/\missing:\"(.*?)\"(\s|$)/))) {
-			if (!filters.missing) filters.missing = [];
-			filters.missing.push(match[1]);
-			text = text.replace(/\s*missing:\"(.*?)\"\s*/, " ");
-		}
-
-		while ((match = text.match(/\has:\"(.*?)\"(\s|$)/))) {
-			if (!filters.has) filters.has = [];
-			filters.has.push(match[1]);
-			text = text.replace(/\s*has:\"(.*?)\"\s*/, " ");
-		}
-
-		match = text.match(/\message:\"(.*?)\"(\s|$)/);
-		if (match) {
-			filters.message = match[1];
-			text = text.replace(/\s*message:\"(.*?)\"\s*/, " ");
-		}
-
-		return filters;
 	};
 
 	const renderResults = () => {
@@ -337,29 +257,12 @@ export default function ObservabilityLogsPanel() {
 		);
 	};
 
-	const formatRowValue = (fieldName: string, fieldValue: string) => {
-		if (fieldName === "timestamp") {
-			return <Timestamp time={fieldValue}></Timestamp>;
-		}
-
-		if (fieldName === "level") {
-			return (
-				<>
-					<LogSeverity style={{ backgroundColor: logSeverityToColor[fieldValue] }} />
-					{fieldValue}
-				</>
-			);
-		}
-
-		return fieldValue;
-	};
-
 	const LogRow = (props: { logResult: LogResult; evenRow: boolean }) => {
 		const formatRowValue = (fieldName, fieldValue) => {
 			if (fieldName === "timestamp") {
 				return (
 					<td>
-						<Timestamp time={fieldValue}></Timestamp>
+						<Timestamp time={fieldValue} expandedTime={true}></Timestamp>
 					</td>
 				);
 			}
@@ -458,43 +361,25 @@ export default function ObservabilityLogsPanel() {
 				<ScrollBox>
 					<div className="vscroll">
 						{!isLoading && results && totalItems > 0 && sortedFieldDefinitions && (
-							// <GridContainer>
-							// 	<GridHeaderRow>
-							// 		{sortedFieldDefinitions.map((fd, idx) => {
-							// 			return <GridHeaderItem>{fd}</GridHeaderItem>;
-							// 		})}
-							// 	</GridHeaderRow>
-
-							// 	{results.map((r, idx) => {
-							// 		return (
-							// 			<GridDataRow>
-							// 				{r &&
-							// 					sortedFieldDefinitions.map(fd => {
-							// 						return <GridRowItem>{formatRowValue(fd, r[fd])}</GridRowItem>;
-							// 					})}
-							// 			</GridDataRow>
-							// 		);
-							// 	})}
-							// </GridContainer>
-
 							<table style={{ width: "100%", borderCollapse: "collapse" }}>
 								<thead>{renderHeaderRow()}</thead>
 								<tbody>{renderResults()}</tbody>
 							</table>
 						)}
 
-						{/* TODO: This skeleton loader never appears */}
-						{!totalItems && isLoading && <ObservabilityLoadingLogs />}
-
-						{!totalItems && !isLoading && (
+						{!totalItems && !isLoading && !hasSearched && (
 							<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
-								<h4>No logs found</h4>
+								<span>Enter search criteria above, or just click Query to see recent logs.</span>
+							</div>
+						)}
+
+						{!totalItems && !isLoading && hasSearched && (
+							<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
+								<h4>No logs found during this time range</h4>
 								<span>
-									Either expand the time range window or enable sending logs. Collect, search, and
-									correlate detailed logs from applications, infrastructure, and network devices for
-									faster troubleshooting and investigation.{" "}
-									<Link href="https://docs.newrelic.com/docs/logs/forward-logs/enable-log-management-new-relic/">
-										See our docs
+									Try adjusting your time range or{" "}
+									<Link href="https://docs.newrelic.com/docs/logs/logs-context/annotate-logs-logs-context-using-apm-agent-apis/">
+										set up log management
 									</Link>
 								</span>
 							</div>

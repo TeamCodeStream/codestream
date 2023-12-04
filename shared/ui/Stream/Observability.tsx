@@ -19,7 +19,6 @@ import {
 	ServiceLevelObjectiveResult,
 	isNRErrorResponse,
 	GetIssuesResponse,
-	GetLogsRequestType,
 } from "@codestream/protocols/agent";
 import cx from "classnames";
 import { head as _head, isEmpty as _isEmpty, isNil as _isNil } from "lodash-es";
@@ -86,7 +85,6 @@ import { throwIfError } from "@codestream/webview/store/common";
 import { AnyObject } from "@codestream/webview/utils";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { ObservabilityAlertViolations } from "./ObservabilityAlertViolations";
-import { ObservabilityLogsWrapper } from "./ObservabilityLogsWrapper";
 
 interface Props {
 	paneState: PaneState;

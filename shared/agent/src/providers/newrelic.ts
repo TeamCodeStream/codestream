@@ -4672,7 +4672,7 @@ export class NewRelicProvider
 	@log()
 	public async getLogs(request: GetLogsRequest): Promise<GetLogsResponse> {
 		try {
-			const { entityGuid, since, limit, order } = {
+			const { entityGuid, since, limit, order, filterText } = {
 				...request,
 			};
 
@@ -4683,28 +4683,8 @@ export class NewRelicProvider
 			const queryOrder = `ORDER BY ${order.field} ${order.direction}`;
 			const queryLimit = `LIMIT ${limit}`;
 
-			if (request.filters.levels && request.filters.levels.length > 0) {
-				queryWhere += ` AND level IN ('${request.filters.levels.join("','")}')`;
-			}
-
-			if (request.filters.codes && request.filters.codes.length > 0) {
-				queryWhere += ` AND code IN ('${request.filters.codes.join("','")}')`;
-			}
-
-			if (request.filters.missing && request.filters.missing.length > 0) {
-				request.filters.missing.map(m => {
-					queryWhere += ` AND ${m} IS NULL`;
-				});
-			}
-
-			if (request.filters.has && request.filters.has.length > 0) {
-				request.filters.has.map(h => {
-					queryWhere += ` AND ${h} IS NOT NULL`;
-				});
-			}
-
-			if (request.filters.message && request.filters.message.length > 0) {
-				queryWhere += ` AND message = '${request.filters.message}'`;
+			if (filterText) {
+				queryWhere += ` AND allColumnSearch('${filterText}', insensitive: true)`;
 			}
 
 			const query = `SELECT timestamp, level, message FROM Log ${queryWhere} ${querySince} ${queryOrder} ${queryLimit}`;
