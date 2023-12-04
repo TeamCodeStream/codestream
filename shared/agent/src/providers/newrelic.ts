@@ -3116,9 +3116,11 @@ export class NewRelicProvider
 
 			const countQuery = [
 				"SELECT",
-				"count(*) AS 'count'",
+				"latest(deploymentId) AS 'deploymentId',",
+				"latest(timestamp) AS 'timestamp'",
 				"FROM Deployment",
-				"WHERE entity.guid = MXxBUE18QVBQTElDQVRJT058MjgwODIzMjY",
+				"WHERE entity.guid = 'MTExODYyMDF8QVBNfEFQUExJQ0FUSU9OfDgxNTMzNzUx'", //TODO: change to variable
+				"SINCE 13 months ago",
 			].join(" ");
 
 			const countResponse = await this.query<{
@@ -3126,7 +3128,8 @@ export class NewRelicProvider
 					account: {
 						nrql: {
 							results: {
-								count: number;
+								deploymentId: string;
+								timestamp: number;
 							}[];
 						};
 					};
@@ -3143,18 +3146,13 @@ export class NewRelicProvider
 					}
 				}`,
 				{
-					accountId: 1,
+					accountId: 11186201, //TODO: change to variable
 				}
 			);
 
 			const countResults = countResponse.actor.account.nrql.results;
 
-			for (const result in countResults) {
-				if (countResults[result].count !== 0) {
-					// (SELECT average(newrelic.goldenmetrics.apm.application.responseTimeMs) AS 'Response Time Ms' FROM Metric WHERE entity.guid in ('MTE2NjAxMzJ8QVBNfEFQUExJQ0FUSU9OfDEyMDk1MjY5') LIMIT MAX TIMESERIES SINCE [DEPLOYMENT TIMESTAMP - 3 HOURS] UNTIL [DEPLOYMENT TIMESTAMP]) /  (SELECT average(newrelic.goldenmetrics.apm.application.responseTimeMs) AS 'Response Time Ms' FROM Metric WHERE entity.guid in ('MTE2NjAxMzJ8QVBNfEFQUExJQ0FUSU9OfDEyMDk1MjY5') LIMIT MAX TIMESERIES SINCE [DEPLOYMENT TIMESTAMP + 3 HOURS] UNTIL [DEPLOYMENT TIMESTAMP]) *100
-					console.log(countResults[result]);
-				}
-			}
+			console.log(countResults);
 
 			const entityGoldenMetricsResults = await this.query<EntityGoldenMetricsResults>(gmQuery);
 			const metricResults = entityGoldenMetricsResults?.actor?.entity;
