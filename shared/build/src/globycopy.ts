@@ -5,18 +5,9 @@ import { convertPathToPattern, glob, isDynamicPattern } from "fast-glob";
 import * as os from "os";
 
 export type CopyFileOptions = {
-	rename: string;
+	rename?: string;
+	ignore?: string[];
 };
-
-async function isDirectory(path: string): Promise<boolean> {
-	const stats = await fs.stat(path);
-	return stats.isDirectory();
-}
-
-async function isFile(path: string): Promise<boolean> {
-	const stats = await fs.stat(path);
-	return stats.isFile();
-}
 
 // Basically extract the base directory the glob is rooted in
 function clearGlobs(pattern: string): string {
@@ -71,7 +62,7 @@ export async function globycopy(
 		await handleRenameCopy(from, to, options.rename);
 		return;
 	}
-	const srcFileList = await glob(from, { dot: true });
+	const srcFileList = await glob(from, { dot: true, ignore: options?.ignore });
 	console.debug(`Copying ${srcFileList.length} files ${from} to ${to}`);
 	const fromDir = clearGlobs(from);
 	await copyFiles(srcFileList, fromDir, to);

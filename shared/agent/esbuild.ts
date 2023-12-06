@@ -53,8 +53,9 @@ function getPostBuildCopy(): CopyStuff[] {
 			to: path.join(__dirname, "../../vs/src/CodeStream.VisualStudio.Vsix.x64/agent/"),
 		},
 		{
-			from: path.join(getProdDepsDir(), `node_modules/**`),
+			from: path.join(getProdDepsDir(), "node_modules/**"),
 			to: path.join(outputDir, "node_modules"),
+			options: { ignore: ["**/@newrelic/security-agent/**"] }, // Path too long for windows
 		},
 		{
 			from: path.join(outputDir, "node_modules/**"),
