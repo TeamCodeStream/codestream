@@ -11,6 +11,42 @@ const agentDistTarget = path.resolve(__dirname, "../shared/agent/dist");
 const copy = copyPlugin({
 	onEnd: [
 		{
+			// Visual Studio 2019
+			from: path.join(agentDistTarget, "agent-vs-2019.js"),
+			to: path.join(__dirname, "src/CodeStream.VisualStudio.Vsix.x86/agent"),
+			options: { rename: "agent.js" },
+		},
+		{
+			// Visual Studio 2019
+			from: path.join(agentDistTarget, "agent-vs-2019.js.map"),
+			to: path.join(__dirname, "/src/CodeStream.VisualStudio.Vsix.x86/agent"),
+			options: { rename: "agent.js.map" },
+		},
+		{
+			// Visual Studio 2022
+			from: path.join(agentDistTarget, "agent.js"),
+			to: path.join(__dirname, "src/CodeStream.VisualStudio.Vsix.x64/agent/agent.js"),
+		},
+		{
+			// Visual Studio 2022
+			from: path.join(agentDistTarget, "agent.js.map"),
+			to: path.join(__dirname, "/src/CodeStream.VisualStudio.Vsix.x64/agent/agent.js.map"),
+		},
+		{
+			from: path.join(agentDistTarget, "node_modules/**"),
+			to: path.resolve(
+				__dirname,
+				"src/CodeStream.VisualStudio.Vsix.x86/agent/node_modules/"
+			),
+		},
+		{
+			from: path.join(agentDistTarget, "node_modules/**"),
+			to: path.resolve(
+				__dirname,
+				"src/CodeStream.VisualStudio.Vsix.x64/agent/node_modules/"
+			),
+		},
+		{
 			from: path.resolve(__dirname, "../shared/webviews/newrelic-browser.js"),
 			to: path.join(__dirname, "src/resources/webview/newrelic-browser.js"),
 		},

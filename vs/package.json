@@ -22,7 +22,7 @@
 		"bundle:ci": "npm run clean:ci && npm run bundle",
 		"clean:ci": "git clean -xdf -e vs/licenses/**/* && npm run webview:clean:ci && npm run agent:clean:ci",
 		"mwatch": "tmux new-session 'npm run watch' \\; split-window -h 'npm run agent:watch'",
-		"preinstall": "pushd \"../shared/ui\" && npm install --no-save && popd && pushd \"../shared/util\" && npm install --no-save && popd && pushd \"../shared/build\" && npm install --no-save && popd",
+		"preinstall": "pushd \"../shared/ui\" && npm install --no-save && popd && pushd \"../shared/agent\" && npm install --no-save && popd && pushd \"../shared/util\" && npm install --no-save && popd && pushd \"../shared/build\" && npm install --no-save && popd",
 		"rebuild": "npm install --no-save && npm run agent:rebuild && npm run build",
 		"verify": "run-p verify:**",
 		"verify:compile": "tsc --noEmit",

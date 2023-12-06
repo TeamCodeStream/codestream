@@ -73,7 +73,19 @@ function explain_version () {
 
 
 function clean () {
-  cleanFiles=("node_modules" "jb/node_modules" "vscode/node_modules" "vs/node_modules" "shared/agent/node_modules" "shared/ui/node_modules" "shared/util/node_modules")
+  cleanFiles=(
+    "jb/node_modules" 
+    "vscode/node_modules" 
+    "vs/node_modules" 
+    "shared/agent/node_modules" 
+    "shared/ui/node_modules" 
+    "shared/util/node_modules"
+    "shared/agent/dist" 
+    "vscode/dist" 
+    "vs/src/CodeStream.VisualStudio.Vsix.x86/agent" 
+    "vs/src/CodeStream.VisualStudio.Vsix.x64/agent"
+    "vs/src/resources/webview"
+  )
   for path in "${cleanFiles[@]}"; do
     if [ -d "$path" ]; then
       echo "deleting $path"

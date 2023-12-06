@@ -52,7 +52,8 @@ async function extensionBuild(args: Args) {
 	const postBuildCopy: CopyStuff[] = [
 		{
 			from: path.resolve(__dirname, "../shared/agent/dist/**"),
-			to: dist
+			to: dist,
+			options: { ignore: ["**/agent-vs*"] }
 		},
 		{
 			from: path.resolve(__dirname, "codestream-*.info"),

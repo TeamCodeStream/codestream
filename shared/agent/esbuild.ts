@@ -31,60 +31,9 @@ function getPostBuildCopy(): CopyStuff[] {
 			to: outputDir,
 		},
 		{
-			// VS Code
-			from: path.join(outputDir, "agent.js"),
-			to: path.resolve(__dirname, "../../vscode/dist/agent.js"),
-		},
-		{
-			// VS Code
-			from: path.join(outputDir, "agent.js.map"),
-			to: path.resolve(__dirname, "../../vscode/dist/agent.js.map"),
-		},
-		{
-			// Visual Studio 2019
-			from: path.join(outputDir, "agent-vs-2019.js"),
-			to: path.join(__dirname, "../../vs/src/CodeStream.VisualStudio.Vsix.x86/agent"),
-			options: { rename: "agent.js" },
-		},
-		{
-			// Visual Studio 2019
-			from: path.join(outputDir, "agent-vs-2019.js.map"),
-			to: path.join(__dirname, "../../vs/src/CodeStream.VisualStudio.Vsix.x86/agent"),
-			options: { rename: "agent.js.map" },
-		},
-		{
-			// Visual Studio 2022
-			from: path.join(outputDir, "agent.js"),
-			to: path.join(__dirname, "../../vs/src/CodeStream.VisualStudio.Vsix.x64/agent/agent.js"),
-		},
-		{
-			// Visual Studio 2022
-			from: path.join(outputDir, "agent.js.map"),
-			to: path.join(__dirname, "../../vs/src/CodeStream.VisualStudio.Vsix.x64/agent/agent.js.map"),
-		},
-
-		{
 			from: path.join(getProdDepsDir(), "node_modules/**"),
 			to: path.join(outputDir, "node_modules"),
 			options: { ignore: ["**/@newrelic/security-agent/**"] }, // Path too long for windows
-		},
-		{
-			from: path.join(outputDir, "node_modules/**"),
-			to: path.resolve(__dirname, "../../vscode/dist/node_modules/"),
-		},
-		{
-			from: path.join(outputDir, "node_modules/**"),
-			to: path.resolve(
-				__dirname,
-				"../../vs/src/CodeStream.VisualStudio.Vsix.x86/agent/node_modules/"
-			),
-		},
-		{
-			from: path.join(outputDir, "node_modules/**"),
-			to: path.resolve(
-				__dirname,
-				"../../vs/src/CodeStream.VisualStudio.Vsix.x64/agent/node_modules/"
-			),
 		},
 	];
 }
