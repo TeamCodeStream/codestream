@@ -131,7 +131,7 @@ export const Headshot = styled((props: HeadshotProps) => {
 		(props.className || "") +
 		(props.addThumbsUp && !props.hardRightBorder ? " make-room-for-thumbs-up" : "");
 
-	if (person.username?.toLowerCase() === "grok") {
+	if (person.username?.toLowerCase() === "ai") {
 		return (
 			<Root
 				size={size}

@@ -274,7 +274,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const allTeamMembers = getTeamMembers(state);
-		const teamMembers = allTeamMembers.filter(_ => _.username !== "Grok");
+		const teamMembers = allTeamMembers.filter(_ => _.username !== "AI");
 
 		const user = state.users[state.session.userId!];
 		const teamId = state.context.currentTeamId;
@@ -1660,7 +1660,7 @@ const GrokSuggestion = (props: { query: string; onSelect: (text: string) => void
 			}}
 		>
 			<div>{props.query}</div>
-			<Button onClick={() => props.onSelect(`@Grok ${props.query}`)}>Select</Button>
+			<Button onClick={() => props.onSelect(`@AI ${props.query}`)}>Select</Button>
 		</div>
 	);
 };
@@ -1672,14 +1672,14 @@ const AskGrok = (props: { setText: (text: string) => void; onClose: () => void }
 	};
 	return (
 		<Modal translucent>
-			<Dialog wide onClose={props.onClose} title="Grok - Your GenAI Assistant">
+			<Dialog wide onClose={props.onClose} title="New Relic AI - Your GenAI Assistant">
 				<p>
-					By default Grok will automatically provide an analysis of the error, and even a potential
-					code fix, so that you can save time and reduce MTTR.
+					By default the AI assistant will automatically provide an analysis of the error, and even
+					a potential code fix, so that you can save time and reduce MTTR.
 				</p>
 				<p>
-					But the conversation doesn't have to stop there! Mention Grok in any reply to ask followup
-					questions or have Grok do some work for you.
+					But the conversation doesn't have to stop there! Mention AI in any reply to ask followup
+					questions or have the AI assistant do some work for you.
 				</p>
 				<MetaLabel data-testid="grok-examples">Examples</MetaLabel>
 				<GrokSuggestion query={"Write a test case for the suggested fix."} onSelect={onSelect} />
@@ -1708,7 +1708,7 @@ const ReplyInput = (props: { codeError: CSCodeError; setGrokRequested: () => voi
 		props.setGrokRequested();
 
 		setIsLoading(true);
-		if (showGrok && text.match(/@Grok/gim)) {
+		if (showGrok && text.match(/@AI/gim)) {
 			dispatch(startGrokLoading(props.codeError));
 		}
 
@@ -1779,7 +1779,7 @@ const ReplyInput = (props: { codeError: CSCodeError; setGrokRequested: () => voi
 				{showGrok && (
 					<Button style={{ marginLeft: 0 }} onClick={() => setIsAskGrokOpen(true)}>
 						<Icon name="grok" />
-						<span style={{ paddingLeft: "4px" }}>Ask Grok</span>
+						<span style={{ paddingLeft: "4px" }}>Ask AI</span>
 					</Button>
 				)}
 			</ButtonRow>

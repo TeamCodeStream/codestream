@@ -786,7 +786,7 @@ const mapStateToProps = state => {
 	const teammates = mapFilter(memberIds, id => {
 		const user = users[id as string];
 		if (!user || !user.isRegistered || user.deactivated || user.externalUserId) return;
-		if (user.username === "Grok") {
+		if (user.username === "AI") {
 			return;
 		}
 		if (!user.fullName) {
@@ -808,7 +808,7 @@ const mapStateToProps = state => {
 	const invited = mapFilter(memberIds, id => {
 		const user = users[id as string];
 		if (!user || user.isRegistered || user.deactivated || user.externalUserId) return;
-		if (user.username === "Grok") {
+		if (user.username === "AI") {
 			return;
 		}
 		let email = user.email;

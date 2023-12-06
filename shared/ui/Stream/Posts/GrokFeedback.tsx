@@ -53,7 +53,7 @@ export function GrokFeedback(props: GrokFeedbackProps) {
 		<div>
 			{showForm && type && (
 				<Modal translucent>
-					<Dialog title={"Grok Feedback"} wide={true} onClose={() => setShowForm(false)}>
+					<Dialog title={"AI Feedback"} wide={true} onClose={() => setShowForm(false)}>
 						<Root>
 							<GrokFeedbackForm {...props} feedbackType={type} onSuccess={onSuccessHandler} />
 						</Root>
@@ -118,7 +118,7 @@ export function GrokFeedbackForm(props: GrokFeedbackFormProps) {
 			telemetryPayload["ResponseHarmful"] = isHarmful;
 		}
 
-		console.debug(`Grok feedback ${JSON.stringify(telemetryPayload)}`);
+		console.debug(`AI feedback ${JSON.stringify(telemetryPayload)}`);
 		await HostApi.instance.track("Grok Feedback Submitted", telemetryPayload);
 		setIsLoading(false);
 		props.onSuccess();

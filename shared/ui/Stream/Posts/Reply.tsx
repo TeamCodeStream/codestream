@@ -444,7 +444,7 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 						<MarkdownContent className="reply-content-container">
 							<MarkdownText
 								text={postText}
-								includeCodeBlockCopy={props.author.username === "Grok"}
+								includeCodeBlockCopy={props.author.username === "AI"}
 								className="reply-markdown-content"
 							/>
 							<Attachments post={props.post as CSPost} />

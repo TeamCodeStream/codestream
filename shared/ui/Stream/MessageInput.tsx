@@ -505,7 +505,7 @@ export const MessageInput = (props: MessageInputProps) => {
 					if (description) {
 						description += you;
 					}
-					if (person.username.toLowerCase() === "grok") {
+					if (person.username.toLowerCase() === "ai") {
 						if (props.suggestGrok) {
 							itemsToShow.unshift({
 								id: person.id,
