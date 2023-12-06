@@ -97,6 +97,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Condition="'$(Configuration)' == 'Debug'" Include="..\resources\agent\node_modules\**\*.*" Link="agent\node_modules\%(RecursiveDir)%(Filename)%(Extension)" IncludeInVSIX="True" />  
+  </ItemGroup>
+  <ItemGroup>
     <Content Include="..\resources\assets\dark\add.svg">
       <Link>resources\assets\dark\add.svg</Link>
     </Content>
@@ -283,9 +286,6 @@
     </Content>
     <Content Include="agent\agent.js" Condition="'$(Configuration)' == 'Debug'">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="agent\node_modules\**\*.*" Condition="'$(Configuration)' == 'Debug'">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Resource Include="..\resources\assets\marker-add-comment-aqua.png">

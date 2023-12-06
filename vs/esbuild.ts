@@ -36,14 +36,7 @@ const copy = copyPlugin({
 			from: path.join(agentDistTarget, "node_modules/**"),
 			to: path.resolve(
 				__dirname,
-				"src/CodeStream.VisualStudio.Vsix.x86/agent/node_modules/"
-			),
-		},
-		{
-			from: path.join(agentDistTarget, "node_modules/**"),
-			to: path.resolve(
-				__dirname,
-				"src/CodeStream.VisualStudio.Vsix.x64/agent/node_modules/"
+				"src/resources/agent/node_modules/"
 			),
 		},
 		{

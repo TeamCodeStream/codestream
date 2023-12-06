@@ -82,6 +82,7 @@ function clean () {
     "shared/util/node_modules"
     "shared/agent/dist" 
     "vscode/dist" 
+    "vs/src/resources/agent"
     "vs/src/CodeStream.VisualStudio.Vsix.x86/agent" 
     "vs/src/CodeStream.VisualStudio.Vsix.x64/agent"
     "vs/src/resources/webview"
