@@ -75,6 +75,14 @@ export class PubnubConnection implements BroadcasterConnection {
 		this._debug(`Connection initializing...`);
 
 		this._userId = options.userId;
+		let proxy;
+		if (options.httpsAgent instanceof HttpsProxyAgent) {
+			proxy = {
+				protocol: options.httpsAgent.protocol,
+				host: options.httpsAgent.proxy.hostname,
+				port: options.httpsAgent.proxy.port,
+			};
+		}
 		this._pubnub = new Pubnub({
 			authKey: options.authKey,
 			uuid: options.userId,
@@ -83,8 +91,8 @@ export class PubnubConnection implements BroadcasterConnection {
 			logVerbosity: false,
 			// heartbeatInterval: 30,
 			autoNetworkDetection: true,
-			proxy: options.httpsAgent instanceof HttpsProxyAgent && options.httpsAgent.proxy,
-		} as Pubnub.PubnubConfig);
+			proxy: proxy,
+		} as Pubnub.PubnubConfig); // TODO @types/pubnub is very broken
 
 		this._messageCallback = options.onMessage;
 		this._statusCallback = options.onStatus;
