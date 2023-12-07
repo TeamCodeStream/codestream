@@ -107,7 +107,6 @@ export default function ObservabilityLogsPanel() {
 	const searchInput = useRef<HTMLInputElement>(null);
 
 	const [fieldDefinitions, setFieldDefinitions] = useState<LogFieldDefinition[]>([]);
-	const [sortedFieldDefinitions, setSortedFieldDefinitions] = useState<string[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [query, setQuery] = useState<string>("");
 	const [hasSearched, setHasSearched] = useState<boolean>(false);
@@ -164,14 +163,18 @@ export default function ObservabilityLogsPanel() {
 
 					if (response.logDefinitions) {
 						setFieldDefinitions(response.logDefinitions);
-
-						// TODO: Don't always do this when a preference is found instead.
-						setSortedFieldDefinitions(["level", "timestamp", "message"]);
 					}
 				}
 			}
 		} finally {
 			//
+		}
+	};
+
+	const checkKeyPress = (e: { keyCode: Number }) => {
+		const { keyCode } = e;
+		if (keyCode === 13) {
+			fetchLogs(derivedState.entityGuid);
 		}
 	};
 
@@ -238,18 +241,18 @@ export default function ObservabilityLogsPanel() {
 	const renderHeaderRow = () => {
 		return (
 			<tr>
-				{sortedFieldDefinitions &&
-					sortedFieldDefinitions.length > 0 &&
-					sortedFieldDefinitions.map((fd, idx) => {
+				{fieldDefinitions &&
+					fieldDefinitions.length > 0 &&
+					fieldDefinitions.map((fd, idx) => {
 						return (
 							<th
-								colSpan={columnSpanMapping[fd] || 1}
+								colSpan={columnSpanMapping[fd.key!] || 1}
 								style={{
 									border: "1px solid darkgray",
 									padding: "3px 8px 3px 8px",
 								}}
 							>
-								{fd}
+								{fd.key}
 							</th>
 						);
 					})}
@@ -257,30 +260,30 @@ export default function ObservabilityLogsPanel() {
 		);
 	};
 
-	const LogRow = (props: { logResult: LogResult; evenRow: boolean }) => {
-		const formatRowValue = (fieldName, fieldValue) => {
-			if (fieldName === "timestamp") {
-				return (
+	const formatRowValue = (fieldName: string, fieldValue: string) => {
+		if (fieldName === "timestamp") {
+			return (
+				<td>
+					<Timestamp time={fieldValue} expandedTime={true}></Timestamp>
+				</td>
+			);
+		}
+
+		if (fieldName === "level") {
+			return (
+				<>
 					<td>
-						<Timestamp time={fieldValue} expandedTime={true}></Timestamp>
+						<LogSeverity style={{ backgroundColor: logSeverityToColor[fieldValue] }} />
 					</td>
-				);
-			}
+					<td>{fieldValue}</td>
+				</>
+			);
+		}
 
-			if (fieldName === "level") {
-				return (
-					<>
-						<td>
-							<LogSeverity style={{ backgroundColor: logSeverityToColor[fieldValue] }} />
-						</td>
-						<td>{fieldValue}</td>
-					</>
-				);
-			}
+		return <td>{fieldValue}</td>;
+	};
 
-			return <td>{fieldValue}</td>;
-		};
-
+	const LogRow = (props: { logResult: LogResult; evenRow: boolean }) => {
 		return (
 			<tr
 				style={{
@@ -289,9 +292,9 @@ export default function ObservabilityLogsPanel() {
 				}}
 			>
 				{props.logResult &&
-					sortedFieldDefinitions &&
-					sortedFieldDefinitions.map(fd => {
-						return formatRowValue(fd, props.logResult[fd]);
+					fieldDefinitions &&
+					fieldDefinitions.map(fd => {
+						return formatRowValue(fd.key!, props.logResult[fd.key!]);
 					})}
 			</tr>
 		);
@@ -319,6 +322,7 @@ export default function ObservabilityLogsPanel() {
 							onChange={e => {
 								setQuery(e.target.value);
 							}}
+							onKeyDown={checkKeyPress}
 							placeholder="Query logs in the selected entity"
 							autoFocus
 						/>
@@ -360,7 +364,7 @@ export default function ObservabilityLogsPanel() {
 
 				<ScrollBox>
 					<div className="vscroll">
-						{!isLoading && results && totalItems > 0 && sortedFieldDefinitions && (
+						{!isLoading && results && totalItems > 0 && fieldDefinitions && (
 							<table style={{ width: "100%", borderCollapse: "collapse" }}>
 								<thead>{renderHeaderRow()}</thead>
 								<tbody>{renderResults()}</tbody>
@@ -382,6 +386,13 @@ export default function ObservabilityLogsPanel() {
 										set up log management
 									</Link>
 								</span>
+							</div>
+						)}
+
+						{hasSearched && logError && (
+							<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
+								<h4>There was an error querying logs</h4>
+								<span>{logError}</span>
 							</div>
 						)}
 					</div>
