@@ -4687,7 +4687,7 @@ export class NewRelicProvider
 				queryWhere += ` AND allColumnSearch('${filterText}', insensitive: true)`;
 			}
 
-			const query = `SELECT timestamp, level, message FROM Log ${queryWhere} ${querySince} ${queryOrder} ${queryLimit}`;
+			const query = `SELECT * FROM Log ${queryWhere} ${querySince} ${queryOrder} ${queryLimit}`;
 
 			ContextLogger.log(`getLogs query: ${query}`);
 
