@@ -49,12 +49,21 @@ async function installProdDeps(tmpDir: string) {
 
 	const currentDir = process.cwd();
 	process.chdir(tmpDir);
-	const { error, stdout, stderr } = await exec("npm i --production");
+	const { error, stdout, stderr } = await exec("npm i --omit=dev");
 	if (stderr || error) {
 		console.error(`stdout: ${stdout}\nstderr: ${stderr}\n ${error?.message}`);
 		if (error) {
 			throw new Error("Unable to npm i --production");
 		}
+	}
+	// Remove this bizarre extra file that shows up only on linux only for --omit=dev that breaks vcse package
+	const evilVile = path.join(
+		tmpDir,
+		"node_modules/pubnub/lib/crypto/modules/NodeCryptoModule/NodeCryptoModule.js"
+	);
+	if (await fs.pathExists(evilVile)) {
+		console.log(`Removing evil file ${evilVile}`);
+		await fs.unlink(evilVile);
 	}
 	console.log(stdout);
 	process.chdir(currentDir);
