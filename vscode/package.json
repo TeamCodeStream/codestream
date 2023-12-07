@@ -320,7 +320,7 @@
 		"mwatch": "tmux new-session 'npm run watch' \\; split-window -h 'npm run agent:watch'",
 		"pack": "vsce package",
 		"postinstall": "patch-package",
-		"preinstall": "pushd \"../shared/ui\" && npm install --no-save && popd && pushd \"../shared/util\" && npm install --no-save && popd && pushd \"../shared/build\" && npm install --no-save && popd",
+		"preinstall": "pushd \"../shared/ui\" && npm install --no-save && popd && pushd \"../shared/util\" && npm install --no-save && popd && pushd \"../shared/build\" && npm install --no-save && popd && pushd \"../shared/agent\" && npm install --no-save && popd",
 		"pretty": "prettier  --write \"./src/**/*.ts\" \"./src/**/*.js\" ./package.json ./.prettierrc.js",
 		"rebuild": "npm install --no-save && npm run agent:rebuild && npm run build",
 		"test": "npm run agent:test && npm run webview:test && npm run vscode:test",

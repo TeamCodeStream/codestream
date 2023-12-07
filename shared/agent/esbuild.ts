@@ -1,15 +1,19 @@
 import * as path from "path";
 import * as os from "os";
 import * as fs from "fs-extra";
+import * as crypto from "crypto";
 
 import graphqlLoaderPlugin from "@luckycatfactory/esbuild-graphql-loader";
 import { BuildOptions } from "esbuild";
 
 import { copyPlugin, CopyStuff } from "../build/src/copyPlugin";
-import { commonEsbuildOptions, processArgs, startEsbuild } from "../build/src/esbuildCommon";
+import { Args, commonEsbuildOptions, processArgs, startEsbuild } from "../build/src/esbuildCommon";
 import { nativeNodeModulesPlugin } from "../build/src/nativeNodeModulesPlugin";
 import { statsPlugin } from "../build/src/statsPlugin";
 import { promisify } from "util";
+import { readFileSync, rmSync } from "fs";
+
+let packageLockSha: string | undefined;
 
 const exec = promisify(require("child_process").exec);
 
@@ -17,25 +21,56 @@ const outputDir = path.resolve(__dirname, "dist");
 
 let prodDepsDir: string | undefined;
 
-function getProdDepsDir(): string {
+function getDepsRoot(watchMode: boolean): string {
+	if (watchMode) {
+		return path.resolve(__dirname);
+	}
 	if (!prodDepsDir) {
 		throw new Error("Could not resolve prod deps directory");
 	}
 	return prodDepsDir;
 }
 
-function getPostBuildCopy(): CopyStuff[] {
-	return [
-		{
-			from: "node_modules/opn/**/xdg-open",
-			to: outputDir,
-		},
-		{
-			from: path.join(getProdDepsDir(), "node_modules/**"),
-			to: path.join(outputDir, "node_modules"),
-			options: { ignore: ["**/@newrelic/security-agent/**"] }, // Path too long for windows
-		},
-	];
+function calculatePackageLockSha(): string {
+	const packageLock = readFileSync(path.join(__dirname, "package-lock.json"));
+	const hash = crypto.createHash("sha1");
+	hash.update(packageLock);
+	return hash.digest("hex");
+}
+
+function getPostBuildCopy(args: Args): CopyStuff[] {
+	const currentPackageLockSha = calculatePackageLockSha();
+	let result: CopyStuff[];
+	const nodeModulesDest = path.join(outputDir, "node_modules");
+	if (packageLockSha !== currentPackageLockSha) {
+		console.log(
+			`package-lock.json has changed. Removing ${nodeModulesDest} and copying new dependencies`
+		);
+		if (args.watchMode) {
+			console.log(`Removing ${nodeModulesDest}`);
+			rmSync(nodeModulesDest, { recursive: true });
+		}
+		result = [
+			{
+				from: "node_modules/opn/**/xdg-open",
+				to: outputDir,
+			},
+			{
+				from: path.join(getDepsRoot(args.watchMode), "node_modules/**"),
+				to: nodeModulesDest,
+				options: { ignore: ["**/@newrelic/security-agent/**"] }, // Path too long for windows
+			},
+		];
+	} else {
+		result = [
+			{
+				from: "node_modules/opn/**/xdg-open",
+				to: outputDir,
+			},
+		];
+	}
+	packageLockSha = currentPackageLockSha;
+	return result;
 }
 
 // No need to package up the dev dependencies - copy minimal files so that `npm i --production works` and copy the
@@ -71,10 +106,15 @@ async function installProdDeps(tmpDir: string) {
 
 (async function () {
 	try {
-		prodDepsDir = await fs.mkdtemp(path.join(os.tmpdir(), "agent-esbuild"));
-		console.log(`Created temp dir ${prodDepsDir}`);
-		await installProdDeps(prodDepsDir);
 		const args = processArgs();
+		if (!args.watchMode) {
+			prodDepsDir = await fs.mkdtemp(path.join(os.tmpdir(), "agent-esbuild"));
+			if (!prodDepsDir) {
+				throw new Error("Could not create temp dir");
+			}
+			console.log(`Created temp dir ${prodDepsDir}`);
+			await installProdDeps(prodDepsDir);
+		}
 		const buildOptions: BuildOptions = {
 			...commonEsbuildOptions(false, args),
 			entryPoints: {
@@ -87,7 +127,7 @@ async function installProdDeps(tmpDir: string) {
 				graphqlLoaderPlugin(),
 				nativeNodeModulesPlugin,
 				statsPlugin,
-				copyPlugin({ onEnd: getPostBuildCopy() }),
+				copyPlugin({ onEnd: () => getPostBuildCopy(args) }),
 			],
 			format: "cjs",
 			platform: "node",

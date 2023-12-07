@@ -9,7 +9,7 @@ export interface CopyStuff {
 
 export interface CopyOptions {
 	onStart?: CopyStuff[];
-	onEnd?: CopyStuff[];
+	onEnd?: CopyStuff[] | (() => CopyStuff[]);
 }
 
 export const copyPlugin = (options: CopyOptions): Plugin => ({
@@ -33,7 +33,8 @@ export const copyPlugin = (options: CopyOptions): Plugin => ({
 		build.onEnd(async () => {
 			if (options.onEnd) {
 				const start = Date.now();
-				await doCopy(options.onEnd);
+				const copyStuff = typeof options.onEnd === "function" ? options.onEnd() : options.onEnd;
+				await doCopy(copyStuff);
 				const elapsed = Date.now() - start;
 				console.info(`copyPlugin onEnd copied ${options.onEnd.length} sources in ${elapsed}ms`);
 			}
