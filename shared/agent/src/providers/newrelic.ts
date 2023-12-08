@@ -3055,6 +3055,93 @@ export class NewRelicProvider
 		return response;
 	}
 
+	async getPillsData(entityGuid: string): Promise<any> {
+		const countQuery = [
+			"SELECT",
+			"latest(deploymentId) AS 'deploymentId',",
+			"latest(timestamp) AS 'timestamp'",
+			"FROM Deployment",
+			"WHERE entity.guid = 'MTExODYyMDF8QVBNfEFQUExJQ0FUSU9OfDgxNTMzNzUx'", //TODO: change to variable
+			"SINCE 13 months ago",
+		].join(" ");
+
+		const countResponse = await this.query<{
+			actor: {
+				account: {
+					nrql: {
+						results: {
+							deploymentId: string;
+							timestamp: number;
+						}[];
+					};
+				};
+			};
+		}>(
+			`query fetchErrorRate($accountId:Int!) {
+				actor {
+					account(id: $accountId) {
+						nrql(
+							options: { eventNamespaces: "Marker" }
+							query: "${countQuery}"
+						) { nrql results }
+					}
+				}
+			}`,
+			{
+				accountId: 11186201, //TODO: change to variable
+			}
+		);
+
+		const countResults = countResponse.actor.account.nrql?.results[0];
+
+		const { deploymentId, timestamp } = countResults;
+
+		if (deploymentId && timestamp) {
+			const threeHoursLater = timestamp + 180000;
+
+			const comparisonQuery = [
+				"FROM Metric",
+				"SELECT",
+				"average(newrelic.goldenmetrics.apm.application.responseTimeMs) AS 'responseTimeMs',",
+				"average(newrelic.goldenmetrics.apm.application.errorRate) AS 'errorRate'",
+				`WHERE entity.guid = 'MTExODYyMDF8QVBNfEFQUExJQ0FUSU9OfDgxNTMzNzUx'`,
+				`SINCE ${timestamp} UNTIL ${threeHoursLater}`,
+				`COMPARE WITH 180 minutes ago`,
+			].join(" ");
+
+			const comparisonQueryData = await this.query<{
+				actor: {
+					account: {
+						nrql: {
+							results: {
+								beginTimeSeconds: number;
+								endTimeSeconds: number;
+								responseTimeMs: number;
+								errorRate: number;
+							}[];
+						};
+					};
+				};
+			}>(
+				`query fetchErrorRate($accountId:Int!) {
+					actor {
+						account(id: $accountId) {
+							nrql(
+								
+								query: "${comparisonQuery}"
+							) { nrql results }
+						}
+					}
+				}`,
+				{
+					accountId: 11186201, //TODO: change to variable
+				}
+			);
+
+			console.log(comparisonQueryData);
+		}
+	}
+
 	async getEntityLevelGoldenMetrics(
 		entityGuid: string
 	): Promise<EntityGoldenMetrics | NRErrorResponse | undefined> {
@@ -3114,46 +3201,6 @@ export class NewRelicProvider
 				}
 			}`;
 
-			const countQuery = [
-				"SELECT",
-				"latest(deploymentId) AS 'deploymentId',",
-				"latest(timestamp) AS 'timestamp'",
-				"FROM Deployment",
-				"WHERE entity.guid = 'MTExODYyMDF8QVBNfEFQUExJQ0FUSU9OfDgxNTMzNzUx'", //TODO: change to variable
-				"SINCE 13 months ago",
-			].join(" ");
-
-			const countResponse = await this.query<{
-				actor: {
-					account: {
-						nrql: {
-							results: {
-								deploymentId: string;
-								timestamp: number;
-							}[];
-						};
-					};
-				};
-			}>(
-				`query fetchErrorRate($accountId:Int!) {
-					actor {
-						account(id: $accountId) {
-							nrql(
-								options: { eventNamespaces: "Marker" }
-								query: "${countQuery}"
-							) { nrql results }
-						}
-					}
-				}`,
-				{
-					accountId: 11186201, //TODO: change to variable
-				}
-			);
-
-			const countResults = countResponse.actor.account.nrql.results;
-
-			console.log(countResults);
-
 			const entityGoldenMetricsResults = await this.query<EntityGoldenMetricsResults>(gmQuery);
 			const metricResults = entityGoldenMetricsResults?.actor?.entity;
 
@@ -3193,6 +3240,9 @@ export class NewRelicProvider
 					displayValue: this.toFixedNoRounding(metricValue, 2) ?? "Unknown",
 				};
 			});
+
+			const pillsData = this.getPillsData(entityGuid);
+			console.log(pillsData);
 
 			return {
 				lastUpdated: new Date().toLocaleString(),
