@@ -184,6 +184,10 @@
 			{
 				"command": "codestream.viewMethodLevelTelemetry",
 				"title": "View Method Level Telemetry"
+			},
+			{
+				"command": "codestream.logSearch",
+				"title": "Find in Logs"
 			}
 		],
 		"keybindings": [
@@ -279,6 +283,11 @@
 					"command": "codestream.newIssue",
 					"when": "codestream:status == signedIn && resourceScheme == file",
 					"group": "9_zcodestream@2"
+				},
+				{
+					"command": "codestream.logSearch",
+					"when": "codestream:status == signedIn && resourceScheme == file",
+					"group": "9_zcodestream@3"
 				}
 			]
 		},
