@@ -1,12 +1,26 @@
 import * as paths from "path";
 
 import { CodemarkType, CSMarkerIdentifier, CSReviewCheckpoint } from "@codestream/protocols/api";
-import { commands, Disposable, env, Range, Uri, ViewColumn, window, workspace } from "vscode";
+import {
+	commands,
+	Disposable,
+	env,
+	Range,
+	Uri,
+	ViewColumn,
+	window,
+	workspace,
+	TextDocument,
+	SemanticTokensLegend,
+	SemanticTokens,
+	CancellationTokenSource
+} from "vscode";
 import {
 	FileLevelTelemetryRequestOptions,
 	MetricTimesliceNameMapping,
 	ObservabilityAnomaly
 } from "@codestream/protocols/agent";
+import { SymbolLocator } from "providers/symbolLocator";
 
 import { Editor } from "./extensions/editor";
 import { openUrl } from "./urlHandler";
@@ -125,6 +139,7 @@ export interface ViewMethodLevelTelemetryCommandArgs
 
 export class Commands implements Disposable {
 	private readonly _disposable: Disposable;
+	private readonly _symbolLocator: SymbolLocator;
 
 	constructor() {
 		this._disposable = Disposable.from(
@@ -135,6 +150,7 @@ export class Commands implements Disposable {
 				Container.sidebar.show()
 			)
 		);
+		this._symbolLocator = new SymbolLocator();
 	}
 
 	dispose() {
@@ -608,6 +624,84 @@ export class Commands implements Disposable {
 		} catch (ex) {
 			Logger.error(ex);
 		}
+	}
+
+	@command("logSearch")
+	async logSearch() {
+		const editor = window.activeTextEditor;
+		if (editor === undefined) return;
+		if (!editor.selection.isSingleLine) return; // no multiple line highlights...yet
+
+		const line = editor.document.lineAt(editor.selection.start.line);
+
+		const tokenLegend = await commands.executeCommand<SemanticTokensLegend>(
+			"vscode.provideDocumentRangeSemanticTokensLegend",
+			editor.document.uri,
+			line.range
+		);
+
+		const tokens = await commands.executeCommand<SemanticTokens>(
+			"vscode.provideDocumentRangeSemanticTokens",
+			editor.document.uri,
+			line.range,
+			new CancellationTokenSource().token
+		);
+
+		const strings = this.extractStringsFromTokens(tokens, editor.document, tokenLegend);
+
+		strings.forEach(s => {
+			Logger.log(`${s}`);
+		});
+	}
+
+	private extractStringsFromTokens(
+		tokens: SemanticTokens,
+		document: TextDocument,
+		legend: SemanticTokensLegend
+	): string[] {
+		const strings: string[] = [];
+
+		let lineNumber: number = 0;
+		let columnNumber: number = 0;
+
+		// Process the tokens data to extract string literals
+		for (let i = 0; i < tokens.data.length; i += 5) {
+			const tokenTypeIndex: number = tokens.data[i + 3];
+			const tokenType: string = legend.tokenTypes[tokenTypeIndex];
+
+			const lineNumberDelta: number = tokens.data[i];
+			const columnDelta: number = tokens.data[i + 1];
+
+			// first index is the first token, since numbers of are offsets,
+			// use the offsets from the first token to initialize a running
+			// sum.
+			if (i === 0) {
+				lineNumber = lineNumberDelta;
+				columnNumber = columnDelta;
+			} else {
+				lineNumber = lineNumber + lineNumberDelta;
+				columnNumber = columnNumber + columnDelta;
+			}
+
+			if (tokenType === "string") {
+				const tokenLength = tokens.data[i + 2];
+
+				// dont care about these, but leaving here for completeness of how this is parsed
+				// const modifiers = tokens.data[i + 3];
+				// compare against legend.modifiers to figure out what they are
+
+				const tokenRange = new Range(
+					lineNumber,
+					columnNumber,
+					lineNumber,
+					columnNumber + tokenLength
+				);
+				const stringData = document.getText(tokenRange);
+				strings.push(stringData);
+			}
+		}
+
+		return strings;
 	}
 
 	async updateEditorCodeLens(): Promise<boolean> {
