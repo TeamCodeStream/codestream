@@ -119,6 +119,7 @@ export default function ObservabilityLogsPanel() {
 	const [results, setResults] = useState<LogResult[]>([]);
 	const [totalItems, setTotalItems] = useState<number>(0);
 	const [logError, setLogError] = useState<string | undefined>("");
+	const [isUIDisabled, setIsUIDisabled] = useState<boolean>(false);
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
@@ -144,84 +145,105 @@ export default function ObservabilityLogsPanel() {
 
 		setSelectSinceOptions(sinceOptions);
 		setSelectedSinceOption(defaultOption);
+
+		if (!derivedState.entityGuid) {
+			handleError(
+				"We were unable to locate the Entity GUID for the selected service; please contact support."
+			);
+			setIsUIDisabled(true);
+			return;
+		}
+
 		fetchFieldDefinitions(derivedState.entityGuid);
 	});
 
-	const fetchFieldDefinitions = async (entityGuid?: string) => {
+	const handleError = (message: string) => {
+		setLogError(message);
+		console.error(message);
+	};
+
+	const fetchFieldDefinitions = async (entityGuid: string) => {
 		try {
-			if (entityGuid) {
-				const response = await HostApi.instance.send(GetLogFieldDefinitionsRequestType, {
-					entityGuid,
-				});
+			const response = await HostApi.instance.send(GetLogFieldDefinitionsRequestType, {
+				entityGuid,
+			});
 
-				if (response) {
-					if (isNRErrorResponse(response?.error)) {
-						setLogError(response.error?.error?.message ?? response.error?.error?.type);
-					} else {
-						setLogError(undefined);
-					}
-
-					if (response.logDefinitions) {
-						setFieldDefinitions(response.logDefinitions);
-					}
-				}
+			if (!response) {
+				handleError(
+					"An unexpected error occurred while fetching log field information; please contact support."
+				);
+				return;
 			}
-		} finally {
-			//
+
+			if (isNRErrorResponse(response?.error)) {
+				handleError(response.error?.error?.message ?? response.error?.error?.type);
+				return;
+			}
+
+			if (response.logDefinitions) {
+				setFieldDefinitions(response.logDefinitions);
+			}
+		} catch (ex) {
+			handleError(ex);
 		}
 	};
 
 	const checkKeyPress = (e: { keyCode: Number }) => {
 		const { keyCode } = e;
 		if (keyCode === 13) {
-			fetchLogs(derivedState.entityGuid);
+			fetchLogs(derivedState.entityGuid!);
 		}
 	};
 
-	const fetchLogs = async (entityGuid?: string) => {
+	const fetchLogs = async (entityGuid: string) => {
 		try {
+			setLogError(undefined);
 			setHasSearched(true);
 			setIsLoading(true);
+			setResults([]);
+			setTotalItems(0);
 
-			if (entityGuid) {
-				setResults([]);
-				setTotalItems(0);
+			const response = await HostApi.instance.send(GetLogsRequestType, {
+				entityGuid,
+				filterText: query,
+				limit: "MAX",
+				since: selectedSinceOption?.value || "30 MINUTES AGO",
+				order: {
+					field: "timestamp",
+					direction: "DESC",
+				},
+			});
 
-				const response = await HostApi.instance.send(GetLogsRequestType, {
-					entityGuid,
-					filterText: query,
-					limit: "MAX",
-					since: selectedSinceOption?.value || "30 MINUTES AGO",
-					order: {
-						field: "timestamp",
-						direction: "DESC",
-					},
-				});
-
-				if (response) {
-					if (isNRErrorResponse(response?.error)) {
-						setLogError(response.error?.error?.message ?? response.error?.error?.type);
-					} else {
-						setLogError(undefined);
-					}
-
-					if (response.logs && response.logs.length > 0) {
-						setResults(response.logs);
-						setTotalItems(response.logs.length);
-					}
-				} else {
-					console.debug(`o11y: no logs`);
-					setResults([]);
-					setTotalItems(0);
-				}
-			} else {
-				console.debug(`o11y: no logs (no entityGuid)`);
-				setResults([]);
-				setTotalItems(0);
+			if (!response) {
+				handleError(
+					"An unexpected error occurred while fetching log information; please contact support."
+				);
+				return;
 			}
+
+			if (isNRErrorResponse(response?.error)) {
+				handleError(response.error?.error?.message ?? response.error?.error?.type);
+				return;
+			}
+
+			if (response.logs && response.logs.length > 0) {
+				setResults(response.logs);
+				setTotalItems(response.logs.length);
+			}
+
+			trackTelemetry(entityGuid, (response?.logs?.length ?? 0) > 0);
+		} catch (ex) {
+			handleError(ex);
 		} finally {
 			setIsLoading(false);
 		}
+	};
+
+	const trackTelemetry = (entityGuid: string, resultsReturned: boolean) => {
+		HostApi.instance.track("Logs Searched", {
+			"Entity GUID": entityGuid,
+			"Results Returned": resultsReturned,
+		});
 	};
 
 	const renderResults = () => {
@@ -243,7 +265,7 @@ export default function ObservabilityLogsPanel() {
 			<tr>
 				{fieldDefinitions &&
 					fieldDefinitions.length > 0 &&
-					fieldDefinitions.map((fd, idx) => {
+					fieldDefinitions.map(fd => {
 						return (
 							<th
 								colSpan={columnSpanMapping[fd.key!] || 1}
@@ -325,6 +347,7 @@ export default function ObservabilityLogsPanel() {
 							onKeyDown={checkKeyPress}
 							placeholder="Query logs in the selected entity"
 							autoFocus
+							disabled={isUIDisabled}
 						/>
 						<Icon name="x" className="clear" onClick={e => setQuery("")} />
 					</div>
@@ -337,12 +360,14 @@ export default function ObservabilityLogsPanel() {
 							placeholder="Since"
 							options={selectSinceOptions}
 							onChange={value => setSelectedSinceOption(value)}
+							isDisabled={isUIDisabled}
 						/>
 					</div>
 					<Button
 						style={{ paddingLeft: "8px", paddingRight: "8px" }}
-						onClick={() => fetchLogs(derivedState.entityGuid)}
+						onClick={() => fetchLogs(derivedState.entityGuid!)}
 						loading={isLoading}
+						disabled={isUIDisabled}
 					>
 						Query Logs
 					</Button>
@@ -364,20 +389,20 @@ export default function ObservabilityLogsPanel() {
 
 				<ScrollBox>
 					<div className="vscroll">
-						{!isLoading && results && totalItems > 0 && fieldDefinitions && (
+						{!logError && !isLoading && results && totalItems > 0 && fieldDefinitions && (
 							<table style={{ width: "100%", borderCollapse: "collapse" }}>
 								<thead>{renderHeaderRow()}</thead>
 								<tbody>{renderResults()}</tbody>
 							</table>
 						)}
 
-						{!totalItems && !isLoading && !hasSearched && (
+						{!logError && !totalItems && !isLoading && !hasSearched && (
 							<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
 								<span>Enter search criteria above, or just click Query to see recent logs.</span>
 							</div>
 						)}
 
-						{!totalItems && !isLoading && hasSearched && (
+						{!logError && !totalItems && !isLoading && hasSearched && (
 							<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
 								<h4>No logs found during this time range</h4>
 								<span>
@@ -389,9 +414,9 @@ export default function ObservabilityLogsPanel() {
 							</div>
 						)}
 
-						{hasSearched && logError && (
+						{logError && (
 							<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
-								<h4>There was an error querying logs</h4>
+								<h4>Uh oh, we've encounted an error!</h4>
 								<span>{logError}</span>
 							</div>
 						)}
