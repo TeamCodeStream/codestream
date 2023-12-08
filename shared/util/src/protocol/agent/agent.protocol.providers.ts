@@ -1478,12 +1478,9 @@ export interface CodeLevelMetrics {
 	errorRate?: number;
 }
 
-export const GetClmRequestType = new RequestType<
-	GetClmRequest,
-	GetClmResponse,
-	void,
-	void
->("codestream/newrelic/clm");
+export const GetClmRequestType = new RequestType<GetClmRequest, GetClmResponse, void, void>(
+	"codestream/newrelic/clm"
+);
 
 export interface GetObservabilityResponseTimesRequest {
 	fileUri: string;
@@ -2271,6 +2268,14 @@ export interface EntityGoldenMetrics {
 		value: number;
 		displayValue: string;
 	}[];
+	pillsData: {
+		errorRateFinalData: {
+			percentChange: number;
+		};
+		responseTimeFinalData: {
+			percentChange: number;
+		};
+	};
 }
 
 export interface MethodGoldenMetrics {

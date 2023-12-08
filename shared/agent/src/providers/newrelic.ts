@@ -3056,28 +3056,29 @@ export class NewRelicProvider
 	}
 
 	async getPillsData(entityGuid: string): Promise<any> {
-		const countQuery = [
-			"SELECT",
-			"latest(deploymentId) AS 'deploymentId',",
-			"latest(timestamp) AS 'timestamp'",
-			"FROM Deployment",
-			"WHERE entity.guid = 'MTExODYyMDF8QVBNfEFQUExJQ0FUSU9OfDgxNTMzNzUx'", //TODO: change to variable
-			"SINCE 13 months ago",
-		].join(" ");
+		try {
+			const countQuery = [
+				"SELECT",
+				"latest(deploymentId) AS 'deploymentId',",
+				"latest(timestamp) AS 'timestamp'",
+				"FROM Deployment",
+				"WHERE entity.guid = 'MTExODYyMDF8QVBNfEFQUExJQ0FUSU9OfDgxNTMzNzUx'", //TODO: change to variable
+				"SINCE 13 months ago",
+			].join(" ");
 
-		const countResponse = await this.query<{
-			actor: {
-				account: {
-					nrql: {
-						results: {
-							deploymentId: string;
-							timestamp: number;
-						}[];
+			const countResponse = await this.query<{
+				actor: {
+					account: {
+						nrql: {
+							results: {
+								deploymentId: string;
+								timestamp: number;
+							}[];
+						};
 					};
 				};
-			};
-		}>(
-			`query fetchErrorRate($accountId:Int!) {
+			}>(
+				`query fetchErrorRate($accountId:Int!) {
 				actor {
 					account(id: $accountId) {
 						nrql(
@@ -3087,16 +3088,17 @@ export class NewRelicProvider
 					}
 				}
 			}`,
-			{
-				accountId: 11186201, //TODO: change to variable
-			}
-		);
+				{
+					accountId: 11186201, //TODO: change to variable
+				}
+			);
 
-		const countResults = countResponse.actor.account.nrql?.results[0];
+			const countResults = countResponse.actor.account.nrql?.results[0];
 
-		const { deploymentId, timestamp } = countResults;
+			const { deploymentId, timestamp } = countResults;
 
-		if (deploymentId && timestamp) {
+			if (!deploymentId || !timestamp) return undefined;
+
 			const threeHoursLater = timestamp + 180000;
 
 			const comparisonQuery = [
@@ -3138,8 +3140,29 @@ export class NewRelicProvider
 				}
 			);
 
-			console.log(comparisonQueryData);
+			const currentMetrics = comparisonQueryData.actor.account.nrql?.results[0];
+			const previousMetrics = comparisonQueryData.actor.account.nrql?.results[1];
+
+			if (!currentMetrics || !previousMetrics) return undefined;
+
+			const errorRatePercentageChange =
+				(currentMetrics.errorRate - previousMetrics.errorRate) / (currentMetrics.errorRate * 100);
+			const responseTimePercentageChange =
+				(currentMetrics.responseTimeMs - previousMetrics.responseTimeMs) /
+				(currentMetrics.responseTimeMs * 100);
+
+			return {
+				errorRateFinalData: {
+					percentChange: errorRatePercentageChange,
+				},
+				responseTimeFinalData: {
+					percentChange: responseTimePercentageChange,
+				},
+			};
+		} catch (err) {
+			Logger.error(err, entityGuid);
 		}
+		return undefined;
 	}
 
 	async getEntityLevelGoldenMetrics(
@@ -3241,13 +3264,13 @@ export class NewRelicProvider
 				};
 			});
 
-			const pillsData = this.getPillsData(entityGuid);
-			console.log(pillsData);
+			const pillsData = await this.getPillsData(entityGuid);
 
 			return {
 				lastUpdated: new Date().toLocaleString(),
 				since: since.toLowerCase().replace("minutes", "min"),
 				metrics: metrics,
+				pillsData: pillsData,
 			};
 		} catch (ex) {
 			Logger.warn("getEntityGoldenMetrics no response", {
