@@ -92,14 +92,22 @@ async function installProdDeps(tmpDir: string) {
 		}
 	}
 	// Remove this bizarre extra file that shows up only on linux only for --omit=dev that breaks vcse package
-	const evilVile = path.join(
-		tmpDir,
-		"node_modules/pubnub/lib/crypto/modules/NodeCryptoModule/NodeCryptoModule.js"
-	);
-	if (await fs.pathExists(evilVile)) {
-		console.log(`Removing evil file ${evilVile}`);
-		await fs.unlink(evilVile);
+	if (os.platform() === "linux") {
+		const evilVile = path.join(
+			tmpDir,
+			"node_modules/pubnub/lib/crypto/modules/NodeCryptoModule/NodeCryptoModule.js"
+		);
+		const nonEvil = path.join(
+			tmpDir,
+			"node_modules/pubnub/lib/crypto/modules/NodeCryptoModule/nodeCryptoModule.js"
+		);
+
+		if ((await fs.pathExists(evilVile)) && (await fs.pathExists(nonEvil))) {
+			console.log(`Removing evil file ${evilVile}`);
+			await fs.unlink(evilVile);
+		}
 	}
+
 	console.log(stdout);
 	process.chdir(currentDir);
 }
