@@ -12,8 +12,7 @@ import {
 	workspace,
 	TextDocument,
 	SemanticTokensLegend,
-	SemanticTokens,
-	CancellationTokenSource
+	SemanticTokens
 } from "vscode";
 import {
 	FileLevelTelemetryRequestOptions,
@@ -634,24 +633,44 @@ export class Commands implements Disposable {
 
 		const line = editor.document.lineAt(editor.selection.start.line);
 
-		const tokenLegend = await commands.executeCommand<SemanticTokensLegend>(
-			BuiltInCommands.ProvideDocumentRangeSemanticTokensLegend,
-			editor.document.uri,
-			line.range
+		const regExString = this.extractStringsFromLine(editor.document, editor.selection.start.line);
+		Logger.log(`REGEX: ${regExString}`);
+
+		// const tokenLegend = await commands.executeCommand<SemanticTokensLegend>(
+		// 	BuiltInCommands.ProvideDocumentRangeSemanticTokensLegend,
+		// 	editor.document.uri,
+		// 	line.range
+		// );
+
+		// const tokens = await commands.executeCommand<SemanticTokens>(
+		// 	BuiltInCommands.ProvideDocumentRangeSemanticTokens,
+		// 	editor.document.uri,
+		// 	line.range,
+		// 	new CancellationTokenSource().token
+		// );
+
+		// const strings = this.extractStringsFromTokens(tokens, editor.document, tokenLegend);
+
+		// strings.forEach(s => {
+		// 	Logger.log(`TOKEN: ${s}`);
+		// });
+	}
+
+	private extractStringsFromLine(document: TextDocument, lineNumber: number): string {
+		const line = document.lineAt(lineNumber);
+
+		// https://regex101.com/r/Pky4GV/4
+		const matches = line.text.match(
+			/"(?:[^"]|"")*(?:"|$)|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^'\\]|\\.)*`/gim
 		);
+		const match = matches?.[0] ?? "%";
 
-		const tokens = await commands.executeCommand<SemanticTokens>(
-			BuiltInCommands.ProvideDocumentRangeSemanticTokens,
-			editor.document.uri,
-			line.range,
-			new CancellationTokenSource().token
-		);
+		const fixed = match
+			.replace(/\$?{.*}/, "%") // replace interpolated values - {0}, {variable2}, ${something}, ${variable23}
+			.replace(/^["'`]|["'`]$/, "") // replace leading and trailing quotes - ' / " / `
+			.trim();
 
-		const strings = this.extractStringsFromTokens(tokens, editor.document, tokenLegend);
-
-		strings.forEach(s => {
-			Logger.log(`${s}`);
-		});
+		return fixed;
 	}
 
 	private extractStringsFromTokens(
