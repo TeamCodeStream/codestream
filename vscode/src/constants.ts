@@ -50,6 +50,8 @@ export enum BuiltInCommands {
 	FormatSelection = "editor.action.formatSelection",
 	NextEditor = "workbench.action.nextEditor",
 	Open = "vscode.open",
+	ProvideDocumentRangeSemanticTokensLegend = "vscode.provideDocumentRangeSemanticTokensLegend",
+	ProvideDocumentRangeSemanticTokens = "vscode.provideDocumentRangeSemanticTokens",
 	PreviewHtml = "vscode.previewHtml",
 	RevealLine = "revealLine",
 	ReloadWindow = "workbench.action.reloadWindow",

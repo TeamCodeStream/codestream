@@ -635,13 +635,13 @@ export class Commands implements Disposable {
 		const line = editor.document.lineAt(editor.selection.start.line);
 
 		const tokenLegend = await commands.executeCommand<SemanticTokensLegend>(
-			"vscode.provideDocumentRangeSemanticTokensLegend",
+			BuiltInCommands.ProvideDocumentRangeSemanticTokensLegend,
 			editor.document.uri,
 			line.range
 		);
 
 		const tokens = await commands.executeCommand<SemanticTokens>(
-			"vscode.provideDocumentRangeSemanticTokens",
+			BuiltInCommands.ProvideDocumentRangeSemanticTokens,
 			editor.document.uri,
 			line.range,
 			new CancellationTokenSource().token
