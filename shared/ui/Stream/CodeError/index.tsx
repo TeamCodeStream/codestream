@@ -1180,7 +1180,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 		};
 	}, shallowEqual);
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
-	const { codeError, errorGroup } = derivedState;
+	const { codeError, errorGroup, currentCodeErrorData } = derivedState;
 	const isPostThreadsLoading: boolean | undefined = useAppSelector(
 		state => state.posts.postThreadsLoading[codeError.postId]
 	);
@@ -1270,6 +1270,20 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	const { stackTraces } = codeError as CSCodeError;
 	const stackTrace = stackTraces && stackTraces[0] && stackTraces[0].lines;
 	const stackTraceText = stackTraces && stackTraces[0] && stackTraces[0].text;
+	// If we have a valid source map for the stack trace, use it insetad.
+	if (currentCodeErrorData.stackSourceMap?.stackTrace?.length > 0) {
+		stackTrace.forEach(entry => {
+			const matchingEntry = currentCodeErrorData.stackSourceMap.stackTrace.find(sourceMapEntry => {
+				return sourceMapEntry.original.fileName === entry.fileFullPath;
+			});
+
+			if (matchingEntry && matchingEntry.mapped) {
+				entry.fileFullPath = matchingEntry.mapped.fileName;
+				entry.column = matchingEntry.mapped.columnNumber;
+				entry.line = matchingEntry.mapped.lineNumber;
+			}
+		});
+	}
 
 	// This can be incredibly complex with nested anonymous inner functions. For the current approach
 	// we rely on the stack trace having a named method for us to latch on to send for error analysis.

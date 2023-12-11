@@ -1580,6 +1580,7 @@ export interface GetObservabilityErrorGroupMetadataResponse {
 	entityId?: string;
 	remote?: string;
 	relatedRepos: RelatedRepository;
+	stackSourceMap?: any;
 }
 
 export const GetObservabilityErrorGroupMetadataRequestType = new RequestType<

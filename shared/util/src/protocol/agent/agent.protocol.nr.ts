@@ -30,6 +30,7 @@ export interface ResolveStackTraceRequest {
 	repoId: string;
 	ref: string;
 	codeErrorId: string;
+	stackSourceMap: any;
 }
 
 export interface WarningOrError {

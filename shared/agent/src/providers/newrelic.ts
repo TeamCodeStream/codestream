@@ -857,6 +857,7 @@ export class NewRelicProvider
 				return {
 					entityId: metricResponse?.entityGuid,
 					occurrenceId: metricResponse?.traceId,
+					stackSourceMap: metricResponse?.stackSourceMap,
 					relatedRepos: mappedRepoEntities || [],
 				} as GetObservabilityErrorGroupMetadataResponse;
 			}
@@ -4391,6 +4392,7 @@ export class NewRelicProvider
 		| {
 				entityGuid: string;
 				traceId?: string;
+				stackSourceMap?: string;
 		  }
 		| undefined
 	> {
@@ -4443,7 +4445,12 @@ export class NewRelicProvider
 						nrql: {
 							results: {
 								entityGuid: string;
-								id: string;
+								id?: string;
+								stackHash?: string;
+								stackTrace?: string;
+								monitorAccountId?: string;
+								appId?: number;
+								releaseIds?: string;
 							}[];
 						};
 					};
@@ -4453,7 +4460,14 @@ export class NewRelicProvider
 			});
 
 			if (errorTraceResponse) {
-				const errorTraceResult = errorTraceResponse.actor.account.nrql.results[0];
+				const errorTraceResult: {
+					stackHash?: string;
+					id?: string;
+					stackTrace?: string;
+					monitorAccountId?: string;
+					appId?: number;
+					releaseIds?: string;
+				} = errorTraceResponse.actor.account.nrql.results[0];
 				if (!errorTraceResult) {
 					ContextLogger.warn("getMetricData missing errorTraceResult", {
 						accountId: accountId,
@@ -4465,9 +4479,26 @@ export class NewRelicProvider
 					};
 				}
 				if (errorTraceResult) {
+					let stackSourceMap;
+
+					if (
+						errorTraceResult.stackTrace &&
+						errorTraceResult.monitorAccountId &&
+						errorTraceResult.appId &&
+						errorTraceResult.releaseIds
+					) {
+						stackSourceMap = await this.fetchSourceMap(
+							errorTraceResult.stackTrace,
+							errorTraceResult.monitorAccountId,
+							errorTraceResult.appId,
+							errorTraceResult.releaseIds
+						);
+					}
+
 					return {
 						entityGuid: entityGuid || errorGroupResponse.entityGuid,
-						traceId: errorTraceResult.id,
+						traceId: errorTraceResult.id || errorTraceResult.stackHash,
+						stackSourceMap,
 					};
 				}
 			}
@@ -4476,6 +4507,55 @@ export class NewRelicProvider
 				errorGroupGuid: errorGroupGuid,
 			});
 		}
+		return undefined;
+	}
+
+	private async fetchSourceMap(
+		stackTrace: string,
+		monitorAccountId: string,
+		appId: number,
+		releaseIds: string
+	): Promise<any> {
+		let serviceUrlChunk = "service";
+		if (this.productUrl.includes("staging")) {
+			serviceUrlChunk = "staging-service";
+		}
+
+		const url = `https://sourcemaps.${serviceUrlChunk}.newrelic.com/ui/accounts/${monitorAccountId}/applications/${appId}/stacktraces?releaseIds=${encodeURIComponent(
+			releaseIds
+		)}`;
+
+		let headers: { [key: string]: string } = {
+			"Content-Type": "text/plain",
+		};
+
+		const token = this.accessToken;
+		if (token) {
+			if (this._providerInfo?.tokenType === "access") {
+				headers["x-access-token"] = token;
+			} else {
+				headers["x-id-token"] = token;
+			}
+		}
+
+		try {
+			//@ts-ignore
+			//https://stackoverflow.com/questions/42293176/cannot-find-name-fetch
+			const response = await fetch(url, {
+				method: "POST",
+				headers: headers,
+				body: stackTrace,
+			});
+
+			if (!response.ok) {
+				throw new Error(`HTTP error! Status: ${response.status}`);
+			}
+			const responseData = await response.json();
+			return responseData;
+		} catch (error) {
+			ContextLogger.error(error, "fetchSourceMap");
+		}
+
 		return undefined;
 	}
 

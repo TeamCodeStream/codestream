@@ -192,6 +192,7 @@ export class NRManager {
 		ref,
 		occurrenceId,
 		codeErrorId,
+		stackSourceMap,
 	}: ResolveStackTraceRequest): Promise<ResolveStackTraceResponse> {
 		const { git, repos } = SessionContainer.instance();
 		const matchingRepo = await git.getRepositoryById(repoId);
@@ -282,7 +283,24 @@ export class NRManager {
 			lines: [],
 		};
 
+		// ERIC HERE, do mapping here.
+
 		if (parsedStackInfo.lines) {
+			if (stackSourceMap?.stackTrace?.length > 0) {
+				parsedStackInfo.lines.forEach(entry => {
+					//@ts-ignore @TODO: typescriptify
+					const matchingEntry = stackSourceMap.stackTrace.find(sourceMapEntry => {
+						return sourceMapEntry.original.fileName === entry.fileFullPath;
+					});
+
+					if (matchingEntry && matchingEntry.mapped) {
+						entry.fileFullPath = matchingEntry.mapped.fileName;
+						entry.column = matchingEntry.mapped.columnNumber;
+						entry.line = matchingEntry.mapped.lineNumber;
+					}
+				});
+			}
+
 			void this.resolveStackTraceLines(
 				parsedStackInfo,
 				resolvedStackInfo,

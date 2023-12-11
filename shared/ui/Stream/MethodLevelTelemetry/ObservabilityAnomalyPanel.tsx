@@ -352,6 +352,7 @@ export const ObservabilityAnomalyPanel = () => {
 																			pendingErrorGroupGuid: _.errorGroupGuid,
 																			openType: "CLM Details",
 																			remote: _?.remote || undefined,
+																			stackSourceMap: response?.stackSourceMap,
 																		})
 																	);
 																} catch (ex) {
