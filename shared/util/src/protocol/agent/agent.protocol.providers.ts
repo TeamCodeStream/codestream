@@ -2268,12 +2268,14 @@ export interface EntityGoldenMetrics {
 		value: number;
 		displayValue: string;
 	}[];
-	pillsData: {
-		errorRateFinalData: {
-			percentChange: number;
+	pillsData?: {
+		errorRateFinalData?: {
+			percentChange?: number;
+			level?: string;
 		};
-		responseTimeFinalData: {
-			percentChange: number;
+		responseTimeFinalData?: {
+			percentChange?: number;
+			level?: string;
 		};
 	};
 }

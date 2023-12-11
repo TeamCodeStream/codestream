@@ -3151,12 +3151,33 @@ export class NewRelicProvider
 				(currentMetrics.responseTimeMs - previousMetrics.responseTimeMs) /
 				(currentMetrics.responseTimeMs * 100);
 
+			const pillsErrorChange = errorRatePercentageChange
+				? Math.floor(errorRatePercentageChange)
+				: undefined;
+			const pillsResponseTimeChange = responseTimePercentageChange
+				? Math.floor(responseTimePercentageChange)
+				: undefined;
+
+			function pillsSeverity(num: number) {
+				if (num > 0) {
+					if (num >= 0 && num <= 5) {
+						return "warning";
+					} else {
+						return "critical";
+					}
+				} else {
+					return "good";
+				}
+			}
+
 			return {
 				errorRateFinalData: {
-					percentChange: errorRatePercentageChange,
+					percentChange: pillsErrorChange,
+					level: pillsErrorChange ? pillsSeverity(pillsErrorChange) : undefined,
 				},
 				responseTimeFinalData: {
-					percentChange: responseTimePercentageChange,
+					percentChange: pillsResponseTimeChange,
+					level: pillsResponseTimeChange ? pillsSeverity(pillsResponseTimeChange) : undefined,
 				},
 			};
 		} catch (err) {
