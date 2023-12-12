@@ -287,10 +287,11 @@ export function reduceContext(
 			};
 		}
 
-		case ContextActionsType.SetCurrentObservabilityLogEntity: {
+		case ContextActionsType.SetCurrentObservabilityLogSearchContext: {
 			return {
 				...state,
 				currentObservabilityLogEntityGuid: action.payload.entityGuid,
+				currentObservabilityLogSearchTerm: action.payload.searchTerm,
 			};
 		}
 

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
 import { Dialog } from "../src/components/Dialog";
 import { PanelHeader } from "../src/components/PanelHeader";
@@ -124,8 +124,16 @@ export default function ObservabilityLogsPanel() {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
 			entityGuid: state.context.currentObservabilityLogEntityGuid,
+			searchTerm: state.context.currentObservabilityLogSearchTerm,
 		};
 	});
+
+	useEffect(() => {
+		if (derivedState.searchTerm && derivedState.entityGuid) {
+			setQuery(derivedState.searchTerm);
+			fetchLogs(derivedState.entityGuid, derivedState.searchTerm);
+		}
+	}, [derivedState.searchTerm]);
 
 	useDidMount(() => {
 		const defaultOption: SelectedOption = {
@@ -155,6 +163,11 @@ export default function ObservabilityLogsPanel() {
 		}
 
 		fetchFieldDefinitions(derivedState.entityGuid);
+
+		if (derivedState.searchTerm) {
+			setQuery(derivedState.searchTerm);
+			fetchLogs(derivedState.entityGuid, derivedState.searchTerm);
+		}
 	});
 
 	const handleError = (message: string) => {
@@ -195,7 +208,7 @@ export default function ObservabilityLogsPanel() {
 		}
 	};
 
-	const fetchLogs = async (entityGuid: string) => {
+	const fetchLogs = async (entityGuid: string, searchTerm?: string) => {
 		try {
 			setLogError(undefined);
 			setHasSearched(true);
@@ -203,9 +216,11 @@ export default function ObservabilityLogsPanel() {
 			setResults([]);
 			setTotalItems(0);
 
+			const filterText = searchTerm || query;
+
 			const response = await HostApi.instance.send(GetLogsRequestType, {
 				entityGuid,
-				filterText: query,
+				filterText,
 				limit: "MAX",
 				since: selectedSinceOption?.value || "30 MINUTES AGO",
 				order: {

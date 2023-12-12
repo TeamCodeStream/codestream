@@ -33,7 +33,10 @@ import {
 	ObservabilityLoadingServiceEntity,
 } from "@codestream/webview/Stream/ObservabilityLoading";
 import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
-import { setCurrentObservabilityLogEntity, setRefreshAnomalies } from "../store/context/actions";
+import {
+	setCurrentObservabilityLogSearchContext,
+	setRefreshAnomalies,
+} from "../store/context/actions";
 
 import { HealthIcon } from "@codestream/webview/src/components/HealthIcon";
 import {
@@ -1349,7 +1352,7 @@ export const Observability = React.memo((props: Props) => {
 																										e.preventDefault();
 																										e.stopPropagation();
 																										dispatch(
-																											setCurrentObservabilityLogEntity(
+																											setCurrentObservabilityLogSearchContext(
 																												ea.entityGuid
 																											)
 																										);
