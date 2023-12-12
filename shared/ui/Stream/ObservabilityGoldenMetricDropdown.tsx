@@ -33,6 +33,52 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 
 	const { errors, entityGuid, entityGoldenMetrics, loadingGoldenMetrics, noDropdown } = props;
 
+	//fake data to test pills
+	const pillsData = {
+		errorRateFinalData: {
+			percentChange: 4,
+			level: "critical",
+		},
+		responseTimeFinalData: {
+			percentChange: 7,
+			level: "critical",
+		},
+	};
+
+	function displayPillsData(indicator: string) {
+		if (
+			(indicator === "errorRate" && pillsData.errorRateFinalData.level === "critical") ||
+			(indicator === "errorRate" && pillsData.errorRateFinalData.level === "high")
+		) {
+			if (pillsData.errorRateFinalData.level === "critical") {
+				return (
+					<div style={{ color: "#DF2D24" }}>(+{pillsData.errorRateFinalData.percentChange}%)</div>
+				);
+			} else if (pillsData.errorRateFinalData.level === "high") {
+				return (
+					<div style={{ color: "#FFD23D" }}>(+{pillsData.errorRateFinalData.percentChange}%)</div>
+				);
+			}
+		} else if (
+			(indicator === "responseTimeMs" && pillsData.responseTimeFinalData.level === "critical") ||
+			(indicator === "responseTimeMs" && pillsData.responseTimeFinalData.level === "high")
+		) {
+			if (pillsData.responseTimeFinalData.level === "critical") {
+				return (
+					<div style={{ color: "#DF2D24" }}>
+						(+{pillsData.responseTimeFinalData.percentChange}%)
+					</div>
+				);
+			} else if (pillsData.responseTimeFinalData.level === "high") {
+				return (
+					<div style={{ color: "#FFD23D" }}>
+						(+{pillsData.responseTimeFinalData.percentChange}%)
+					</div>
+				);
+			}
+		}
+	}
+
 	const errorTitle: string | undefined =
 		errors.length === 0 ? undefined : `Last request failed:\n${errors.join("\n")}`;
 
@@ -58,6 +104,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 									{gm.value || gm.value === 0 ? (
 										<>
 											{gm.displayValue} {gm.displayUnit && <>{gm.displayUnit}</>}
+											{displayPillsData(gm.name) && <>{displayPillsData(gm.name)}</>}
 										</>
 									) : (
 										<>No Data</>
