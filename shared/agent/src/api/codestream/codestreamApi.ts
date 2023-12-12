@@ -2736,6 +2736,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 				}
 
 				if (init.headers instanceof Headers) {
+					init.headers.append("x-cs-override-maintenance-mode", "xyz123");
 					init.headers.append("Accept", "application/json");
 					init.headers.append("Content-Type", "application/json");
 
@@ -3022,6 +3023,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 			const resp = await customFetch(this.baseUrl + "/no-auth/capabilities", {
 				timeout: 5000,
+				headers: {
+					"x-cs-override-maintenance-mode": "xyz123",
+				},
 			});
 
 			Logger.log(`API server status: ${resp.status}`);

@@ -151,8 +151,8 @@ const Root = connect(mapStateToProps)(props => {
 		return (
 			<RoadBlock title="Update Required">
 				<p>
-					Please update to the latest version of CodeStream to continue. You may need to update your IDE as well if it isn't
-					recent.
+					Please update to the latest version of CodeStream to continue. You may need to update your
+					IDE as well if it isn't recent.
 				</p>
 				{getIdeInstallationInstructions(props)}
 			</RoadBlock>

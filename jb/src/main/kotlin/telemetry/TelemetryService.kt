@@ -24,6 +24,7 @@ class TelemetryService(val project: Project) {
             val jsonStr = HttpRequests
                 .request("${url.trim()}/no-auth/nr-ingest-key")
                 .tuner { c -> c.setRequestProperty("X-CS-Plugin-IDE", Ide.name) }
+                .tuner { c -> c.setRequestProperty("X-CS-Override-Maintenance-Mode", "xyz123") }
                 .connectTimeout(5000)
                 .readTimeout(5000)
                 .readString()

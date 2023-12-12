@@ -1,11 +1,12 @@
 import { isEmpty } from "lodash";
-import { errors, fetch, Request, RequestInfo, RequestInit, Response } from "undici";
+import { errors, fetch, HeadersInit, Request, RequestInfo, RequestInit, Response } from "undici";
 import { Logger } from "../logger";
 import { Functions } from "./function";
 import { handleLimit, InternalRateError } from "../rateLimits";
 
 export interface ExtraRequestInit extends RequestInit {
 	timeout?: number;
+	headers?: HeadersInit;
 }
 
 const noLogRetries = [
@@ -84,6 +85,7 @@ export async function fetchCore(
 			}
 		}, init.timeout ?? 30000);
 		init.signal = controller.signal;
+		init.headers!["x-cs-override-maintenance-mode"] = "xyz123";
 		const resp = await fetch(url, init);
 		if (resp.status < 200 || resp.status > 299) {
 			if (resp.status < 400 || resp.status >= 500) {

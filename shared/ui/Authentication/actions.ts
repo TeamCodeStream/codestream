@@ -136,6 +136,7 @@ export const startSSOSignin =
 			query.anonUserId = anonymousId;
 		}
 
+		query._overrideMaintenanceMode = "xyz123";
 		const queryString = Object.keys(query)
 			.map(key => `${key}=${encodeURIComponent(query[key])}`)
 			.join("&");

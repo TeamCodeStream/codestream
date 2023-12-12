@@ -61,6 +61,10 @@ namespace CodeStream.VisualStudio.Shared.Services
 					"X-CS-Plugin-IDE",
 					settingsManager.GetIdeInfo().Name
 				);
+				client.DefaultRequestHeaders.Add(
+					"X-CS-Override-Maintenance-Mode",
+					"xyz123"
+				);
 				client.BaseAddress = new Uri(settingsManager.ServerUrl);
 
 				Log.Information("Calling API for Ingest Keys");

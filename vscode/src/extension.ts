@@ -117,7 +117,8 @@ export async function activate(context: ExtensionContext) {
 		const requestInit: RequestInit | undefined = {
 			agent: proxyAgent,
 			headers: {
-				"X-CS-Plugin-IDE": IDE_NAME
+				"X-CS-Plugin-IDE": IDE_NAME,
+				"X-CS-Override-Maintenance-Mode": "xyz123"
 			}
 		};
 
