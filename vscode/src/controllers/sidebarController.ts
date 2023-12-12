@@ -51,6 +51,8 @@ import {
 	HostDidChangeWorkspaceFoldersNotificationType,
 	HostDidLogoutNotificationType,
 	HostDidReceiveRequestNotificationType,
+	InitiateLogSearchNotification,
+	InitiateLogSearchNotificationType,
 	InsertTextRequestType,
 	IpcRoutes,
 	isIpcRequestMessage,
@@ -527,6 +529,22 @@ export class SidebarController implements Disposable {
 			return;
 		}
 		this._sidebar!.notify(ViewMethodLevelTelemetryNotificationType, args);
+	}
+
+	@log()
+	async logSearch(args: InitiateLogSearchNotification): Promise<void> {
+		if (this.visible) {
+			await this._sidebar!.show();
+		} else {
+			await this.show();
+		}
+
+		if (!this._sidebar) {
+			// it's possible that the webview is closing...
+			return;
+		}
+
+		this._sidebar!.notify(InitiateLogSearchNotificationType, args);
 	}
 
 	@log()

@@ -76,6 +76,7 @@ import {
 	ViewMethodLevelTelemetryNotificationType,
 	WebviewDidInitializeNotificationType,
 	ViewAnomalyNotificationType,
+	InitiateLogSearchNotificationType,
 } from "./ipc/webview.protocol";
 import { WebviewPanels } from "@codestream/protocols/api";
 import { store } from "./store";
@@ -101,6 +102,7 @@ import {
 	setCurrentCodemark,
 	setCurrentMethodLevelTelemetry,
 	setCurrentObservabilityAnomaly,
+	setCurrentObservabilityLogSearchContext,
 	setCurrentPullRequest,
 	setCurrentReview,
 	setCurrentStream,
@@ -982,6 +984,19 @@ function listenForEvents(store) {
 				data: params.directives.directives,
 			})
 		);
+	});
+
+	api.on(InitiateLogSearchNotificationType, params => {
+		const { session, users } = store.getState();
+		const currentUser = session.userId ? (users[session.userId] as CSMe) : null;
+		const currentRepoId = currentUser?.preferences?.currentO11yRepoId;
+
+		const currentEntityGuid = currentRepoId
+			? (currentUser?.preferences?.activeO11y?.[currentRepoId] as string)
+			: undefined;
+
+		store.dispatch(setCurrentObservabilityLogSearchContext(currentEntityGuid, params.searchTerm));
+		store.dispatch(openPanel(WebviewPanels.ObservabilityLogsSearch));
 	});
 }
 

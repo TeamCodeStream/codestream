@@ -631,10 +631,10 @@ export class Commands implements Disposable {
 		if (editor === undefined) return;
 		if (!editor.selection.isSingleLine) return; // no multiple line highlights...yet
 
-		const line = editor.document.lineAt(editor.selection.start.line);
-
 		const regExString = this.extractStringsFromLine(editor.document, editor.selection.start.line);
 		Logger.log(`REGEX: ${regExString}`);
+
+		await Container.sidebar.logSearch({ searchTerm: regExString });
 
 		// const tokenLegend = await commands.executeCommand<SemanticTokensLegend>(
 		// 	BuiltInCommands.ProvideDocumentRangeSemanticTokensLegend,
@@ -659,15 +659,15 @@ export class Commands implements Disposable {
 	private extractStringsFromLine(document: TextDocument, lineNumber: number): string {
 		const line = document.lineAt(lineNumber);
 
-		// https://regex101.com/r/Pky4GV/4
+		// https://regex101.com/r/Pky4GV/6
 		const matches = line.text.match(
 			/"(?:[^"]|"")*(?:"|$)|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^'\\]|\\.)*`/gim
 		);
 		const match = matches?.[0] ?? "%";
 
 		const fixed = match
-			.replace(/\$?{.*}/, "%") // replace interpolated values - {0}, {variable2}, ${something}, ${variable23}
-			.replace(/^["'`]|["'`]$/, "") // replace leading and trailing quotes - ' / " / `
+			.replace(/\$?{.*}/g, "") // replace interpolated values - {0}, {variable2}, ${something}, ${variable23}
+			.replace(/^["'`]|["'`]$/g, "") // replace leading and trailing quotes - ' / " / `
 			.trim();
 
 		return fixed;

@@ -204,3 +204,13 @@ export const HandlePullRequestDirectivesNotificationType = new NotificationType<
 	HandlePullRequestDirectivesNotification,
 	void
 >(`${IpcRoutes.Webview}/pullRequest/handleDirectives`);
+
+export interface InitiateLogSearchNotification {
+	entityGuid?: string;
+	searchTerm?: string;
+}
+
+export const InitiateLogSearchNotificationType = new NotificationType<
+	InitiateLogSearchNotification,
+	void
+>(`${IpcRoutes.Webview}/logs/search`);
