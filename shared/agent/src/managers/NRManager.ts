@@ -28,6 +28,7 @@ import {
 	ResolveStackTraceRequestType,
 	ResolveStackTraceResponse,
 	WarningOrError,
+	SourceMapEntry,
 } from "@codestream/protocols/agent";
 import { CSStackTraceInfo, CSStackTraceLine } from "@codestream/protocols/api";
 import { structuredPatch } from "diff";
@@ -283,13 +284,10 @@ export class NRManager {
 			lines: [],
 		};
 
-		// ERIC HERE, do mapping here.
-
 		if (parsedStackInfo.lines) {
 			if (stackSourceMap?.stackTrace?.length > 0) {
 				parsedStackInfo.lines.forEach(entry => {
-					//@ts-ignore @TODO: typescriptify
-					const matchingEntry = stackSourceMap.stackTrace.find(sourceMapEntry => {
+					const matchingEntry = stackSourceMap.stackTrace.find((sourceMapEntry: SourceMapEntry) => {
 						return sourceMapEntry.original.fileName === entry.fileFullPath;
 					});
 

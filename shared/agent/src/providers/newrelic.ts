@@ -1017,7 +1017,7 @@ export class NewRelicProvider
 					const entitiesReponse = await this.findRelatedEntityByRepositoryGuids(
 						repositoryEntitiesResponse?.entities?.map(_ => _.guid)
 					);
-					// find the APPLICATIONm, SERVICE (otel), and AWSLAMBDA entities themselves
+					// find the APPLICATION, SERVICE (otel), and AWSLAMBDA entities themselves
 					applicationAssociations = entitiesReponse?.actor?.entities?.filter(
 						_ =>
 							_?.relatedEntities?.results?.filter(

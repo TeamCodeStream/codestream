@@ -253,7 +253,6 @@ export const ErrorRow = (props: {
 };
 
 // EXT for Otel, INFRA for AWSLambda
-// const ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS = ["APM", "BROWSER", "MOBILE", "EXT", "INFRA"];
 const ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS = ["APM", "BROWSER", "MOBILE"];
 const EMPTY_ARRAY = [];
 

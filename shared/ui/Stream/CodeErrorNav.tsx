@@ -516,20 +516,6 @@ export function CodeErrorNav(props: Props) {
 					refToUse = errorGroupResult.errorGroup.commit || errorGroupResult.errorGroup.releaseTag;
 				}
 
-				//ERIC HERE - pass new source map here\
-
-				// if (derivedState.currentCodeErrorData.stackSourceMap?.stackTrace?.length > 0) {
-				// 	stackTrace.forEach(entry => {
-				// 		const matchingEntry = currentCodeErrorData.stackSourceMap.stackTrace.find(sourceMapEntry => {
-				// 			return sourceMapEntry.original.fileName === entry.fileFullPath;
-				// 		});
-
-				// 		if (matchingEntry && matchingEntry.mapped) {
-				// 			entry.fileFullPath = matchingEntry.mapped.fileName;
-				// 		}
-				// 	});
-				// }
-
 				if (stack) {
 					stackInfo = (await resolveStackTrace(
 						errorGroupGuidToUse!,

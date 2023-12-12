@@ -38,6 +38,17 @@ export interface WarningOrError {
 	helpUrl?: string;
 }
 
+export interface SourceMapEntry {
+	original: {
+		fileName: string;
+	};
+	mapped?: {
+		fileName: string;
+		columnNumber: number;
+		lineNumber: number;
+	};
+}
+
 export interface ResolveStackTraceResponse {
 	parsedStackInfo?: CSStackTraceInfo; // this is parsed info relative to the given sha, to be stored
 	resolvedStackInfo?: CSStackTraceInfo; // this is relative to the user's current sha, ephemeral
