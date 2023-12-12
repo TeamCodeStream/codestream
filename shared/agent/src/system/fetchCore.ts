@@ -86,10 +86,7 @@ export async function fetchCore(
 		}, init.timeout ?? 30000);
 		init.signal = controller.signal;
 
-		let headers: HeadersInit = {
-			"x-cs-override-maintenance-mode": "xyz123",
-		};
-		init.headers = headers;
+		(init.headers as { [key: string]: string })["x-cs-override-maintenance-mode"] = "xyz123";
 
 		const resp = await fetch(url, init);
 		if (resp.status < 200 || resp.status > 299) {
