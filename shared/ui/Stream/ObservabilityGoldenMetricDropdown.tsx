@@ -33,22 +33,18 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 
 	const { errors, entityGuid, entityGoldenMetrics, loadingGoldenMetrics, noDropdown } = props;
 
-	//fake data to test pills
-	const pillsData = {
-		errorRateFinalData: {
-			percentChange: 4,
-			level: "critical",
-		},
-		responseTimeFinalData: {
-			percentChange: 7,
-			level: "critical",
-		},
-	};
+	const pillsData = entityGoldenMetrics?.pillsData;
 
 	function displayPillsData(indicator: string) {
 		if (
-			(indicator === "errorRate" && pillsData.errorRateFinalData.level === "critical") ||
-			(indicator === "errorRate" && pillsData.errorRateFinalData.level === "high")
+			(indicator === "errorRate" &&
+				pillsData &&
+				pillsData.errorRateFinalData &&
+				pillsData.errorRateFinalData.level === "critical") ||
+			(indicator === "errorRate" &&
+				pillsData &&
+				pillsData.errorRateFinalData &&
+				pillsData.errorRateFinalData.level === "high")
 		) {
 			if (pillsData.errorRateFinalData.level === "critical") {
 				return (
@@ -60,8 +56,14 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 				);
 			}
 		} else if (
-			(indicator === "responseTimeMs" && pillsData.responseTimeFinalData.level === "critical") ||
-			(indicator === "responseTimeMs" && pillsData.responseTimeFinalData.level === "high")
+			(indicator === "responseTimeMs" &&
+				pillsData &&
+				pillsData.responseTimeFinalData &&
+				pillsData.responseTimeFinalData.level === "critical") ||
+			(indicator === "responseTimeMs" &&
+				pillsData &&
+				pillsData.responseTimeFinalData &&
+				pillsData.responseTimeFinalData.level === "high")
 		) {
 			if (pillsData.responseTimeFinalData.level === "critical") {
 				return (
@@ -77,6 +79,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 				);
 			}
 		}
+		return;
 	}
 
 	const errorTitle: string | undefined =
