@@ -65,29 +65,9 @@ function Build-AgentAndWebview {
 
 	& npm run bundle
 	if ($LastExitCode -ne 0) {
-		throw "Bundling webview failed"
+		throw "Bundling agent & webview failed"
 	}
-	Write-Log "Bundling webview completed"
-
-	Write-Log "Packaging agent..."
-
-	& npm run agent:pkg
-	if ($LastExitCode -ne 0) {
-		throw "Agent packaging failed"
-	}
-
-	if ((Test-Path -Path "../shared/agent/dist/agent-vs-2019.exe") -eq $False) {
-		throw "Creating packaged artifacts failed, ensure the agent has been built"
-	}
-
-	Copy-Item -Path ..\shared\agent\dist\agent-vs-2019.exe -Destination src\CodeStream.VisualStudio.Vsix.x86\agent\agent.exe -Force
-	Copy-Item -Path ..\shared\agent\dist\agent-vs-2022.exe -Destination src\CodeStream.VisualStudio.Vsix.x64\agent\agent.exe -Force
-
-	if ($LastExitCode -ne 0) {
-		throw "Copying packaged artifacts failed"
-	}
-
-	Write-Log "Packaging agent completed"
+	Write-Log "Bundling agent & webview completed"
 
 	Write-Log "Build-AgentAndWebview completed in {$(Get-ElapsedTime($timer))}"
 }
