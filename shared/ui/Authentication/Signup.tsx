@@ -442,7 +442,7 @@ export const Signup = (props: Props) => {
 													onClick={event => onClickNewRelicSignup(event)}
 												>
 													<Icon name="newrelic" />
-													<div className="copy">New Relic</div>
+													<div className="copy">Sign in to New Relic</div>
 													<Icon name="chevron-right" />
 												</Button>
 											</>
