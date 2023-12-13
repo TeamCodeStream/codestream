@@ -38,4 +38,7 @@ Write-Host '************ npm install -g lightercollective'
 
 Write-Host 'DISABLE_OPENCOLLECTIVE is set to' $env:DISABLE_OPENCOLLECTIVE
 
+Copy-Item "$($env:TCBUILD_SUPPLEMENTAL_SOFTWARE_PATH)\node\node-v18.15.0-win-x64" -Destination "..\vs\src\CodeStream.VisualStudio.Vsix.x64\agent\node.exe"
+Copy-Item "$($env:TCBUILD_SUPPLEMENTAL_SOFTWARE_PATH)\node\node-v18.15.0-win-x86" -Destination "..\vs\src\CodeStream.VisualStudio.Vsix.x86\agent\node.exe"
+
 . $PSScriptRoot\Bump-Version.ps1 -BumpBuild -BuildNumber $env:BUILD_NUMBER -Environment $assetEnv
