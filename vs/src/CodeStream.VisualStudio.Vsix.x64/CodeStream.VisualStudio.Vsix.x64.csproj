@@ -97,7 +97,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Condition="'$(Configuration)' == 'Debug'" Include="..\resources\agent\node_modules\**\*.*" Link="agent\node_modules\%(RecursiveDir)%(Filename)%(Extension)" IncludeInVSIX="True" />  
+    <Content Include="..\resources\agent\node_modules\**\*.*" Link="agent\node_modules\%(RecursiveDir)%(Filename)%(Extension)" IncludeInVSIX="True" />
+    <Content Include="agent\node.exe" Condition="'$(Configuration)' == 'Release'">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\resources\assets\dark\add.svg">
@@ -280,11 +283,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="agent\agent.exe" Condition="'$(Configuration)' == 'Release'">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="agent\agent.js" Condition="'$(Configuration)' == 'Debug'">
+    <Content Include="agent\agent.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -522,7 +521,7 @@
     <None Include="..\resources\CodeStream.VisualStudio.Settings.json">
       <Link>CodeStream.VisualStudio.Settings.json</Link>
     </None>
-    <Content Include="agent\agent.js.map" Condition="'$(Configuration)' == 'Debug'">
+    <Content Include="agent\agent.js.map">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
