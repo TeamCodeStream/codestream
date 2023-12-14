@@ -48,10 +48,11 @@ const copy = copyPlugin({
 			to: target,
 			options: { rename: "webview.html" },
 		},
-		{
-			from: path.resolve(target, "index.js.map"),
-			to: path.join(agentDistTarget, "index.js.map"),
-		},
+		//	I don't understand why we're copying the webview map file into the agent dist directory here? Maybe a mistake?
+		// {
+		// 	from: path.resolve(target, "index.js.map"),
+		// 	to: path.join(agentDistTarget, "index.js.map"),
+		// },
 	]
 });
 
