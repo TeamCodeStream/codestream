@@ -8,6 +8,8 @@ import { ObservabilityLoadingGoldenMetrics } from "@codestream/webview/Stream/Ob
 import { useAppSelector, useAppDispatch } from "../utilities/hooks";
 import { CodeStreamState } from "@codestream/webview/store";
 import { setUserPreference } from "./actions";
+import { HostApi } from "../webview-api";
+import { OpenUrlRequestType } from "../ipc/host.protocol";
 
 interface Props {
 	entityGoldenMetrics: EntityGoldenMetrics | undefined;
@@ -48,11 +50,33 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 		) {
 			if (pillsData.errorRateFinalData.level === "critical") {
 				return (
-					<span style={{ color: "#DF2D24" }}>(+{pillsData.errorRateFinalData.percentChange}%)</span>
+					<span
+						onClick={e => {
+							e.preventDefault();
+							e.stopPropagation();
+							HostApi.instance.send(OpenUrlRequestType, {
+								url: pillsData.errorRateFinalData ? pillsData.errorRateFinalData.permalinkUrl : "",
+							});
+						}}
+						style={{ color: "#DF2D24" }}
+					>
+						(+{pillsData.errorRateFinalData.percentChange}%)
+					</span>
 				);
 			} else if (pillsData.errorRateFinalData.level === "high") {
 				return (
-					<span style={{ color: "#FFD23D" }}>(+{pillsData.errorRateFinalData.percentChange}%)</span>
+					<span
+						onClick={e => {
+							e.preventDefault();
+							e.stopPropagation();
+							HostApi.instance.send(OpenUrlRequestType, {
+								url: pillsData.errorRateFinalData ? pillsData.errorRateFinalData.permalinkUrl : "",
+							});
+						}}
+						style={{ color: "#FFD23D" }}
+					>
+						(+{pillsData.errorRateFinalData.percentChange}%)
+					</span>
 				);
 			}
 		} else if (
@@ -67,13 +91,31 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 		) {
 			if (pillsData.responseTimeFinalData.level === "critical") {
 				return (
-					<span style={{ color: "#DF2D24" }}>
+					<span
+						onClick={e => {
+							e.preventDefault();
+							e.stopPropagation();
+							HostApi.instance.send(OpenUrlRequestType, {
+								url: pillsData.errorRateFinalData ? pillsData.errorRateFinalData.permalinkUrl : "",
+							});
+						}}
+						style={{ color: "#DF2D24" }}
+					>
 						(+{pillsData.responseTimeFinalData.percentChange}%)
 					</span>
 				);
 			} else if (pillsData.responseTimeFinalData.level === "high") {
 				return (
-					<span style={{ color: "#FFD23D" }}>
+					<span
+						onClick={e => {
+							e.preventDefault();
+							e.stopPropagation();
+							HostApi.instance.send(OpenUrlRequestType, {
+								url: pillsData.errorRateFinalData ? pillsData.errorRateFinalData.permalinkUrl : "",
+							});
+						}}
+						style={{ color: "#FFD23D" }}
+					>
 						(+{pillsData.responseTimeFinalData.percentChange}%)
 					</span>
 				);

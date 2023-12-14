@@ -3080,9 +3080,12 @@ export class NewRelicProvider
 								}[];
 							};
 						};
+						entity: {
+							permalink: string;
+						};
 					};
 				}>(
-					`query fetchErrorRate($accountId:Int!) {
+					`query fetchErrorRate($accountId:Int!, $entityGuid:EntityGuid!) {
 				actor {
 					account(id: $accountId) {
 						nrql(
@@ -3090,14 +3093,20 @@ export class NewRelicProvider
 							query: "${countQuery}"
 						) { nrql results }
 					}
+					entity(guid: $entityGuid) {
+						permalink
+					}
 				}
 			}`,
 					{
 						accountId: accountId,
+						entityGuid: entityGuid,
 					}
 				);
 
 				const countResults = countResponse.actor.account.nrql?.results[0];
+
+				const permalinkUrl = countResponse.actor.entity.permalink;
 
 				const { deploymentId, timestamp } = countResults;
 
@@ -3178,10 +3187,12 @@ export class NewRelicProvider
 					errorRateFinalData: {
 						percentChange: pillsErrorChange,
 						level: pillsErrorChange ? pillsSeverity(pillsErrorChange) : undefined,
+						permalinkUrl: permalinkUrl,
 					},
 					responseTimeFinalData: {
 						percentChange: pillsResponseTimeChange,
 						level: pillsResponseTimeChange ? pillsSeverity(pillsResponseTimeChange) : undefined,
+						permalinkUrl: permalinkUrl,
 					},
 				};
 			} catch (err) {
