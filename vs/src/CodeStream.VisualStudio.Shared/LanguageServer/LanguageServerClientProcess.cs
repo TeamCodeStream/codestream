@@ -32,7 +32,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 #else
 			// the specific version we ship in the VSIX
 			exe = Path.GetDirectoryName(assembly.Location) + @"\agent\node.exe";
-			arguments = $@"--stdio --nolazy --log={logPath}";
+			arguments = $@"--nolazy ""{path}"" --stdio- -log={logPath}";
 #endif
 
 			Node.EnsureVersion(exe);
