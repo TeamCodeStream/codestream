@@ -13,7 +13,6 @@
 		"agent:build": "pushd \"../shared/agent\" && tsx esbuild.ts -- --ide vs && popd",
 		"agent:bundle": "pushd \"../shared/agent\" && npm run bundle && popd",
 		"agent:clean:ci": "pushd \"../shared/agent\" && npm run clean:ci && popd",
-		"agent:pkg": "pushd \"../shared/agent\" && npm run pkg-vs && popd",
 		"agent:rebuild": "pushd \"../shared/agent\" && npm run clean && npm install --no-save && tsx esbuild -- --ide vs && popd",
 		"agent:test": "pushd \"../shared/agent\" && npm run test && popd",
 		"agent:watch": "pushd \"../shared/agent\" && npm run watch -- --ide vs && popd",
