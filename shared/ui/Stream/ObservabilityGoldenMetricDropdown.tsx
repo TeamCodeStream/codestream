@@ -48,11 +48,11 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 		) {
 			if (pillsData.errorRateFinalData.level === "critical") {
 				return (
-					<div style={{ color: "#DF2D24" }}>(+{pillsData.errorRateFinalData.percentChange}%)</div>
+					<span style={{ color: "#DF2D24" }}>(+{pillsData.errorRateFinalData.percentChange}%)</span>
 				);
 			} else if (pillsData.errorRateFinalData.level === "high") {
 				return (
-					<div style={{ color: "#FFD23D" }}>(+{pillsData.errorRateFinalData.percentChange}%)</div>
+					<span style={{ color: "#FFD23D" }}>(+{pillsData.errorRateFinalData.percentChange}%)</span>
 				);
 			}
 		} else if (
@@ -67,15 +67,15 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 		) {
 			if (pillsData.responseTimeFinalData.level === "critical") {
 				return (
-					<div style={{ color: "#DF2D24" }}>
+					<span style={{ color: "#DF2D24" }}>
 						(+{pillsData.responseTimeFinalData.percentChange}%)
-					</div>
+					</span>
 				);
 			} else if (pillsData.responseTimeFinalData.level === "high") {
 				return (
-					<div style={{ color: "#FFD23D" }}>
+					<span style={{ color: "#FFD23D" }}>
 						(+{pillsData.responseTimeFinalData.percentChange}%)
-					</div>
+					</span>
 				);
 			}
 		}
@@ -107,7 +107,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 									{gm.value || gm.value === 0 ? (
 										<>
 											{gm.displayValue} {gm.displayUnit && <>{gm.displayUnit}</>}
-											{displayPillsData(gm.name) && <>{displayPillsData(gm.name)}</>}
+											{displayPillsData(gm.name) && <> {displayPillsData(gm.name)}</>}
 										</>
 									) : (
 										<>No Data</>
