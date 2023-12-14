@@ -1,6 +1,6 @@
 import { EntityGoldenMetrics, GetIssuesResponse } from "@codestream/protocols/agent";
 import { isEmpty as _isEmpty } from "lodash-es";
-import React from "react";
+import React, { useState } from "react";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
@@ -22,6 +22,7 @@ interface Props {
 
 export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 	const dispatch = useAppDispatch();
+	const [isPillsHover, setPillsHover] = useState<boolean>(false);
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
@@ -50,33 +51,11 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 		) {
 			if (pillsData.errorRateFinalData.level === "critical") {
 				return (
-					<span
-						onClick={e => {
-							e.preventDefault();
-							e.stopPropagation();
-							HostApi.instance.send(OpenUrlRequestType, {
-								url: pillsData.errorRateFinalData ? pillsData.errorRateFinalData.permalinkUrl : "",
-							});
-						}}
-						style={{ color: "#DF2D24" }}
-					>
-						(+{pillsData.errorRateFinalData.percentChange}%)
-					</span>
+					<span style={{ color: "#DF2D24" }}>(+{pillsData.errorRateFinalData.percentChange}%)</span>
 				);
 			} else if (pillsData.errorRateFinalData.level === "high") {
 				return (
-					<span
-						onClick={e => {
-							e.preventDefault();
-							e.stopPropagation();
-							HostApi.instance.send(OpenUrlRequestType, {
-								url: pillsData.errorRateFinalData ? pillsData.errorRateFinalData.permalinkUrl : "",
-							});
-						}}
-						style={{ color: "#FFD23D" }}
-					>
-						(+{pillsData.errorRateFinalData.percentChange}%)
-					</span>
+					<span style={{ color: "#FFD23D" }}>(+{pillsData.errorRateFinalData.percentChange}%)</span>
 				);
 			}
 		} else if (
@@ -91,31 +70,13 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 		) {
 			if (pillsData.responseTimeFinalData.level === "critical") {
 				return (
-					<span
-						onClick={e => {
-							e.preventDefault();
-							e.stopPropagation();
-							HostApi.instance.send(OpenUrlRequestType, {
-								url: pillsData.errorRateFinalData ? pillsData.errorRateFinalData.permalinkUrl : "",
-							});
-						}}
-						style={{ color: "#DF2D24" }}
-					>
+					<span style={{ color: "#DF2D24" }}>
 						(+{pillsData.responseTimeFinalData.percentChange}%)
 					</span>
 				);
 			} else if (pillsData.responseTimeFinalData.level === "high") {
 				return (
-					<span
-						onClick={e => {
-							e.preventDefault();
-							e.stopPropagation();
-							HostApi.instance.send(OpenUrlRequestType, {
-								url: pillsData.errorRateFinalData ? pillsData.errorRateFinalData.permalinkUrl : "",
-							});
-						}}
-						style={{ color: "#FFD23D" }}
-					>
+					<span style={{ color: "#FFD23D" }}>
 						(+{pillsData.responseTimeFinalData.percentChange}%)
 					</span>
 				);
@@ -145,14 +106,49 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 							</div>
 
 							<div className="icons">
-								<span className={"details"}>
-									{gm.value || gm.value === 0 ? (
+								<span
+									className={"details"}
+									onMouseLeave={e => {
+										setPillsHover(false);
+									}}
+									onMouseEnter={e => {
+										setPillsHover(true);
+									}}
+								>
+									{isPillsHover ? (
 										<>
-											{gm.displayValue} {gm.displayUnit && <>{gm.displayUnit}</>}
+											<Icon
+												name="globe"
+												className="clickable"
+												title="View on New Relic"
+												placement="bottomLeft"
+												delay={1}
+												onClick={e => {
+													e.preventDefault();
+													e.stopPropagation();
+													HostApi.instance.send(OpenUrlRequestType, {
+														url:
+															(pillsData?.responseTimeFinalData &&
+																pillsData.responseTimeFinalData.permalinkUrl) ||
+															(pillsData?.errorRateFinalData &&
+																pillsData.errorRateFinalData.permalinkUrl) ||
+															"",
+													});
+												}}
+											/>
 											{displayPillsData(gm.name) && <> {displayPillsData(gm.name)}</>}
 										</>
+									) : !isPillsHover ? (
+										gm.value || gm.value === 0 ? (
+											<>
+												{gm.displayValue} {gm.displayUnit && <>{gm.displayUnit}</>}
+												{displayPillsData(gm.name) && <> {displayPillsData(gm.name)}</>}
+											</>
+										) : (
+											<>No Data</>
+										)
 									) : (
-										<>No Data</>
+										<></>
 									)}
 								</span>
 							</div>

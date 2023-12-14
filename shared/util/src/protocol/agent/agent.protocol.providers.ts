@@ -2272,10 +2272,12 @@ export interface EntityGoldenMetrics {
 		errorRateFinalData?: {
 			percentChange?: number;
 			level?: string;
+			permalinkUrl: string;
 		};
 		responseTimeFinalData?: {
 			percentChange?: number;
 			level?: string;
+			permalinkUrl: string;
 		};
 	};
 }
