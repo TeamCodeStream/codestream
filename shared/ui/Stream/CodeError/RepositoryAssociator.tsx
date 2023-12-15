@@ -117,7 +117,9 @@ export function RepositoryAssociator(props: {
 				if (!_isEmpty(derivedState.relatedRepos)) {
 					filteredResults = results.filter(_ => {
 						return derivedState.relatedRepos?.some(repo => {
-							return repo.remotes.includes(_.remote);
+							const lowercaseRepoRemotes = repo.remotes.map(remote => remote.toLowerCase());
+							const lowercaseCurrentRemote = _.remote.toLowerCase();
+							return lowercaseRepoRemotes.includes(lowercaseCurrentRemote);
 						});
 					});
 				} else {

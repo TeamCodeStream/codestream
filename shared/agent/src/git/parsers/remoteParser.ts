@@ -139,6 +139,7 @@ export class GitRemoteParser {
 				// support for github.repositoryUrl context https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
 				results.push({ type: "git", value: `git://${parsed[1]}/${parsed[2]}.git` });
 				results.push({ type: "git", value: `git@${parsed[1]}:${parsed[2]}.git` });
+				results.push({ type: "git", value: `git@${parsed[1]}:${parsed[2]}` });
 			} else if (httpOrSshEndpoint.indexOf("http") === 0) {
 				results.push({ type: "https", value: httpOrSshEndpoint });
 				if (httpOrSshEndpoint.indexOf(".git") > -1) {
