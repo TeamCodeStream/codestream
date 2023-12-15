@@ -3171,27 +3171,33 @@ export class NewRelicProvider
 					? Math.floor(responseTimePercentageChange)
 					: undefined;
 
-				function pillsSeverity(num: number) {
-					if (num > 0) {
+				function getPillsSeverityColor(num: number) {
+					if (num >= 0) {
 						if (num >= 0 && num <= 5) {
-							return "warning";
+							return "#FFD23D";
 						} else {
-							return "critical";
+							return "#DF2D24";
 						}
 					} else {
-						return "good";
+						return undefined;
 					}
 				}
 
 				return {
-					errorRateFinalData: {
+					errorRateData: {
+						isDisplayErrorChange:
+							pillsErrorChange && getPillsSeverityColor(pillsErrorChange) ? true : false,
 						percentChange: pillsErrorChange,
-						level: pillsErrorChange ? pillsSeverity(pillsErrorChange) : undefined,
+						color: pillsErrorChange && getPillsSeverityColor(pillsErrorChange),
 						permalinkUrl: permalinkUrl,
 					},
-					responseTimeFinalData: {
+					responseTimeData: {
+						isDisplayTimeResponseChange:
+							pillsResponseTimeChange && getPillsSeverityColor(pillsResponseTimeChange)
+								? true
+								: false,
 						percentChange: pillsResponseTimeChange,
-						level: pillsResponseTimeChange ? pillsSeverity(pillsResponseTimeChange) : undefined,
+						color: pillsResponseTimeChange && getPillsSeverityColor(pillsResponseTimeChange),
 						permalinkUrl: permalinkUrl,
 					},
 				};

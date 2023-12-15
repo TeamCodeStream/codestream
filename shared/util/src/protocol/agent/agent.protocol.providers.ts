@@ -2269,15 +2269,17 @@ export interface EntityGoldenMetrics {
 		displayValue: string;
 	}[];
 	pillsData?: {
-		errorRateFinalData?: {
+		errorRateData?: {
+			isDisplayErrorChange?: boolean;
 			percentChange?: number;
-			level?: string;
-			permalinkUrl: string;
+			color?: string;
+			permalinkUrl?: string;
 		};
-		responseTimeFinalData?: {
+		responseTimeData?: {
+			isDisplayTimeResponseChange?: boolean;
 			percentChange?: number;
-			level?: string;
-			permalinkUrl: string;
+			color?: string;
+			permalinkUrl?: string;
 		};
 	};
 }

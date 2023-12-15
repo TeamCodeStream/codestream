@@ -38,51 +38,69 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 
 	const pillsData = entityGoldenMetrics?.pillsData;
 
-	function displayPillsData(indicator: string) {
-		if (
-			(indicator === "errorRate" &&
-				pillsData &&
-				pillsData.errorRateFinalData &&
-				pillsData.errorRateFinalData.level === "critical") ||
-			(indicator === "errorRate" &&
-				pillsData &&
-				pillsData.errorRateFinalData &&
-				pillsData.errorRateFinalData.level === "high")
-		) {
-			if (pillsData.errorRateFinalData.level === "critical") {
-				return (
-					<span style={{ color: "#DF2D24" }}>(+{pillsData.errorRateFinalData.percentChange}%)</span>
-				);
-			} else if (pillsData.errorRateFinalData.level === "high") {
-				return (
-					<span style={{ color: "#FFD23D" }}>(+{pillsData.errorRateFinalData.percentChange}%)</span>
-				);
-			}
-		} else if (
-			(indicator === "responseTimeMs" &&
-				pillsData &&
-				pillsData.responseTimeFinalData &&
-				pillsData.responseTimeFinalData.level === "critical") ||
-			(indicator === "responseTimeMs" &&
-				pillsData &&
-				pillsData.responseTimeFinalData &&
-				pillsData.responseTimeFinalData.level === "high")
-		) {
-			if (pillsData.responseTimeFinalData.level === "critical") {
-				return (
-					<span style={{ color: "#DF2D24" }}>
-						(+{pillsData.responseTimeFinalData.percentChange}%)
-					</span>
-				);
-			} else if (pillsData.responseTimeFinalData.level === "high") {
-				return (
-					<span style={{ color: "#FFD23D" }}>
-						(+{pillsData.responseTimeFinalData.percentChange}%)
-					</span>
-				);
-			}
+	function getErrorPillsJSX() {
+		if (pillsData?.errorRateData) {
+			return (
+				<span
+					onMouseLeave={e => {
+						setPillsHover(false);
+					}}
+					onMouseEnter={e => {
+						setPillsHover(true);
+					}}
+					style={{ color: pillsData.errorRateData.color }}
+				>
+					{isPillsHover && <>{getGlobeIcon()} </>}
+					(+{pillsData.errorRateData.percentChange}%)
+				</span>
+			);
 		}
-		return;
+		return undefined;
+	}
+
+	function getResponseTimePillsJSX() {
+		if (pillsData?.responseTimeData) {
+			return (
+				<span
+					onMouseLeave={e => {
+						setPillsHover(false);
+					}}
+					onMouseEnter={e => {
+						setPillsHover(true);
+					}}
+					style={{ color: pillsData.responseTimeData.color }}
+				>
+					{isPillsHover && <>{getGlobeIcon()} </>}
+					(+{pillsData.responseTimeData.percentChange}%)
+				</span>
+			);
+		}
+		return undefined;
+	}
+
+	function getGlobeIcon() {
+		if (pillsData) {
+			return (
+				<Icon
+					name="globe"
+					className="clickable"
+					title="View on New Relic"
+					placement="bottomLeft"
+					delay={1}
+					onClick={e => {
+						e.preventDefault();
+						e.stopPropagation();
+						HostApi.instance.send(OpenUrlRequestType, {
+							url:
+								(pillsData.responseTimeData && pillsData.responseTimeData.permalinkUrl) ||
+								(pillsData.errorRateData && pillsData.errorRateData.permalinkUrl) ||
+								"",
+						});
+					}}
+				/>
+			);
+		}
+		return undefined;
 	}
 
 	const errorTitle: string | undefined =
@@ -106,49 +124,19 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 							</div>
 
 							<div className="icons">
-								<span
-									className={"details"}
-									onMouseLeave={e => {
-										setPillsHover(false);
-									}}
-									onMouseEnter={e => {
-										setPillsHover(true);
-									}}
-								>
-									{isPillsHover ? (
+								<span className={"details"}>
+									{gm.value || gm.value === 0 ? (
 										<>
-											<Icon
-												name="globe"
-												className="clickable"
-												title="View on New Relic"
-												placement="bottomLeft"
-												delay={1}
-												onClick={e => {
-													e.preventDefault();
-													e.stopPropagation();
-													HostApi.instance.send(OpenUrlRequestType, {
-														url:
-															(pillsData?.responseTimeFinalData &&
-																pillsData.responseTimeFinalData.permalinkUrl) ||
-															(pillsData?.errorRateFinalData &&
-																pillsData.errorRateFinalData.permalinkUrl) ||
-															"",
-													});
-												}}
-											/>
-											{displayPillsData(gm.name) && <> {displayPillsData(gm.name)}</>}
+											{gm.displayValue} {gm.displayUnit && !isPillsHover && <>{gm.displayUnit}</>}
+											{pillsData?.errorRateData &&
+												pillsData.errorRateData.isDisplayErrorChange &&
+												gm.name === "errorRate" && <> {getErrorPillsJSX()}</>}
+											{pillsData?.responseTimeData &&
+												pillsData.responseTimeData.isDisplayTimeResponseChange &&
+												gm.name === "responseTimeMs" && <> {getResponseTimePillsJSX()}</>}
 										</>
-									) : !isPillsHover ? (
-										gm.value || gm.value === 0 ? (
-											<>
-												{gm.displayValue} {gm.displayUnit && <>{gm.displayUnit}</>}
-												{displayPillsData(gm.name) && <> {displayPillsData(gm.name)}</>}
-											</>
-										) : (
-											<>No Data</>
-										)
 									) : (
-										<></>
+										<>No Data</>
 									)}
 								</span>
 							</div>
