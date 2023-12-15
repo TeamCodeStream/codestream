@@ -127,7 +127,12 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 								<span className={"details"}>
 									{gm.value || gm.value === 0 ? (
 										<>
-											{gm.displayValue} {gm.displayUnit && !isPillsHover && <>{gm.displayUnit}</>}
+											{gm.displayValue}{" "}
+											{gm.displayUnit && gm.name !== "throughput" && !isPillsHover ? (
+												<>{gm.displayUnit}</>
+											) : (
+												gm.displayUnit && <>{gm.displayUnit}</>
+											)}
 											{pillsData?.errorRateData &&
 												pillsData.errorRateData.isDisplayErrorChange &&
 												gm.name === "errorRate" && <> {getErrorPillsJSX()}</>}
