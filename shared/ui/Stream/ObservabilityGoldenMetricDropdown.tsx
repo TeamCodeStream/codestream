@@ -39,7 +39,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 
 	const pillsData = entityGoldenMetrics?.pillsData;
 
-	function getErrorPillsJSX() {
+	function getErrorPillsJSX(displayValue, displayUnits) {
 		if (pillsData?.errorRateData) {
 			return (
 				<span
@@ -54,7 +54,11 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 					{isPillsErrorHover ? (
 						<>{getGlobeIcon()} </>
 					) : (
-						<>(+{pillsData.errorRateData.percentChange}%)</>
+						<>
+							{displayValue}
+							{displayUnits && <>{displayUnits} </>}
+							{<>(+{pillsData.errorRateData.percentChange}%)</>}
+						</>
 					)}
 				</span>
 			);
@@ -62,7 +66,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 		return undefined;
 	}
 
-	function getResponseTimePillsJSX() {
+	function getResponseTimePillsJSX(displayValue, displayUnits) {
 		if (pillsData?.responseTimeData) {
 			return (
 				<span
@@ -77,7 +81,11 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 					{isPillsResponseTimeHover ? (
 						<>{getGlobeIcon()} </>
 					) : (
-						<>(+{pillsData.responseTimeData.percentChange}%)</>
+						<>
+							{displayValue}
+							{displayUnits && <>{displayUnits} </>}
+							{<>(+{pillsData.responseTimeData.percentChange}%)</>}
+						</>
 					)}
 				</span>
 			);
@@ -99,8 +107,8 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 						e.stopPropagation();
 						HostApi.instance.send(OpenUrlRequestType, {
 							url:
-								(pillsData.responseTimeData && pillsData.responseTimeData.permalinkUrl) ||
-								(pillsData.errorRateData && pillsData.errorRateData.permalinkUrl) ||
+								pillsData?.responseTimeData?.permalinkUrl ||
+								pillsData?.errorRateData?.permalinkUrl ||
 								"",
 						});
 					}}
@@ -134,20 +142,15 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 								<span className={"details"}>
 									{gm.value || gm.value === 0 ? (
 										<>
-											{gm.displayValue}{" "}
-											{gm.displayUnit &&
-											gm.name !== "throughput" &&
-											(!isPillsErrorHover || !isPillsResponseTimeHover) ? (
-												<>{gm.displayUnit}</>
+											{gm.name === "errorRate" ? (
+												<> {getErrorPillsJSX(gm.displayValue, gm.displayUnit)}</>
+											) : gm.name === "responseTimeMs" ? (
+												<> {getResponseTimePillsJSX(gm.displayValue, gm.displayUnit)}</>
 											) : (
-												gm.displayUnit && <>{gm.displayUnit}</>
+												<>
+													{gm.displayValue} {gm.displayUnit && <>{gm.displayUnit}</>}
+												</>
 											)}
-											{pillsData?.errorRateData &&
-												pillsData.errorRateData.isDisplayErrorChange &&
-												gm.name === "errorRate" && <> {getErrorPillsJSX()}</>}
-											{pillsData?.responseTimeData &&
-												pillsData.responseTimeData.isDisplayTimeResponseChange &&
-												gm.name === "responseTimeMs" && <> {getResponseTimePillsJSX()}</>}
 										</>
 									) : (
 										<>No Data</>
