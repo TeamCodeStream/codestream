@@ -22,7 +22,8 @@ interface Props {
 
 export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 	const dispatch = useAppDispatch();
-	const [isPillsHover, setPillsHover] = useState<boolean>(false);
+	const [isPillsErrorHover, setPillsErrorHover] = useState<boolean>(false);
+	const [isPillsResponseTimeHover, setPillsResponseTimeHover] = useState<boolean>(false);
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
@@ -43,15 +44,18 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 			return (
 				<span
 					onMouseLeave={e => {
-						setPillsHover(false);
+						setPillsErrorHover(false);
 					}}
 					onMouseEnter={e => {
-						setPillsHover(true);
+						setPillsErrorHover(true);
 					}}
 					style={{ color: pillsData.errorRateData.color }}
 				>
-					{isPillsHover && <>{getGlobeIcon()} </>}
-					(+{pillsData.errorRateData.percentChange}%)
+					{isPillsErrorHover ? (
+						<>{getGlobeIcon()} </>
+					) : (
+						<>(+{pillsData.errorRateData.percentChange}%)</>
+					)}
 				</span>
 			);
 		}
@@ -63,15 +67,18 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 			return (
 				<span
 					onMouseLeave={e => {
-						setPillsHover(false);
+						setPillsResponseTimeHover(false);
 					}}
 					onMouseEnter={e => {
-						setPillsHover(true);
+						setPillsResponseTimeHover(true);
 					}}
 					style={{ color: pillsData.responseTimeData.color }}
 				>
-					{isPillsHover && <>{getGlobeIcon()} </>}
-					(+{pillsData.responseTimeData.percentChange}%)
+					{isPillsResponseTimeHover ? (
+						<>{getGlobeIcon()} </>
+					) : (
+						<>(+{pillsData.responseTimeData.percentChange}%)</>
+					)}
 				</span>
 			);
 		}
@@ -128,7 +135,9 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 									{gm.value || gm.value === 0 ? (
 										<>
 											{gm.displayValue}{" "}
-											{gm.displayUnit && gm.name !== "throughput" && !isPillsHover ? (
+											{gm.displayUnit &&
+											gm.name !== "throughput" &&
+											(!isPillsErrorHover || !isPillsResponseTimeHover) ? (
 												<>{gm.displayUnit}</>
 											) : (
 												gm.displayUnit && <>{gm.displayUnit}</>
