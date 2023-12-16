@@ -49,7 +49,6 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 					onMouseEnter={e => {
 						setPillsErrorHover(true);
 					}}
-					style={{ color: pillsData.errorRateData.color }}
 				>
 					{isPillsErrorHover ? (
 						<>{getGlobeIcon()} </>
@@ -57,7 +56,11 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 						<>
 							{displayValue}
 							{displayUnits && <>{displayUnits} </>}
-							{<>(+{pillsData.errorRateData.percentChange}%)</>}
+							{
+								<span style={{ color: pillsData.errorRateData.color }}>
+									(+{pillsData.errorRateData.percentChange}%)
+								</span>
+							}
 						</>
 					)}
 				</span>
@@ -76,7 +79,6 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 					onMouseEnter={e => {
 						setPillsResponseTimeHover(true);
 					}}
-					style={{ color: pillsData.responseTimeData.color }}
 				>
 					{isPillsResponseTimeHover ? (
 						<>{getGlobeIcon()} </>
@@ -84,7 +86,11 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 						<>
 							{displayValue}
 							{displayUnits && <>{displayUnits} </>}
-							{<>(+{pillsData.responseTimeData.percentChange}%)</>}
+							{
+								<span style={{ color: pillsData.responseTimeData.color }}>
+									(+{pillsData.responseTimeData.percentChange}%)
+								</span>
+							}
 						</>
 					)}
 				</span>
