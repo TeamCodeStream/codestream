@@ -40,88 +40,83 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 	const pillsData = entityGoldenMetrics?.pillsData;
 
 	function getErrorPillsJSX(displayValue, displayUnits) {
-		if (pillsData?.errorRateData) {
-			return (
-				<span
-					onMouseLeave={e => {
-						setPillsErrorHover(false);
-					}}
-					onMouseEnter={e => {
-						setPillsErrorHover(true);
-					}}
-				>
-					{isPillsErrorHover ? (
-						<>{getGlobeIcon()} </>
-					) : (
+		return (
+			<span
+				onMouseLeave={e => {
+					setPillsErrorHover(false);
+				}}
+				onMouseEnter={e => {
+					setPillsErrorHover(true);
+				}}
+			>
+				{isPillsErrorHover && pillsData?.errorRateData?.isDisplayErrorChange ? (
+					<>{getGlobeIcon()} </>
+				) : (
+					<>
 						<>
 							{displayValue}
 							{displayUnits && <>{displayUnits} </>}
-							{
-								<span style={{ color: pillsData.errorRateData.color }}>
-									(+{pillsData.errorRateData.percentChange}%)
-								</span>
-							}
 						</>
-					)}
-				</span>
-			);
-		}
-		return undefined;
+						<span style={{ color: pillsData?.errorRateData?.color }}>
+							{pillsData?.errorRateData?.isDisplayErrorChange && (
+								<>(+{pillsData?.errorRateData?.percentChange}%)</>
+							)}
+						</span>
+					</>
+				)}
+			</span>
+		);
 	}
 
 	function getResponseTimePillsJSX(displayValue, displayUnits) {
-		if (pillsData?.responseTimeData) {
-			return (
-				<span
-					onMouseLeave={e => {
-						setPillsResponseTimeHover(false);
-					}}
-					onMouseEnter={e => {
-						setPillsResponseTimeHover(true);
-					}}
-				>
-					{isPillsResponseTimeHover ? (
-						<>{getGlobeIcon()} </>
-					) : (
+		return (
+			<span
+				onMouseLeave={e => {
+					setPillsResponseTimeHover(false);
+				}}
+				onMouseEnter={e => {
+					setPillsResponseTimeHover(true);
+				}}
+			>
+				{isPillsResponseTimeHover && pillsData?.responseTimeData?.isDisplayTimeResponseChange ? (
+					<>{getGlobeIcon()} </>
+				) : (
+					<>
 						<>
 							{displayValue}
 							{displayUnits && <>{displayUnits} </>}
-							{
-								<span style={{ color: pillsData.responseTimeData.color }}>
-									(+{pillsData.responseTimeData.percentChange}%)
-								</span>
-							}
 						</>
-					)}
-				</span>
-			);
-		}
-		return undefined;
+						<span style={{ color: pillsData?.responseTimeData?.color }}>
+							{pillsData?.responseTimeData?.isDisplayTimeResponseChange && (
+								<>(+{pillsData?.responseTimeData?.percentChange}%)</>
+							)}
+						</span>
+					</>
+				)}
+			</span>
+		);
 	}
 
 	function getGlobeIcon() {
-		if (pillsData) {
-			return (
-				<Icon
-					name="globe"
-					className="clickable"
-					title="View on New Relic"
-					placement="bottomLeft"
-					delay={1}
-					onClick={e => {
-						e.preventDefault();
-						e.stopPropagation();
-						HostApi.instance.send(OpenUrlRequestType, {
-							url:
-								pillsData?.responseTimeData?.permalinkUrl ||
-								pillsData?.errorRateData?.permalinkUrl ||
-								"",
-						});
-					}}
-				/>
-			);
-		}
-		return undefined;
+		return (
+			<Icon
+				name="globe"
+				className="clickable"
+				title="View on New Relic"
+				placement="bottomLeft"
+				delay={1}
+				onClick={e => {
+					e.preventDefault();
+					e.stopPropagation();
+					HostApi.instance.send(OpenUrlRequestType, {
+						url:
+							pillsData?.responseTimeData?.permalinkUrl ||
+							pillsData?.errorRateData?.permalinkUrl ||
+							"",
+					});
+				}}
+			/>
+		);
 	}
 
 	const errorTitle: string | undefined =
