@@ -1,24 +1,26 @@
 import React, { useEffect, useRef, useState } from "react";
-import Icon from "./Icon";
-import { Dialog } from "../src/components/Dialog";
-import { PanelHeader } from "../src/components/PanelHeader";
+import Icon from "../Icon";
+import { Dialog } from "../../src/components/Dialog";
+import { PanelHeader } from "../../src/components/PanelHeader";
 import styled from "styled-components";
-import ScrollBox from "./ScrollBox";
-import { HostApi } from "../webview-api";
+import ScrollBox from "../ScrollBox";
+import { HostApi } from "../../webview-api";
 import {
 	GetLogFieldDefinitionsRequestType,
 	GetLogsRequestType,
 	LogFieldDefinition,
 	LogResult,
 	isNRErrorResponse,
-} from "../../util/src/protocol/agent/agent.protocol.providers";
-import { CodeStreamState } from "../store";
-import { closePanel } from "./actions";
-import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
-import Button from "./Button";
+} from "../../../util/src/protocol/agent/agent.protocol.providers";
+import { CodeStreamState } from "../../store";
+import { closePanel, openModal } from "../actions";
+import { useAppDispatch, useAppSelector, useDidMount } from "../../utilities/hooks";
+import Button from "../Button";
 import Select from "react-select";
-import Timestamp from "./Timestamp";
-import { Link } from "./Link";
+import Timestamp from "../Timestamp";
+import { Link } from "../Link";
+import { WebviewModals } from "@codestream/protocols/webview";
+import { setCurrentAPMLoggingDetailContext } from "../../store/context/actions";
 
 interface SelectedOption {
 	value: string;
@@ -123,8 +125,8 @@ export default function ObservabilityLogsPanel() {
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
-			entityGuid: state.context.currentObservabilityLogEntityGuid,
-			searchTerm: state.context.currentObservabilityLogSearchTerm,
+			entityGuid: state.context.currentAPMLoggingEntityGuid,
+			searchTerm: state.context.currentAPMLoggingSearchTerm,
 		};
 	});
 
@@ -326,6 +328,14 @@ export default function ObservabilityLogsPanel() {
 				style={{
 					color: "lightgray",
 					borderBottom: "1px solid lightgray",
+				}}
+				onClick={e => {
+					e.preventDefault();
+					e.stopPropagation();
+					dispatch(
+						setCurrentAPMLoggingDetailContext(derivedState.entityGuid, props.logResult["messageId"])
+					);
+					dispatch(openModal(WebviewModals.LogDetailView));
 				}}
 			>
 				{props.logResult &&

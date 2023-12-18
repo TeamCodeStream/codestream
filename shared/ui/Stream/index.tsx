@@ -110,7 +110,8 @@ import { TeamSetup } from "./TeamSetup";
 import { Tester } from "./Tester";
 import { ObservabilityAnomalyPanel } from "@codestream/webview/Stream/MethodLevelTelemetry/ObservabilityAnomalyPanel";
 import { TransactionSpanPanel } from "./TransactionSpanPanel";
-import ObservabilityLogsPanel from "./ObservabilityLogsPanel";
+import ObservabilityLogsPanel from "./APMLogging/APMLogSearchPanel";
+import { ObservabilityLogDetails } from "./APMLogging/APMLogDetailView";
 
 interface DispatchProps {
 	clearDynamicLogging: Function;
@@ -475,6 +476,7 @@ export class SimpleStream extends PureComponent<Props> {
 						{activeModal === WebviewModals.CreateTeam && <CreateTeamPage />}
 						{activeModal === WebviewModals.CreateCompany && <CreateCompanyPage />}
 						{activeModal === WebviewModals.CLMSettings && <CLMSettings />}
+						{activeModal === WebviewModals.LogDetailView && <ObservabilityLogDetails />}
 						{activeModal === WebviewModals.Notifications && <Notifications />}
 						{activeModal === WebviewModals.ChangeEmail && <ChangeEmail />}
 						{activeModal === WebviewModals.ChangeAvatar && <ChangeAvatar />}
@@ -563,7 +565,7 @@ export class SimpleStream extends PureComponent<Props> {
 							{activePanel === WebviewPanels.MethodLevelTelemetry && <MethodLevelTelemetryPanel />}
 							{activePanel === WebviewPanels.TransactionSpan && <TransactionSpanPanel />}
 							{activePanel === WebviewPanels.ObservabilityAnomaly && <ObservabilityAnomalyPanel />}
-							{activePanel === WebviewPanels.ObservabilityLogsSearch && <ObservabilityLogsPanel />}
+							{activePanel === WebviewPanels.APMLoggingSearch && <ObservabilityLogsPanel />}
 							{activePanel === WebviewPanels.Integrations && <IntegrationsPanel />}
 							{activePanel === WebviewPanels.Profile && <ProfilePanel />}
 							{activePanel === WebviewPanels.NewPullRequest && (

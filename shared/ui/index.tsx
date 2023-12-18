@@ -101,7 +101,7 @@ import {
 	setCurrentCodemark,
 	setCurrentMethodLevelTelemetry,
 	setCurrentObservabilityAnomaly,
-	setCurrentObservabilityLogSearchContext,
+	setCurrentAPMLoggingSearchContext,
 	setCurrentPullRequest,
 	setCurrentReview,
 	setCurrentStream,
@@ -990,8 +990,8 @@ function listenForEvents(store) {
 			? (currentUser?.preferences?.activeO11y?.[currentRepoId] as string)
 			: undefined;
 
-		store.dispatch(setCurrentObservabilityLogSearchContext(currentEntityGuid, params.searchTerm));
-		store.dispatch(openPanel(WebviewPanels.ObservabilityLogsSearch));
+		store.dispatch(setCurrentAPMLoggingSearchContext(currentEntityGuid, params.searchTerm));
+		store.dispatch(openPanel(WebviewPanels.APMLoggingSearch));
 	});
 }
 

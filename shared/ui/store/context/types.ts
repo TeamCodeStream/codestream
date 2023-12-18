@@ -63,8 +63,8 @@ export enum ContextActionsType {
 	SetCurrentMethodLevelTelemetry = "@context/SetCurrentMethodLevelTelemetry",
 	SetCurrentObservabilityAnomaly = "@context/SetCurrentObservabilityAnomaly",
 	SetCurrentTransactionSpan = "@context/SetCurrentTransactionSpan",
-	SetCurrentObservabilityLogEntity = "@context/SetCurrentObservabilityLogEntity",
-	SetCurrentObservabilityLogSearchContext = "@context/SetCurrentObservabilityLogSearchContext",
+	SetCurrentAPMLoggingSearchContext = "@context/SetCurrentObservabilityLogSearchContext",
+	SetCurrentAPMLoggingDetailContext = "@context/SetCurrentObservabilityLogDetailContext",
 }
 
 /**
@@ -143,8 +143,9 @@ export interface ContextState extends WebviewContext {
 	currentObservabilityAnomalyEntityName?: string;
 	currentTransactionSpan?: CurrentTransactionSpan;
 
-	currentObservabilityLogEntityGuid?: string;
-	currentObservabilityLogSearchTerm?: string;
+	currentAPMLoggingEntityGuid?: string;
+	currentAPMLoggingSearchTerm?: string;
+	currentAPMLoggingMessageId?: string;
 
 	selectedRegion?: string;
 }
