@@ -287,11 +287,19 @@ export function reduceContext(
 			};
 		}
 
-		case ContextActionsType.SetCurrentObservabilityLogSearchContext: {
+		case ContextActionsType.SetCurrentAPMLoggingSearchContext: {
 			return {
 				...state,
-				currentObservabilityLogEntityGuid: action.payload.entityGuid,
-				currentObservabilityLogSearchTerm: action.payload.searchTerm,
+				currentAPMLoggingEntityGuid: action.payload.entityGuid,
+				currentAPMLoggingSearchTerm: action.payload.searchTerm,
+			};
+		}
+
+		case ContextActionsType.SetCurrentAPMLoggingDetailContext: {
+			return {
+				...state,
+				currentAPMLoggingEntityGuid: action.payload.entityGuid,
+				currentAPMLoggingMessageId: action.payload.messageId,
 			};
 		}
 

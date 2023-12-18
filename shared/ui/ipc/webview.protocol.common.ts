@@ -88,6 +88,7 @@ export enum WebviewModals {
 	Profile = "profile",
 	AddNewRelicNodeJS = "add-new-relic-nodejs",
 	AddNewRelicJava = "add-new-relic-java",
+	LogDetailView = "log-detail-view",
 }
 
 export interface CodeErrorData {

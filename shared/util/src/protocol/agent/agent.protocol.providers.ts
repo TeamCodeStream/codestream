@@ -2540,6 +2540,23 @@ export const GetLogsRequestType = new RequestType<GetLogsRequest, GetLogsRespons
 	"codestream/newrelic/logs"
 );
 
+export interface GetLogDetailRequest {
+	entityGuid: string;
+	logMessageId: string;
+}
+
+export interface GetLogDetailResponse {
+	result?: LogResult;
+	error?: NRErrorResponse;
+}
+
+export const GetLogsDetailRequestType = new RequestType<
+	GetLogDetailRequest,
+	GetLogDetailResponse,
+	void,
+	void
+>("codestream/newrelic/logs/details");
+
 export interface GetLogFieldDefinitionsRequest {
 	entityGuid: string;
 }
