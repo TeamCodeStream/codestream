@@ -11,7 +11,7 @@ import { createSelector } from "reselect";
 import CancelButton from "./CancelButton";
 import { closePanel } from "./actions";
 import Icon from "./Icon";
-import copy from "copy-to-clipboard";
+import { stringify } from "csv-stringify/browser/esm/sync";
 
 const getSearchableCodemarks = createSelector(
 	(state: CodeStreamState) => state.codemarks,
@@ -36,43 +36,14 @@ export const ExportPanel = () => {
 		return { codemarks, webviewFocused: state.context.hasFocus, repos: state.repos };
 	});
 
-	const [text, setText] = React.useState("");
-
 	useDidMount(() => {
 		if (derivedState.webviewFocused)
 			HostApi.instance.track("Page Viewed", { "Page Name": "Export" });
 	});
 
-	const insertText = () => {};
-
-	const escapeText = text => {
-		const returnText = (text || "").replace(/\n/g, "\\" + "n");
-		if (returnText.match(/\"/)) return `"${returnText.replace(/\"/g, '\\"')}"`;
-		else return returnText;
-	};
-
-	let output =
-		"// repo,file,commitSha,location,date,author,id,parentId,type,title,body,assignees\n";
-	derivedState.codemarks.forEach(codemark => {
-		if (!codemark) return;
-		if (codemark.markers) {
-			codemark.markers.map(marker => {
-				if (!marker) return;
-				const location: any = marker.referenceLocations
-					? marker.referenceLocations[marker.referenceLocations.length - 1] || {}
-					: {};
-				const repo = derivedState.repos[marker.repoId];
-				const repoName = repo ? repo.name : "";
-				output += `${repoName},${marker.file},${location.commitHash},${
-					location.location ? location.location[0] : ""
-				},${codemark.createdAt},${codemark.creatorId},${codemark.id},${codemark.type},${escapeText(
-					codemark.title || codemark.text
-				)},${escapeText(codemark.title ? codemark.text : "")}\n`;
-			});
-		} else {
-			output += `${escapeText(codemark.text || codemark.title)}\n`;
-		}
-	});
+	function generateCsv() {
+		return derivedState.codemarks.length ? stringify(derivedState.codemarks) : "";
+	}
 
 	return (
 		<div className="panel full-height activity-panel">
@@ -84,7 +55,7 @@ export const ExportPanel = () => {
 						<Icon
 							name="copy"
 							className="clickable"
-							onClick={() => copy(output)}
+							onClick={() => generateCsv()}
 							title="Copy Export to Clipboard"
 						/>
 					</span>
@@ -103,7 +74,7 @@ export const ExportPanel = () => {
 							overflow: "auto",
 						}}
 					>
-						{output}
+						{derivedState.codemarks.length ? stringify(derivedState.codemarks) : ""}
 					</textarea>
 				</div>
 			</ScrollBox>
