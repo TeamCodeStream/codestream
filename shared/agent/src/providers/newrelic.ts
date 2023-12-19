@@ -2643,6 +2643,9 @@ export class NewRelicProvider
 					  )
 					: [];
 
+			// const criticalPathCalculator = new CriticalPathCalculator(this);
+			// const criticalPath = await criticalPathCalculator.getCriticalPath(request.newRelicEntityGuid || entity!.entityGuid!, request.metricTimesliceNameMapping!);
+
 			const entityGuid = entity?.entityGuid || request.newRelicEntityGuid;
 			return {
 				goldenMetrics: goldenMetrics,
