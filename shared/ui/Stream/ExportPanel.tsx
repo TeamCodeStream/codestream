@@ -12,6 +12,7 @@ import CancelButton from "./CancelButton";
 import { closePanel } from "./actions";
 import Icon from "./Icon";
 import { stringify } from "csv-stringify/browser/esm/sync";
+import copy from "copy-to-clipboard";
 
 const getSearchableCodemarks = createSelector(
 	(state: CodeStreamState) => state.codemarks,
@@ -55,7 +56,7 @@ export const ExportPanel = () => {
 						<Icon
 							name="copy"
 							className="clickable"
-							onClick={() => generateCsv()}
+							onClick={() => copy(generateCsv())}
 							title="Copy Export to Clipboard"
 						/>
 					</span>
