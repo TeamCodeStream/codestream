@@ -9,12 +9,16 @@ import {
 	LogResult,
 	isNRErrorResponse,
 } from "@codestream/protocols/agent";
+import { PanelHeader } from "@codestream/webview/src/components/PanelHeader";
+import ScrollBox from "../ScrollBox";
 
 export const ObservabilityLogDetails = props => {
 	const dispatch = useAppDispatch();
 
 	const [logError, setLogError] = useState<string | undefined>("");
 	const [logEntry, setLogEntry] = useState<LogResult | undefined>();
+	const [maximized, setMaximized] = useState<boolean>(false);
+	const [isLoading, setIsLoading] = useState<boolean>();
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
@@ -47,6 +51,8 @@ export const ObservabilityLogDetails = props => {
 	};
 
 	const fetchLogDetails = async (logMessageId: string) => {
+		setIsLoading(true);
+
 		try {
 			const response = await HostApi.instance.send(GetLogsDetailRequestType, {
 				logMessageId,
@@ -71,23 +77,54 @@ export const ObservabilityLogDetails = props => {
 		} catch (ex) {
 			handleError(ex);
 		}
+
+		setIsLoading(false);
 	};
 
 	return (
-		<Dialog title="Log Details" onClose={() => dispatch(closeModal())}>
-			<table>
-				<tbody>
-					{logEntry &&
-						Object.keys(logEntry).forEach((value, index) => {
-							return (
-								<tr>
-									<th>{value}</th>
-									<td>logEntry[value]</td>
-								</tr>
-							);
-						})}
-				</tbody>
-			</table>
+		<Dialog
+			maximizable
+			wide
+			noPadding
+			onMaximize={() => setMaximized(true)}
+			onMinimize={() => setMaximized(false)}
+			onClose={() => dispatch(closeModal())}
+		>
+			<PanelHeader title="Log Details"></PanelHeader>
+			<div
+				style={{
+					height: maximized ? "calc(100vh - 100px)" : "calc(100vh - 200px)",
+					overflow: "hidden",
+					padding: "0px 20px 0px 20px",
+					marginBottom: "20px",
+				}}
+			>
+				<ScrollBox>
+					<div className="vscroll">
+						{!logError && !isLoading && logEntry && (
+							<table style={{ width: "100%", borderCollapse: "collapse" }}>
+								<tbody>
+									{Object.keys(logEntry).map((v, i) => {
+										return (
+											<tr>
+												<th>logEntry[v]</th>
+												<td></td>
+											</tr>
+										);
+									})}
+								</tbody>
+							</table>
+						)}
+
+						{logError && (
+							<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
+								<h4>Uh oh, we've encounted an error!</h4>
+								<span>{logError}</span>
+							</div>
+						)}
+					</div>
+				</ScrollBox>
+			</div>
 		</Dialog>
 	);
 };
