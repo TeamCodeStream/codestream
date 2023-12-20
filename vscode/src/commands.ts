@@ -10,9 +10,7 @@ import {
 	ViewColumn,
 	window,
 	workspace,
-	TextDocument,
-	SemanticTokensLegend,
-	SemanticTokens
+	TextDocument
 } from "vscode";
 import {
 	FileLevelTelemetryRequestOptions,
@@ -629,31 +627,29 @@ export class Commands implements Disposable {
 	async logSearch() {
 		const editor = window.activeTextEditor;
 		if (editor === undefined) return;
-		if (!editor.selection.isSingleLine) return; // no multiple line highlights...yet
 
-		const regExString = this.extractStringsFromLine(editor.document, editor.selection.start.line);
-		Logger.log(`REGEX: ${regExString}`);
+		let searchTerm = editor.document.getText(editor.selection);
 
-		await Container.sidebar.logSearch({ searchTerm: regExString });
+		if (!searchTerm) {
+			// cursor sitting on a line, but nothing actually highlighted
+			searchTerm = this.extractStringsFromLine(editor.document, editor.selection.start.line);
+		} else {
+			// take highlighted section minus leading/trailing quotes & spaces.
+			searchTerm = searchTerm
+				.trim()
+				.replace(/^["'`]|["'`]$/g, "")
+				.trim();
+		}
 
-		// const tokenLegend = await commands.executeCommand<SemanticTokensLegend>(
-		// 	BuiltInCommands.ProvideDocumentRangeSemanticTokensLegend,
-		// 	editor.document.uri,
-		// 	line.range
-		// );
-
-		// const tokens = await commands.executeCommand<SemanticTokens>(
-		// 	BuiltInCommands.ProvideDocumentRangeSemanticTokens,
-		// 	editor.document.uri,
-		// 	line.range,
-		// 	new CancellationTokenSource().token
-		// );
-
-		// const strings = this.extractStringsFromTokens(tokens, editor.document, tokenLegend);
-
-		// strings.forEach(s => {
-		// 	Logger.log(`TOKEN: ${s}`);
-		// });
+		if (!searchTerm) {
+			// notification of some sort that we couldn't find anything to search on?
+			await window.showErrorMessage(
+				"We were unable to determine the search criteria from your selection or line of code.",
+				"Dismiss"
+			);
+		} else {
+			await Container.sidebar.logSearch({ searchTerm });
+		}
 	}
 
 	private extractStringsFromLine(document: TextDocument, lineNumber: number): string {
@@ -663,64 +659,19 @@ export class Commands implements Disposable {
 		const matches = line.text.match(
 			/"(?:[^"]|"")*(?:"|$)|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^'\\]|\\.)*`/gim
 		);
-		const match = matches?.[0] ?? "%";
+		const match = matches?.[0];
+
+		if (!match) {
+			return "";
+		}
 
 		const fixed = match
+			.trim()
 			.replace(/\$?{.*}/g, "") // replace interpolated values - {0}, {variable2}, ${something}, ${variable23}
 			.replace(/^["'`]|["'`]$/g, "") // replace leading and trailing quotes - ' / " / `
 			.trim();
 
 		return fixed;
-	}
-
-	private extractStringsFromTokens(
-		tokens: SemanticTokens,
-		document: TextDocument,
-		legend: SemanticTokensLegend
-	): string[] {
-		const strings: string[] = [];
-
-		let lineNumber: number = 0;
-		let columnNumber: number = 0;
-
-		// Process the tokens data to extract string literals
-		for (let i = 0; i < tokens.data.length; i += 5) {
-			const tokenTypeIndex: number = tokens.data[i + 3];
-			const tokenType: string = legend.tokenTypes[tokenTypeIndex];
-
-			const lineNumberDelta: number = tokens.data[i];
-			const columnDelta: number = tokens.data[i + 1];
-
-			// first index is the first token, since numbers of are offsets,
-			// use the offsets from the first token to initialize a running
-			// sum.
-			if (i === 0) {
-				lineNumber = lineNumberDelta;
-				columnNumber = columnDelta;
-			} else {
-				lineNumber = lineNumber + lineNumberDelta;
-				columnNumber = columnNumber + columnDelta;
-			}
-
-			if (tokenType === "string") {
-				const tokenLength = tokens.data[i + 2];
-
-				// dont care about these, but leaving here for completeness of how this is parsed
-				// const modifiers = tokens.data[i + 3];
-				// compare against legend.modifiers to figure out what they are
-
-				const tokenRange = new Range(
-					lineNumber,
-					columnNumber,
-					lineNumber,
-					columnNumber + tokenLength
-				);
-				const stringData = document.getText(tokenRange);
-				strings.push(stringData);
-			}
-		}
-
-		return strings;
 	}
 
 	async updateEditorCodeLens(): Promise<boolean> {
