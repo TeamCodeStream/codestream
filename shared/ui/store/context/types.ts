@@ -64,7 +64,6 @@ export enum ContextActionsType {
 	SetCurrentObservabilityAnomaly = "@context/SetCurrentObservabilityAnomaly",
 	SetCurrentTransactionSpan = "@context/SetCurrentTransactionSpan",
 	SetCurrentAPMLoggingSearchContext = "@context/SetCurrentObservabilityLogSearchContext",
-	SetCurrentAPMLoggingDetailContext = "@context/SetCurrentObservabilityLogDetailContext",
 }
 
 /**
@@ -145,7 +144,6 @@ export interface ContextState extends WebviewContext {
 
 	currentAPMLoggingEntityGuid?: string;
 	currentAPMLoggingSearchTerm?: string;
-	currentAPMLoggingMessageId?: string;
 
 	selectedRegion?: string;
 }

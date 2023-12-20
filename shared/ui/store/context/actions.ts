@@ -154,9 +154,6 @@ export const setCurrentTransactionSpan = (data: any) =>
 export const setCurrentAPMLoggingSearchContext = (entityGuid?: string, searchTerm?: string) =>
 	action(ContextActionsType.SetCurrentAPMLoggingSearchContext, { entityGuid, searchTerm });
 
-export const setCurrentAPMLoggingDetailContext = (entityGuid?: string, messageId?: string) =>
-	action(ContextActionsType.SetCurrentAPMLoggingDetailContext, { entityGuid, messageId });
-
 export const setComposeCodemarkActive = (type: CodemarkType | undefined) =>
 	action(ContextActionsType.SetComposeCodemarkActive, { type });
 
