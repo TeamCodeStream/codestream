@@ -121,9 +121,6 @@ import {
 	GetLogFieldDefinitionsRequest,
 	GetLogFieldDefinitionsResponse,
 	LogFieldDefinition,
-	GetLogsDetailRequestType,
-	GetLogDetailRequest,
-	GetLogDetailResponse,
 } from "@codestream/protocols/agent";
 import {
 	CSBitbucketProviderInfo,
@@ -4669,35 +4666,6 @@ export class NewRelicProvider
 		return {
 			deployments,
 		};
-	}
-
-	@lspHandler(GetLogsDetailRequestType)
-	@log()
-	public async getLogDetails(request: GetLogDetailRequest): Promise<GetLogDetailResponse> {
-		try {
-			const { logMessageId, entityGuid } = {
-				...request,
-			};
-
-			const parsedId = NewRelicProvider.parseId(entityGuid)!;
-
-			const query = `SELECT * FROM Log WHERE messsageId = '${logMessageId}' AND entity.guid = '${entityGuid}'`;
-
-			ContextLogger.log(`getLogDetails query: ${query}`);
-
-			const logs = await this.runNrql<LogResult>(parsedId.accountId, query, 400);
-
-			return {
-				result: logs[0],
-			};
-		} catch (ex) {
-			ContextLogger.warn("getLogDetails failure", {
-				request,
-				error: ex,
-			});
-
-			return { error: this.mapNRErrorResponse(ex) };
-		}
 	}
 
 	@lspHandler(GetLogsRequestType)

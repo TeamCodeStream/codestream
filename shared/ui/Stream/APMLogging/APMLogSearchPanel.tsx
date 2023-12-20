@@ -14,7 +14,6 @@ import Timestamp from "../Timestamp";
 import { Link } from "../Link";
 import {
 	GetLogFieldDefinitionsRequestType,
-	GetLogsDetailRequestType,
 	GetLogsRequestType,
 	LogFieldDefinition,
 	LogResult,
@@ -109,7 +108,6 @@ export const APMLogSearchPanel = () => {
 
 	const [fieldDefinitions, setFieldDefinitions] = useState<LogFieldDefinition[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
-	const [detailsLoading, setDetailsLoading] = useState<boolean>(false);
 
 	const [query, setQuery] = useState<string>("");
 	const [hasSearched, setHasSearched] = useState<boolean>(false);
@@ -120,7 +118,6 @@ export const APMLogSearchPanel = () => {
 	const [selectSinceOptions, setSelectSinceOptions] = useState<SelectedOption[]>([]);
 	const [maximized, setMaximized] = useState<boolean>(false);
 	const [results, setResults] = useState<LogResult[]>([]);
-	const [details, setDetails] = useState<LogResult>();
 
 	const [totalItems, setTotalItems] = useState<number>(0);
 	const [logError, setLogError] = useState<string | undefined>("");
@@ -146,6 +143,7 @@ export const APMLogSearchPanel = () => {
 			label: "30 Minutes Ago",
 		};
 
+		// TODO: Sliding time window selector?
 		const sinceOptions: SelectedOption[] = [
 			defaultOption,
 			{ value: "60 MINUTES AGO", label: "60 Minutes Ago" },
@@ -266,38 +264,27 @@ export const APMLogSearchPanel = () => {
 		});
 	};
 
-	const renderResults = () => {
-		if (results.length === 0) {
-			return null;
-		}
-
-		return (
-			<>
-				{results.map((r, idx) => (
-					<LogRow logResult={r} evenRow={idx % 2 === 0} />
-				))}
-			</>
-		);
-	};
-
 	const renderHeaderRow = () => {
 		return (
 			<tr>
-				{fieldDefinitions &&
+				{
+					// TODO: Instead of using the full list of field definitions for display,
+					//       Use a preference that includes which columns to show.fieldDefinitions &&
 					fieldDefinitions.length > 0 &&
-					fieldDefinitions.map(fd => {
-						return (
-							<th
-								colSpan={columnSpanMapping[fd.key!] || 1}
-								style={{
-									border: "1px solid darkgray",
-									padding: "3px 8px 3px 8px",
-								}}
-							>
-								{fd.key}
-							</th>
-						);
-					})}
+						fieldDefinitions.map(fd => {
+							return (
+								<th
+									colSpan={columnSpanMapping[fd.key!] || 1}
+									style={{
+										border: "1px solid darkgray",
+										padding: "3px 8px 3px 8px",
+									}}
+								>
+									{fd.key}
+								</th>
+							);
+						})
+				}
 			</tr>
 		);
 	};
@@ -325,42 +312,15 @@ export const APMLogSearchPanel = () => {
 		return <td>{fieldValue}</td>;
 	};
 
-	const fetchLogDetails = async (logMessageId: string) => {
-		setDetailsLoading(true);
-
-		try {
-			const response = await HostApi.instance.send(GetLogsDetailRequestType, {
-				logMessageId,
-				entityGuid: derivedState.entityGuid!,
-			});
-
-			if (!response) {
-				handleError(
-					"An unexpected error occurred while fetching log detail information; please contact support."
-				);
-				return;
-			}
-
-			if (isNRErrorResponse(response?.error)) {
-				handleError(response.error?.error?.message ?? response.error?.error?.type);
-				return;
-			}
-
-			if (response.result) {
-				setDetails(response.result);
-			}
-		} catch (ex) {
-			handleError(ex);
-		}
-
-		setDetailsLoading(false);
-	};
-
 	const expandDetailsView = (messageId: string) => {
-		fetchLogDetails(messageId);
+		const details = results.find(lr => {
+			return lr["messageId"] === messageId;
+		});
+
+		// TODO: Design drop-down / split view to display detail data inline
 	};
 
-	const LogRow = (props: { logResult: LogResult; evenRow: boolean }) => {
+	const LogRow = (props: { logResult: LogResult }) => {
 		return (
 			<tr
 				style={{
@@ -368,6 +328,8 @@ export const APMLogSearchPanel = () => {
 					borderBottom: "1px solid lightgray",
 				}}
 				onClick={e => {
+					// TODO: Move to icon in front of row?
+					//       Add Hover indicators?
 					e.preventDefault();
 					e.stopPropagation();
 
@@ -375,6 +337,8 @@ export const APMLogSearchPanel = () => {
 				}}
 			>
 				{props.logResult &&
+					// TODO: Instead of using the full list of field definitions for display,
+					//       Use a preference that includes which columns to show.
 					fieldDefinitions &&
 					fieldDefinitions.map(fd => {
 						return formatRowValue(fd.key!, props.logResult[fd.key!]);
@@ -450,10 +414,19 @@ export const APMLogSearchPanel = () => {
 
 				<ScrollBox>
 					<div className="vscroll">
+						{/* {isLoading && (
+							TODO: Skeleton loader? Couldn't get it to work when I tried
+						)} */}
+
 						{!logError && !isLoading && results && totalItems > 0 && fieldDefinitions && (
+							// TODO: Using a table is pretty terrible here...
 							<table style={{ width: "100%", borderCollapse: "collapse" }}>
 								<thead>{renderHeaderRow()}</thead>
-								<tbody>{renderResults()}</tbody>
+								<tbody>
+									{results.map((r, idx) => (
+										<LogRow logResult={r} />
+									))}
+								</tbody>
 							</table>
 						)}
 
