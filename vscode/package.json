@@ -286,7 +286,7 @@
 				},
 				{
 					"command": "codestream.logSearch",
-					"when": "codestream:status == signedIn && resourceScheme == file",
+					"when": "codestream:status == signedIn && editorTextFocus",
 					"group": "9_zcodestream@3"
 				}
 			]
