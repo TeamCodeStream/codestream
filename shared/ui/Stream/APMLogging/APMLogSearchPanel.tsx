@@ -5,22 +5,21 @@ import { PanelHeader } from "../../src/components/PanelHeader";
 import styled from "styled-components";
 import ScrollBox from "../ScrollBox";
 import { HostApi } from "../../webview-api";
-import {
-	GetLogFieldDefinitionsRequestType,
-	GetLogsRequestType,
-	LogFieldDefinition,
-	LogResult,
-	isNRErrorResponse,
-} from "../../../util/src/protocol/agent/agent.protocol.providers";
 import { CodeStreamState } from "../../store";
-import { closePanel, openModal } from "../actions";
+import { closePanel } from "../actions";
 import { useAppDispatch, useAppSelector, useDidMount } from "../../utilities/hooks";
 import Button from "../Button";
 import Select from "react-select";
 import Timestamp from "../Timestamp";
 import { Link } from "../Link";
-import { WebviewModals } from "@codestream/protocols/webview";
-import { setCurrentAPMLoggingDetailContext } from "../../store/context/actions";
+import {
+	GetLogFieldDefinitionsRequestType,
+	GetLogsDetailRequestType,
+	GetLogsRequestType,
+	LogFieldDefinition,
+	LogResult,
+	isNRErrorResponse,
+} from "@codestream/protocols/agent";
 
 interface SelectedOption {
 	value: string;
@@ -104,12 +103,14 @@ const columnSpanMapping = {
 	level: 2,
 };
 
-export default function ObservabilityLogsPanel() {
+export const APMLogSearchPanel = () => {
 	const dispatch = useAppDispatch();
 	const searchInput = useRef<HTMLInputElement>(null);
 
 	const [fieldDefinitions, setFieldDefinitions] = useState<LogFieldDefinition[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
+	const [detailsLoading, setDetailsLoading] = useState<boolean>(false);
+
 	const [query, setQuery] = useState<string>("");
 	const [hasSearched, setHasSearched] = useState<boolean>(false);
 
@@ -119,6 +120,8 @@ export default function ObservabilityLogsPanel() {
 	const [selectSinceOptions, setSelectSinceOptions] = useState<SelectedOption[]>([]);
 	const [maximized, setMaximized] = useState<boolean>(false);
 	const [results, setResults] = useState<LogResult[]>([]);
+	const [details, setDetails] = useState<LogResult>();
+
 	const [totalItems, setTotalItems] = useState<number>(0);
 	const [logError, setLogError] = useState<string | undefined>("");
 	const [isUIDisabled, setIsUIDisabled] = useState<boolean>(false);
@@ -322,6 +325,41 @@ export default function ObservabilityLogsPanel() {
 		return <td>{fieldValue}</td>;
 	};
 
+	const fetchLogDetails = async (logMessageId: string) => {
+		setDetailsLoading(true);
+
+		try {
+			const response = await HostApi.instance.send(GetLogsDetailRequestType, {
+				logMessageId,
+				entityGuid: derivedState.entityGuid!,
+			});
+
+			if (!response) {
+				handleError(
+					"An unexpected error occurred while fetching log detail information; please contact support."
+				);
+				return;
+			}
+
+			if (isNRErrorResponse(response?.error)) {
+				handleError(response.error?.error?.message ?? response.error?.error?.type);
+				return;
+			}
+
+			if (response.result) {
+				setDetails(response.result);
+			}
+		} catch (ex) {
+			handleError(ex);
+		}
+
+		setDetailsLoading(false);
+	};
+
+	const expandDetailsView = (messageId: string) => {
+		fetchLogDetails(messageId);
+	};
+
 	const LogRow = (props: { logResult: LogResult; evenRow: boolean }) => {
 		return (
 			<tr
@@ -332,10 +370,8 @@ export default function ObservabilityLogsPanel() {
 				onClick={e => {
 					e.preventDefault();
 					e.stopPropagation();
-					dispatch(
-						setCurrentAPMLoggingDetailContext(derivedState.entityGuid, props.logResult["messageId"])
-					);
-					dispatch(openModal(WebviewModals.LogDetailView));
+
+					expandDetailsView(props.logResult["messageId"]);
 				}}
 			>
 				{props.logResult &&
@@ -450,4 +486,4 @@ export default function ObservabilityLogsPanel() {
 			</div>
 		</Dialog>
 	);
-}
+};

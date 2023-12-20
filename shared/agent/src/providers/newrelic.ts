@@ -4749,7 +4749,7 @@ export class NewRelicProvider
 
 			const parsedId = NewRelicProvider.parseId(entityGuid)!;
 			const query = `SELECT keyset() FROM Log WHERE entity.guid = '${entityGuid}'`;
-			const logDefinitions = await this.runNrql<LogFieldDefinition>(parsedId.accountId, query, 400);
+			let logDefinitions = await this.runNrql<LogFieldDefinition>(parsedId.accountId, query, 400);
 
 			if (!logDefinitions || logDefinitions.length === 0) {
 				ContextLogger.warn("getLogFieldDefinitions unable to query Logs for field definitions", {
@@ -4764,6 +4764,22 @@ export class NewRelicProvider
 					},
 				};
 			}
+
+			// resort some common fields to the front - better way?
+			var timestamp = logDefinitions.find(lfd => lfd.key === "timestamp");
+			var level = logDefinitions.find(lfd => lfd.key === "level");
+			var message = logDefinitions.find(lfd => lfd.key === "message");
+
+			var timestampIndex = logDefinitions.findIndex(lfd => lfd.key === "timestamp");
+			logDefinitions.splice(timestampIndex, 1);
+
+			var levelIndex = logDefinitions.findIndex(lfd => lfd.key === "level");
+			logDefinitions.splice(levelIndex, 1);
+
+			var messageIndex = logDefinitions.findIndex(lfd => lfd.key === "message");
+			logDefinitions.splice(messageIndex, 1);
+
+			logDefinitions.unshift(timestamp!, level!, message!);
 
 			return {
 				logDefinitions,

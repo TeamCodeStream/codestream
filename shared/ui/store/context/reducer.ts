@@ -295,14 +295,6 @@ export function reduceContext(
 			};
 		}
 
-		case ContextActionsType.SetCurrentAPMLoggingDetailContext: {
-			return {
-				...state,
-				currentAPMLoggingEntityGuid: action.payload.entityGuid,
-				currentAPMLoggingMessageId: action.payload.messageId,
-			};
-		}
-
 		case "RESET":
 			return {
 				...initialState,
