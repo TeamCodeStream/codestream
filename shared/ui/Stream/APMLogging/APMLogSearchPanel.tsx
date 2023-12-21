@@ -119,6 +119,9 @@ export const APMLogSearchPanel = () => {
 	const [selectSinceOptions, setSelectSinceOptions] = useState<SelectedOption[]>([]);
 	const [maximized, setMaximized] = useState<boolean>(false);
 	const [results, setResults] = useState<LogResult[]>([]);
+	const [severityAttribute, setSeverityAttribute] = useState<string>();
+	const [messageAttribute, setMessageAttribute] = useState<string>();
+	const [displayColumns, setDisplayColumns] = useState<string[]>([]);
 
 	const [beforeLogs, setBeforeLogs] = useState<LogResult[]>([]);
 	const [afterLogs, setAfterLogs] = useState<LogResult[]>([]);
@@ -220,7 +223,7 @@ export const APMLogSearchPanel = () => {
 	 * Given properties of a specific log entry, querys for logs that occurred BEFORE it
 	 * and logs that occured AFTER it
 	 */
-	const fetchSurroundLogs = async (entityGuid: string, messageId: string, since: number) => {
+	const fetchSurroundingLogs = async (entityGuid: string, messageId: string, since: number) => {
 		try {
 			setSurroundingLogsLoading(true);
 			setBeforeLogs([]);
@@ -264,6 +267,8 @@ export const APMLogSearchPanel = () => {
 			setHasSearched(true);
 			setIsLoading(true);
 			setResults([]);
+			setSeverityAttribute(undefined);
+			setMessageAttribute(undefined);
 			setTotalItems(0);
 
 			const filterText = searchTerm || query;
@@ -294,6 +299,11 @@ export const APMLogSearchPanel = () => {
 			if (response.logs && response.logs.length > 0) {
 				setResults(response.logs);
 				setTotalItems(response.logs.length);
+				setMessageAttribute(response.messageAttribute!);
+				setSeverityAttribute(response.severityAttribute!);
+
+				// TODO: Instead of this, utilize a preference with a list of columns
+				setDisplayColumns(["timestamp", response.severityAttribute!, response.messageAttribute!]);
 			}
 
 			trackTelemetry(entityGuid, (response?.logs?.length ?? 0) > 0);
@@ -317,17 +327,17 @@ export const APMLogSearchPanel = () => {
 				{
 					// TODO: Instead of using the full list of field definitions for display,
 					//       Use a preference that includes which columns to show.fieldDefinitions &&
-					fieldDefinitions.length > 0 &&
-						fieldDefinitions.map(fd => {
+					displayColumns.length > 0 &&
+						displayColumns.map(fd => {
 							return (
 								<th
-									colSpan={columnSpanMapping[fd.key!] || 1}
+									colSpan={columnSpanMapping[fd] || 1}
 									style={{
 										border: "1px solid darkgray",
 										padding: "3px 8px 3px 8px",
 									}}
 								>
-									{fd.key}
+									{fd}
 								</th>
 							);
 						})
@@ -345,7 +355,7 @@ export const APMLogSearchPanel = () => {
 			);
 		}
 
-		if (fieldName === "level") {
+		if (fieldName === severityAttribute) {
 			return (
 				<>
 					<td>
@@ -375,8 +385,8 @@ export const APMLogSearchPanel = () => {
 					borderBottom: "1px solid lightgray",
 				}}
 				onClick={e => {
-					// TODO: Move to icon in front of row?
-					//       Add Hover indicators?
+					// TODO: Move to icon in right of row with hover indicators
+					//       Outside of scrollable region, though?
 					e.preventDefault();
 					e.stopPropagation();
 
@@ -384,11 +394,9 @@ export const APMLogSearchPanel = () => {
 				}}
 			>
 				{props.logResult &&
-					// TODO: Instead of using the full list of field definitions for display,
-					//       Use a preference that includes which columns to show.
-					fieldDefinitions &&
-					fieldDefinitions.map(fd => {
-						return formatRowValue(fd.key!, props.logResult[fd.key!]);
+					displayColumns &&
+					displayColumns.map(fd => {
+						return formatRowValue(fd, props.logResult[fd]);
 					})}
 			</tr>
 		);
@@ -470,7 +478,7 @@ export const APMLogSearchPanel = () => {
 							<table style={{ width: "100%", borderCollapse: "collapse" }}>
 								<thead>{renderHeaderRow()}</thead>
 								<tbody>
-									{results.map((r, idx) => (
+									{results.map(r => (
 										<LogRow logResult={r} />
 									))}
 								</tbody>

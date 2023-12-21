@@ -4696,8 +4696,39 @@ export class NewRelicProvider
 
 			const logs = await this.runNrql<LogResult>(parsedId.accountId, query, 400);
 
+			let messageAttribute: string = "message";
+			const hasMessageAttribute = logs.some(lr => Object.keys(lr).includes("message"));
+			if (!hasMessageAttribute) {
+				logs.map(lr => {
+					const json = JSON.stringify(lr);
+					lr["log_summary"] = json;
+				});
+				messageAttribute = "log_summary";
+			}
+
+			const possibleSeverityAttributes: string[] = [
+				`log_severity`,
+				`level`,
+				`log.level`,
+				`loglevel`,
+				`log_level`,
+			];
+
+			let severityAttribute: string = "";
+
+			// should have at least (and no more) than one of these
+			possibleSeverityAttributes.map(psa => {
+				const hasAttribute = logs.some(lr => Object.keys(lr).includes(psa));
+
+				if (hasAttribute) {
+					severityAttribute = psa;
+				}
+			});
+
 			return {
 				logs,
+				messageAttribute,
+				severityAttribute,
 			};
 		} catch (ex) {
 			ContextLogger.warn("getLogs failure", {
