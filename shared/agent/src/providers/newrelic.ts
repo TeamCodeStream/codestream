@@ -4699,12 +4699,13 @@ export class NewRelicProvider
 			let messageAttribute: string = "message";
 			const hasMessageAttribute = logs.some(lr => Object.keys(lr).includes("message"));
 			if (!hasMessageAttribute) {
-				logs.map(lr => {
-					const json = JSON.stringify(lr);
-					lr["log_summary"] = json;
-				});
 				messageAttribute = "log_summary";
 			}
+
+			logs.map(lr => {
+				const json = JSON.stringify(lr);
+				lr["log_summary"] = json;
+			});
 
 			const possibleSeverityAttributes: string[] = [
 				`log_severity`,
