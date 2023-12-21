@@ -2552,7 +2552,6 @@ export interface GetSurroundingLogsRequest {
 	entityGuid: string;
 	messageId: string;
 	since: number;
-	limit: number;
 }
 
 export interface GetSurroundingLogsResponse {

@@ -4714,7 +4714,7 @@ export class NewRelicProvider
 		request: GetSurroundingLogsRequest
 	): Promise<GetSurroundingLogsResponse> {
 		try {
-			const { entityGuid, since, messageId, limit } = {
+			const { entityGuid, since, messageId } = {
 				...request,
 			};
 
@@ -4722,15 +4722,14 @@ export class NewRelicProvider
 
 			const queryWhere = `WHERE entity.guid = '${entityGuid}' AND newrelic.source = 'logs.APM' AND messageId != '${messageId}`;
 			const queryOrder = `ORDER BY timestamp ASC`;
-			const queryLimit = `LIMIT ${limit}`;
 
-			const beforeQuerySince = `SINCE ${since} - 1 HOUR`;
+			const beforeQuerySince = `SINCE ${since} - 10 MINUTES`;
 			const beforeQueryUntil = `UNTIL ${since}`;
-			const beforeQuery = `SELECT * FROM Log ${queryWhere} ${beforeQuerySince} ${beforeQueryUntil} ${queryOrder} ${queryLimit}`;
+			const beforeQuery = `SELECT * FROM Log ${queryWhere} ${beforeQuerySince} ${beforeQueryUntil} ${queryOrder}`;
 
 			const afterQuerySince = `SINCE ${since}`;
-			const afterQueryUntil = `UNTIL ${since} + 1 HOUR`;
-			const afterQuery = `SELECT * FROM Log ${queryWhere} ${afterQuerySince} ${afterQueryUntil} ${queryOrder} ${queryLimit}`;
+			const afterQueryUntil = `UNTIL ${since} + 10 MINUTES`;
+			const afterQuery = `SELECT * FROM Log ${queryWhere} ${afterQuerySince} ${afterQueryUntil} ${queryOrder}`;
 
 			ContextLogger.log(`getSurroundingLogs beforeQuery: ${beforeQuery}`);
 			ContextLogger.log(`getSurroundingLogs afterQuery: ${afterQuery}`);

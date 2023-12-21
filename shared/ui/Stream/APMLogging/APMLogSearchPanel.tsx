@@ -220,12 +220,7 @@ export const APMLogSearchPanel = () => {
 	 * Given properties of a specific log entry, querys for logs that occurred BEFORE it
 	 * and logs that occured AFTER it
 	 */
-	const fetchSurroundLogs = async (
-		entityGuid: string,
-		messageId: string,
-		since: number,
-		limit?: number
-	) => {
+	const fetchSurroundLogs = async (entityGuid: string, messageId: string, since: number) => {
 		try {
 			setSurroundingLogsLoading(true);
 			setBeforeLogs([]);
@@ -235,7 +230,6 @@ export const APMLogSearchPanel = () => {
 				entityGuid,
 				messageId,
 				since,
-				limit: limit ?? 15,
 			});
 
 			if (!response) {
