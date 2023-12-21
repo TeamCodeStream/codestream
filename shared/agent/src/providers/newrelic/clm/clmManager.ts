@@ -168,7 +168,27 @@ export class ClmManager implements Disposable {
 				this.anomaliesProvider.getLastObservabilityAnomaliesResponse(newRelicEntityGuid);
 			if (anomalies) {
 				this.addAnomalies(averageDuration, anomalies.responseTime);
+				for (const anomaly of anomalies.responseTime) {
+					this.addAnomalies(
+						averageDuration,
+						(anomaly.children || []).filter(_ => _.type === "duration")
+					);
+					this.addAnomalies(
+						errorRate,
+						(anomaly.children || []).filter(_ => _.type === "errorRate")
+					);
+				}
 				this.addAnomalies(errorRate, anomalies.errorRate);
+				for (const anomaly of anomalies.errorRate) {
+					this.addAnomalies(
+						averageDuration,
+						(anomaly.children || []).filter(_ => _.type === "duration")
+					);
+					this.addAnomalies(
+						errorRate,
+						(anomaly.children || []).filter(_ => _.type === "errorRate")
+					);
+				}
 			}
 
 			const hasAnyData = sampleSize.length || averageDuration.length || errorRate.length;
