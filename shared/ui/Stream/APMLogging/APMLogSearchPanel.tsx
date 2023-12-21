@@ -258,9 +258,9 @@ export const APMLogSearchPanel = () => {
 	};
 
 	const trackTelemetry = (entityGuid: string, resultsReturned: boolean) => {
-		HostApi.instance.track("Logs Searched", {
-			"Entity GUID": entityGuid,
-			"Results Returned": resultsReturned,
+		HostApi.instance.track("codestream/logs searched", {
+			meta_data: `entity_guid: ${entityGuid}`,
+			meta_data_2: `results_returned: ${resultsReturned}`,
 		});
 	};
 
