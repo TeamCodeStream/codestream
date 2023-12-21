@@ -2533,6 +2533,8 @@ export interface LogResult {
 
 export interface GetLogsResponse {
 	logs?: LogResult[];
+	messageAttribute?: string;
+	severityAttribute?: string;
 	error?: NRErrorResponse;
 }
 
