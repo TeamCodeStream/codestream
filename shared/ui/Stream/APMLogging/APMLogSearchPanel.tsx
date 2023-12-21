@@ -15,6 +15,7 @@ import { Link } from "../Link";
 import {
 	GetLogFieldDefinitionsRequestType,
 	GetLogsRequestType,
+	GetSurroundingLogsRequestType,
 	LogFieldDefinition,
 	LogResult,
 	isNRErrorResponse,
@@ -119,6 +120,10 @@ export const APMLogSearchPanel = () => {
 	const [maximized, setMaximized] = useState<boolean>(false);
 	const [results, setResults] = useState<LogResult[]>([]);
 
+	const [beforeLogs, setBeforeLogs] = useState<LogResult[]>([]);
+	const [afterLogs, setAfterLogs] = useState<LogResult[]>([]);
+	const [surroundingLogsLoading, setSurroundingLogsLoading] = useState<boolean>();
+
 	const [totalItems, setTotalItems] = useState<number>(0);
 	const [logError, setLogError] = useState<string | undefined>("");
 	const [isUIDisabled, setIsUIDisabled] = useState<boolean>(false);
@@ -208,6 +213,54 @@ export const APMLogSearchPanel = () => {
 		const { keyCode } = e;
 		if (keyCode === 13) {
 			fetchLogs(derivedState.entityGuid!);
+		}
+	};
+
+	/**
+	 * Given properties of a specific log entry, querys for logs that occurred BEFORE it
+	 * and logs that occured AFTER it
+	 */
+	const fetchSurroundLogs = async (
+		entityGuid: string,
+		messageId: string,
+		since: number,
+		limit?: number
+	) => {
+		try {
+			setSurroundingLogsLoading(true);
+			setBeforeLogs([]);
+			setAfterLogs([]);
+
+			const response = await HostApi.instance.send(GetSurroundingLogsRequestType, {
+				entityGuid,
+				messageId,
+				since,
+				limit: limit ?? 15,
+			});
+
+			if (!response) {
+				handleError(
+					"An unexpected error occurred while fetching surrounding log information; please contact support."
+				);
+				return;
+			}
+
+			if (isNRErrorResponse(response?.error)) {
+				handleError(response.error?.error?.message ?? response.error?.error?.type);
+				return;
+			}
+
+			if (response.beforeLogs && response.beforeLogs.length > 0) {
+				setResults(response.beforeLogs);
+			}
+
+			if (response.afterLogs && response.afterLogs.length > 0) {
+				setResults(response.afterLogs);
+			}
+		} catch (ex) {
+			handleError(ex);
+		} finally {
+			setSurroundingLogsLoading(false);
 		}
 	};
 

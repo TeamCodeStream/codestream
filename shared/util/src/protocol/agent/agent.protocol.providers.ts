@@ -2545,8 +2545,28 @@ export interface GetLogsResponse {
 }
 
 export const GetLogsRequestType = new RequestType<GetLogsRequest, GetLogsResponse, void, void>(
-	"codestream/newrelic/logs"
+	"codestream/newrelic/logs/search"
 );
+
+export interface GetSurroundingLogsRequest {
+	entityGuid: string;
+	messageId: string;
+	since: number;
+	limit: number;
+}
+
+export interface GetSurroundingLogsResponse {
+	beforeLogs?: LogResult[];
+	afterLogs?: LogResult[];
+	error?: NRErrorResponse;
+}
+
+export const GetSurroundingLogsRequestType = new RequestType<
+	GetSurroundingLogsRequest,
+	GetSurroundingLogsResponse,
+	void,
+	void
+>("codestream/newrelic/logs/surrounding");
 
 export interface GetLogFieldDefinitionsRequest {
 	entityGuid: string;

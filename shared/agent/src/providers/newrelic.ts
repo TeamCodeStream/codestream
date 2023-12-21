@@ -121,6 +121,9 @@ import {
 	GetLogFieldDefinitionsRequest,
 	GetLogFieldDefinitionsResponse,
 	LogFieldDefinition,
+	GetSurroundingLogsRequest,
+	GetSurroundingLogsRequestType,
+	GetSurroundingLogsResponse,
 } from "@codestream/protocols/agent";
 import {
 	CSBitbucketProviderInfo,
@@ -4698,6 +4701,49 @@ export class NewRelicProvider
 			};
 		} catch (ex) {
 			ContextLogger.warn("getLogs failure", {
+				request,
+				error: ex,
+			});
+			return { error: this.mapNRErrorResponse(ex) };
+		}
+	}
+
+	@lspHandler(GetSurroundingLogsRequestType)
+	@log()
+	public async getSurroundingLogs(
+		request: GetSurroundingLogsRequest
+	): Promise<GetSurroundingLogsResponse> {
+		try {
+			const { entityGuid, since, messageId, limit } = {
+				...request,
+			};
+
+			const parsedId = NewRelicProvider.parseId(entityGuid)!;
+
+			const queryWhere = `WHERE entity.guid = '${entityGuid}' AND newrelic.source = 'logs.APM' AND messageId != '${messageId}`;
+			const queryOrder = `ORDER BY timestamp ASC`;
+			const queryLimit = `LIMIT ${limit}`;
+
+			const beforeQuerySince = `SINCE ${since} - 1 HOUR`;
+			const beforeQueryUntil = `UNTIL ${since}`;
+			const beforeQuery = `SELECT * FROM Log ${queryWhere} ${beforeQuerySince} ${beforeQueryUntil} ${queryOrder} ${queryLimit}`;
+
+			const afterQuerySince = `SINCE ${since}`;
+			const afterQueryUntil = `UNTIL ${since} + 1 HOUR`;
+			const afterQuery = `SELECT * FROM Log ${queryWhere} ${afterQuerySince} ${afterQueryUntil} ${queryOrder} ${queryLimit}`;
+
+			ContextLogger.log(`getSurroundingLogs beforeQuery: ${beforeQuery}`);
+			ContextLogger.log(`getSurroundingLogs afterQuery: ${afterQuery}`);
+
+			const beforeLogs = await this.runNrql<LogResult>(parsedId.accountId, beforeQuery, 400);
+			const afterLogs = await this.runNrql<LogResult>(parsedId.accountId, afterQuery, 400);
+
+			return {
+				beforeLogs,
+				afterLogs,
+			};
+		} catch (ex) {
+			ContextLogger.warn("getSurroundingLogs failure", {
 				request,
 				error: ex,
 			});
