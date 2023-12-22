@@ -206,11 +206,7 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 															<TransactionIconSpan>
 																<span>&nbsp;</span>
 															</TransactionIconSpan>
-															<Tooltip
-																title={tooltipContent(anomaly)}
-																placement="topRight"
-																delay={1}
-															>
+															<Tooltip title={tooltipContent(child)} placement="topRight" delay={1}>
 																{formatFilePath(child.text)}
 															</Tooltip>
 															<AnomalyIcon
