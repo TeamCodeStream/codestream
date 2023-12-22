@@ -2,7 +2,6 @@
 
 import { FLTStrategy } from "./FLTStrategy";
 import { GetFileLevelTelemetryRequest } from "@codestream/protocols/agent";
-import { INewRelicProvider } from "../../newrelic";
 import { groupBy as _groupBy } from "lodash";
 import { AdditionalMetadataInfo, FunctionInfo, MetricTimeslice, Span } from "../newrelic.types";
 import { generateSpanQuery, spanQueryTypes } from "../spanQuery";
@@ -13,6 +12,7 @@ import { EnhancedMetricTimeslice, LanguageId } from "./clmManager";
 import { generateMethodAverageDurationQuery } from "../methodAverageDurationQuery";
 import { generateMethodErrorRateQuery } from "../methodErrorRateQuery";
 import { Index } from "@codestream/utils/types";
+import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 
 export class FLTCodeAttributeStrategy implements FLTStrategy {
 	constructor(
@@ -22,7 +22,7 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 		protected relativeFilePath: string,
 		protected request: GetFileLevelTelemetryRequest,
 		protected resolutionMethod: "filePath" | "locator" | "hybrid",
-		protected provider: INewRelicProvider
+		private graphqlClient: NewRelicGraphqlClient
 	) {}
 
 	async execute() {
@@ -224,7 +224,7 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 					bestMatchingCodeFilePath ? undefined : this.request.locator
 				);
 
-				const response = await this.provider.query(query, {
+				const response = await this.graphqlClient.query(query, {
 					accountId: this.accountId!,
 				});
 
@@ -236,7 +236,7 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 				}
 			}
 		} catch (ex) {
-			this.provider.errorLogIfNotIgnored(ex, "getSpans", { request: this.request });
+			this.graphqlClient.errorLogIfNotIgnored(ex, "getSpans", { request: this.request });
 			if (ex instanceof GraphqlNrqlError) {
 				throw ex;
 			}
@@ -259,7 +259,7 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 			` WHERE \`entity.guid\` = '${this.entityGuid}' AND \`code.filepath\` LIKE '%${filename}'` +
 			` FACET name SINCE 30 minutes AGO LIMIT 100`;
 
-		const results = await this.provider.runNrql<{
+		const results = await this.graphqlClient.runNrql<{
 			name: string;
 			codeFilePath: string;
 		}>(this.accountId, nrql);
@@ -293,11 +293,11 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 			metricTimesliceNames
 		);
 		try {
-			return this.provider.query(query, {
+			return this.graphqlClient.query(query, {
 				accountId: this.accountId,
 			});
 		} catch (ex) {
-			this.provider.errorLogIfNotIgnored(ex, "getMethodThroughput", {
+			this.graphqlClient.errorLogIfNotIgnored(ex, "getMethodThroughput", {
 				request: this.request,
 			});
 			if (ex instanceof GraphqlNrqlError) {
@@ -314,11 +314,11 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 			metricTimesliceNames
 		);
 		try {
-			return await this.provider.query(query, {
+			return await this.graphqlClient.query(query, {
 				accountId: this.accountId!,
 			});
 		} catch (ex) {
-			this.provider.errorLogIfNotIgnored(ex, "getMethodAverageDuration", {
+			this.graphqlClient.errorLogIfNotIgnored(ex, "getMethodAverageDuration", {
 				request: this.request,
 			});
 			if (ex instanceof GraphqlNrqlError) {
@@ -335,11 +335,11 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 			metricTimesliceNames
 		);
 		try {
-			return this.provider.query(query, {
+			return this.graphqlClient.query(query, {
 				accountId: this.accountId,
 			});
 		} catch (ex) {
-			this.provider.errorLogIfNotIgnored(ex, "getMethodErrorRate", { request: this.request });
+			this.graphqlClient.errorLogIfNotIgnored(ex, "getMethodErrorRate", { request: this.request });
 			if (ex instanceof GraphqlNrqlError) {
 				throw ex;
 			}

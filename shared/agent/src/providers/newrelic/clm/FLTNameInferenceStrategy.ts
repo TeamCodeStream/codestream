@@ -6,7 +6,7 @@ import {
 } from "@codestream/protocols/agent";
 import { Logger } from "../../../logger";
 import { FLTStrategy } from "./FLTStrategy";
-import { INewRelicProvider } from "../../newrelic";
+import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 
 interface NameValue {
 	name: string;
@@ -26,7 +26,7 @@ export abstract class FLTNameInferenceStrategy implements FLTStrategy {
 		protected accountId: number,
 		protected relativeFilePath: string,
 		protected request: GetFileLevelTelemetryRequest,
-		protected provider: INewRelicProvider
+		private graphqlClient: NewRelicGraphqlClient
 	) {}
 
 	abstract getMetricLookup(): string;
@@ -213,6 +213,6 @@ export abstract class FLTNameInferenceStrategy implements FLTStrategy {
 	}
 
 	private runNrql<T>(nrql: string): Promise<T[]> {
-		return this.provider.runNrql(this.accountId, nrql, 200);
+		return this.graphqlClient.runNrql(this.accountId, nrql, 200);
 	}
 }

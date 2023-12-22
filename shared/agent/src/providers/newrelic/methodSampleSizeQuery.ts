@@ -1,4 +1,4 @@
-import { escapeNrql } from "../newrelic";
+import { escapeNrql } from "./newRelicGraphqlClient";
 import { LanguageId } from "./clm/clmManager";
 
 export function generateMethodSampleSizeQuery(

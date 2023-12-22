@@ -1,15 +1,6 @@
 import { EntityType, FunctionLocator } from "@codestream/protocols/agent";
 import { LanguageId } from "./clm/clmManager";
 
-export interface Directive {
-	type: "assignRepository" | "removeAssignee" | "setAssignee" | "setState";
-	data: any;
-}
-
-export interface Directives {
-	directives: Directive[];
-}
-
 export interface NewRelicId {
 	accountId: number;
 	unknownAbbreviation: string;
@@ -33,7 +24,11 @@ export interface AdditionalMetadataInfo {
 }
 
 export class AccessTokenError extends Error {
-	constructor(public text: string, public innerError: any, public isAccessTokenError: boolean) {
+	constructor(
+		public text: string,
+		public innerError: any,
+		public isAccessTokenError: boolean
+	) {
 		super(text);
 	}
 }

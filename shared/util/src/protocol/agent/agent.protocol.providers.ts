@@ -14,6 +14,12 @@ import { ReviewPlus } from "./agent.protocol.reviews";
 import { CSRepository, PullRequestQuery } from "./api.protocol.models";
 import { TrunkCheckResults } from "./agent.protocol.trunk";
 
+export interface NewThirdPartyProviderConfig {
+	id: string;
+	apiUrl: string;
+	name: string;
+	baseHeaders: { [key: string]: string };
+}
 export interface ThirdPartyProviderConfig {
 	id: string;
 	name: string; // e.g. "trello"

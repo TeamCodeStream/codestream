@@ -33,6 +33,19 @@ export * from "./providers/trello";
 export * from "./providers/trunk";
 export * from "./providers/youtrack";
 
+export * from "./providers/newrelic/clm/clmProvider";
+export * from "./providers/newrelic/slo/sloProvider";
+export * from "./providers/newrelic/anomalies/anomaliesProvider";
+export * from "./providers/newrelic/errors/observabilityErrorsProvider";
+export * from "./providers/newrelic/entity/entityProvider";
+export * from "./providers/newrelic/repos/reposProvider";
+export * from "./providers/newrelic/deployments/deploymentsProvider";
+export * from "./providers/newrelic/goldenSignals/goldenSignalsProvider";
+export * from "./providers/newrelic/orgs/nrOrgProvider";
+export * from "./providers/newrelic/clm/entityAccountResolver";
+export * from "./providers/newrelic/newRelicGraphqlClient";
+export * from "./api/httpClient";
+
 function dumpError(err: Error | string): Promise<void> {
 	return new Promise(resolve => {
 		const destFile = path.join(os.homedir(), ".codestream", "agent-crash.txt");

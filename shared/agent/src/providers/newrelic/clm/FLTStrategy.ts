@@ -8,9 +8,9 @@ import {
 	GetFileLevelTelemetryRequest,
 } from "@codestream/protocols/agent";
 import { FLTNameInferenceJavaStrategy } from "./FLTNameInferenceJavaStrategy";
-import { INewRelicProvider } from "../../newrelic";
 import { FLTCodeAttributeStrategy } from "./FLTCodeAttributeStrategy";
 import { FLTNameInferenceKotlinStrategy } from "./FLTNameInferenceKotlinStrategy";
+import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 
 export interface FLTStrategy {
 	execute(): Promise<{
@@ -28,7 +28,7 @@ export class FLTStrategyFactory {
 		relativeFilePath: string,
 		request: GetFileLevelTelemetryRequest,
 		resolutionMethod: "filePath" | "locator" | "hybrid",
-		provider: INewRelicProvider
+		graphqlClient: NewRelicGraphqlClient
 	): FLTStrategy[] {
 		const strategies: FLTStrategy[] = [];
 		strategies.push(
@@ -39,13 +39,19 @@ export class FLTStrategyFactory {
 				relativeFilePath,
 				request,
 				resolutionMethod,
-				provider
+				graphqlClient
 			)
 		);
 
 		if (languageId === "java") {
 			strategies.push(
-				new FLTNameInferenceJavaStrategy(entityGuid, accountId, relativeFilePath, request, provider)
+				new FLTNameInferenceJavaStrategy(
+					entityGuid,
+					accountId,
+					relativeFilePath,
+					request,
+					graphqlClient
+				)
 			);
 		}
 		if (languageId === "kotlin") {
@@ -55,7 +61,7 @@ export class FLTStrategyFactory {
 					accountId,
 					relativeFilePath,
 					request,
-					provider
+					graphqlClient
 				)
 			);
 		}

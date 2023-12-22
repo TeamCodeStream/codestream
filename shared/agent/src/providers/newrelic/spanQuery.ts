@@ -1,12 +1,12 @@
 import { FunctionLocator } from "@codestream/protocols/agent";
 
 import { Logger } from "../../logger";
-import { escapeNrql } from "../newrelic";
 import { ResolutionMethod } from "./newrelic.types";
 import { LanguageId } from "./clm/clmManager";
+import { escapeNrql } from "./newRelicGraphqlClient";
 
 export const spanQueryTypes = ["equals", "like", "fuzzy", "desperate"] as const;
-export type SpanQueryType = typeof spanQueryTypes[number];
+export type SpanQueryType = (typeof spanQueryTypes)[number];
 const LIMIT = 250;
 
 const removableExtensions = new Set<string>(["tsx", "jsx", "js", "ts", "cjs", "mjs", "mts", "cts"]);
