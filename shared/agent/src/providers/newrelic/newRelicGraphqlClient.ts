@@ -259,20 +259,24 @@ export class NewRelicGraphqlClient {
 		let triedRefresh = false;
 		while (!resp) {
 			try {
-				resp = client.request<T>(query, variables);
+				resp = await client.request<T>(query, variables);
 			} catch (ex) {
 				if (
 					this.session.api.usingServiceGatewayAuth &&
 					!triedRefresh &&
 					this.providerInfo &&
-					this.providerInfo.refreshToken
+					this.providerInfo.refreshToken !== undefined
 				) {
 					Logger.log("NerdGraph call failed, attempting to refresh NR access token...");
 					let tokenInfo;
 					try {
-						tokenInfo = await this.session.api.refreshNewRelicToken(this.providerInfo.refreshToken);
+						tokenInfo = await this.session.api.refreshNewRelicToken(
+							this.providerInfo.refreshToken!
+						);
 						Logger.log("NR access token successfully refreshed, trying request again...");
-						//client.setHeader("Authorization", `Bearer ${tokenInfo.accessToken}`);
+						this.providerInfo.accessToken = tokenInfo.accessToken;
+						this.providerInfo.refreshToken = tokenInfo.refreshToken;
+						this.providerInfo.tokenType = tokenInfo.tokenType;
 						if (tokenInfo.tokenType === "access") {
 							client.setHeader("x-access-token", tokenInfo.accessToken);
 						} else {

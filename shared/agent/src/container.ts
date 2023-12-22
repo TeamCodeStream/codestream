@@ -32,7 +32,7 @@ import { UrlManager } from "./managers/urlManager";
 import { UsersManager } from "./managers/usersManager";
 import { ThirdPartyProviderRegistry } from "./providers/registry";
 import { CodeStreamSession } from "./session";
-import { injectNR } from "./providers/newrelic/nrDI";
+import { injectNR } from "./providers/newrelic/nrContainer";
 
 let providerRegistry: ThirdPartyProviderRegistry | undefined = undefined;
 

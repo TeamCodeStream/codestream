@@ -24,7 +24,7 @@ import { NrDirectives } from "./directives/nrDirectives";
 let nrDirectives: NrDirectives | undefined;
 
 export async function injectNR(sessionServiceContainer: SessionServiceContainer) {
-	Logger.log("*** Injecting New Relic providers");
+	Logger.log("Injecting New Relic providers");
 	const session: CodeStreamSession = sessionServiceContainer.session;
 	const codeStreamAgent = session.agent;
 	const name = "newrelic";

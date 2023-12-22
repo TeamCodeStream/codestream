@@ -4,17 +4,16 @@ import { InternalError, ReportSuppressedMessages } from "../agentError";
 import { NewThirdPartyProviderConfig } from "@codestream/protocols/agent";
 import { Headers, Response } from "undici";
 import { CodeStreamSession } from "../session";
-import { CSAccessTokenType, CSNewRelicProviderInfo } from "@codestream/protocols/api";
+import { CSAccessTokenType, CSProviderInfo } from "@codestream/protocols/api";
 import { Logger } from "../logger";
 import { Container } from "../container";
 import { Strings } from "../system";
 
 export class HttpClient {
-	// TODO REF Generic CSNewRelicProviderInfo
 	constructor(
 		private providerConfig: NewThirdPartyProviderConfig,
 		private session: CodeStreamSession,
-		private providerInfo: CSNewRelicProviderInfo
+		private providerInfo: CSProviderInfo
 	) {}
 
 	get headers() {
@@ -148,6 +147,9 @@ export class HttpClient {
 							tokenInfo = await this.session.api.refreshNewRelicToken(
 								this.providerInfo.refreshToken
 							);
+							this.providerInfo.accessToken = tokenInfo.accessToken;
+							this.providerInfo.refreshToken = tokenInfo.refreshToken;
+							this.providerInfo.tokenType = tokenInfo.tokenType;
 							Logger.log("NR access token successfully refreshed, trying request again...");
 							if (tokenInfo.tokenType === CSAccessTokenType.ACCESS_TOKEN) {
 								init.headers.set("x-access-token", tokenInfo.accessToken);
@@ -270,11 +272,11 @@ export class HttpClient {
 		return new Error(message);
 	}
 
-	private isNewRelicAuth() {
+	private isNewRelicAuth(): boolean {
 		return (
 			this.providerConfig.id === "newrelic*com" &&
 			this.session.api.usingServiceGatewayAuth &&
-			this.providerInfo.refreshToken
+			this.providerInfo.refreshToken !== undefined
 		);
 	}
 

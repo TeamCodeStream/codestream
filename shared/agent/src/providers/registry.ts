@@ -92,7 +92,7 @@ import {
 	ThirdPartyProviderSupportsPullRequests,
 	ThirdPartyProviderSupportsViewingPullRequests,
 } from "./provider";
-import { getNrDirectives } from "./newrelic/nrDI";
+import { getNrDirectives } from "./newrelic/nrContainer";
 
 const PR_QUERIES: PRProviderQueries = {
 	"gitlab*com": [
