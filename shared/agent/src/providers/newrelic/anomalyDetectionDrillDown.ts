@@ -17,6 +17,7 @@ import { Logger } from "../../logger";
 import { getStorage } from "../../storage";
 import { getAnomalyDetectionMockResponse } from "./anomalyDetectionMockResults";
 import { getLanguageSupport, LanguageSupport } from "./clm/languageSupport";
+import { flatten } from "lodash";
 
 export class AnomalyDetectorDrillDown {
 	constructor(
@@ -132,19 +133,20 @@ export class AnomalyDetectorDrillDown {
 
 		try {
 			const telemetry = Container.instance().telemetry;
+			const children = [
+				...flatten(durationAnomalies.map(_ => _.children || [])),
+				...flatten(errorRateAnomalies.map(_ => _.children || [])),
+			];
+			const durationMetrics = children.filter(_ => _.type === "duration");
+			const errorRateMetrics = children.filter(_ => _.type === "duration");
+
 			const event = {
-				"Total Methods": topLevel.totalMetrics,
-				"Anomalous Error Methods": errorRateAnomalies.length,
-				"Anomalous Duration Methods": durationAnomalies.length,
 				"Entity GUID": this._request.entityGuid,
-				"Minimum Change": Math.round((this._request.minimumRatio - 1) * 100),
-				"Minimum RPM": this._request.minimumSampleRate,
-				"Minimum Error Rate": this._request.minimumErrorRate,
-				"Minimum Avg Duration": this._request.minimumResponseTime,
-				"Since Days Ago": this._sinceDaysAgo,
-				"Baseline Days": this._request.baselineDays,
-				"Release Based": this._releaseBased,
 				Language: languageSupport.language,
+				"Anomalous Duration Transactions": durationAnomalies.length,
+				"Anomalous Error Transactions": errorRateAnomalies.length,
+				"Anomalous Duration Metrics": durationMetrics.length,
+				"Anomalous Error Metrics": errorRateMetrics.length,
 			};
 			telemetry?.track({
 				eventName: "CLM Anomalies Calculated",

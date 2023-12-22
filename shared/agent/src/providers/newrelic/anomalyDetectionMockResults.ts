@@ -17,7 +17,9 @@ export const getAnomalyDetectionMockResponse = (
 	return undefined;
 };
 
-const getMethodLevelTelemetryMockResponseCheckout = (request: GetMethodLevelTelemetryRequest) => {
+const getMethodLevelTelemetryMockResponseConfirmationJsp = (
+	request: GetMethodLevelTelemetryRequest
+) => {
 	const methodGoldenMetrics = [
 		{
 			...errorRateChartTemplate,
@@ -37,16 +39,16 @@ const getMethodLevelTelemetryMockResponseCheckout = (request: GetMethodLevelTele
 		{
 			...durationChartTemplate,
 			result: [
-				buildChartDataForNDaysAgo(10, "23.24", null, null),
-				buildChartDataForNDaysAgo(9, "25.12", null, null),
-				buildChartDataForNDaysAgo(8, "24.00", null, null),
-				buildChartDataForNDaysAgo(7, "24.12", null, null),
-				buildChartDataForNDaysAgo(6, "23.45", null, null),
-				buildChartDataForNDaysAgo(5, "25.09", null, null),
-				buildChartDataForNDaysAgo(4, "25.03", null, null),
-				buildChartDataForNDaysAgo(3, "24.94", null, null),
-				buildChartDataForNDaysAgo(2, "23.98", null, null),
-				buildChartDataForNDaysAgo(1, "23.87", null, null),
+				buildChartDataForNDaysAgo(10, "27.14", null, null),
+				buildChartDataForNDaysAgo(9, "28.12", null, null),
+				buildChartDataForNDaysAgo(8, "27.00", null, null),
+				buildChartDataForNDaysAgo(7, "27.12", null, null),
+				buildChartDataForNDaysAgo(6, "26.45", null, null),
+				buildChartDataForNDaysAgo(5, "28.09", null, null),
+				buildChartDataForNDaysAgo(4, "28.03", null, null),
+				buildChartDataForNDaysAgo(3, "27.94", null, null),
+				buildChartDataForNDaysAgo(2, "26.98", null, null),
+				buildChartDataForNDaysAgo(1, "26.87", null, null),
 			],
 		},
 		{
@@ -78,7 +80,7 @@ const getMethodLevelTelemetryMockResponseCheckout = (request: GetMethodLevelTele
 	};
 };
 
-const getMethodLevelTelemetryMockResponseLogin = (request: GetMethodLevelTelemetryRequest) => {
+const getMethodLevelTelemetryMockResponsePhoneJsp = (request: GetMethodLevelTelemetryRequest) => {
 	const methodGoldenMetrics = [
 		{
 			...errorRateChartTemplate,
@@ -139,21 +141,91 @@ const getMethodLevelTelemetryMockResponseLogin = (request: GetMethodLevelTelemet
 	};
 };
 
+const getMethodLevelTelemetryMockResponseBrowsePhone = (
+	request: GetMethodLevelTelemetryRequest
+) => {
+	const methodGoldenMetrics = [
+		{
+			...errorRateChartTemplate,
+			result: [
+				buildChartDataForNDaysAgo(10, null, null, "0.00"),
+				buildChartDataForNDaysAgo(9, null, null, "0.00"),
+				buildChartDataForNDaysAgo(8, null, null, "0.00"),
+				buildChartDataForNDaysAgo(7, null, null, "0.00"),
+				buildChartDataForNDaysAgo(6, null, null, "0.00"),
+				buildChartDataForNDaysAgo(5, null, null, "0.00"),
+				buildChartDataForNDaysAgo(4, null, null, "0.00"),
+				buildChartDataForNDaysAgo(3, null, null, "0.00"),
+				buildChartDataForNDaysAgo(2, null, null, "0.00"),
+				buildChartDataForNDaysAgo(1, null, null, "0.00"),
+			],
+		},
+		{
+			...durationChartTemplate,
+			result: [
+				buildChartDataForNDaysAgo(10, "103.34", null, null),
+				buildChartDataForNDaysAgo(9, "106.23", null, null),
+				buildChartDataForNDaysAgo(8, "103.34", null, null),
+				buildChartDataForNDaysAgo(7, "106.43", null, null),
+				buildChartDataForNDaysAgo(6, "110.90", null, null),
+				buildChartDataForNDaysAgo(5, "98.87", null, null),
+				buildChartDataForNDaysAgo(4, "112.93", null, null),
+				buildChartDataForNDaysAgo(3, "134.12", null, null),
+				buildChartDataForNDaysAgo(2, "127.34", null, null),
+				buildChartDataForNDaysAgo(1, "131.02", null, null),
+			],
+		},
+		{
+			...samplesChartTemplate,
+			result: [
+				buildChartDataForNDaysAgo(10, null, "1030.00", null),
+				buildChartDataForNDaysAgo(9, null, "998.00", null),
+				buildChartDataForNDaysAgo(8, null, "970.00", null),
+				buildChartDataForNDaysAgo(7, null, "1120.00", null),
+				buildChartDataForNDaysAgo(6, null, "1024.00", null),
+				buildChartDataForNDaysAgo(5, null, "1202.00", null),
+				buildChartDataForNDaysAgo(4, null, "1038.00", null),
+				buildChartDataForNDaysAgo(3, null, "972.00", null),
+				buildChartDataForNDaysAgo(2, null, "1049.00", null),
+				buildChartDataForNDaysAgo(1, null, "1002.00", null),
+			],
+		},
+	] as any as MethodGoldenMetrics[];
+
+	return {
+		newRelicEntityGuid: request.newRelicEntityGuid,
+		newRelicUrl: undefined,
+		goldenMetrics: methodGoldenMetrics,
+		deployments: deployments,
+		errors: undefined,
+		newRelicAlertSeverity: undefined,
+		newRelicEntityAccounts: [],
+		newRelicEntityName: "WebPortal",
+	};
+};
+
 export const getMethodLevelTelemetryMockResponse = (
 	request: GetMethodLevelTelemetryRequest
 ): GetMethodLevelTelemetryResponse | undefined => {
 	if (request.newRelicEntityGuid !== anomalyDetectionMockEntityGuid) return undefined;
 
+	// WebTransaction/JSP/purchase/confirmation.jsp
+	// WebTransaction/JSP/browse/phone.jsp
+	// Java/acme.storefront.action.BrowsePhoneAction/browsePhone
+
 	if (
-		request.metricTimesliceNameMapping?.duration ===
-		"Java/acme.storefront.action.PurchaseAction/checkout"
+		request.metricTimesliceNameMapping?.duration === "WebTransaction/JSP/purchase/confirmation.jsp"
 	) {
-		return getMethodLevelTelemetryMockResponseCheckout(request);
+		return getMethodLevelTelemetryMockResponseConfirmationJsp(request);
+	}
+	if (request.metricTimesliceNameMapping?.duration === "WebTransaction/JSP/browse/phone.jsp") {
+		return getMethodLevelTelemetryMockResponsePhoneJsp(request);
 	}
 	if (
-		request.metricTimesliceNameMapping?.duration === "Java/acme.storefront.action.LoginAction/login"
+		request.metricTimesliceNameMapping?.duration ===
+		"Java/acme.storefront.action.BrowsePhoneAction/browsePhone"
 	) {
-		return getMethodLevelTelemetryMockResponseLogin(request);
+		return getMethodLevelTelemetryMockResponseBrowsePhone(request);
 	}
 	return undefined;
 };
@@ -227,72 +299,69 @@ const anomalyDetectionMockEntityGuid = "MTYwNjg2MnxBUE18QVBQTElDQVRJT058NDMxOTIy
 const anomalyDetectionMockResponseTemplate: GetObservabilityAnomaliesResponse = {
 	responseTime: [
 		{
-			name: "Java/acme.storefront.action.LoginAction/login",
+			name: "WebTransaction/JSP/browse/phone.jsp",
 			type: "duration",
 			oldValue: 163.33,
 			newValue: 200.22,
 			ratio: 1.2259,
-			codeAttrs: {
-				codeFilepath: undefined,
-				codeNamespace: "acme.storefront.action.LoginAction",
-				codeFunction: "login",
-			},
 			language: "java",
-			text: "acme.storefront.action.LoginAction/login",
+			text: "WebTransaction/JSP/browse/phone.jsp",
 			totalDays: 10,
-			metricTimesliceName: "Java/acme.storefront.action.LoginAction/login",
+			metricTimesliceName: "WebTransaction/JSP/browse/phone.jsp",
 			sinceText: "release CS42 on $date",
-			errorMetricTimesliceName: "Java/acme.storefront.action.LoginAction/login",
+			errorMetricTimesliceName: "Errors/WebTransaction/JSP/browse/phone.jsp",
 			chartHeaderTexts: {
 				"Average duration (ms)": "+22.59% since release CS42 on $date",
 			},
 			notificationText: "Average duration (ms) +22.59% since release CS42 on $date",
 			entityName: "WebPortal",
+			children: [
+				{
+					name: "Java/acme.storefront.action.BrowsePhoneAction/browsePhone",
+					type: "duration",
+					oldValue: 97.2,
+					newValue: 130.64,
+					ratio: 1.3441,
+					codeAttrs: {
+						codeFilepath: undefined,
+						codeNamespace: "acme.storefront.action.BrowsePhoneAction",
+						codeFunction: "browsePhone",
+					},
+					language: "java",
+					text: "Java/acme.storefront.action.BrowsePhoneAction/browsePhone",
+					totalDays: 10,
+					metricTimesliceName: "Java/acme.storefront.action.BrowsePhoneAction/browsePhone",
+					sinceText: "release CS42 on $date",
+					errorMetricTimesliceName:
+						"Errors/Java/acme.storefront.action.BrowsePhoneAction/browsePhone",
+					chartHeaderTexts: {
+						"Average duration (ms)": "+34.41% since release CS42 on $date",
+					},
+					notificationText: "Average duration (ms) +34.41% since release CS42 on $date",
+					entityName: "WebPortal",
+				},
+			],
 		},
-		// {
-		// 	name: "Java/acme.storefront.action.PurchaseAction/checkout",
-		// 	oldValue: 177.15232468106115,
-		// 	newValue: 416.4159984105804,
-		// 	ratio: 2.3506098447213786,
-		// 	codeFilepath: undefined,
-		// 	codeNamespace: "acme.storefront.action.PurchaseAction",
-		// 	codeFunction: "checkout",
-		// 	language: "java",
-		// 	text: "acme.storefront.action.PurchaseAction/checkout",
-		// 	totalDays: 10,
-		// 	metricTimesliceName: "Java/acme.storefront.action.PurchaseAction/checkout",
-		// 	sinceText: "release CS42 on $date",
-		// 	errorMetricTimesliceName: "Java/acme.storefront.action.PurchaseAction/checkout",
-		// 	chartHeaderTexts: {
-		// 		"Average duration (ms)": "+135.06% since release CS42 on $date",
-		// 	},
-		// 	notificationText: "Average duration (ms) +135.06% since release CS42 on $date",
-		// 	entityName: "WebPortal",
-		// },
 	],
 	errorRate: [
 		{
-			name: "Java/acme.storefront.action.PurchaseAction/checkout",
+			name: "WebTransaction/JSP/purchase/confirmation.jsp",
 			type: "errorRate",
 			oldValue: 12.23,
 			newValue: 16.51,
 			ratio: 1.3506,
-			codeAttrs: {
-				codeFilepath: undefined,
-				codeNamespace: "acme.storefront.action.PurchaseAction",
-				codeFunction: "checkout",
-			},
 			language: "java",
-			text: "acme.storefront.action.PurchaseAction/checkout",
+			text: "WebTransaction/JSP/purchase/confirmation.jsp",
 			totalDays: 10,
-			metricTimesliceName: "Java/acme.storefront.action.PurchaseAction/checkout",
+			metricTimesliceName: "WebTransaction/JSP/purchase/confirmation.jsp",
 			sinceText: "release CS42 on $date",
-			errorMetricTimesliceName: "Java/acme.storefront.action.PurchaseAction/checkout",
+			errorMetricTimesliceName: "Errors/WebTransaction/JSP/purchase/confirmation.jsp",
 			chartHeaderTexts: {
 				"Errors (per minute)": "+35.06% since release CS42 on $date",
 			},
 			notificationText: "Errors (per minute) +35.06% since release CS42 on $date",
 			entityName: "WebPortal",
+			children: [],
 		},
 	],
 	detectionMethod: "Release Based",
