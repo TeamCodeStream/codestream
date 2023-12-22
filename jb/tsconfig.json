@@ -29,6 +29,7 @@
 			"@codestream/webview/*": ["../shared/ui/*"],
 			"vscode-jsonrpc": ["../shared/ui/vscode-jsonrpc.shim.ts"]
 		},
+		"resolveJsonModule": false,
 		"rootDir": "../",
 		"skipDefaultLibCheck": true,
 		"skipLibCheck": true,

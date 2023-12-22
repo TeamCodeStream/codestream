@@ -1,26 +1,24 @@
 "use strict";
 
-import { NewRelicProvider } from "../../../../../src/providers/newrelic";
-import { CSMe } from "@codestream/protocols/api";
 import { Dictionary } from "lodash";
-import {
-	Entity,
-	GetEntityCountResponse,
-	ObservabilityRepo,
-	RelatedEntity,
-	RelatedEntityByRepositoryGuidsResult,
-} from "@codestream/protocols/agent";
-import {
-	MetricQueryRequest,
-	MetricTimeslice,
-	Span,
-} from "../../../../../src/providers/newrelic/newrelic.types";
+import { MetricTimeslice, Span } from "../../../../../src/providers/newrelic/newrelic.types";
 import { FLTCodeAttributeStrategy } from "../../../../../src/providers/newrelic/clm/FLTCodeAttributeStrategy";
+import { NewRelicGraphqlClient } from "../../../../../src/providers/newrelic/newRelicGraphqlClient";
+import { describe, expect, it } from "@jest/globals";
+
+const mockRunNrql = jest.fn();
+
+const mockNewRelicGraphqlClient = {
+	runNrql: mockRunNrql,
+} as unknown as NewRelicGraphqlClient;
 
 describe("FLTCodeAttributeStrategy", () => {
+	beforeEach(() => {
+		jest.clearAllMocks();
+	});
+
 	describe("addMethodName", () => {
 		it("parses python function name", async () => {
-			const provider = new NewRelicProviderStub({} as any, {} as any);
 			const strategy = new FLTCodeAttributeStrategy(
 				"entityGuid",
 				1,
@@ -31,7 +29,7 @@ describe("FLTCodeAttributeStrategy", () => {
 					languageId: "python",
 				},
 				"locator",
-				provider
+				mockNewRelicGraphqlClient
 			);
 			const results = strategy.addMethodName(
 				{
@@ -105,7 +103,6 @@ describe("FLTCodeAttributeStrategy", () => {
 		});
 
 		it("maps python code.namespace", async () => {
-			const provider = new NewRelicProviderStub({} as any, {} as any);
 			const strategy = new FLTCodeAttributeStrategy(
 				"entityGuid",
 				1,
@@ -116,7 +113,7 @@ describe("FLTCodeAttributeStrategy", () => {
 					languageId: "python",
 				},
 				"locator",
-				provider
+				mockNewRelicGraphqlClient
 			);
 			const results = strategy.addMethodName(
 				{
@@ -161,7 +158,6 @@ describe("FLTCodeAttributeStrategy", () => {
 		});
 
 		it("handles ruby controller", () => {
-			const provider = new NewRelicProviderStub({} as any, {} as any);
 			const strategy = new FLTCodeAttributeStrategy(
 				"entityGuid",
 				1,
@@ -172,7 +168,7 @@ describe("FLTCodeAttributeStrategy", () => {
 					languageId: "ruby",
 				},
 				"locator",
-				provider
+				mockNewRelicGraphqlClient
 			);
 			const groupedByTransactionName = {
 				"Controller/agents/show": [
@@ -283,7 +279,6 @@ describe("FLTCodeAttributeStrategy", () => {
 		});
 
 		it("handles ruby ActiveJob", () => {
-			const provider = new NewRelicProviderStub({} as any, {} as any);
 			const strategy = new FLTCodeAttributeStrategy(
 				"entityGuid",
 				1,
@@ -294,7 +289,7 @@ describe("FLTCodeAttributeStrategy", () => {
 					languageId: "ruby",
 				},
 				"locator",
-				provider
+				mockNewRelicGraphqlClient
 			);
 			const groupedByTransactionName = {
 				"MessageBroker/ActiveJob::Async/Queue/Produce/Named/default": [
@@ -352,7 +347,6 @@ describe("FLTCodeAttributeStrategy", () => {
 		});
 
 		it("parses ruby modules:class:functions syntax", () => {
-			const provider = new NewRelicProviderStub({} as any, {} as any);
 			const strategy = new FLTCodeAttributeStrategy(
 				"entityGuid",
 				1,
@@ -363,7 +357,7 @@ describe("FLTCodeAttributeStrategy", () => {
 					languageId: "ruby",
 				},
 				"locator",
-				provider
+				mockNewRelicGraphqlClient
 			);
 			const groupedByTransactionName: Dictionary<Span[]> = {
 				"Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method": [
@@ -550,7 +544,6 @@ describe("FLTCodeAttributeStrategy", () => {
 		});
 
 		it("parses ruby class/function syntax", () => {
-			const provider = new NewRelicProviderStub({} as any, {} as any);
 			const strategy = new FLTCodeAttributeStrategy(
 				"entityGuid",
 				1,
@@ -561,7 +554,7 @@ describe("FLTCodeAttributeStrategy", () => {
 					languageId: "ruby",
 				},
 				"locator",
-				provider
+				mockNewRelicGraphqlClient
 			);
 			const groupedByTransactionName: Dictionary<Span[]> = {
 				"Nested/OtherTransaction/Background/WhichIsWhich/samename": [
@@ -640,7 +633,6 @@ describe("FLTCodeAttributeStrategy", () => {
 		});
 
 		it("getsSpansForFlask", async () => {
-			const provider = new NewRelicProviderStub2({} as any, {} as any);
 			const strategy = new FLTCodeAttributeStrategy(
 				"entityGuid",
 				1,
@@ -651,7 +643,7 @@ describe("FLTCodeAttributeStrategy", () => {
 					languageId: "python",
 				},
 				"locator",
-				provider
+				mockNewRelicGraphqlClient
 			);
 
 			const results = await strategy.addMethodName(
@@ -681,772 +673,3 @@ describe("FLTCodeAttributeStrategy", () => {
 		});
 	});
 });
-
-class NewRelicProviderStubBase extends NewRelicProvider {
-	isConnected(user: CSMe): boolean {
-		return true;
-	}
-
-	public async getEntityCount(): Promise<GetEntityCountResponse> {
-		return { entityCount: 1 };
-	}
-
-	async getObservabilityEntityRepos(repoId: string): Promise<ObservabilityRepo | undefined> {
-		return {
-			repoId: "123",
-			hasRepoAssociation: true,
-			hasCodeLevelMetricSpanData: true,
-			repoName: "foo",
-			repoRemote: "https://example.com",
-			entityAccounts: [
-				{
-					accountId: 123,
-					accountName: "name",
-					entityGuid: "123",
-					entityName: "entity",
-					tags: [
-						{
-							key: "url",
-							values: ["cheese"],
-						},
-					],
-					distributedTracingEnabled: true,
-				},
-			],
-		};
-	}
-
-	async getMethodAverageDuration(request: MetricQueryRequest): Promise<any> {
-		return {
-			actor: {
-				account: {
-					metrics: {
-						results: [],
-					},
-					extrapolations: {
-						results: [],
-					},
-				},
-			},
-		};
-	}
-
-	async getMethodErrorCount(request: MetricQueryRequest): Promise<any> {
-		return {
-			actor: {
-				account: {
-					metrics: {
-						results: [],
-					},
-					extrapolations: {
-						results: [],
-					},
-				},
-			},
-		};
-	}
-
-	protected async findRepositoryEntitiesByRepoRemotes(remotes: string[]): Promise<any> {
-		return {
-			entities: [
-				{
-					guid: "123456",
-					name: "my-entity",
-					account: {
-						id: 1,
-						name: "name",
-					},
-					tags: [
-						{
-							key: "accountId",
-							values: ["1"],
-						},
-						{
-							key: "url",
-							values: ["git@yoursourcecode.net:biz-enablement/foo-account-persister.git"],
-						},
-					],
-				},
-			] as Entity[],
-			remotes: await this.buildRepoRemoteVariants(remotes),
-		};
-	}
-
-	protected async findRelatedEntityByRepositoryGuids(
-		repositoryGuids: string[]
-	): Promise<RelatedEntityByRepositoryGuidsResult> {
-		return {
-			actor: {
-				entities: [
-					{
-						relatedEntities: {
-							results: [
-								{
-									source: {
-										entity: {
-											account: {
-												id: 1,
-												name: "name",
-											},
-											name: "src-entity",
-											type: "APPLICATION",
-											tags: [
-												{
-													key: "accountId",
-													values: ["1"],
-												},
-											],
-										},
-									},
-									target: {
-										entity: {
-											account: {
-												id: 1,
-												name: "name",
-											},
-											name: "target-entity",
-											type: "REPOSITORY",
-											tags: [
-												{
-													key: "accountId",
-													values: ["1"],
-												},
-											],
-										},
-									},
-								},
-							] as RelatedEntity[],
-						},
-					},
-				],
-			},
-		};
-	}
-}
-
-class NewRelicProviderStub extends NewRelicProviderStubBase {
-	async getSpans(request: MetricQueryRequest): Promise<Span[] | undefined> {
-		return [
-			{
-				"code.lineno": 1892,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask.do_teardown_request",
-				timestamp: 1647612755718,
-				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
-				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd",
-			},
-			{
-				"code.lineno": 1925,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask.do_teardown_appcontext",
-				timestamp: 1647612755718,
-				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
-				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd",
-			},
-			{
-				"code.lineno": null,
-				"code.namespace": null,
-				name: "Python/WSGI/Response",
-				timestamp: 1647612755718,
-				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
-				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd",
-			},
-			{
-				"code.lineno": null,
-				"code.namespace": null,
-				name: "Python/WSGI/Finalize",
-				timestamp: 1647612755718,
-				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
-				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd",
-			},
-			{
-				"code.lineno": 464,
-				"code.namespace": "werkzeug.wsgi.ClosingIterator",
-				name: "Function/werkzeug.wsgi:ClosingIterator.close",
-				timestamp: 1647612755718,
-				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
-				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd",
-			},
-			{
-				"code.lineno": 1363,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask.handle_user_exception",
-				timestamp: 1647612755717,
-				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
-				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd",
-			},
-			{
-				"code.lineno": 1395,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask.handle_exception",
-				timestamp: 1647612755717,
-				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
-				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd",
-			},
-			{
-				"code.lineno": 1864,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask.process_response",
-				timestamp: 1647612755717,
-				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
-				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd",
-			},
-			{
-				"code.lineno": 27,
-				"code.namespace": "routes.app",
-				name: "Function/routes.app:error",
-				timestamp: 1647612755717,
-				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
-				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd",
-			},
-			{
-				"code.lineno": null,
-				"code.namespace": null,
-				name: "Python/WSGI/Application",
-				timestamp: 1647612755716,
-				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
-				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd",
-			},
-			{
-				"code.lineno": 2086,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask",
-				timestamp: 1647612755716,
-				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
-				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd",
-			},
-			{
-				"code.lineno": 1837,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask.preprocess_request",
-				timestamp: 1647612755716,
-				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
-				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd",
-			},
-			{
-				"code.lineno": 2086,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/routes.app:error",
-				timestamp: 1647612755716,
-				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
-				"transaction.name": "WebTransaction/Function/routes.app:error",
-				transactionId: "eeaea27222ebc8bd",
-			},
-			{
-				"code.lineno": null,
-				"code.namespace": null,
-				name: "Python/WSGI/Response",
-				timestamp: 1647612669352,
-				traceId: "f6162d7b5374c64014c41ab0629add6c",
-				"transaction.name": null,
-				transactionId: "f6162d7b5374c640",
-			},
-			{
-				"code.lineno": null,
-				"code.namespace": null,
-				name: "Python/WSGI/Finalize",
-				timestamp: 1647612669352,
-				traceId: "f6162d7b5374c64014c41ab0629add6c",
-				"transaction.name": null,
-				transactionId: "f6162d7b5374c640",
-			},
-			{
-				"code.lineno": 464,
-				"code.namespace": "werkzeug.wsgi.ClosingIterator",
-				name: "Function/werkzeug.wsgi:ClosingIterator.close",
-				timestamp: 1647612669352,
-				traceId: "f6162d7b5374c64014c41ab0629add6c",
-				"transaction.name": null,
-				transactionId: "f6162d7b5374c640",
-			},
-			{
-				"code.lineno": 1925,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask.do_teardown_appcontext",
-				timestamp: 1647612669352,
-				traceId: "f6162d7b5374c64014c41ab0629add6c",
-				"transaction.name": null,
-				transactionId: "f6162d7b5374c640",
-			},
-			{
-				"code.lineno": 1892,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask.do_teardown_request",
-				timestamp: 1647612669351,
-				traceId: "f6162d7b5374c64014c41ab0629add6c",
-				"transaction.name": null,
-				transactionId: "f6162d7b5374c640",
-			},
-			{
-				"code.lineno": 1395,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask.handle_exception",
-				timestamp: 1647612669351,
-				traceId: "f6162d7b5374c64014c41ab0629add6c",
-				"transaction.name": null,
-				transactionId: "f6162d7b5374c640",
-			},
-			{
-				"code.lineno": 1864,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask.process_response",
-				timestamp: 1647612669351,
-				traceId: "f6162d7b5374c64014c41ab0629add6c",
-				"transaction.name": null,
-				transactionId: "f6162d7b5374c640",
-			},
-			{
-				"code.lineno": 1363,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask.handle_user_exception",
-				timestamp: 1647612669350,
-				traceId: "f6162d7b5374c64014c41ab0629add6c",
-				"transaction.name": null,
-				transactionId: "f6162d7b5374c640",
-			},
-			{
-				"code.lineno": 2086,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/routes.app:error",
-				timestamp: 1647612669350,
-				traceId: "f6162d7b5374c64014c41ab0629add6c",
-				"transaction.name": "WebTransaction/Function/routes.app:error",
-				transactionId: "f6162d7b5374c640",
-			},
-			{
-				"code.lineno": null,
-				"code.namespace": null,
-				name: "Python/WSGI/Application",
-				timestamp: 1647612669350,
-				traceId: "f6162d7b5374c64014c41ab0629add6c",
-				"transaction.name": null,
-				transactionId: "f6162d7b5374c640",
-			},
-			{
-				"code.lineno": 2086,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask",
-				timestamp: 1647612669350,
-				traceId: "f6162d7b5374c64014c41ab0629add6c",
-				"transaction.name": null,
-				transactionId: "f6162d7b5374c640",
-			},
-			{
-				"code.lineno": 1837,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask.preprocess_request",
-				timestamp: 1647612669350,
-				traceId: "f6162d7b5374c64014c41ab0629add6c",
-				"transaction.name": null,
-				transactionId: "f6162d7b5374c640",
-			},
-			{
-				"code.lineno": 27,
-				"code.namespace": "routes.app",
-				name: "Function/routes.app:error",
-				timestamp: 1647612669350,
-				traceId: "f6162d7b5374c64014c41ab0629add6c",
-				"transaction.name": null,
-				transactionId: "f6162d7b5374c640",
-			},
-			{
-				"code.lineno": null,
-				"code.namespace": null,
-				name: "Python/WSGI/Response",
-				timestamp: 1647612515523,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": null,
-				transactionId: "9ecccdf563986be9",
-			},
-			{
-				"code.lineno": null,
-				"code.namespace": null,
-				name: "Python/WSGI/Finalize",
-				timestamp: 1647612515523,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": null,
-				transactionId: "9ecccdf563986be9",
-			},
-			{
-				"code.lineno": 464,
-				"code.namespace": "werkzeug.wsgi.ClosingIterator",
-				name: "Function/werkzeug.wsgi:ClosingIterator.close",
-				timestamp: 1647612515523,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": null,
-				transactionId: "9ecccdf563986be9",
-			},
-			{
-				"code.lineno": 1925,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask.do_teardown_appcontext",
-				timestamp: 1647612515523,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": null,
-				transactionId: "9ecccdf563986be9",
-			},
-			{
-				"code.lineno": 1892,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask.do_teardown_request",
-				timestamp: 1647612515522,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": null,
-				transactionId: "9ecccdf563986be9",
-			},
-			{
-				"code.lineno": 1864,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask.process_response",
-				timestamp: 1647612515522,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": null,
-				transactionId: "9ecccdf563986be9",
-			},
-			{
-				"code.lineno": 464,
-				"code.namespace": "werkzeug.wsgi.ClosingIterator",
-				name: "Function/werkzeug.wsgi:ClosingIterator.close",
-				timestamp: 1647612515521,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": null,
-				transactionId: "793a543ef938a9fb",
-			},
-			{
-				"code.lineno": null,
-				"code.namespace": null,
-				name: "Python/WSGI/Finalize",
-				timestamp: 1647612515521,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": null,
-				transactionId: "793a543ef938a9fb",
-			},
-			{
-				"code.lineno": 40,
-				"code.namespace": "routes.app",
-				name: "Function/routes.app:external_source",
-				timestamp: 1647612515520,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": null,
-				transactionId: "793a543ef938a9fb",
-			},
-			{
-				"code.lineno": 1864,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask.process_response",
-				timestamp: 1647612515520,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": null,
-				transactionId: "793a543ef938a9fb",
-			},
-			{
-				"code.lineno": 1892,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask.do_teardown_request",
-				timestamp: 1647612515520,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": null,
-				transactionId: "793a543ef938a9fb",
-			},
-			{
-				"code.lineno": 1925,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask.do_teardown_appcontext",
-				timestamp: 1647612515520,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": null,
-				transactionId: "793a543ef938a9fb",
-			},
-			{
-				"code.lineno": null,
-				"code.namespace": null,
-				name: "Python/WSGI/Response",
-				timestamp: 1647612515520,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": null,
-				transactionId: "793a543ef938a9fb",
-			},
-			{
-				"code.lineno": 1837,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask.preprocess_request",
-				timestamp: 1647612515519,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": null,
-				transactionId: "793a543ef938a9fb",
-			},
-			{
-				"code.lineno": null,
-				"code.namespace": null,
-				name: "Python/WSGI/Application",
-				timestamp: 1647612515519,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": null,
-				transactionId: "793a543ef938a9fb",
-			},
-			{
-				"code.lineno": 2086,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask",
-				timestamp: 1647612515519,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": null,
-				transactionId: "793a543ef938a9fb",
-			},
-			{
-				"code.lineno": 2086,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/routes.app:external_source",
-				timestamp: 1647612515518,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": "WebTransaction/Function/routes.app:external_source",
-				transactionId: "793a543ef938a9fb",
-			},
-			{
-				"code.lineno": null,
-				"code.namespace": null,
-				name: "External/localhost:8000/requests/",
-				timestamp: 1647612515514,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": null,
-				transactionId: "9ecccdf563986be9",
-			},
-			{
-				"code.lineno": 2086,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/routes.app:external_call",
-				timestamp: 1647612515514,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": "WebTransaction/Function/routes.app:external_call",
-				transactionId: "9ecccdf563986be9",
-			},
-			{
-				"code.lineno": null,
-				"code.namespace": null,
-				name: "Python/WSGI/Application",
-				timestamp: 1647612515514,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": null,
-				transactionId: "9ecccdf563986be9",
-			},
-			{
-				"code.lineno": 2086,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask",
-				timestamp: 1647612515514,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": null,
-				transactionId: "9ecccdf563986be9",
-			},
-			{
-				"code.lineno": 1837,
-				"code.namespace": "flask.app.Flask",
-				name: "Function/flask.app:Flask.preprocess_request",
-				timestamp: 1647612515514,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": null,
-				transactionId: "9ecccdf563986be9",
-			},
-			{
-				"code.lineno": 32,
-				"code.namespace": "routes.app",
-				name: "Function/routes.app:external_call",
-				timestamp: 1647612515514,
-				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
-				"transaction.name": null,
-				transactionId: "9ecccdf563986be9",
-			},
-		];
-	}
-
-	isConnected(user: CSMe): boolean {
-		return true;
-	}
-
-	public async getEntityCount(): Promise<GetEntityCountResponse> {
-		return { entityCount: 1 };
-	}
-
-	async getObservabilityEntityRepos(repoId: string): Promise<ObservabilityRepo | undefined> {
-		return {
-			repoId: "123",
-			hasRepoAssociation: true,
-			hasCodeLevelMetricSpanData: true,
-			repoName: "foo",
-			repoRemote: "https://example.com",
-			entityAccounts: [
-				{
-					accountId: 123,
-					accountName: "name",
-					entityGuid: "123",
-					entityName: "entity",
-					tags: [
-						{
-							key: "url",
-							values: ["cheese"],
-						},
-					],
-					distributedTracingEnabled: true,
-				},
-			],
-		};
-	}
-
-	async getMethodSampleSize(request: MetricQueryRequest) {
-		return {
-			actor: {
-				account: {
-					metrics: {
-						results: [
-							{
-								facet: "Function/routes.app:error",
-								metricTimesliceName: "Function/routes.app:error",
-								requestsPerMinute: 0.2,
-							},
-							{
-								facet: "Function/routes.app:hello_world",
-								metricTimesliceName: "Function/routes.app:hello_world",
-								requestsPerMinute: 0.06666666666666667,
-							},
-						],
-					},
-					spans: {
-						results: [
-							{
-								facet: "Function/routes.app:error",
-								metricTimesliceName: "Function/routes.app:error",
-								requestsPerMinute: 0.2,
-							},
-							{
-								facet: "Function/routes.app:hello_world",
-								metricTimesliceName: "Function/routes.app:hello_world",
-								requestsPerMinute: 0.06666666666666667,
-							},
-						],
-					},
-				},
-			},
-		};
-	}
-
-	async getMethodAverageDuration(request: MetricQueryRequest) {
-		return {
-			actor: {
-				account: {
-					metrics: {
-						results: [
-							{
-								facet: "WebTransaction/Function/routes.app:error",
-								averageDuration: 0.0025880090121565193,
-								metricTimesliceName: "WebTransaction/Function/routes.app:error",
-							},
-							{
-								facet: "WebTransaction/Function/routes.app:hello_world",
-								averageDuration: 0.0015958845615386963,
-								metricTimesliceName: "WebTransaction/Function/routes.app:hello_world",
-							},
-						],
-					},
-					spans: {
-						results: [
-							{
-								facet: "WebTransaction/Function/routes.app:error",
-								averageDuration: 0.0025880090121565193,
-								metricTimesliceName: "WebTransaction/Function/routes.app:error",
-							},
-							{
-								facet: "WebTransaction/Function/routes.app:hello_world",
-								averageDuration: 0.0015958845615386963,
-								metricTimesliceName: "WebTransaction/Function/routes.app:hello_world",
-							},
-						],
-					},
-				},
-			},
-		};
-	}
-
-	async getMethodErrorCount(request: MetricQueryRequest) {
-		return {
-			actor: {
-				account: {
-					metrics: {
-						results: [
-							{
-								facet: "Errors/WebTransaction/Function/routes.app:error",
-								errorsPerMinute: 0.48333333333333334,
-								metricTimesliceName: "Errors/WebTransaction/Function/routes.app:error",
-							},
-						],
-					},
-					spans: {
-						results: [
-							{
-								facet: "Errors/WebTransaction/Function/routes.app:error",
-								errorsPerMinute: 0.48333333333333334,
-								metricTimesliceName: "Errors/WebTransaction/Function/routes.app:error",
-							},
-						],
-					},
-				},
-			},
-		};
-	}
-}
-
-class NewRelicProviderStub2 extends NewRelicProviderStubBase {
-	async getSpans(request: MetricQueryRequest): Promise<Span[] | undefined> {
-		return [
-			{
-				"code.function": "create_bill_credit_payment_thing",
-				name: "Carrot/foo_bar.bills.tasks.create_bill_credit_payment_thing",
-				timestamp: 1647631200451,
-				"transaction.name":
-					"OtherTransaction/Carrot/foo_bar.bills.tasks.create_bill_credit_payment_thing",
-			},
-		];
-	}
-
-	async getMethodSampleSize(request: MetricQueryRequest) {
-		return {
-			actor: {
-				account: {
-					metrics: {
-						results: [
-							{
-								facet:
-									"OtherTransaction/Carrot/foo_bar.bills.tasks.create_bill_credit_payment_thing",
-								metricTimesliceName:
-									"OtherTransaction/Carrot/foo_bar.bills.tasks.create_bill_credit_payment_thing",
-								requestsPerMinute: 0.35,
-							},
-						],
-					},
-					spans: {
-						results: [
-							{
-								facet:
-									"OtherTransaction/Carrot/foo_bar.bills.tasks.create_bill_credit_payment_thing",
-								metricTimesliceName:
-									"OtherTransaction/Carrot/foo_bar.bills.tasks.create_bill_credit_payment_thing",
-								requestsPerMinute: 0.35,
-							},
-						],
-					},
-				},
-			},
-		};
-	}
-}

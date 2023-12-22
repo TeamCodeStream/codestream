@@ -15,7 +15,6 @@ import { IgnoreFilesManager } from "./managers/ignoreFilesManager";
 import { MarkerLocationManager } from "./managers/markerLocationManager";
 import { MarkersManager } from "./managers/markersManager";
 import { NRManager } from "./managers/NRManager";
-import { PixieManager } from "./managers/pixieManager";
 import { PostsManager } from "./managers/postsManager";
 import { RepoIdentificationManager } from "./managers/repoIdentificationManager";
 import { RepositoryMappingManager } from "./managers/repositoryMappingManager";
@@ -32,6 +31,7 @@ import { UrlManager } from "./managers/urlManager";
 import { UsersManager } from "./managers/usersManager";
 import { ThirdPartyProviderRegistry } from "./providers/registry";
 import { CodeStreamSession } from "./session";
+import { injectNR } from "./providers/newrelic/nrContainer";
 
 let providerRegistry: ThirdPartyProviderRegistry | undefined = undefined;
 
@@ -136,11 +136,6 @@ export class SessionServiceContainer {
 		return this._nr;
 	}
 
-	private readonly _pixie: PixieManager;
-	get pixie() {
-		return this._pixie;
-	}
-
 	private readonly _repoIdentifier: RepoIdentificationManager;
 	get repoIdentifier() {
 		return this._repoIdentifier;
@@ -169,13 +164,20 @@ export class SessionServiceContainer {
 		this._codeErrors = new CodeErrorsManager(session);
 		this._nr = new NRManager(session);
 		this._repoIdentifier = new RepoIdentificationManager(session);
-		this._pixie = new PixieManager(session);
+	}
+
+	async inject() {
+		Logger.log("Injecting NR services");
+		await injectNR(this);
 	}
 }
 
 class ServiceContainer {
 	// TODO: [EA] I think we should try to rework this to avoid the need of the session here
-	constructor(public readonly agent: CodeStreamAgent, private session: CodeStreamSession) {
+	constructor(
+		public readonly agent: CodeStreamAgent,
+		private session: CodeStreamSession
+	) {
 		this._documents = agent.documents;
 		this._gitServiceLite = new GitServiceLite(session);
 		this._repositoryLocator = new RepositoryLocator(session, this._gitServiceLite);

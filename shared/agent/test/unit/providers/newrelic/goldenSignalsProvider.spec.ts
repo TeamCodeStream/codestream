@@ -2,12 +2,12 @@
 
 import { describe, expect, it } from "@jest/globals";
 
-import { NewRelicProvider } from "../../../../src/providers/newrelic";
+import { GoldenSignalsProvider } from "../../../../src/providers/newrelic/goldenSignals/goldenSignalsProvider";
 
 describe("newRelicProvider", () => {
 	it("getBestEntity-basedOnTag", () => {
-		const newrelic = new NewRelicProvider({} as any, {} as any);
-		const asdf = newrelic.getGoldenSignalsEntity({} as any, {
+		const goldenSignalsProvider = new GoldenSignalsProvider({} as any, {} as any, {} as any);
+		const asdf = goldenSignalsProvider.getGoldenSignalsEntity({} as any, {
 			repoId: "123",
 			repoName: "repo1",
 			repoRemote: "remote",
@@ -27,8 +27,8 @@ describe("newRelicProvider", () => {
 	});
 
 	it("getBestEntity-basedOnName", () => {
-		const newrelic = new NewRelicProvider({} as any, {} as any);
-		const asdf = newrelic.getGoldenSignalsEntity({} as any, {
+		const goldenSignalsProvider = new GoldenSignalsProvider({} as any, {} as any, {} as any);
+		const asdf = goldenSignalsProvider.getGoldenSignalsEntity({} as any, {
 			repoId: "123",
 			repoName: "repo1",
 			repoRemote: "remote",
@@ -57,8 +57,8 @@ describe("newRelicProvider", () => {
 	});
 
 	it("getBestEntity-default", () => {
-		const newrelic = new NewRelicProvider({} as any, {} as any);
-		const asdf = newrelic.getGoldenSignalsEntity({} as any, {
+		const goldenSignalsProvider = new GoldenSignalsProvider({} as any, {} as any, {} as any);
+		const asdf = goldenSignalsProvider.getGoldenSignalsEntity({} as any, {
 			repoId: "123",
 			repoName: "repo1",
 			repoRemote: "remote",
@@ -93,8 +93,8 @@ describe("newRelicProvider", () => {
 		expect(asdf.entityGuid).toEqual("012");
 	});
 	it("getBestEntity-basedOnpreferences", () => {
-		const newrelic = new NewRelicProvider({} as any, {} as any);
-		const asdf = newrelic.getGoldenSignalsEntity(
+		const goldenSignalsProvider = new GoldenSignalsProvider({} as any, {} as any, {} as any);
+		const asdf = goldenSignalsProvider.getGoldenSignalsEntity(
 			{
 				preferences: {
 					observabilityRepoEntities: [

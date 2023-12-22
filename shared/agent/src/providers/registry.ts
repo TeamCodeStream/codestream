@@ -46,8 +46,8 @@ import {
 	FetchThirdPartyChannelsRequestType,
 	FetchThirdPartyChannelsResponse,
 	FetchThirdPartyCodeAnalyzersRequest,
-	FetchThirdPartyLicenseDependenciesResponse,
 	FetchThirdPartyLicenseDependenciesRequestType,
+	FetchThirdPartyLicenseDependenciesResponse,
 	FetchThirdPartyPullRequestCommitsRequest,
 	FetchThirdPartyPullRequestCommitsType,
 	FetchThirdPartyPullRequestRequest,
@@ -55,8 +55,8 @@ import {
 	FetchThirdPartyRepoMatchToFossaRequest,
 	FetchThirdPartyRepoMatchToFossaRequestType,
 	FetchThirdPartyRepoMatchToFossaResponse,
-	FetchThirdPartyVulnerabilitiesResponse,
 	FetchThirdPartyVulnerabilitiesRequestType,
+	FetchThirdPartyVulnerabilitiesResponse,
 	GetMyPullRequestsResponse,
 	MoveThirdPartyCardRequest,
 	MoveThirdPartyCardRequestType,
@@ -92,6 +92,7 @@ import {
 	ThirdPartyProviderSupportsPullRequests,
 	ThirdPartyProviderSupportsViewingPullRequests,
 } from "./provider";
+import { getNrDirectives } from "./newrelic/nrContainer";
 
 const PR_QUERIES: PRProviderQueries = {
 	"gitlab*com": [
@@ -593,6 +594,12 @@ export class ThirdPartyProviderRegistry {
 	})
 	@lspHandler(ExecuteThirdPartyRequestUntypedType)
 	async executeMethod(request: ExecuteThirdPartyRequest) {
+		if (request.providerId === "newrelic*com") {
+			const nrDirectives = getNrDirectives();
+			if (nrDirectives) {
+				return (nrDirectives as any)[request.method](request.params);
+			}
+		}
 		const provider = getProvider(request.providerId);
 		if (provider === undefined) {
 			throw new Error(`No registered provider for '${request.providerId}'`);

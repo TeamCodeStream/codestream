@@ -39,8 +39,16 @@ export function lsp<T extends object>(target: T) {
 	});
 }
 
-export function lspHandler(type: RequestType<any, any, void, void>): Function {
-	return (target: any, key: string, descriptor: PropertyDescriptor) => {
+export type LspMethodHandler = (
+	target: object,
+	key: string,
+	descriptor: PropertyDescriptor
+) => void;
+
+export function lspHandler<Request, Response>(
+	type: RequestType<Request, Response, void, void>
+): LspMethodHandler {
+	return (target: object, key: string, descriptor: PropertyDescriptor) => {
 		if (!descriptor || typeof descriptor.value !== "function") {
 			throw new Error("Not supported");
 		}
@@ -78,23 +86,6 @@ export function lspProvider<T extends object>(name: string): Function {
 	};
 }
 
-function mergeLocalProviders(providers: ThirdPartyProviders): ThirdPartyProviders {
-	const localProviders: ThirdPartyProviders = {};
-	const newrelicProvider = providers?.["newrelic*com"];
-
-	if (newrelicProvider) {
-		const newrelicVulnProvider = {
-			id: "newrelic-vulnerabilities*com",
-			name: "newrelic-vulnerabilities",
-			host: "", // Provided in apiCapabilities
-		};
-		localProviders[newrelicVulnProvider.id] = newrelicVulnProvider;
-		newrelicProvider.subProviders = [newrelicVulnProvider];
-	}
-
-	return { ...providers, ...localProviders };
-}
-
 export function registerProviders(
 	providers: ThirdPartyProviders,
 	session: CodeStreamSession,
@@ -103,9 +94,8 @@ export function registerProviders(
 	if (clear) {
 		providerRegistry.clear();
 	}
-	const mergedProviders = mergeLocalProviders(providers);
-	for (const providerId in mergedProviders) {
-		const provider = mergedProviders[providerId];
+	for (const providerId in providers) {
+		const provider = providers[providerId];
 		const type = providerTypeRegistry.get(provider.name);
 		if (type) {
 			const providerConfig = new (lsp(type) as any)(session, provider);

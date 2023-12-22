@@ -37,7 +37,7 @@
 		"lodash-es": "4.17.21",
 		"node-fetch": "2.6.7",
 		"patch-package": "7.0.2",
-		"typescript": "5.1.6",
+		"typescript": "5.3.3",
 		"vscode-languageclient": "8.0.2",
 		"vscode-languageserver-protocol": "3.14.1"
 	},
@@ -49,6 +49,6 @@
 		"jest-teamcity": "1.11.0",
 		"set-interval-async": "3.0.3",
 		"ts-jest": "29.1.1",
-		"undici": "5.27.2"
+		"undici": "6.2.1"
 	}
 }

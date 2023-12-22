@@ -36,7 +36,6 @@ import { Container, SessionContainer } from "../container";
 import { isWindows } from "../git/shell";
 import { Logger } from "../logger";
 import { calculateLocation, MAX_RANGE_VALUE } from "../markerLocation/calculator";
-import { NewRelicProvider } from "../providers/newrelic";
 import { CodeStreamSession } from "../session";
 import { log } from "../system/decorators/log";
 import { lsp, lspHandler } from "../system/decorators/lsp";
@@ -55,6 +54,7 @@ import { Parser as phpParser } from "./stackTraceParsers/phpStackTraceParser";
 import { Parser as pythonParser } from "./stackTraceParsers/pythonStackTraceParser";
 import { Parser as rubyParser } from "./stackTraceParsers/rubyStackTraceParser";
 import fs from "fs";
+import { parseId } from "../providers/newrelic/utils";
 
 const ExtensionToLanguageMap: { [key: string]: string } = {
 	js: "javascript",
@@ -143,7 +143,7 @@ export class NRManager {
 		} else {
 			try {
 				const telemetry = Container.instance().telemetry;
-				const parsed = NewRelicProvider.parseId(errorGroupGuid || "");
+				const parsed = parseId(errorGroupGuid || "");
 
 				telemetry.track({
 					eventName: "Error Parsing Trace",

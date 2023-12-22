@@ -5,7 +5,7 @@ import { Agent as HttpsAgent } from "https";
 import * as path from "path";
 import * as url from "url";
 
-import { isEmpty, isEqual, omit, uniq } from "lodash";
+import { isEmpty, isEqual, uniq } from "lodash";
 import {
 	CancellationToken,
 	Connection,
@@ -69,7 +69,6 @@ import {
 	ReportingMessageType,
 	SetServerUrlRequest,
 	SetServerUrlRequestType,
-	ThirdPartyProviders,
 	TokenLoginRequest,
 	TokenLoginRequestType,
 	VerifyConnectivityRequestType,
@@ -79,6 +78,7 @@ import {
 	RefreshMaintenancePollNotificationType,
 	VersionCompatibility,
 	DidRefreshAccessTokenNotificationType,
+	ThirdPartyProviders,
 } from "@codestream/protocols/agent";
 import {
 	CSAccessTokenType,
@@ -134,16 +134,6 @@ import { ProxyAgent, setGlobalDispatcher } from "undici";
 const envRegex = /https?:\/\/(?:codestream)?-?([a-zA-Z]+)?(?:[0-9])?(?:\.)((\w+)-?(?:\w+)?)?/i;
 
 const FIRST_SESSION_TIMEOUT = 12 * 60 * 60 * 1000; // first session "times out" after 12 hours
-
-const PROVIDERS_TO_REGISTER_BEFORE_SIGNIN = {
-	[`newrelic*com`]: {
-		host: "newrelic.com",
-		id: "newrelic*com",
-		isEnterprise: false,
-		name: "newrelic",
-		needsConfigure: true,
-	},
-};
 
 export const loginApiErrorMappings: { [k: string]: LoginResult } = {
 	"USRC-1001": LoginResult.InvalidCredentials,
@@ -295,8 +285,6 @@ export class CodeStreamSession {
 		);
 
 		Container.initialize(agent, this);
-
-		registerProviders(PROVIDERS_TO_REGISTER_BEFORE_SIGNIN, this);
 
 		this.logNodeEnvVariables();
 
@@ -1219,14 +1207,14 @@ export class CodeStreamSession {
 		}
 
 		this._providers = currentTeam.providerHosts || {};
-		const combinedProviders = { ...currentTeam.providerHosts };
-		registerProviders(
-			{ combinedProviders }
-				? omit(combinedProviders, Object.keys(PROVIDERS_TO_REGISTER_BEFORE_SIGNIN))
-				: {},
-			this,
-			false
-		);
+		// const combinedProviders = { ...currentTeam.providerHosts };
+		// registerProviders(
+		// 	{ combinedProviders }
+		// 		? omit(combinedProviders, Object.keys(PROVIDERS_TO_REGISTER_BEFORE_SIGNIN))
+		// 		: {},
+		// 	this,
+		// 	false
+		// );
 
 		const cc = Logger.getCorrelationContext();
 
@@ -1247,6 +1235,7 @@ export class CodeStreamSession {
 			// request can be processed, resulting in bad repo data known by the webview
 			// see https://trello.com/c/1IjQLhzh - Colin
 			await SessionContainer.instance().git.ensureSearchComplete();
+			await SessionContainer.instance().inject();
 		} catch (e) {
 			Logger.error(e, cc);
 		}
@@ -1514,6 +1503,7 @@ export class CodeStreamSession {
 	logout(reason: LogoutReason) {
 		Logger.log(`Session.logout: ${reason}`);
 		this.setStatus(SessionStatus.SignedOut);
+		// disposeNR();
 		return this.agent.sendNotification(DidLogoutNotificationType, { reason: reason });
 	}
 
