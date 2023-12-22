@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { shallowEqual } from "react-redux";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { CodeStreamState } from "../store";
@@ -62,59 +62,7 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 		};
 	}, shallowEqual);
 	const [numToShow, setNumToShow] = useState(5);
-
-	const getRoundedPercentage = ratio => {
-		const percentage = (ratio - 1) * 100;
-		const factor = Math.pow(10, 2);
-		return Math.floor(percentage * factor) / factor;
-	};
-
-	const getTypeAndValueOutput = (type: "errorRate" | "duration", ratio) => {
-		if (props.noAnomaly) return <div></div>;
-		const roundedPercentage = getRoundedPercentage(ratio);
-		let roundedPercentageText =
-			roundedPercentage > 0 ? `${roundedPercentage}%+` : `${roundedPercentage}%+`;
-
-		return (
-			<div
-				style={{
-					overflow: "visible",
-					marginLeft: "auto",
-					textAlign: "right",
-					direction: "rtl",
-					width: "40%",
-				}}
-			>
-				<span
-					style={{
-						color: "red",
-					}}
-				>
-					{roundedPercentageText}
-				</span>
-				<span
-					style={{
-						paddingRight: "5px",
-					}}
-					className="subtle"
-				>
-					{getAnomalyTypeLabel(type)}
-				</span>
-			</div>
-		);
-	};
-
-	const getAnomalyTypeLabel = (type: "errorRate" | "duration") => {
-		switch (type) {
-			case "duration":
-				return "avg duration";
-			case "errorRate":
-				return "error rate";
-			default:
-				return "";
-		}
-	};
-
+	const [hoveredRowIndex, setHoveredRowIndex] = useState<string | undefined>(undefined);
 	const hasMoreAnomaliesToShow = props.observabilityAnomalies.length > numToShow;
 
 	const handleClickTelemetry = () => {
@@ -159,6 +107,39 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 		);
 	};
 
+	const getAnomalyTypeLabel = (type: "errorRate" | "duration") => {
+		switch (type) {
+			case "duration":
+				return "Average Duration";
+			case "errorRate":
+				return "Error Rate";
+			default:
+				return "";
+		}
+	};
+
+	const getRoundedPercentage = ratio => {
+		const percentage = (ratio - 1) * 100;
+		const factor = Math.pow(10, 2);
+		return Math.floor(percentage * factor) / factor;
+	};
+
+	const tooltipContent = anomaly => {
+		const roundedPercentage = getRoundedPercentage(anomaly.ratio);
+		let roundedPercentageText =
+			roundedPercentage > 0 ? `+${roundedPercentage}%` : `+${roundedPercentage}%`;
+		const anomalyTypeText = getAnomalyTypeLabel(anomaly.type);
+
+		return (
+			<div>
+				<div style={{ overflowWrap: "break-word", marginBottom: "4px" }}>{anomaly.text}</div>
+				<div>
+					{anomalyTypeText}: {roundedPercentageText}
+				</div>
+			</div>
+		);
+	};
+
 	return (
 		<>
 			{
@@ -182,37 +163,30 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 											onClick={e => {
 												handleClick(anomaly);
 											}}
+											onMouseEnter={() => {
+												setHoveredRowIndex(`parent_${index}`);
+											}}
+											onMouseLeave={() => {
+												setHoveredRowIndex(undefined);
+											}}
 										>
 											<TransactionIconSpan>
 												<Icon className="subtle" name="transaction" />
 											</TransactionIconSpan>
-											<Tooltip
-												title={<div style={{ overflowWrap: "break-word" }}>{anomaly.text}</div>}
-												placement="topRight"
-												delay={1}
-											>
+											<Tooltip title={tooltipContent(anomaly)} placement="topRight" delay={1}>
 												{formatFilePath(anomaly.text)}
-
-												{/* <div
-													style={{
-														width: "60%",
-														textAlign: "left",
-														marginRight: "auto",
-														direction: "rtl",
-													}}
-												>
-													<bdi>
-														<span>&#x200e;{anomaly.text}</span>
-													</bdi>
-												</div> */}
 											</Tooltip>
 
-											<div>{getTypeAndValueOutput(anomaly.type, anomaly.ratio)}</div>
+											<AnomalyIcon
+												anomaly={anomaly}
+												noAnomaly={props?.noAnomaly}
+												isHovered={hoveredRowIndex === `parent_${index}` ? true : false}
+											/>
 										</Row>
 										{anomaly.children &&
 											anomaly.children
 												.sort((a, b) => b.ratio - a.ratio)
-												.map(child => {
+												.map((child, childIndex) => {
 													return (
 														<Row
 															style={{
@@ -222,34 +196,30 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 															onClick={e => {
 																handleClick(child);
 															}}
+															onMouseEnter={() => {
+																setHoveredRowIndex(`child_${index}_${childIndex}`);
+															}}
+															onMouseLeave={() => {
+																setHoveredRowIndex(undefined);
+															}}
 														>
-															{/* <TransactionIconSpan>
+															<TransactionIconSpan>
 																<span>&nbsp;</span>
-															</TransactionIconSpan> */}
+															</TransactionIconSpan>
 															<Tooltip
-																title={
-																	<div style={{ overflowWrap: "break-word" }}>{child.text}</div>
-																}
+																title={tooltipContent(anomaly)}
 																placement="topRight"
 																delay={1}
 															>
-																{/* {formatFilePath(child.text)} */}
-																<div
-																	style={{
-																		width: "60%",
-																		marginLeft: "10px",
-																		textAlign: "left",
-																		marginRight: "auto",
-																		direction: "rtl",
-																	}}
-																>
-																	<bdi>
-																		<span>&#x200e;{child.text}</span>
-																	</bdi>
-																</div>
+																{formatFilePath(child.text)}
 															</Tooltip>
-
-															<div>{getTypeAndValueOutput(child.type, child.ratio)}</div>
+															<AnomalyIcon
+																anomaly={anomaly}
+																noAnomaly={props?.noAnomaly}
+																isHovered={
+																	hoveredRowIndex === `child_${index}_${childIndex}` ? true : false
+																}
+															/>
 														</Row>
 													);
 												})}
@@ -272,5 +242,100 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 				</>
 			}
 		</>
+	);
+});
+
+interface AnomalyIconsProps {
+	anomaly: ObservabilityAnomaly;
+	noAnomaly?: boolean;
+	isHovered: boolean;
+}
+const AnomalyIcon = React.memo((props: AnomalyIconsProps) => {
+	const getAnomalyTypeLabel = (type: "errorRate" | "duration") => {
+		switch (type) {
+			case "duration":
+				return "clock";
+			case "errorRate":
+				return "alert";
+			default:
+				return "";
+		}
+	};
+
+	const getRoundedPercentage = ratio => {
+		const percentage = (ratio - 1) * 100;
+		const factor = Math.pow(10, 2);
+		return Math.floor(percentage * factor) / factor;
+	};
+
+	const getTypeAndValueOutput = (type: "errorRate" | "duration", ratio) => {
+		if (props.noAnomaly) return <div></div>;
+		const roundedPercentage = getRoundedPercentage(ratio);
+		let roundedPercentageText =
+			roundedPercentage > 0 ? `${roundedPercentage}%+` : `${roundedPercentage}%+`;
+		const iconName = getAnomalyTypeLabel(type);
+
+		return (
+			<div
+				style={{
+					overflow: "visible",
+					marginLeft: "auto",
+					textAlign: "right",
+					direction: "rtl",
+					width: "40%",
+				}}
+			>
+				<span
+					style={{
+						color: "red",
+						display: "inline-block",
+						minWidth: "66px",
+					}}
+				>
+					{roundedPercentageText}
+				</span>
+				<Icon
+					style={{
+						transform: "scale(0.8)",
+						marginLeft: "0px",
+						display: "inline-block",
+						paddingLeft: "2px",
+					}}
+					className="subtle"
+					name={iconName}
+				/>
+			</div>
+		);
+	};
+
+	const iconContent = useMemo(() => {
+		return (
+			<>
+				{props.isHovered ? (
+					<span
+						onClick={e => {
+							e.preventDefault();
+							e.stopPropagation();
+						}}
+					>
+						<Icon
+							name="globe"
+							className="clickable"
+							title="View on New Relic"
+							placement="bottomLeft"
+							delay={1}
+						/>
+					</span>
+				) : (
+					<div>{getTypeAndValueOutput(props.anomaly.type, props.anomaly.ratio)}</div>
+				)}
+			</>
+		);
+	}, [props.isHovered, props.anomaly.type, props.anomaly.ratio, props.noAnomaly]);
+
+	return (
+		<div style={{ paddingLeft: "0px" }} className="icons">
+			{iconContent}
+		</div>
 	);
 });

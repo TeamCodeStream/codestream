@@ -1355,7 +1355,7 @@ export const Row = styled.div`
 		color: var(--text-color);
 		.icon {
 			margin-left: 10px;
-			display: none !important;
+			display: none;
 		}
 		padding-left: 2.5px;
 		.clickable {
