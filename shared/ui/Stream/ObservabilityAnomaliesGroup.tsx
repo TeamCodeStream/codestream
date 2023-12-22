@@ -134,7 +134,7 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 			<div>
 				<div style={{ overflowWrap: "break-word", marginBottom: "4px" }}>{anomaly.text}</div>
 				<div>
-					{anomalyTypeText}: {roundedPercentageText}
+					{anomalyTypeText}: <span style={{ color: "red" }}>{roundedPercentageText}</span>
 				</div>
 			</div>
 		);
