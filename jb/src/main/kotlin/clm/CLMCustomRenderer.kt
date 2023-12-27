@@ -9,10 +9,12 @@ import com.intellij.codeInsight.hints.presentation.InputHandler
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorCustomElementRenderer
 import com.intellij.openapi.editor.Inlay
+import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.ui.JBColor
 import com.intellij.util.DocumentUtil
 import com.intellij.util.text.CharArrayUtil
+import com.intellij.util.ui.UIUtil
 import java.awt.Graphics
 import java.awt.Graphics2D
 import java.awt.Point
@@ -45,6 +47,14 @@ class CLMCustomRenderer(val presentation: InlayPresentation, val isAnomaly: Bool
             val attributes = LinearOrderInlayRenderer.effectsIn(textAttributes)
             if (isAnomaly) {
                 attributes.foregroundColor = JBColor.RED
+            } else {
+                val isHighContrast = if (UIUtil.isUnderDarcula()) {
+                    val scheme = EditorColorsManager.getInstance().globalScheme
+                    scheme.name.contains("high contrast", ignoreCase = true)
+                } else false
+                if (isHighContrast) {
+                    attributes.foregroundColor = JBColor.foreground()
+                }
             }
             presentation.paint(g, attributes)
         }
