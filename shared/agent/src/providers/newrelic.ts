@@ -5,19 +5,14 @@ import {
 	ERROR_PIXIE_NOT_CONFIGURED,
 	NRErrorResponse,
 	NRErrorType,
-	ThirdPartyProviderConfig,
 } from "@codestream/protocols/agent";
-import { CSNewRelicProviderInfo } from "@codestream/protocols/api";
 import Cache from "@codestream/utils/system/timedCache";
 import { ResponseError } from "vscode-jsonrpc/lib/messages";
 import { Logger } from "../logger";
-import { CodeStreamSession } from "../session";
 import { log } from "../system";
 import { CodedError } from "./newrelic.types";
 import { NewRelicId } from "./newrelic/newrelic.types";
-import { ApiProvider } from "../api/apiProvider";
 import { NewRelicGraphqlClient } from "./newrelic/newRelicGraphqlClient";
-import { CodeStreamAgent } from "../agent";
 
 export function toFixedNoRounding(number: number, precision = 1): string {
 	const factor = Math.pow(10, precision);
@@ -38,18 +33,7 @@ export function mapNRErrorResponse(ex: Error): NRErrorResponse {
 }
 
 export class NewRelicProvider {
-	private _config: ThirdPartyProviderConfig;
-
-	constructor(
-		session: CodeStreamSession,
-		config: ThirdPartyProviderConfig,
-		private _providerInfo: CSNewRelicProviderInfo,
-		private api: ApiProvider,
-		private graphqlClient: NewRelicGraphqlClient,
-		private agent: CodeStreamAgent
-	) {
-		this._config = config;
-	}
+	constructor(private graphqlClient: NewRelicGraphqlClient) {}
 
 	get displayName() {
 		return "New Relic";

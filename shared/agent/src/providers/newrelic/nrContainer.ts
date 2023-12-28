@@ -58,11 +58,19 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 		session.isProductionCloud
 	);
 
+	const apiProvider = session.api;
+	const nrApiConfig = new NrApiConfig(session);
+	const nrOrgProvider = new NrOrgProvider(newRelicGraphqlClient, apiProvider, nrApiConfig);
+
+	// Avoid circular dependency between NewRelicGraphqlClient and NrOrgProvider
+	newRelicGraphqlClient.onGraphqlClientConnected = async (newRelicUserId: number) => {
+		const { orgId } = await nrOrgProvider.updateOrgId({ teamId: session.teamId });
+		await session.addNewRelicSuperProps(newRelicUserId, orgId);
+	};
+
 	const nrHttpClient = new HttpClient(newRelicProviderConfig, session, newRelicProviderInfo);
 
 	const deploymentsProvider = new DeploymentsProvider(newRelicGraphqlClient);
-
-	const nrApiConfig = new NrApiConfig(session);
 
 	const reposProvider = new ReposProvider(
 		newRelicGraphqlClient,
@@ -121,10 +129,6 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 		deploymentsProvider,
 		observabilityErrorsProvider
 	);
-
-	const apiProvider = session.api;
-
-	const nrOrgProvider = new NrOrgProvider(newRelicGraphqlClient, apiProvider, nrApiConfig);
 
 	const sloProvider = new SloProvider(newRelicGraphqlClient, nrOrgProvider);
 

@@ -6,7 +6,6 @@ import {
 	ERROR_NR_CONNECTION_MISSING_API_KEY,
 	ERROR_NR_CONNECTION_MISSING_URL,
 	ERROR_NR_INSUFFICIENT_API_KEY,
-	ProviderConfigurationData,
 } from "@codestream/protocols/agent";
 import { customFetch, isSuppressedException } from "../../system/fetchCore";
 import { CSNewRelicProviderInfo } from "@codestream/protocols/api";
@@ -26,6 +25,8 @@ const PRODUCTION_US_GRAPHQL_URL = "https://api.newrelic.com/graphql";
 const PRODUCTION_EU_GRAPHQL_URL = "https://api-eu.newrelic.com/graphql";
 
 const ignoredErrors = [GraphqlNrqlTimeoutError];
+
+export type OnGraphqlClientConnected = (newRelicUserId: number) => Promise<void>;
 
 // NR graphql specific error
 export interface HttpErrorResponse {
@@ -59,6 +60,7 @@ export class NewRelicGraphqlClient {
 	private _clientUrlNeedsUpdate: boolean = false;
 	private _newRelicUserId: number | undefined = undefined;
 	private _accountIds: number[] | undefined = undefined;
+	private _onGraphqlClientConnected: OnGraphqlClientConnected | undefined = undefined;
 
 	constructor(
 		private session: CodeStreamSession,
@@ -90,6 +92,10 @@ export class NewRelicGraphqlClient {
 		}
 	}
 
+	set onGraphqlClientConnected(onGraphqlClientConnected: OnGraphqlClientConnected) {
+		this._onGraphqlClientConnected = onGraphqlClientConnected;
+	}
+
 	get headers() {
 		const headers: { [key: string]: string } = {
 			"Content-Type": "application/json",
@@ -112,49 +118,35 @@ export class NewRelicGraphqlClient {
 		return headers;
 	}
 
-	// TODO move this config stuff to separate class (_newRelicUserId, _accountIds, etc)
-	// @log()
-	// async configure(config: ProviderConfigurationData, verify?: boolean): Promise<boolean> {
-	//   // FIXME: this whole method of configuring New Relic by key should go away with Unified Identity
-	//   if (verify) {
-	//     if (!(await super.configure(config, true))) return false;
-	//   }
-	//   await this.createClientAndValidateKey(config.accessToken!);
-	//
-	//   // TODO wtf circular dependency
-	//   const { orgId } = await this.orgProvider.updateOrgId({ teamId: this.session.teamId });
-	//
-	//   config.data = config.data || {};
-	//   config.data.userId = this._newRelicUserId;
-	//   config.data.orgIds = orgId ? [orgId] : [];
-	//   await super.configure(config);
-	//
-	//   // update telemetry super-properties
-	//   this.session.addNewRelicSuperProps(this._newRelicUserId!, orgId);
-	//   return true;
-	// }
-
 	protected async client(useOtherRegion?: boolean): Promise<GraphQLClient> {
-		let client;
+		let client: GraphQLClient;
 		// if (useOtherRegion && this.session.isProductionCloud) {
 		if (useOtherRegion) {
-			let newGraphQlBaseUrl = this.graphQlBaseUrl;
+			const newGraphQlBaseUrl = this.graphQlBaseUrl;
 			if (newGraphQlBaseUrl === PRODUCTION_US_GRAPHQL_URL) {
-				client = this._client = this.createClient(PRODUCTION_EU_GRAPHQL_URL, this.accessToken);
+				client = this._client = await this.createClientAndValidateKey(
+					PRODUCTION_EU_GRAPHQL_URL,
+					this.accessToken
+				);
 			} else if (newGraphQlBaseUrl === PRODUCTION_EU_GRAPHQL_URL) {
-				client = this._client = this.createClient(PRODUCTION_US_GRAPHQL_URL, this.accessToken);
+				client = this._client = await this.createClientAndValidateKey(
+					PRODUCTION_US_GRAPHQL_URL,
+					this.accessToken
+				);
 			} else {
 				client =
-					this._client || (this._client = this.createClient(this.graphQlBaseUrl, this.accessToken));
+					this._client ??
+					(await this.createClientAndValidateKey(this.graphQlBaseUrl, this.accessToken));
 			}
 			this._clientUrlNeedsUpdate = true;
 		} else {
 			if (this._clientUrlNeedsUpdate) {
-				client = this._client = this.createClient(this.graphQlBaseUrl, this.accessToken);
+				client = await this.createClientAndValidateKey(this.graphQlBaseUrl, this.accessToken);
 				this._clientUrlNeedsUpdate = false;
 			} else {
 				client =
-					this._client || (this._client = this.createClient(this.graphQlBaseUrl, this.accessToken));
+					this._client ??
+					(await this.createClientAndValidateKey(this.graphQlBaseUrl, this.accessToken));
 			}
 		}
 
@@ -191,15 +183,10 @@ export class NewRelicGraphqlClient {
 		return client;
 	}
 
-	async verifyConnection(config: ProviderConfigurationData): Promise<void> {
-		delete this._client;
-		await this.createClientAndValidateKey(config.accessToken!);
-	}
-
 	private async validateApiKey(client: GraphQLClient): Promise<{
 		userId: number;
 		organizationId?: number;
-		accounts: any[];
+		accounts: { id: number; name: string }[];
 	}> {
 		try {
 			const response = await client.request<{
@@ -221,7 +208,7 @@ export class NewRelicGraphqlClient {
 				actor {
 					user {
 						id
-					}
+          }
 					accounts {
 						id,
 						name
@@ -242,18 +229,30 @@ export class NewRelicGraphqlClient {
 		}
 	}
 
-	async createClientAndValidateKey(apiKey: string) {
+	async createClientAndValidateKey(apiUrl: string, apiKey: string): Promise<GraphQLClient> {
 		if (this._client && this._newRelicUserId && this._accountIds) {
-			return;
+			return this._client;
 		}
-		this._client = this.createClient(this.apiUrl + "/graphql", apiKey);
+		this._client = this.createClient(apiUrl, apiKey);
 		const { userId, accounts } = await this.validateApiKey(this._client!);
 		this._newRelicUserId = userId;
 		ContextLogger.log(`Found ${accounts.length} New Relic accounts`);
 		this._accountIds = accounts.map(_ => _.id);
+		if (this._onGraphqlClientConnected) {
+			// Avoid circular dependency between this class and NrOrgProvider
+			setImmediate(
+				() =>
+					this._onGraphqlClientConnected && this._onGraphqlClientConnected(this._newRelicUserId!)
+			);
+		}
+		return this._client;
 	}
 
-	private async clientRequestWrap<T>(query: string, variables: any, useOtherRegion?: boolean) {
+	private async clientRequestWrap<T>(
+		query: string,
+		variables: Record<string, string>,
+		useOtherRegion?: boolean
+	) {
 		let resp;
 		const client = await this.client(useOtherRegion);
 		let triedRefresh = false;
@@ -365,7 +364,7 @@ export class NewRelicGraphqlClient {
 		tryCount: number = 3,
 		isMultiRegion: boolean = false
 	): Promise<T> {
-		// TODO re-implement
+		// TODO REF re-implement
 		// await this.ensureConnected();
 
 		if (this.providerInfo && this.providerInfo.tokenError) {
