@@ -11,9 +11,10 @@ import {
 	ServiceLevelObjectiveQueryResult,
 } from "../newrelic.types";
 import { Logger } from "../../../logger";
-import { ContextLogger, mapNRErrorResponse, toFixedNoRounding } from "../../newrelic";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 import { NrOrgProvider } from "../orgs/nrOrgProvider";
+import { mapNRErrorResponse, toFixedNoRounding } from "../utils";
+import { ContextLogger } from "../../contextLogger";
 
 @lsp
 export class SloProvider {

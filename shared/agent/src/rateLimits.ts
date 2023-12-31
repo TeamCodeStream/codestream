@@ -1,7 +1,7 @@
 import { Logger } from "./logger";
 import { NRErrorType } from "@codestream/protocols/agent";
-import { CodedError } from "./providers/newrelic.types";
 import { Container } from "./container";
+import { CodedError } from "./providers/newrelic/newrelic.types";
 
 // Time period in seconds in which we evaluate the rate limit
 export const RATE_LIMIT_INTERVAL = 15;

@@ -17,16 +17,20 @@ import {
 } from "@codestream/protocols/agent";
 import { log } from "../../../system/decorators/log";
 import { ResponseError } from "vscode-jsonrpc/lib/messages";
-import { CodedError, GraphqlNrqlError, GraphqlNrqlTimeoutError } from "../../newrelic.types";
+import {
+	CodedError,
+	EntitySearchResult,
+	GraphqlNrqlError,
+	GraphqlNrqlTimeoutError,
+} from "../newrelic.types";
 import Cache from "@codestream/utils/system/timedCache";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
-import { ContextLogger } from "../../newrelic";
-import { EntitySearchResult } from "../newrelic.types";
 import { Strings } from "../../../system";
 import { ReposProvider } from "../repos/reposProvider";
 import { ObservabilityErrorsProvider } from "../errors/observabilityErrorsProvider";
 import { isEmpty as _isEmpty, isUndefined as _isUndefined } from "lodash";
 import { Logger } from "../../../logger";
+import { ContextLogger } from "../../contextLogger";
 
 const ENTITY_CACHE_KEY = "entityCache";
 

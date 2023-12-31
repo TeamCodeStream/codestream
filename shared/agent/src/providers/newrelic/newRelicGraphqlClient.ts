@@ -1,5 +1,4 @@
 import { GraphQLClient } from "graphql-request";
-import { ContextLogger } from "../newrelic";
 import { ResponseError } from "vscode-jsonrpc/lib/messages";
 import {
 	ERROR_NR_CONNECTION_INVALID_API_KEY,
@@ -17,9 +16,10 @@ import { InternalError, ReportSuppressedMessages } from "../../agentError";
 import { makeHtmlLoggable } from "@codestream/utils/system/string";
 import { Functions } from "../../system/function";
 import { isEmpty as _isEmpty } from "lodash";
-import { GraphqlNrqlError, GraphqlNrqlTimeoutError, isGraphqlNrqlError } from "../newrelic.types";
+import { GraphqlNrqlError, GraphqlNrqlTimeoutError, isGraphqlNrqlError } from "./newrelic.types";
 import { AccessTokenError } from "./newrelic.types";
 import * as Dom from "graphql-request/dist/types.dom";
+import { ContextLogger } from "../contextLogger";
 
 const PRODUCTION_US_GRAPHQL_URL = "https://api.newrelic.com/graphql";
 const PRODUCTION_EU_GRAPHQL_URL = "https://api-eu.newrelic.com/graphql";

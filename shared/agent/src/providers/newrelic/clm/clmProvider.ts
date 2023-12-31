@@ -1,6 +1,6 @@
 import { ClmManager } from "./clmManager";
 import Cache from "@codestream/utils/system/timedCache";
-import { ClmSpanData, isClmSpanData } from "../../newrelic.types";
+import { ClmSpanData, isClmSpanData } from "../newrelic.types";
 import {
 	Entity,
 	EntityAccount,
@@ -26,7 +26,6 @@ import { ClmManagerNew } from "./clmManagerNew";
 import { Logger } from "../../../logger";
 import { Functions } from "../../../system/function";
 import { generateClmSpanDataExistsQuery } from "../spanQuery";
-import { ContextLogger, mapNRErrorResponse, NewRelicProvider } from "../../newrelic";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 import { ReposProvider } from "../repos/reposProvider";
 import { getMethodLevelTelemetryMockResponse } from "../anomalyDetectionMockResults";
@@ -34,6 +33,8 @@ import { NrApiConfig } from "../nrApiConfig";
 import { GoldenSignalsProvider } from "../goldenSignals/goldenSignalsProvider";
 import { DeploymentsProvider } from "../deployments/deploymentsProvider";
 import { ObservabilityErrorsProvider } from "../errors/observabilityErrorsProvider";
+import { mapNRErrorResponse, parseId } from "../utils";
+import { ContextLogger } from "../../contextLogger";
 
 @lsp
 export class ClmProvider {
@@ -67,7 +68,7 @@ export class ClmProvider {
 						return cached;
 					}
 					const response = await this.graphqlClient.query(generateClmSpanDataExistsQuery(_), {
-						accountId: NewRelicProvider.parseId(_)?.accountId,
+						accountId: parseId(_)?.accountId,
 					});
 					const spanData = response?.actor?.account?.nrql?.results[0];
 					if (isClmSpanData(spanData)) {
@@ -211,7 +212,7 @@ export class ClmProvider {
 			relativeFilePath?: string;
 		}
 	): Promise<ObservabilityError[]> {
-		const parsedId = NewRelicProvider.parseId(entityGuid)!;
+		const parsedId = parseId(entityGuid)!;
 		const query = this.getMethodLevelErrorsQuery(
 			entityGuid,
 			metricTimesliceNames,

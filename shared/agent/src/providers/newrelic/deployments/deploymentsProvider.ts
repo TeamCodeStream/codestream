@@ -6,7 +6,7 @@ import {
 } from "@codestream/protocols/agent";
 import { log } from "../../../system/decorators/log";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
-import { NewRelicProvider } from "../../newrelic";
+import { parseId } from "../utils";
 
 @lsp
 export class DeploymentsProvider {
@@ -19,7 +19,7 @@ export class DeploymentsProvider {
 			since: "30 days ago",
 			...request,
 		};
-		const parsedId = NewRelicProvider.parseId(entityGuid)!;
+		const parsedId = parseId(entityGuid)!;
 		const query = `SELECT timestamp, version FROM Deployment WHERE entity.guid = '${entityGuid}' SINCE ${since} ORDER BY timestamp LIMIT MAX`;
 		const result = await this.graphqlClient.runNrql<{
 			timestamp: number;

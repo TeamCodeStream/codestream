@@ -317,7 +317,6 @@ import { HistoryFetchInfo } from "../../broadcaster/broadcaster";
 import { Container, SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import { safeDecode, safeEncode } from "../../managers/operations";
-import { NewRelicProvider } from "../../providers/newrelic";
 import { getProvider, log, lsp, lspHandler, Objects, Strings } from "../../system";
 import { customFetch, fetchCore } from "../../system/fetchCore";
 import { VersionInfo } from "../../types";
@@ -336,6 +335,7 @@ import { BroadcasterEvents } from "./events";
 import { CodeStreamUnreads } from "./unreads";
 import { clearResolvedFlag } from "@codestream/utils/api/codeErrorCleanup";
 import { ResponseError } from "vscode-jsonrpc/lib/messages";
+import { parseId } from "../../providers/newrelic/utils";
 
 @lsp
 export class CodeStreamApiProvider implements ApiProvider {
@@ -444,7 +444,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			case "otc":
 				const nrAccountId =
 					options.errorGroupGuid !== undefined
-						? NewRelicProvider.parseId(options.errorGroupGuid)?.accountId
+						? parseId(options.errorGroupGuid)?.accountId
 						: undefined;
 				response = await this.put<CSCompleteSignupRequest, CSLoginResponse>(
 					"/no-auth/check-signup",
@@ -716,7 +716,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	async confirmRegistration(request: CSConfirmRegistrationRequest): Promise<CSLoginResponse> {
 		if (request.errorGroupGuid !== undefined && request.nrAccountId === undefined) {
-			request.nrAccountId = NewRelicProvider.parseId(request.errorGroupGuid)?.accountId;
+			request.nrAccountId = parseId(request.errorGroupGuid)?.accountId;
 		}
 		const response = await this.post<CSConfirmRegistrationRequest, CSLoginResponse>(
 			"/no-auth/confirm",

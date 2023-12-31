@@ -17,10 +17,10 @@ import {
 } from "@codestream/protocols/agent";
 import { log } from "../../../system/decorators/log";
 import { SessionContainer } from "../../../container";
-import { ContextLogger } from "../../newrelic";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 import { ApiProvider } from "../../../api/apiProvider";
 import { NrApiConfig } from "../nrApiConfig";
+import { ContextLogger } from "../../contextLogger";
 
 @lsp
 export class NrOrgProvider {

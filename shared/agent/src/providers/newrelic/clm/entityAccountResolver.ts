@@ -1,7 +1,6 @@
 import { EntityAccount, NRErrorResponse, ObservabilityRepo } from "@codestream/protocols/agent";
 import { GitRepository } from "../../../git/models/repository";
-import { ContextLogger, errorTypeMapper } from "../../newrelic";
-import { GraphqlNrqlError } from "../../newrelic.types";
+import { GraphqlNrqlError } from "../newrelic.types";
 import { Logger } from "../../../logger";
 import { join, relative, sep } from "path";
 import { SessionServiceContainer } from "../../../container";
@@ -9,6 +8,8 @@ import { EntityProvider } from "../entity/entityProvider";
 import { GoldenSignalsProvider } from "../goldenSignals/goldenSignalsProvider";
 import { ReposProvider } from "../repos/reposProvider";
 import { lsp } from "../../../system/decorators/lsp";
+import { errorTypeMapper } from "../utils";
+import { ContextLogger } from "../../contextLogger";
 
 @lsp
 export class EntityAccountResolver {

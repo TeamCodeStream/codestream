@@ -12,7 +12,6 @@ import {
 	ObservabilityRepo,
 	SpanWithCodeAttrs,
 } from "@codestream/protocols/agent";
-import { NewRelicProvider } from "../newrelic";
 import { Logger } from "../../logger";
 import { getStorage } from "../../storage";
 import { getAnomalyDetectionMockResponse } from "./anomalyDetectionMockResults";
@@ -20,6 +19,7 @@ import { getLanguageSupport, LanguageSupport } from "./clm/languageSupport";
 import { NewRelicGraphqlClient } from "./newRelicGraphqlClient";
 import { ReposProvider } from "./repos/reposProvider";
 import { DeploymentsProvider } from "./deployments/deploymentsProvider";
+import { parseId } from "./utils";
 
 export class AnomalyDetector {
 	constructor(
@@ -34,7 +34,7 @@ export class AnomalyDetector {
 		this._baselineTimeFrame = `SINCE ${
 			sinceDaysAgo + baselineDays
 		} days AGO UNTIL ${sinceDaysAgo} days AGO`;
-		this._accountId = NewRelicProvider.parseId(_request.entityGuid)!.accountId;
+		this._accountId = parseId(_request.entityGuid)!.accountId;
 		this._sinceDaysAgo = sinceDaysAgo;
 	}
 

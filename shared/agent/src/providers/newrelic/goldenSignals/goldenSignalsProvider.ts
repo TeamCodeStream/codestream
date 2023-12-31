@@ -18,12 +18,6 @@ import {
 	ObservabilityRepo,
 } from "@codestream/protocols/agent";
 import { Logger } from "../../../logger";
-import {
-	ContextLogger,
-	mapNRErrorResponse,
-	NewRelicProvider,
-	toFixedNoRounding,
-} from "../../newrelic";
 import { escapeNrql, NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 import { CSMe } from "@codestream/protocols/api";
 import { lsp, lspHandler } from "../../../system/decorators/lsp";
@@ -32,6 +26,8 @@ import { ResponseError } from "vscode-jsonrpc/lib/messages";
 import { ReposProvider } from "../repos/reposProvider";
 import { NrApiConfig } from "../nrApiConfig";
 import { uniqBy as _uniqBy } from "lodash";
+import { mapNRErrorResponse, parseId, toFixedNoRounding } from "../utils";
+import { ContextLogger } from "../../contextLogger";
 
 @lsp
 export class GoldenSignalsProvider {
@@ -68,7 +64,7 @@ export class GoldenSignalsProvider {
 		let recentIssuesResponse;
 
 		if (request.fetchRecentIssues) {
-			const accountId = NewRelicProvider.parseId(request.newRelicEntityGuid)?.accountId;
+			const accountId = parseId(request.newRelicEntityGuid)?.accountId;
 
 			if (accountId) {
 				recentIssuesResponse = await this.getIssues(accountId!, request.newRelicEntityGuid);
@@ -293,7 +289,7 @@ export class GoldenSignalsProvider {
 			entityGuid,
 		});
 
-		const parsedId = NewRelicProvider.parseId(entityGuid)!;
+		const parsedId = parseId(entityGuid)!;
 		const useSpan = metricTimesliceNames?.source === "span";
 
 		const results = await Promise.all(

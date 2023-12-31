@@ -1,5 +1,5 @@
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
-import { RepoEntitiesByRemotesResponse } from "../../newrelic.types";
+import { RepoEntitiesByRemotesResponse } from "../newrelic.types";
 import {
 	AgentValidateLanguageExtensionRequestType,
 	BuiltFromResult,
@@ -25,10 +25,11 @@ import { GitRemoteParser } from "../../../git/parsers/remoteParser";
 import { log } from "../../../system/decorators/log";
 import { lsp, lspHandler } from "../../../system/decorators/lsp";
 import { SessionContainer, SessionServiceContainer } from "../../../container";
-import { ContextLogger, mapNRErrorResponse } from "../../newrelic";
 import { URI } from "vscode-uri";
 import semver from "semver";
 import { NrApiConfig } from "../nrApiConfig";
+import { mapNRErrorResponse } from "../utils";
+import { ContextLogger } from "../../contextLogger";
 
 const REQUIRED_AGENT_VERSIONS = {
 	go: "3.24.0",

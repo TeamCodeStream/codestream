@@ -3,10 +3,15 @@
 import { FLTStrategy } from "./FLTStrategy";
 import { GetFileLevelTelemetryRequest } from "@codestream/protocols/agent";
 import { groupBy as _groupBy } from "lodash";
-import { AdditionalMetadataInfo, FunctionInfo, MetricTimeslice, Span } from "../newrelic.types";
+import {
+	AdditionalMetadataInfo,
+	FunctionInfo,
+	GraphqlNrqlError,
+	MetricTimeslice,
+	Span,
+} from "../newrelic.types";
 import { generateSpanQuery, spanQueryTypes } from "../spanQuery";
 import { Logger } from "../../../logger";
-import { GraphqlNrqlError } from "../../newrelic.types";
 import { generateMethodSampleSizeQuery } from "../methodSampleSizeQuery";
 import { EnhancedMetricTimeslice, LanguageId } from "./clmManager";
 import { generateMethodAverageDurationQuery } from "../methodAverageDurationQuery";

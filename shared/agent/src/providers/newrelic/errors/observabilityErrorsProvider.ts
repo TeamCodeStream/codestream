@@ -30,13 +30,14 @@ import {
 import { log } from "../../../system/decorators/log";
 import { SessionContainer } from "../../../container";
 import { ResponseError } from "vscode-jsonrpc/lib/messages";
-import { ContextLogger, mapNRErrorResponse, NewRelicProvider } from "../../newrelic";
 import { ReposProvider } from "../repos/reposProvider";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 import { Logger } from "../../../logger";
 import { Strings } from "../../../system";
 import { NrApiConfig } from "../nrApiConfig";
 import { isEmpty as _isEmpty } from "lodash";
+import { mapNRErrorResponse, parseId } from "../utils";
+import { ContextLogger } from "../../contextLogger";
 
 @lsp
 export class ObservabilityErrorsProvider {
@@ -335,7 +336,7 @@ export class ObservabilityErrorsProvider {
 				return undefined;
 			}
 
-			const accountId = NewRelicProvider.parseId(errorGroupGuid)?.accountId!;
+			const accountId = parseId(errorGroupGuid)?.accountId!;
 
 			const errorGroupResponse = await this.fetchErrorGroupById(errorGroupGuid);
 
@@ -1001,7 +1002,7 @@ export class ObservabilityErrorsProvider {
 		let entityGuid = "";
 		try {
 			const errorGroupGuid = request.errorGroupGuid;
-			const parsedId = NewRelicProvider.parseId(errorGroupGuid)!;
+			const parsedId = parseId(errorGroupGuid)!;
 			accountId = parsedId?.accountId;
 
 			let errorGroupFullResponse;

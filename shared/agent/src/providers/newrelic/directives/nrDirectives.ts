@@ -1,10 +1,11 @@
 import { log } from "../../../system/decorators/log";
-import { ContextLogger, NewRelicProvider } from "../../newrelic";
 import { isNRErrorResponse } from "@codestream/protocols/agent";
 import { Functions } from "../../../system/function";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 import { ObservabilityErrorsProvider } from "../errors/observabilityErrorsProvider";
 import { ReposProvider } from "../repos/reposProvider";
+import { ContextLogger } from "../../contextLogger";
+import { parseId } from "../utils";
 
 export interface Directive {
 	type: "assignRepository" | "removeAssignee" | "setAssignee" | "setState";
@@ -36,7 +37,7 @@ export class NrDirectives {
 		errorGroupGuid?: string;
 	}): Promise<Directives | undefined> {
 		try {
-			const parsedId = NewRelicProvider.parseId(request.parseableAccountId)!;
+			const parsedId = parseId(request.parseableAccountId)!;
 			const accountId = parsedId?.accountId;
 			const name = request.name;
 

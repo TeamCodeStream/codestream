@@ -12,15 +12,18 @@ import {
 	NRErrorResponse,
 	ObservabilityAnomaly,
 } from "@codestream/protocols/agent";
-import { AdditionalMetadataInfo, MetricTimeslice, ResolutionMethod } from "../newrelic.types";
+import {
+	AdditionalMetadataInfo,
+	GraphqlNrqlError,
+	MetricTimeslice,
+	ResolutionMethod,
+} from "../newrelic.types";
 import { Logger } from "../../../logger";
-import { GraphqlNrqlError } from "../../newrelic.types";
 import { SessionServiceContainer } from "../../../container";
 import * as csUri from "../../../system/uri";
 import { ReviewsManager } from "../../../managers/reviewsManager";
 import path from "path";
 import { URI } from "vscode-uri";
-import { ContextLogger, errorTypeMapper } from "../../newrelic";
 import Cache from "@codestream/utils/system/timedCache";
 import { FLTStrategyFactory } from "./FLTStrategy";
 import { AnomaliesProvider } from "../anomalies/anomaliesProvider";
@@ -29,6 +32,8 @@ import { NrApiConfig } from "../nrApiConfig";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 import { EntityAccountResolver } from "./entityAccountResolver";
 import { lsp } from "../../../system/decorators/lsp";
+import { errorTypeMapper } from "../utils";
+import { ContextLogger } from "../../contextLogger";
 
 @lsp
 export class ClmManager {

@@ -8,11 +8,11 @@ import {
 	ObservabilityRepo,
 	SpanWithCodeAttrs,
 } from "@codestream/protocols/agent";
-import { NewRelicProvider } from "../../newrelic";
 import { Logger } from "../../../logger";
 import { getLanguageSupport, LanguageSupport } from "./languageSupport";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 import { ReposProvider } from "../repos/reposProvider";
+import { parseId } from "../utils";
 
 export class ClmManagerNew {
 	constructor(
@@ -20,7 +20,7 @@ export class ClmManagerNew {
 		private graphqlClient: NewRelicGraphqlClient,
 		private reposProvider: ReposProvider
 	) {
-		this._accountId = NewRelicProvider.parseId(_request.entityGuid)!.accountId;
+		this._accountId = parseId(_request.entityGuid)!.accountId;
 	}
 
 	private _dataTimeFrame = "SINCE 30 minutes AGO";

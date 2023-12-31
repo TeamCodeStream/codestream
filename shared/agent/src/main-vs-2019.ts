@@ -143,3 +143,7 @@ function restartAgent() {
 }
 
 connection.listen();
+export { mapNRErrorResponse } from "./providers/newrelic/utils";
+export { errorTypeMapper } from "./providers/newrelic/utils";
+export { toFixedNoRounding } from "./providers/newrelic/utils";
+export { ContextLogger } from "./providers/contextLogger";
