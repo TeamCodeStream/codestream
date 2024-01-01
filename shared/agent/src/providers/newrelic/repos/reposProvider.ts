@@ -62,7 +62,7 @@ export class ReposProvider {
 		);
 	}
 
-	protected async buildRepoRemoteVariants(remotes: string[]): Promise<string[]> {
+	async buildRepoRemoteVariants(remotes: string[]): Promise<string[]> {
 		const set = new Set<string>();
 
 		await Promise.all(
@@ -107,7 +107,7 @@ export class ReposProvider {
 		}
 		const response: GetObservabilityReposResponse = { repos: [] };
 		try {
-			const { scm } = this.sessionServiceContainer || SessionContainer.instance();
+			const { scm } = this.sessionServiceContainer;
 			const reposResponse = await scm.getRepos({ includeRemotes: true });
 			let filteredRepos: ReposScm[] | undefined = reposResponse?.repositories;
 			if (request?.filters?.length) {

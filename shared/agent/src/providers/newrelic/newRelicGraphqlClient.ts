@@ -60,7 +60,7 @@ export class NewRelicGraphqlClient {
 	private _clientUrlNeedsUpdate: boolean = false;
 	private _newRelicUserId: number | undefined = undefined;
 	private _accountIds: number[] | undefined = undefined;
-	private _onGraphqlClientConnected: OnGraphqlClientConnected | undefined = undefined;
+	private _onGraphqlClientConnected = new Array<OnGraphqlClientConnected>();
 
 	constructor(
 		private session: CodeStreamSession,
@@ -92,8 +92,8 @@ export class NewRelicGraphqlClient {
 		}
 	}
 
-	set onGraphqlClientConnected(onGraphqlClientConnected: OnGraphqlClientConnected) {
-		this._onGraphqlClientConnected = onGraphqlClientConnected;
+	addOnGraphqlClientConnected(onGraphqlClientConnected: OnGraphqlClientConnected) {
+		this._onGraphqlClientConnected?.push(onGraphqlClientConnected);
 	}
 
 	get headers() {
@@ -238,14 +238,15 @@ export class NewRelicGraphqlClient {
 		this._newRelicUserId = userId;
 		ContextLogger.log(`Found ${accounts.length} New Relic accounts`);
 		this._accountIds = accounts.map(_ => _.id);
-		if (this._onGraphqlClientConnected) {
-			// Avoid circular dependency between this class and NrOrgProvider
-			setImmediate(
-				() =>
-					this._onGraphqlClientConnected && this._onGraphqlClientConnected(this._newRelicUserId!)
-			);
-		}
+		this.fireOnGraphqlClientConnected(userId);
 		return this._client;
+	}
+
+	private fireOnGraphqlClientConnected(newRelicUserId: number) {
+		// Avoid circular dependency between this class and NrOrgProvider
+		for (const onGraphqlClientConnected of this._onGraphqlClientConnected) {
+			setImmediate(() => onGraphqlClientConnected(newRelicUserId));
+		}
 	}
 
 	private async clientRequestWrap<T>(
@@ -589,6 +590,7 @@ export class NewRelicGraphqlClient {
 	}
 
 	dispose() {
+		this._onGraphqlClientConnected = [];
 		delete this._client;
 	}
 }

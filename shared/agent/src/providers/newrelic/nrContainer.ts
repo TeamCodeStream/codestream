@@ -1,3 +1,5 @@
+// eslint-disable: Keep unused vars to make it easy to inject objects into new dependencies as they are added
+/* eslint-disable  unused-imports/no-unused-vars */
 import { NewRelicGraphqlClient } from "./newRelicGraphqlClient";
 import { CodeStreamSession } from "../../session";
 import { SessionServiceContainer } from "../../container";
@@ -35,6 +37,10 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 		name
 	);
 
+	if (!newRelicProviderInfo) {
+		throw new Error("New Relic provider info not found");
+	}
+
 	const newRelicProviderConfig: NewThirdPartyProviderConfig = {
 		id: "newrelic*com",
 		apiUrl: session.newRelicApiUrl ?? "https://api.newrelic.com",
@@ -44,10 +50,6 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 			"newrelic-requesting-services": "CodeStream",
 		},
 	};
-
-	if (!newRelicProviderInfo) {
-		throw new Error("New Relic provider info not found");
-	}
 
 	const versionInfo = session.versionInfo;
 
@@ -63,10 +65,10 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 	const nrOrgProvider = new NrOrgProvider(newRelicGraphqlClient, apiProvider, nrApiConfig);
 
 	// Avoid circular dependency between NewRelicGraphqlClient and NrOrgProvider
-	newRelicGraphqlClient.onGraphqlClientConnected = async (newRelicUserId: number) => {
+	newRelicGraphqlClient.addOnGraphqlClientConnected(async (newRelicUserId: number) => {
 		const { orgId } = await nrOrgProvider.updateOrgId({ teamId: session.teamId });
 		await session.addNewRelicSuperProps(newRelicUserId, orgId);
-	};
+	});
 
 	const nrHttpClient = new HttpClient(newRelicProviderConfig, session, newRelicProviderInfo);
 
