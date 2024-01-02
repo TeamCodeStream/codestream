@@ -217,7 +217,7 @@ export const SignupNewRelic = () => {
 									<div className="error-message">
 										Invitation conflict.{" "}
 										<FormattedMessage id="contactSupport" defaultMessage="Contact support">
-											{text => <Link href="mailto:codestream@newrelic.com">{text}</Link>}
+											{text => <Link href="https://one.newrelic.com/help-xp">{text}</Link>}
 										</FormattedMessage>
 										.
 									</div>

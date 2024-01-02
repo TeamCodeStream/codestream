@@ -202,7 +202,7 @@ export const ProviderAuth = (connect(undefined) as any)((props: Props) => {
 					</div>
 					<p>
 						<FormattedMessage id="providerAuth.wrong" defaultMessage="Something went wrong? " />
-						<Link href="mailto:codestream@newrelic.com">
+						<Link href="https://one.newrelic.com/help-xp">
 							<FormattedMessage id="providerAuth.contact" defaultMessage="Contact support" />
 						</Link>{" "}
 						<FormattedMessage id="providerAuth.or" defaultMessage="or " />

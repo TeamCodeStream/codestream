@@ -330,8 +330,8 @@ export default class Container extends React.Component {
 									<a onClick={this.handleClickReload}>Click here</a> to reload.
 									<br />
 									<br />
-									If the problem persists please contact{" "}
-									<a href="mailto:codestream@newrelic.com">codestream@newrelic.com</a>
+									If the problem persists please{" "}
+									<a href="https://one.newrelic.com/help-xp">contact support.</a>
 								</div>
 							</div>
 						</fieldset>

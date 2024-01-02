@@ -152,8 +152,8 @@ export const PRProviderErrorBanner = () => {
 							</Button>
 							<p>
 								If you continue to experience problems with your {derivedState.failedProviderName}{" "}
-								integration, please contact{" "}
-								<a href="mailto:codestream@newrelic.com">customer support</a>.
+								integration, please{" "}
+								<a href="https://one.newrelic.com/help-xp">contact support</a>.
 							</p>
 						</div>
 					</div>
