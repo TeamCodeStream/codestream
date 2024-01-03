@@ -751,5 +751,9 @@
 	"transaction": {
 		"viewBox": "0 0 16 16",
 		"path": "<path fill-rule=\"evenodd\" d=\"M9 12v3H1v-3h8zm-1 1H2v1h6v-1zm4-6v3H1V7h11zm-1 1H2v1h9V8zm4-6v3H1V2h14zm-1 1H2v1h12V3z\" clip-rule=\"evenodd\"></path>"
+	},
+	"metric": {
+		"viewBox": "0 0 16 16",
+		"path": "<path fill-rule=\"evenodd\" d=\"M2 1v12h13v1H1V1h1zm5 1h1v9H7V2zM4 5h1v6H4V5zm7-1h-1v7h1V4zm2 1h1v6h-1V5z\" clip-rule=\"evenodd\"></path>"
 	}
 }

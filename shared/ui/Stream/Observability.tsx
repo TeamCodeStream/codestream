@@ -280,7 +280,7 @@ export const Observability = React.memo((props: Props) => {
 			newRelicIsConnected,
 			activeO11y,
 			observabilityRepoEntities: preferences.observabilityRepoEntities || EMPTY_ARRAY,
-			showGoldenSignalsInEditor: state?.configs.showGoldenSignalsInEditor,
+			showGoldenSignalsInEditor: state?.configs?.showGoldenSignalsInEditor,
 			isVS: state.ide.name === "VS",
 			isVsCode: state.ide.name === "VSC",
 			hideCodeLevelMetricsInstructions: state.preferences.hideCodeLevelMetricsInstructions,
@@ -1288,6 +1288,7 @@ export const Observability = React.memo((props: Props) => {
 																									observabilityAnomalies={observabilityAnomalies}
 																									observabilityRepo={_observabilityRepo}
 																									entityGuid={ea.entityGuid}
+																									entityName={ea.entityName}
 																									noAccess={noErrorsAccess}
 																									calculatingAnomalies={calculatingAnomalies}
 																									distributedTracingEnabled={

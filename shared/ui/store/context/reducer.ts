@@ -276,6 +276,7 @@ export function reduceContext(
 				...state,
 				currentObservabilityAnomaly: action.payload.anomaly,
 				currentObservabilityAnomalyEntityGuid: action.payload.entityGuid,
+				currentObservabilityAnomalyEntityName: action.payload?.entityName,
 			};
 		}
 

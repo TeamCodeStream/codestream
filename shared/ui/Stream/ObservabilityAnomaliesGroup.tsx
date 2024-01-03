@@ -27,6 +27,7 @@ interface Props {
 	observabilityRepo: ObservabilityRepo;
 	detectionMethod?: DetectionMethod;
 	entityGuid?: string;
+	entityName?: string;
 	title?: string;
 	collapseDefault?: boolean;
 	noAnomaly?: boolean;
@@ -85,7 +86,7 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 			language: anomaly.language,
 		});
 		dispatch(closeAllPanels());
-		dispatch(setCurrentObservabilityAnomaly(anomaly, props.entityGuid!));
+		dispatch(setCurrentObservabilityAnomaly(anomaly, props.entityGuid!, props.entityName));
 		dispatch(openPanel(WebviewPanels.ObservabilityAnomaly));
 	};
 
@@ -190,7 +191,7 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 													return (
 														<Row
 															style={{
-																padding: "0 10px 0 54px",
+																padding: "0 10px 0 48px",
 															}}
 															className={"pr-row"}
 															onClick={e => {
@@ -204,7 +205,7 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 															}}
 														>
 															<TransactionIconSpan>
-																<span>&nbsp;</span>
+																<Icon className="subtle" name="metric" />
 															</TransactionIconSpan>
 															<Tooltip title={tooltipContent(child)} placement="topRight" delay={1}>
 																{formatFilePath(child.text)}
@@ -307,24 +308,7 @@ const AnomalyIcon = React.memo((props: AnomalyIconsProps) => {
 	const iconContent = useMemo(() => {
 		return (
 			<>
-				{props.isHovered ? (
-					<span
-						onClick={e => {
-							e.preventDefault();
-							e.stopPropagation();
-						}}
-					>
-						<Icon
-							name="globe"
-							className="clickable"
-							title="View on New Relic"
-							placement="bottomLeft"
-							delay={1}
-						/>
-					</span>
-				) : (
-					<div>{getTypeAndValueOutput(props.anomaly.type, props.anomaly.ratio)}</div>
-				)}
+				<div>{getTypeAndValueOutput(props.anomaly.type, props.anomaly.ratio)}</div>
 			</>
 		);
 	}, [props.isHovered, props.anomaly.type, props.anomaly.ratio, props.noAnomaly]);

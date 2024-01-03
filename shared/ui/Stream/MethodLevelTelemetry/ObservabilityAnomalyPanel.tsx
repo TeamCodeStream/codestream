@@ -20,7 +20,6 @@ import {
 	WarningOrError,
 } from "@codestream/protocols/agent";
 import styled from "styled-components";
-
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import {
 	RefreshEditorsCodeLensRequestType,
@@ -74,16 +73,19 @@ export const ObservabilityAnomalyPanel = () => {
 
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
-			showGoldenSignalsInEditor: state.configs.showGoldenSignalsInEditor,
+			showGoldenSignalsInEditor: state?.configs.showGoldenSignalsInEditor,
 			currentObservabilityAnomaly: (state.context.currentObservabilityAnomaly ||
 				{}) as ObservabilityAnomaly,
 			currentObservabilityAnomalyEntityGuid:
 				state.context.currentObservabilityAnomalyEntityGuid || "",
+			currentObservabilityAnomalyEntityName:
+				state.context.currentObservabilityAnomalyEntityName || "",
 			observabilityRepoEntities:
 				(state.users[state.session.userId!].preferences || {}).observabilityRepoEntities ||
 				EMPTY_ARRAY,
 			clmSettings: (state.preferences.clmSettings || {}) as CLMSettings,
 			sessionStart: state.context.sessionStart,
+			isProductionCloud: state.configs.isProductionCloud,
 		};
 	});
 
@@ -103,6 +105,7 @@ export const ObservabilityAnomalyPanel = () => {
 	const [showGoldenSignalsInEditor, setshowGoldenSignalsInEditor] = useState<boolean>(
 		derivedState.showGoldenSignalsInEditor || false
 	);
+	const [titleHovered, setTitleHovered] = useState<boolean>(false);
 
 	const loadData = async (newRelicEntityGuid: string) => {
 		setLoading(true);
@@ -278,21 +281,63 @@ export const ObservabilityAnomalyPanel = () => {
 		return subtext;
 	};
 
-	const ScopeText = styled.span`
-		color: var(--text-color-subtle);
+	const DataRow = styled.div`
+		display: flex;
+		align-items: flex-start;
+		width: 85%;
 	`;
+	const DataLabel = styled.div`
+		margin-right: 5px;
+	`;
+	const DataValue = styled.div`
+		color: var(--text-color-subtle);
+		word-wrap: break-word;
+		width: 92%;
+	`;
+
+	const renderTitle = () => {
+		if (!derivedState.currentObservabilityAnomaly.scope) {
+			//@TODO - put this href construction logic in the agent
+			const baseUrl = derivedState.isProductionCloud
+				? "https://one.newrelic.com/nr1-core/apm-features/transactions/"
+				: "https://staging-one.newrelic.com/nr1-core/apm-features/transactions/";
+
+			const href = `${baseUrl}${derivedState.currentObservabilityAnomalyEntityGuid}`;
+
+			return (
+				<a href={href} style={{ color: "inherit", textDecoration: "none" }}>
+					<span style={{ marginRight: "6px" }}>
+						{derivedState.currentObservabilityAnomaly.name}
+					</span>
+					{titleHovered && <Icon title="Open on New Relic" delay={1} name="link-external" />}
+				</a>
+			);
+		}
+
+		return <span>{derivedState.currentObservabilityAnomaly.name}</span>;
+	};
 
 	return (
 		<Root className="full-height-codemark-form">
 			{!loading && (
 				<div
+					onMouseEnter={() => {
+						setTitleHovered(true);
+					}}
+					onMouseLeave={() => {
+						setTitleHovered(false);
+					}}
 					style={{
-						whiteSpace: "nowrap",
-						overflow: "hidden",
-						textOverflow: "ellipsis",
+						width: "100%",
+						wordBreak: "break-word",
 					}}
 				>
-					<PanelHeader title={derivedState.currentObservabilityAnomaly.name}></PanelHeader>
+					{/* <PanelHeader
+						title={derivedState.currentObservabilityAnomaly.name}
+						linkJsx={titleHovered ? <Icon name="link-external" title="Open on New Relic" /> : ""}
+					></PanelHeader> */}
+
+					<PanelHeader title={renderTitle()}></PanelHeader>
 				</div>
 			)}
 			<CancelButton
@@ -369,12 +414,18 @@ export const ObservabilityAnomalyPanel = () => {
 										</div>
 									)}
 									{derivedState.currentObservabilityAnomaly.scope && (
-										<div>
-											<ScopeText>
-												<b>Scope: {derivedState.currentObservabilityAnomaly.scope}</b>
-											</ScopeText>
-										</div>
+										<DataRow>
+											<DataLabel>Transaction:</DataLabel>
+											<DataValue>{derivedState.currentObservabilityAnomaly.scope}</DataValue>
+										</DataRow>
 									)}
+									{derivedState.currentObservabilityAnomalyEntityName && (
+										<DataRow>
+											<DataLabel>Entity:</DataLabel>
+											<DataValue>{derivedState.currentObservabilityAnomalyEntityName}</DataValue>
+										</DataRow>
+									)}
+
 									<div>
 										<br />
 										{telemetryResponse &&
@@ -458,9 +509,9 @@ export const ObservabilityAnomalyPanel = () => {
 																					whiteSpace: "nowrap",
 																				}}
 																			>
-																				<ScopeText>
+																				<DataValue>
 																					<b>Scopes</b>
-																				</ScopeText>
+																				</DataValue>
 																			</td>
 																		</tr>
 																		{_.scopes?.map(scope => {
@@ -473,7 +524,7 @@ export const ObservabilityAnomalyPanel = () => {
 																							whiteSpace: "nowrap",
 																						}}
 																					>
-																						<ScopeText>{scope.name}</ScopeText>
+																						<DataValue>{scope.name}</DataValue>
 																					</td>
 																					<td
 																						style={{
@@ -483,7 +534,7 @@ export const ObservabilityAnomalyPanel = () => {
 																							textAlign: "right",
 																						}}
 																					>
-																						<ScopeText>{scope.value.toFixed(3)}</ScopeText>
+																						<DataValue>{scope.value.toFixed(3)}</DataValue>
 																					</td>
 																				</tr>
 																			);
