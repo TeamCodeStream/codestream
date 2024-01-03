@@ -32,6 +32,7 @@ interface Props {
 	observabilityAnomalies: GetObservabilityAnomaliesResponse;
 	observabilityRepo: any;
 	entityGuid: string;
+	entityName?: string;
 	noAccess?: string;
 	calculatingAnomalies?: boolean;
 	distributedTracingEnabled?: boolean;
@@ -325,6 +326,7 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 										observabilityAnomalies={anomalies}
 										observabilityRepo={props.observabilityRepo}
 										entityGuid={props.entityGuid}
+										entityName={props.entityName}
 										title="Anomalies"
 										detectionMethod={props.observabilityAnomalies.detectionMethod}
 									/>

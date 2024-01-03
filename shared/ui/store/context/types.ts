@@ -137,7 +137,7 @@ export interface ContextState extends WebviewContext {
 	currentMethodLevelTelemetry?: CurrentMethodLevelTelemetry;
 	currentObservabilityAnomaly?: ObservabilityAnomaly;
 	currentObservabilityAnomalyEntityGuid?: string;
-
+	currentObservabilityAnomalyEntityName?: string;
 	selectedRegion?: string;
 }
 
