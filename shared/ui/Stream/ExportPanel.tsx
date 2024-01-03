@@ -43,7 +43,25 @@ export const ExportPanel = () => {
 	});
 
 	function generateCsv() {
-		return derivedState.codemarks.length ? stringify(derivedState.codemarks) : "";
+		// repo,file,commitSha,location,date,author,id,parentId,type,title,body,assignees
+		const data = stringify(derivedState.codemarks, {
+			header: true,
+			columns: {
+				repo: "repo",
+				file: "file",
+				commitSha: "commitSha",
+				location: "location",
+				date: "date",
+				author: "author",
+				id: "id",
+				parentId: "parentId",
+				type: "type",
+				title: "title",
+				body: "body",
+				assignees: "assignees",
+			},
+		});
+		return derivedState.codemarks.length ? data : "";
 	}
 
 	return (
