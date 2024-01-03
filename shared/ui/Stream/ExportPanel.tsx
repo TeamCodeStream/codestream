@@ -44,6 +44,7 @@ export const ExportPanel = () => {
 
 	function generateCsv() {
 		// repo,file,commitSha,location,date,author,id,parentId,type,title,body,assignees
+		if (!derivedState.codemarks.length) return "";
 		let output = [{}];
 		derivedState.codemarks.forEach(codemark => {
 			if (!codemark) return;
