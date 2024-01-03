@@ -3112,7 +3112,7 @@ export class NewRelicProvider
 
 				if (!deploymentId || !timestamp) return undefined;
 
-				const threeHoursLater = timestamp + 180000;
+				const threeHoursLater = timestamp + 10800000;
 
 				const comparisonQuery = [
 					"FROM Metric",
@@ -3121,7 +3121,7 @@ export class NewRelicProvider
 					"average(newrelic.goldenmetrics.apm.application.errorRate) AS 'errorRate'",
 					`WHERE entity.guid = '${entityGuid}'`,
 					`SINCE ${timestamp} UNTIL ${threeHoursLater}`,
-					`COMPARE WITH 180000 minutes ago`,
+					`COMPARE WITH 3 hours ago`,
 				].join(" ");
 
 				const comparisonQueryData = await this.query<{
@@ -3159,10 +3159,11 @@ export class NewRelicProvider
 				if (!currentMetrics || !previousMetrics) return undefined;
 
 				const errorRatePercentageChange =
-					((currentMetrics.errorRate - previousMetrics.errorRate) / currentMetrics.errorRate) * 100;
+					((currentMetrics.errorRate - previousMetrics.errorRate) / previousMetrics.errorRate) *
+					100;
 				const responseTimePercentageChange =
 					((currentMetrics.responseTimeMs - previousMetrics.responseTimeMs) /
-						currentMetrics.responseTimeMs) *
+						previousMetrics.responseTimeMs) *
 					100;
 
 				const pillsErrorChange = errorRatePercentageChange
