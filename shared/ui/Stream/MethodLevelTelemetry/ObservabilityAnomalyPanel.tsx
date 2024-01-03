@@ -420,7 +420,7 @@ export const ObservabilityAnomalyPanel = () => {
 									)}
 									{derivedState.currentObservabilityAnomalyEntityName && (
 										<DataRow>
-											<DataLabel>Entity:</DataLabel>
+											<DataLabel>Service:</DataLabel>
 											<DataValue>{derivedState.currentObservabilityAnomalyEntityName}</DataValue>
 										</DataRow>
 									)}
