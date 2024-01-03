@@ -44,7 +44,36 @@ export const ExportPanel = () => {
 
 	function generateCsv() {
 		// repo,file,commitSha,location,date,author,id,parentId,type,title,body,assignees
-		const data = stringify(derivedState.codemarks, {
+		let output = [{}];
+		derivedState.codemarks.forEach(codemark => {
+			if (!codemark) return;
+			if (codemark.markers) {
+				codemark.markers.map(marker => {
+					if (!marker) return;
+					const location: any = marker.referenceLocations
+						? marker.referenceLocations[marker.referenceLocations.length - 1] || {}
+						: {};
+					const repo = derivedState.repos[marker.repoId];
+					const repoName = repo ? repo.name : "";
+					output.push(
+						{ repo: repoName },
+						{ file: marker.file },
+						{ commitSha: location.commitHash },
+						{ location: location.location ? location.location[0] : "" },
+						{ date: codemark.createdAt },
+						{ author: codemark.creatorId },
+						{ id: codemark.id },
+						{ parentId: codemark.parentPostId },
+						{ type: codemark.type },
+						{ title: codemark.title || codemark.text },
+						{ body: codemark.title ? codemark.text : "" },
+						{ assignees: codemark.assignees }
+					);
+				});
+			}
+		});
+
+		const data = stringify(output, {
 			header: true,
 			columns: {
 				repo: "repo",
@@ -93,7 +122,7 @@ export const ExportPanel = () => {
 							overflow: "auto",
 						}}
 					>
-						{derivedState.codemarks.length ? stringify(derivedState.codemarks) : ""}
+						{derivedState.codemarks.length ? generateCsv() : ""}
 					</textarea>
 				</div>
 			</ScrollBox>
