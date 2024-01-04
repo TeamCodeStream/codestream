@@ -1375,7 +1375,7 @@ export class NewRelicProvider
 			"WHERE ",
 			whereClause,
 			"WHERE fingerprint IS NOT NULL",
-			"FACET fingerprint AS 'fingerPrintId'",
+			"FACET error.class, message",
 			`SINCE ${since}`,
 			"LIMIT 10",
 		].join(" ");
