@@ -110,13 +110,9 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
 
     @JsonNotification("codestream/didEncounterMaintenanceMode")
     fun didEncounterMaintenanceMode(json: JsonElement) {
-        ApplicationManager.getApplication().invokeLater {
-            project.codeStream?.show {
-                project.webViewService?.postNotification("codestream/didEncounterMaintenanceMode", json, true)
-                appDispatcher.launch {
-                    project.authenticationService?.logout(CSLogoutReason.MAINTAINENCE_MODE)
-                }
-            }
+        project.webViewService?.postNotification("codestream/didEncounterMaintenanceMode", json, true)
+        appDispatcher.launch {
+            project.authenticationService?.logout(CSLogoutReason.MAINTAINENCE_MODE)
         }
     }
 
@@ -265,8 +261,7 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
 
     @JsonNotification("codestream/refreshMaintenancePoll")
     fun refreshMaintenancePoll(json: JsonElement) {
-        // no-op justo register and stop getting Unsupported notification method logs
-        logger.info("codeStream/refreshMaintenancePoll $json")
+        project.webViewService?.postNotification("codestream/refreshMaintenancePoll", json, true)
     }
 
     @JsonNotification("codestream/didChangeCodelenses")
