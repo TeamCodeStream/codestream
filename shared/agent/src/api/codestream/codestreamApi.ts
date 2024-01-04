@@ -149,6 +149,7 @@ import {
 	ReportingMessageType,
 	SendPasswordResetEmailRequest,
 	SendPasswordResetEmailRequestType,
+	SessionTokenStatus,
 	SetCodemarkPinnedRequest,
 	SetCodemarkStatusRequest,
 	SetPasswordRequest,
@@ -368,6 +369,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private _messageProcessingPromise: Promise<void> | undefined;
 	private _usingServiceGatewayAuth: boolean = false;
 	private _refreshNRTokenPromise: Promise<CSNewRelicProviderInfo> | undefined;
+	private _refreshTokenFailed: boolean = false;
 
 	readonly capabilities: Capabilities = {
 		channelMute: true,
@@ -2450,10 +2452,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 		if (this._refreshNRTokenPromise) {
 			return this._refreshNRTokenPromise;
 		}
+
 		this._refreshNRTokenPromise = new Promise((resolve, reject) => {
 			const url = "/no-auth/provider-refresh/newrelic";
 			this.put<{ refreshToken: string }, CSNewRelicProviderInfo>(url, {
-				refreshToken,
+				refreshToken: refreshToken,
 			})
 				.then(response => {
 					if (response.accessToken) {
@@ -2472,6 +2475,14 @@ export class CodeStreamApiProvider implements ApiProvider {
 						}
 					}
 					delete this._refreshNRTokenPromise;
+					if (this._refreshTokenFailed) {
+						if (SessionContainer.isInitialized()) {
+							SessionContainer.instance().session.onSessionTokenStatusChanged(
+								SessionTokenStatus.Active
+							);
+						}
+						this._refreshTokenFailed = false;
+					}
 					resolve(response);
 				})
 				.catch(ex => {
@@ -2486,6 +2497,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 						);
 					}
 					delete this._refreshNRTokenPromise;
+					if (SessionContainer.isInitialized()) {
+						SessionContainer.instance().session.onSessionTokenStatusChanged(
+							SessionTokenStatus.Expired
+						);
+					}
+					this._refreshTokenFailed = true;
 					reject(ex);
 				});
 		});

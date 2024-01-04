@@ -13,6 +13,8 @@ export function reduceSession(state = initialState, action: SessionActions) {
 			return action.payload;
 		case SessionActionType.SetMaintenanceMode:
 			return { ...state, inMaintenanceMode: action.payload };
+		case SessionActionType.SetSessionTokenStatus:
+			return { ...state, sessionTokenStatus: action.payload };
 		case SessionActionType.SetTOS:
 			return { ...state, acceptedTOS: action.payload };
 		case "RESET":

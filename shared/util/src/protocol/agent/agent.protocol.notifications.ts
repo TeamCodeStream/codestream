@@ -53,6 +53,20 @@ export const DidChangeConnectionStatusNotificationType = new NotificationType<
 	void
 >("codestream/didChangeConnectionStatus");
 
+export enum SessionTokenStatus {
+	Active = "active",
+	Expired = "expired",
+}
+
+export interface DidChangeSessionTokenStatusNotification {
+	status: SessionTokenStatus;
+}
+
+export const DidChangeSessionTokenStatusNotificationType = new NotificationType<
+	DidChangeSessionTokenStatusNotification,
+	void
+>("codestream/didChangeSessionTokenStatus");
+
 export enum ChangeDataType {
 	Codemarks = "codemarks",
 	CodeErrors = "codeErrors",
