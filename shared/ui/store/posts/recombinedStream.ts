@@ -5,10 +5,53 @@ export const GROK_TIMEOUT = 2 * 60 * 1000; // 2 minutes
 export type RecombinedStream = {
 	items: GrokStreamEvent[];
 	content: string;
+	parts?: {
+		intro: string;
+		codeFix: string;
+		description: string;
+	};
 	receivedDoneEvent: boolean;
 	lastContentIndex?: number;
 	lastMessageReceivedAt?: number;
 };
+
+const sections = ["INTRO:", "CODE_FIX:", "DESCRIPTION:"];
+const partsMap = { "INTRO:": "intro", "CODE_FIX:": "codeFix", "DESCRIPTION:": "description" };
+
+export function updateParts(recombinedStream: RecombinedStream) {
+	const parts = {
+		intro: "",
+		codeFix: "",
+		description: "",
+	};
+	// Parse 'INTRO:', 'CODE_FIX:', 'DESCRIPTION:' out of recombinedStream.content and put them in parts
+	for (const section of sections) {
+		const start = recombinedStream.content.indexOf(section);
+		if (start !== -1) {
+			for (let i = sections.indexOf(section) + 1; i <= sections.length; i++) {
+				const nextSection = sections[i];
+				const end = nextSection
+					? recombinedStream.content.indexOf(nextSection, start)
+					: recombinedStream.content.length;
+				if (end !== -1) {
+					const content = recombinedStream.content.substring(start, end);
+					parts[partsMap[section]] = content;
+					break;
+				}
+			}
+
+			// const nextSection = sections[sections.indexOf(section) + 1];
+			// const end = nextSection
+			// 	? recombinedStream.content.indexOf(nextSection, start) - 1
+			// 	: recombinedStream.content.length;
+			// if (end !== -1) {
+			// 	const content = recombinedStream.content.substring(start, end + 1);
+			// 	parts[partsMap[section]] = content;
+			// }
+		}
+	}
+	recombinedStream.parts = parts;
+}
 
 export function advanceRecombinedStream(
 	recombinedStream: RecombinedStream,
@@ -30,6 +73,7 @@ export function advanceRecombinedStream(
 			recombinedStream.lastContentIndex = i;
 		}
 	}
+	updateParts(recombinedStream);
 }
 
 // A stream is done if it has a done event and there are no gaps in the sequence and it is not timed out

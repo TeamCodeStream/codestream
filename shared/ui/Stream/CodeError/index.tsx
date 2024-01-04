@@ -1216,23 +1216,15 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 				props.setGrokRequested();
 				setGrokRequested(true);
 				dispatch(startGrokLoading(props.codeError));
-				const actualCodeError = (await dispatch(
+				const actualCodeError = await dispatch(
 					upgradePendingCodeError(props.codeError.id, "Comment", codeBlock, true)
-				)) as
-					| {
-							codeError: CSCodeError | undefined;
-					  }
-					| undefined;
+				);
 
 				if (!actualCodeError || !actualCodeError.codeError) {
 					return;
 				}
 
 				dispatch(markItemRead(props.codeError.id, actualCodeError.codeError.numReplies + 1));
-
-				// setIsLoading(false);
-				// setText("");
-				// setAttachments([]);
 			};
 			// Case 1 - pending post, will never try to fetch replies
 			if (

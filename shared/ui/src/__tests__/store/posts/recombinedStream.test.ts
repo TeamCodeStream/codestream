@@ -4,9 +4,71 @@ import {
 	GROK_TIMEOUT,
 	isGrokStreamDone,
 	RecombinedStream,
+	updateParts,
 } from "@codestream/webview/store/posts/recombinedStream";
 
 describe("RecombinedStream", () => {
+	it("should updateParts", () => {
+		const recombinedStream: RecombinedStream = {
+			items: [],
+			content:
+				"INTRO:\nintro\nblah blah\nCODE_FIX:\ncodeFix\nblah blah\nDESCRIPTION:\ndescription\nblahblah\n",
+			receivedDoneEvent: false,
+		};
+		updateParts(recombinedStream);
+		expect(recombinedStream.parts?.intro).toBe("INTRO:\nintro\nblah blah\n");
+		expect(recombinedStream.parts?.codeFix).toBe("CODE_FIX:\ncodeFix\nblah blah\n");
+		expect(recombinedStream.parts?.description).toBe("DESCRIPTION:\ndescription\nblahblah\n");
+	});
+
+	it("should updateParts when only DESCRIPTION is present", () => {
+		const recombinedStream: RecombinedStream = {
+			items: [],
+			content: "DESCRIPTION:\ndescription\nblahblah\n",
+			receivedDoneEvent: false,
+		};
+		updateParts(recombinedStream);
+		expect(recombinedStream.parts?.intro).toBe("");
+		expect(recombinedStream.parts?.codeFix).toBe("");
+		expect(recombinedStream.parts?.description).toBe("DESCRIPTION:\ndescription\nblahblah\n");
+	});
+
+	it("should updateParts when only INTRO is present", () => {
+		const recombinedStream: RecombinedStream = {
+			items: [],
+			content: "INTRO:\nintro\nblah blah\n",
+			receivedDoneEvent: false,
+		};
+		updateParts(recombinedStream);
+		expect(recombinedStream.parts?.intro).toBe("INTRO:\nintro\nblah blah\n");
+		expect(recombinedStream.parts?.codeFix).toBe("");
+		expect(recombinedStream.parts?.description).toBe("");
+	});
+
+	it("should updateParts when only CODE_FIX is present", () => {
+		const recombinedStream: RecombinedStream = {
+			items: [],
+			content: "CODE_FIX:\ncodeFix\nblah blah\n",
+			receivedDoneEvent: false,
+		};
+		updateParts(recombinedStream);
+		expect(recombinedStream.parts?.intro).toBe("");
+		expect(recombinedStream.parts?.codeFix).toBe("CODE_FIX:\ncodeFix\nblah blah\n");
+		expect(recombinedStream.parts?.description).toBe("");
+	});
+
+	it("should updateParts when CODE_FIX is missing", () => {
+		const recombinedStream: RecombinedStream = {
+			items: [],
+			content: "INTRO:\nintro\nblah blah\nDESCRIPTION:\ndescription\nblahblah\n",
+			receivedDoneEvent: false,
+		};
+		updateParts(recombinedStream);
+		expect(recombinedStream.parts?.intro).toBe("INTRO:\nintro\nblah blah\n");
+		expect(recombinedStream.parts?.codeFix).toBe("");
+		expect(recombinedStream.parts?.description).toBe("DESCRIPTION:\ndescription\nblahblah\n");
+	});
+
 	it("should start from empty without dupes", () => {
 		const recombinedStream: RecombinedStream = {
 			items: [],
