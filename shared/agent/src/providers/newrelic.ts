@@ -502,6 +502,7 @@ export class NewRelicProvider
 		let triedRefresh = false;
 		while (!resp) {
 			try {
+				//throw new Error("oops"); // uncomment to test roadblock
 				resp = client.request<T>(query, variables);
 			} catch (ex) {
 				if (
