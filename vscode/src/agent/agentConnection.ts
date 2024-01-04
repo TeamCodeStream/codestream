@@ -71,6 +71,8 @@ import {
 	DidChangePullRequestCommentsNotificationType,
 	DidChangeRepositoryCommitHashNotification,
 	DidChangeRepositoryCommitHashNotificationType,
+	DidChangeSessionTokenStatusNotification,
+	DidChangeSessionTokenStatusNotificationType,
 	DidChangeServerUrlNotification,
 	DidChangeServerUrlNotificationType,
 	DidChangeVersionCompatibilityNotification,
@@ -217,6 +219,12 @@ export class CodeStreamAgentConnection implements Disposable {
 	private _onDidChangeConnectionStatus = new EventEmitter<DidChangeConnectionStatusNotification>();
 	get onDidChangeConnectionStatus(): Event<DidChangeConnectionStatusNotification> {
 		return this._onDidChangeConnectionStatus.event;
+	}
+
+	private _onDidChangeSessionTokenStatus =
+		new EventEmitter<DidChangeSessionTokenStatusNotification>();
+	get onDidChangeSessionTokenStatus(): Event<DidChangeSessionTokenStatusNotification> {
+		return this._onDidChangeSessionTokenStatus.event;
 	}
 
 	private _onDidEncounterMaintenanceMode =
@@ -1035,6 +1043,14 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	@log({
+		prefix: (context, e: DidChangeSessionTokenStatusNotification) =>
+			`${context.prefix}(${e.status})`
+	})
+	private onSessionTokenStatusChanged(e: DidChangeSessionTokenStatusNotification) {
+		this._onDidChangeSessionTokenStatus.fire(e);
+	}
+
+	@log({
 		prefix: (context, e: DidChangeDocumentMarkersNotification) =>
 			`${context.prefix}(${e.textDocument.uri})`
 	})
@@ -1277,6 +1293,10 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._client.onNotification(
 			DidChangeConnectionStatusNotificationType,
 			this.onConnectionStatusChanged.bind(this)
+		);
+		this._client.onNotification(
+			DidChangeSessionTokenStatusNotificationType,
+			this.onSessionTokenStatusChanged.bind(this)
 		);
 		this._client.onNotification(
 			DidChangeDocumentMarkersNotificationType,

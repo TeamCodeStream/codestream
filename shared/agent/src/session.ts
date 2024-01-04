@@ -38,6 +38,7 @@ import {
 	DidChangeConnectionStatusNotification,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
+	DidChangeSessionTokenStatusNotificationType,
 	DidChangeServerUrlNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
 	DidEncounterMaintenanceModeNotificationType,
@@ -67,6 +68,7 @@ import {
 	RegisterUserRequest,
 	RegisterUserRequestType,
 	ReportingMessageType,
+	SessionTokenStatus,
 	SetServerUrlRequest,
 	SetServerUrlRequestType,
 	ThirdPartyProviders,
@@ -532,6 +534,11 @@ export class CodeStreamSession {
 			refreshToken,
 			tokenType,
 		});
+	}
+
+	onSessionTokenStatusChanged(status: SessionTokenStatus) {
+		Logger.log(`Session token status changed: ${status}`);
+		this.agent.sendNotification(DidChangeSessionTokenStatusNotificationType, { status });
 	}
 
 	private _didEncounterMaintenanceMode() {

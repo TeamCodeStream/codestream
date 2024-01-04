@@ -1,4 +1,4 @@
-import { WebviewErrorRequestType } from "@codestream/protocols/agent";
+import { SessionTokenStatus, WebviewErrorRequestType } from "@codestream/protocols/agent";
 import PropTypes from "prop-types";
 import React from "react";
 import { IntlProvider } from "react-intl";
@@ -23,6 +23,7 @@ import RoadBlock from "../Stream/RoadBlock";
 import { SearchContextProvider } from "../Stream/SearchContextProvider";
 import { HostApi } from "../webview-api";
 import { Loading } from "./Loading";
+import { logout } from "@codestream/webview/store/session/thunks";
 
 const mapStateToProps = state => {
 	const team = state.teams[state.context.currentTeamId];
@@ -41,6 +42,7 @@ const mapStateToProps = state => {
 		offline: state.connectivity.offline,
 		acceptedTOS: state.session.userId ? state.preferences.acceptedTOS : state.session.acceptedTOS,
 		configChangeReloadRequired: state.configs.configChangeReloadRequired,
+		sessionTokenStatus: state.session.sessionTokenStatus,
 	};
 };
 
@@ -119,7 +121,21 @@ const Root = connect(mapStateToProps)(props => {
 			</Dismissable>
 		);
 	}
-
+	if (props.sessionTokenStatus === SessionTokenStatus.Expired) {
+		return (
+			<RoadBlock title="Session Expired">
+				<p>You CodeStream session has expired. Please login again.</p>
+				<Button
+					onClick={e => {
+						e.preventDefault();
+						props.dispatch(logout());
+					}}
+				>
+					OK
+				</Button>
+			</RoadBlock>
+		);
+	}
 	if (props.configChangeReloadRequired) {
 		if (props.ide === "VSC") {
 			HostApi.instance.send(RestartRequestType);
@@ -151,8 +167,8 @@ const Root = connect(mapStateToProps)(props => {
 		return (
 			<RoadBlock title="Update Required">
 				<p>
-					Please update to the latest version of CodeStream to continue. You may need to update your IDE as well if it isn't
-					recent.
+					Please update to the latest version of CodeStream to continue. You may need to update your
+					IDE as well if it isn't recent.
 				</p>
 				{getIdeInstallationInstructions(props)}
 			</RoadBlock>
