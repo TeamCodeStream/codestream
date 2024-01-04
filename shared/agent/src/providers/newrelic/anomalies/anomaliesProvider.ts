@@ -9,7 +9,6 @@ import {
 } from "@codestream/protocols/agent";
 import { lsp, lspHandler } from "../../../system/decorators/lsp";
 import { log } from "../../../system/decorators/log";
-import { AnomalyDetector } from "../anomalyDetection";
 import { Logger } from "../../../logger";
 import { Functions } from "../../../system/function";
 import Cache from "@codestream/utils/system/timedCache";
@@ -23,6 +22,7 @@ import { URI } from "vscode-uri";
 import { EntityAccountResolver } from "../clm/entityAccountResolver";
 import { Disposable } from "../../../system/disposable";
 import wait = Functions.wait;
+import { AnomalyDetectorDrillDown } from "../anomalyDetectionDrillDown";
 
 @lsp
 export class AnomaliesProvider implements Disposable {
@@ -95,12 +95,7 @@ export class AnomaliesProvider implements Disposable {
 		let lastEx;
 		const fn = async () => {
 			try {
-				const anomalyDetector = new AnomalyDetector(
-					request,
-					this.graphqlClient,
-					this.reposProvider,
-					this.deploymentsProvider
-				);
+				const anomalyDetector = new AnomalyDetectorDrillDown(request, this.deploymentsProvider, this.graphqlClient, this.reposProvider);
 				const promise = anomalyDetector.execute();
 				this._observabilityAnomaliesTimedCache.put(cacheKey, promise);
 				const response = await promise;

@@ -1,17 +1,18 @@
 import { MetricTimesliceNameMapping } from "@codestream/protocols/agent";
-import { INewRelicProvider, NewRelicProvider } from "../newrelic";
 import { Strings } from "../../system";
 import { xfs } from "../../xfs";
 import writeTextAtomic = xfs.writeTextAtomic;
+import { parseId } from "./utils";
+import { NewRelicGraphqlClient } from "./newRelicGraphqlClient";
 
 export class CriticalPathCalculator {
-	constructor(private _provider: INewRelicProvider) {}
+	constructor(private graphqlClient: NewRelicGraphqlClient) {}
 
 	async getCriticalPath(
 		entityGuid: string,
 		metricTimesliceNames: MetricTimesliceNameMapping
 	): Promise<any> {
-		const parsedId = NewRelicProvider.parseId(entityGuid)!;
+		const parsedId = parseId(entityGuid)!;
 
 		// entityGuid = 'WebTransaction/SpringController/api/v2/{accountId}/violation/summary/search (GET)'
 		const slowestTransactionsQuery =
@@ -21,7 +22,7 @@ export class CriticalPathCalculator {
 			`  FROM Span SELECT uniques(traceId) WHERE entity.guid = '${entityGuid}' SINCE 30 minutes ago LIMIT MAX ` +
 			`) ORDER BY duration DESC LIMIT 10`;
 
-		const slowestTransactions = await this._provider.runNrql<{
+		const slowestTransactions = await this.graphqlClient.runNrql<{
 			name: string;
 			duration: number;
 			traceId: string;
@@ -34,7 +35,7 @@ export class CriticalPathCalculator {
 			`SELECT name, id, parentId, traceId, duration ` +
 			`FROM Span WHERE trace.id IN (${traceIdsClause}) LIMIT MAX`;
 
-		const spans = await this._provider.runNrql<{
+		const spans = await this.graphqlClient.runNrql<{
 			name: string;
 			id: string;
 			parentId: string;

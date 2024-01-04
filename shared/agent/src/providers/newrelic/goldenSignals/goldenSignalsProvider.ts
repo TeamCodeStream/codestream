@@ -361,11 +361,14 @@ export class GoldenSignalsProvider {
 	}
 	private async getMethodLevelGoldenMetricQueries(
 		entityGuid: string,
-		metricTimesliceNameMapping?: MetricTimesliceNameMapping
+		metricTimesliceNameMapping?: MetricTimesliceNameMapping,
+		scope?: string
 	): Promise<MethodLevelGoldenMetricQueryResult | undefined> {
 		if (!metricTimesliceNameMapping) {
 			return undefined;
 		}
+
+		const scopeClause = scope ? `AND scope = '${scope}'` : "";
 
 		return {
 			metricQueries: [
@@ -374,6 +377,7 @@ export class GoldenSignalsProvider {
 					metricQuery: `SELECT rate(count(apm.service.transaction.error.count), 1 minute) AS 'Errors (per minute)'
 												FROM Metric
                   WHERE \`entity.guid\` = '${entityGuid}'
+										${scopeClause}
                     AND metricTimesliceName = '${metricTimesliceNameMapping["errorRate"]}' FACET metricTimesliceName TIMESERIES`,
 					spanQuery: `SELECT rate(count(*), 1 minute) AS 'Errors (per minute)'
                                FROM Span
@@ -382,7 +386,8 @@ export class GoldenSignalsProvider {
                                  AND \`error.group.guid\` IS NOT NULL FACET name TIMESERIES`,
 					scopesQuery: `SELECT rate(count(apm.service.transaction.error.count), 1 minute) AS value
 												FROM Metric
-                  			WHERE \`entity.guid\` = '${entityGuid}'
+												WHERE \`entity.guid\` = '${entityGuid}'
+													${scopeClause}
                     		AND metricTimesliceName = '${metricTimesliceNameMapping["errorRate"]}' FACET scope as name`,
 					title: "Errors (per minute)",
 					name: "errorsPerMinute",
@@ -392,6 +397,7 @@ export class GoldenSignalsProvider {
 					metricQuery: `SELECT average(newrelic.timeslice.value) * 1000 AS 'Average duration (ms)'
 												FROM Metric
                   WHERE entity.guid IN ('${entityGuid}')
+										${scopeClause}
                     AND metricTimesliceName = '${metricTimesliceNameMapping["duration"]}' TIMESERIES`,
 					spanQuery: `SELECT average(duration) * 1000 AS 'Average duration (ms)'
                                FROM Span
@@ -400,6 +406,7 @@ export class GoldenSignalsProvider {
 					scopesQuery: `SELECT average(newrelic.timeslice.value) * 1000 AS value
 												FROM Metric
                   			WHERE entity.guid IN ('${entityGuid}')
+												${scopeClause}
                     		AND metricTimesliceName = '${metricTimesliceNameMapping["duration"]}' FACET scope as name`,
 					title: "Average duration (ms)",
 					name: "responseTimeMs",
@@ -417,6 +424,7 @@ export class GoldenSignalsProvider {
 					scopesQuery: `SELECT rate(count(newrelic.timeslice.value), 1 minute) AS value
 												FROM Metric
                   			WHERE entity.guid IN ('${entityGuid}')
+												${scopeClause}
                     		AND metricTimesliceName = '${metricTimesliceNameMapping["sampleSize"]}' FACET scope as name`,
 					title: "Samples (per minute)",
 					name: "samplesPerMinute",
@@ -429,9 +437,14 @@ export class GoldenSignalsProvider {
 		entityGuid: string,
 		metricTimesliceNames?: MetricTimesliceNameMapping,
 		since?: string,
-		timeseriesGroup?: string
+		timeseriesGroup?: string,
+		scope?: string
 	): Promise<MethodGoldenMetrics[] | undefined> {
-		const queries = await this.getMethodLevelGoldenMetricQueries(entityGuid, metricTimesliceNames);
+		const queries = await this.getMethodLevelGoldenMetricQueries(
+			entityGuid,
+			metricTimesliceNames,
+			scope
+		);
 
 		if (!queries?.metricQueries) {
 			Logger.log("getMethodLevelGoldenMetrics no response", {

@@ -148,7 +148,8 @@ export class ClmProvider implements Disposable {
 				request.newRelicEntityGuid || entity!.entityGuid!,
 				request.metricTimesliceNameMapping,
 				request.since,
-				request.timeseriesGroup
+				request.timeseriesGroup,
+				request.scope,
 			);
 
 			let deployments;
@@ -360,7 +361,7 @@ export class ClmProvider implements Disposable {
 			"WHERE ",
 			whereClause,
 			"WHERE fingerprint IS NOT NULL",
-			"FACET fingerprint AS 'fingerPrintId'",
+			"FACET error.class, message",
 			`SINCE ${since}`,
 			"LIMIT 10",
 		].join(" ");

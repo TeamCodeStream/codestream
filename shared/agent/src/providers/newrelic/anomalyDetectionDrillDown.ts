@@ -12,17 +12,22 @@ import {
 	ObservabilityRepo,
 	SpanWithCodeAttrs,
 } from "@codestream/protocols/agent";
-import { INewRelicProvider, NewRelicProvider } from "../newrelic";
 import { Logger } from "../../logger";
 import { getStorage } from "../../storage";
 import { getAnomalyDetectionMockResponse } from "./anomalyDetectionMockResults";
 import { getLanguageSupport, LanguageSupport } from "./clm/languageSupport";
 import { flatten } from "lodash";
+import { DeploymentsProvider } from "./deployments/deploymentsProvider";
+import { parseId } from "./utils";
+import { NewRelicGraphqlClient } from "./newRelicGraphqlClient";
+import { ReposProvider } from "./repos/reposProvider";
 
 export class AnomalyDetectorDrillDown {
 	constructor(
 		private _request: GetObservabilityAnomaliesRequest,
-		private _provider: INewRelicProvider
+		private deploymentsProvider: DeploymentsProvider,
+		private graphqlClient: NewRelicGraphqlClient,
+		private reposProvider: ReposProvider,
 	) {
 		const sinceDaysAgo = parseInt(_request.sinceDaysAgo as any);
 		const baselineDays = parseInt(_request.baselineDays as any);
@@ -30,7 +35,7 @@ export class AnomalyDetectorDrillDown {
 		this._baselineTimeFrame = `SINCE ${
 			sinceDaysAgo + baselineDays
 		} days AGO UNTIL ${sinceDaysAgo} days AGO`;
-		this._accountId = NewRelicProvider.parseId(_request.entityGuid)!.accountId;
+		this._accountId = parseId(_request.entityGuid)!.accountId;
 		this._sinceDaysAgo = sinceDaysAgo;
 	}
 
@@ -79,7 +84,7 @@ export class AnomalyDetectorDrillDown {
 		let detectionMethod: DetectionMethod = "Time Based";
 		if (this._request.sinceLastRelease) {
 			const deployments = (
-				await this._provider.getDeployments({
+				await this.deploymentsProvider.getDeployments({
 					entityGuid: this._request.entityGuid,
 					since: `31 days ago`,
 				})
@@ -572,7 +577,7 @@ export class AnomalyDetectorDrillDown {
 	}
 
 	private runNrql<T>(nrql: string): Promise<T[]> {
-		return this._provider.runNrql(this._accountId, nrql, 400);
+		return this.graphqlClient.runNrql(this._accountId, nrql, 400);
 	}
 
 	private durationComparisonToAnomaly(
@@ -676,7 +681,7 @@ export class AnomalyDetectorDrillDown {
 	private async getObservabilityRepo(): Promise<ObservabilityRepo | undefined> {
 		if (this._observabilityRepo) return this._observabilityRepo;
 
-		const { repos: observabilityRepos } = await this._provider.getObservabilityRepos({});
+		const { repos: observabilityRepos } = await this.reposProvider.getObservabilityRepos({});
 		const { entityGuid } = this._request;
 
 		if (!observabilityRepos) return undefined;
