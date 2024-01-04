@@ -56,7 +56,6 @@ import {
 	HostDidChangeEditorSelectionNotificationType,
 	HostDidChangeEditorVisibleRangesNotificationType,
 	HostDidChangeFocusNotificationType,
-	HostDidChangeVisibilityNotificationType,
 	HostDidChangeLayoutNotificationType,
 	HostDidChangeVisibleEditorsNotificationType,
 	HostDidLogoutNotificationType,
@@ -328,10 +327,6 @@ function listenForEvents(store) {
 		} else {
 			store.dispatch(blur());
 		}
-	});
-
-	api.on(HostDidChangeVisibilityNotificationType, e => {
-		store.dispatch(setMaintenanceMode(undefined, e));
 	});
 
 	api.on(HostDidLogoutNotificationType, () => {
