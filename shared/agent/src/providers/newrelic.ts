@@ -208,7 +208,7 @@ export const REQUIRED_AGENT_VERSIONS = {
 
 const PRODUCTION_US_GRAPHQL_URL = "https://api.newrelic.com/graphql";
 const PRODUCTION_EU_GRAPHQL_URL = "https://api-eu.newrelic.com/graphql";
-const ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS = ["APM", "BROWSER", "MOBILE", "EXT", "INFRA"];
+const ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS = ["APM", "BROWSER", "EXT", "INFRA"];
 
 export interface INewRelicProvider {
 	getProductUrl: () => string;
