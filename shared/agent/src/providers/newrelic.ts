@@ -4461,7 +4461,8 @@ export class NewRelicProvider
 
 			if (errorTraceResponse) {
 				const errorTraceResult: {
-					stackHash?: string;
+					stackHash?: string | number;
+					browserStackHash?: string | number;
 					id?: string;
 					stackTrace?: string;
 					monitorAccountId?: string;
@@ -4494,10 +4495,25 @@ export class NewRelicProvider
 							errorTraceResult.releaseIds
 						);
 					}
+					let returnTraceId;
+
+					// Use ID if available
+					// otherwise use stackHash unless its negative
+					// then use browserStackHash
+					// make sure they are stringified
+					if (errorTraceResult.id) {
+						returnTraceId = errorTraceResult.id;
+					} else {
+						let stringifiedBrowserStackHash = errorTraceResult.stackTrace?.toString() || "";
+						let stringifiedStackHash = errorTraceResult.stackTrace?.toString() || "";
+						returnTraceId = stringifiedStackHash.startsWith("-")
+							? stringifiedBrowserStackHash
+							: stringifiedStackHash;
+					}
 
 					return {
 						entityGuid: entityGuid || errorGroupResponse.entityGuid,
-						traceId: errorTraceResult.id || errorTraceResult.stackHash,
+						traceId: returnTraceId,
 						stackSourceMap,
 					};
 				}
