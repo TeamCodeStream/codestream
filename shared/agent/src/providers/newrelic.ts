@@ -4093,7 +4093,7 @@ export class NewRelicProvider
 
 		const browserNrql = [
 			"SELECT",
-			"count(guid) as 'count',", // first field is used to sort with FACET
+			"count(*) as 'count',", // first field is used to sort with FACET
 			"latest(timestamp) AS 'lastOccurrence',",
 			"latest(stackHash) AS 'occurrenceId',",
 			"latest(appName) AS 'appName',",
