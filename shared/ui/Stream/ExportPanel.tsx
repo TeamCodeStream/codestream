@@ -36,6 +36,7 @@ export const ExportPanel = () => {
 
 		return { codemarks, webviewFocused: state.context.hasFocus, repos: state.repos };
 	});
+	const data = generateCsv();
 
 	useDidMount(() => {
 		if (derivedState.webviewFocused)
@@ -74,7 +75,7 @@ export const ExportPanel = () => {
 			}
 		});
 
-		const data = stringify(output, {
+		const stringData = stringify(output, {
 			header: true,
 			columns: {
 				repo: "repo",
@@ -91,7 +92,7 @@ export const ExportPanel = () => {
 				assignees: "assignees",
 			},
 		});
-		return derivedState.codemarks.length ? data : "";
+		return stringData;
 	}
 
 	return (
@@ -104,7 +105,7 @@ export const ExportPanel = () => {
 						<Icon
 							name="copy"
 							className="clickable"
-							onClick={() => copy(generateCsv())}
+							onClick={() => copy(data)}
 							title="Copy Export to Clipboard"
 						/>
 					</span>
@@ -123,7 +124,7 @@ export const ExportPanel = () => {
 							overflow: "auto",
 						}}
 					>
-						{derivedState.codemarks.length ? generateCsv() : ""}
+						{data}
 					</textarea>
 				</div>
 			</ScrollBox>
