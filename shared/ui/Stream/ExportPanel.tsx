@@ -45,8 +45,8 @@ export const ExportPanel = () => {
 
 	function generateCsv() {
 		// repo,file,commitSha,location,date,author,id,parentId,type,title,body,assignees
-		if (!derivedState.codemarks.length) return "";
-		let output = [{}];
+		if (!derivedState.codemarks.length) return;
+		let output: {}[] = [];
 		derivedState.codemarks.forEach(codemark => {
 			if (!codemark) return;
 			if (codemark.markers) {
@@ -75,24 +75,30 @@ export const ExportPanel = () => {
 			}
 		});
 
-		const stringData = stringify(output, {
-			header: true,
-			columns: {
-				repo: "repo",
-				file: "file",
-				commitSha: "commitSha",
-				location: "location",
-				date: "date",
-				author: "author",
-				id: "id",
-				parentId: "parentId",
-				type: "type",
-				title: "title",
-				body: "body",
-				assignees: "assignees",
-			},
-		});
-		return stringData;
+		try {
+			const stringData = stringify(output, {
+				header: true,
+				columns: {
+					repo: "repo",
+					file: "file",
+					commitSha: "commitSha",
+					location: "location",
+					date: "date",
+					author: "author",
+					id: "id",
+					parentId: "parentId",
+					type: "type",
+					title: "title",
+					body: "body",
+					assignees: "assignees",
+				},
+			});
+			return stringData;
+		} catch (ex) {
+			console.log(ex);
+		}
+
+		return;
 	}
 
 	return (
@@ -105,7 +111,7 @@ export const ExportPanel = () => {
 						<Icon
 							name="copy"
 							className="clickable"
-							onClick={() => copy(data)}
+							onClick={() => (data ? copy(data) : "")}
 							title="Copy Export to Clipboard"
 						/>
 					</span>
