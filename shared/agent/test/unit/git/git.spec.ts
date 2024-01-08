@@ -35,6 +35,10 @@ describe("git", () => {
 					type: "git",
 					value: "git@gitlabratory.example.com:myorg/myrepo-sample-java.git",
 				},
+				{
+					type: "git",
+					value: "git@gitlabratory.example.com:myorg/myrepo-sample-java",
+				},
 			]);
 		});
 		it("ssh1", async () => {
@@ -65,6 +69,10 @@ describe("git", () => {
 				{
 					type: "git",
 					value: "git@:.git",
+				},
+				{
+					type: "git",
+					value: "git@:",
 				},
 			]);
 		});
@@ -97,6 +105,10 @@ describe("git", () => {
 					type: "git",
 					value: "git@gitlabratory.example.com:myorg/myrepo-sample-java.git",
 				},
+				{
+					type: "git",
+					value: "git@gitlabratory.example.com:myorg/myrepo-sample-java",
+				},
 			]);
 		});
 		it("ssh3", async () => {
@@ -127,6 +139,10 @@ describe("git", () => {
 				{
 					type: "git",
 					value: "git@github.com:theuser/therepo.git",
+				},
+				{
+					type: "git",
+					value: "git@github.com:theuser/therepo",
 				},
 			]);
 		});
