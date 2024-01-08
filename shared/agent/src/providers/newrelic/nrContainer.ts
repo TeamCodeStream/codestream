@@ -24,6 +24,7 @@ import { NrDirectives } from "./directives/nrDirectives";
 import { Disposable } from "../../system/disposable";
 import { CodeStreamAgent } from "../../agent";
 import { SpansProvider } from "./spans/spansProvider";
+import { NrLogsProvider } from "./logs/nrLogsProvider";
 
 let nrDirectives: NrDirectives | undefined;
 let disposables: Disposable[] = [];
@@ -185,6 +186,8 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 	);
 
 	disposables.push(newRelicVulnerabilitiesProvider);
+
+	const logsProvider = new NrLogsProvider(newRelicGraphqlClient);
 
 	nrDirectives = new NrDirectives(
 		newRelicGraphqlClient,
