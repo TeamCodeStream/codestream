@@ -447,8 +447,8 @@ export class ObservabilityErrorsProvider {
 					if (errorTraceResult.id) {
 						returnTraceId = errorTraceResult.id;
 					} else {
-						let stringifiedBrowserStackHash = errorTraceResult.stackTrace?.toString() || "";
-						let stringifiedStackHash = errorTraceResult.stackTrace?.toString() || "";
+						let stringifiedBrowserStackHash = errorTraceResult.stackHash?.toString() || "";
+						let stringifiedStackHash = errorTraceResult.stackHash?.toString() || "";
 						returnTraceId = stringifiedStackHash.startsWith("-")
 							? stringifiedBrowserStackHash
 							: stringifiedStackHash;
