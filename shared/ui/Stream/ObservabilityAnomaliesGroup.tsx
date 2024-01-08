@@ -211,7 +211,7 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 																{formatFilePath(child.text)}
 															</Tooltip>
 															<AnomalyIcon
-																anomaly={anomaly}
+																anomaly={child}
 																noAnomaly={props?.noAnomaly}
 																isHovered={
 																	hoveredRowIndex === `child_${index}_${childIndex}` ? true : false
