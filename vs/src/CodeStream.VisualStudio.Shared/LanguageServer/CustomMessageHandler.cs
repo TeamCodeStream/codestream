@@ -567,6 +567,23 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 			}
 		}
 
+		[JsonRpcMethod(DidChangeSessionTokenStatusNotificationType.MethodName)]
+		public void OnDidChangeSessionTokenStatusNotification(JToken e)
+		{
+			try
+			{
+				var notification = e.ToObject<DidChangeSessionTokenStatusNotification>();
+
+				BrowserService.EnqueueNotification(
+					new DidChangeSessionTokenStatusNotificationType(notification)
+				);
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex, $"Problem with {nameof(OnDidChangeSessionTokenStatusNotification)}");
+			}
+		}
+
 		[JsonRpcMethod(DidRefreshAccessTokenNotificationType.MethodName)]
 		public async System.Threading.Tasks.Task OnDidRefreshAccessTokenNotificationAsync(JToken e)
 		{

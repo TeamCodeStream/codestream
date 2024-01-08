@@ -5,6 +5,26 @@ using CodeStream.VisualStudio.Core;
 
 namespace CodeStream.VisualStudio.Shared.Models
 {
+	public class DidChangeSessionTokenStatusNotification
+	{
+		[JsonProperty("status", NullValueHandling = NullValueHandling.Ignore)]
+		public string Status { get; set; }
+	}
+
+	public class DidChangeSessionTokenStatusNotificationType
+		: NotificationType<DidChangeSessionTokenStatusNotification>
+	{
+		public DidChangeSessionTokenStatusNotificationType(
+			DidChangeSessionTokenStatusNotification @params
+		)
+		{
+			Params = @params;
+		}
+
+		public const string MethodName = "codestream/didChangeSessionTokenStatus";
+		public override string Method => MethodName;
+	}
+
 	public class DidRefreshAccessTokenNotificationType
 		: NotificationType<DidRefreshAccessTokenNotification>
 	{
