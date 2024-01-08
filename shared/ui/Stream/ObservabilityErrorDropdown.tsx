@@ -143,6 +143,7 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 															remote: err?.remote || undefined,
 															stackSourceMap: response?.stackSourceMap,
 															domain: props?.domain,
+															showAI: err?.showAI,
 														})
 													);
 												} catch (ex) {

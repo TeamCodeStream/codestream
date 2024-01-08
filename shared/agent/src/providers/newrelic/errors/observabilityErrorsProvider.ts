@@ -42,11 +42,13 @@ import { CSNewRelicProviderInfo } from "@codestream/protocols/api";
 import { customFetch } from "../../../system/fetchCore";
 
 const ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS = ["APM", "BROWSER", "EXT", "INFRA"];
+import { NraiProvider } from "../nrai/nraiProvider";
 
 @lsp
 export class ObservabilityErrorsProvider {
 	constructor(
 		private reposProvider: ReposProvider,
+		private nraiProvider: NraiProvider,
 		private graphqlClient: NewRelicGraphqlClient,
 		private nrApiConfig: NrApiConfig,
 		private providerInfo: CSNewRelicProviderInfo | undefined
@@ -84,6 +86,14 @@ export class ObservabilityErrorsProvider {
 			filteredRepos = filteredRepos?.filter(_ => _.id);
 
 			if (!filteredRepos || !filteredRepos.length) return response;
+
+			const showAIForAccount: { [accountId: number]: boolean } = {};
+			const showAI = async (accountId: number) => {
+				if (showAIForAccount[accountId] === undefined) {
+					showAIForAccount[accountId] = await this.nraiProvider.getAIEligibility({ accountId });
+				}
+				return !!showAIForAccount[accountId];
+			};
 
 			for (const repo of filteredRepos) {
 				if (!repo.remotes || !repo.id) continue;
@@ -171,6 +181,7 @@ export class ObservabilityErrorsProvider {
 											count: errorTrace.count,
 											lastOccurrence: errorTrace.lastOccurrence,
 											errorGroupUrl: response.actor.errorsInbox.errorGroup.url,
+											showAI: await showAI(application.source.entity.account.id),
 										});
 										if (observabilityErrors.length > 4) {
 											gotoEnd = true;

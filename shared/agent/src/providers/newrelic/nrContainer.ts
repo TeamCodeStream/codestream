@@ -24,6 +24,7 @@ import { NrDirectives } from "./directives/nrDirectives";
 import { Disposable } from "../../system/disposable";
 import { CodeStreamAgent } from "../../agent";
 import { SpansProvider } from "./spans/spansProvider";
+import { NraiProvider } from "./nrai/nraiProvider";
 
 let nrDirectives: NrDirectives | undefined;
 let disposables: Disposable[] = [];
@@ -104,8 +105,11 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 
 	disposables.push(reposProvider);
 
+	const nraiProvider = new NraiProvider(newRelicGraphqlClient);
+
 	const observabilityErrorsProvider = new ObservabilityErrorsProvider(
 		reposProvider,
+		nraiProvider,
 		newRelicGraphqlClient,
 		nrApiConfig,
 		newRelicProviderInfo

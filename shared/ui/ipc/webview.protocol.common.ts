@@ -107,6 +107,7 @@ export interface CodeErrorData {
 	openType?: "Open in IDE Flow" | "Observability Section" | "Activity Feed";
 	multipleRepos?: boolean;
 	claimWhenConnected?: boolean;
+	showAI?: boolean;
 }
 
 export interface TeamlessContext {
