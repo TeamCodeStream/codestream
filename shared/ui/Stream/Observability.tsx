@@ -40,6 +40,7 @@ import {
 	HostDidChangeWorkspaceFoldersNotificationType,
 	OpenUrlRequestType,
 	RefreshEditorsCodeLensRequestType,
+	OpenEditorLogViewNotificationType,
 } from "@codestream/protocols/webview";
 import { SecurityIssuesWrapper } from "@codestream/webview/Stream/SecurityIssuesWrapper";
 import { ObservabilityServiceLevelObjectives } from "@codestream/webview/Stream/ObservabilityServiceLevelObjectives";
@@ -470,6 +471,7 @@ export const Observability = React.memo((props: Props) => {
 			setDidMount(true);
 			return;
 		}
+
 		setGenericError(undefined);
 		setLoadingEntities(true);
 		try {
@@ -1347,13 +1349,18 @@ export const Observability = React.memo((props: Props) => {
 																									onClick={e => {
 																										e.preventDefault();
 																										e.stopPropagation();
+																										// TODO remove this?
 																										dispatch(
 																											setCurrentAPMLoggingSearchContext(
 																												ea.entityGuid
 																											)
 																										);
-																										dispatch(
-																											openPanel(WebviewPanels.APMLoggingSearch)
+
+																										HostApi.instance.notify(
+																											OpenEditorLogViewNotificationType,
+																											{
+																												entityGuid: ea.entityGuid,
+																											}
 																										);
 																									}}
 																								>

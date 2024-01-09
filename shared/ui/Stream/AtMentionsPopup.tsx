@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import { useDidMount } from "../utilities/hooks";
 import Headshot from "./Headshot";
 import Icon from "./Icon";
-import { ModalContext } from "./Modal";
+import { ModalContext } from "./ModalContext";
 
 export interface Mention {
 	id?: string;

@@ -8,6 +8,7 @@ import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
 import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
 import Tooltip from "./Tooltip";
+import { ModalContext, ModalContextType } from "./ModalContext";
 
 const noopElement = document.createElement("span");
 
@@ -78,14 +79,6 @@ const ModalWrapper = styled.div<{ noPadding?: boolean }>`
 `;
 
 const VerticallyCentered = styled.div``;
-
-interface ModalContextType {
-	zIndex: number;
-}
-
-export const ModalContext = React.createContext<ModalContextType>({
-	zIndex: 52,
-});
 
 export interface ModalProps {
 	onClose?: (e: any) => void;

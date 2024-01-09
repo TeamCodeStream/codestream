@@ -13,9 +13,9 @@ import { removeSymlinks } from "../shared/build/src/symlinks";
 import { statsPlugin } from "../shared/build/src/statsPlugin";
 
 async function webBuild(args: Args) {
-	const webview = args.webview ?? "sidebar";
-	const context = path.resolve(__dirname, "src/webviews", webview);
-	const target = path.resolve(__dirname, "dist/webviews", webview);
+	const webviewName = args.webview ?? "sidebar";
+	const context = path.resolve(__dirname, "src/webviews", webviewName);
+	const target = path.resolve(__dirname, "dist/webviews", webviewName);
 	const dist = path.resolve(__dirname, "dist");
 
 	const webCopy = copyPlugin({
@@ -23,7 +23,7 @@ async function webBuild(args: Args) {
 			{
 				from: path.resolve(context, "index.html"),
 				to: __dirname,
-				options: { rename: `${webview}.html` }
+				options: { rename: `${webviewName}.html` }
 			},
 			{
 				from: path.resolve(target, "index.js.map"),
@@ -85,10 +85,13 @@ async function extensionBuild(args: Args) {
 (async function () {
 	const args = processArgs();
 	removeSymlinks(__dirname);
+
 	console.info("Starting Primary Webview Build...");
 	await webBuild({ ...args, webview: "sidebar" });
-	//console.info("Starting Secondary Webview Build...");
-	//await webBuild({ ...args, webview: "editor" });
+
+	console.info("Starting Secondary Webview Build...");
+	await webBuild({ ...args, webview: "editor" });
+
 	console.info("Starting extensionBuild");
 	await extensionBuild(args);
 })();

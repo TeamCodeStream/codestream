@@ -1,4 +1,5 @@
 "use strict";
+import { promises as fs } from "fs";
 import {
 	HostDidChangeFocusNotificationType,
 	ShowStreamNotificationType,
@@ -12,6 +13,7 @@ import {
 	Disposable,
 	Event,
 	EventEmitter,
+	ExtensionContext,
 	Uri,
 	ViewColumn,
 	WebviewPanel,
@@ -35,6 +37,10 @@ import {
 } from "./webviewLike";
 
 let ipcSequence = 0;
+
+interface OnDidCloseEventData {
+	entityGuid: string;
+}
 
 export class CodeStreamWebviewPanel implements WebviewLike, Disposable {
 	type = "panel";
@@ -70,17 +76,19 @@ export class CodeStreamWebviewPanel implements WebviewLike, Disposable {
 	private _disposable: Disposable | undefined;
 	private _onIpcReadyResolver: ((cancelled: boolean) => void) | undefined;
 	private readonly _panel: WebviewPanel;
+	private _html: string | undefined;
 
 	constructor(
 		public readonly session: CodeStreamSession,
-		private readonly _html: string,
+		private readonly context: ExtensionContext,
+		public readonly parameters: any | undefined,
 		private onInitializedCallback: Function
 	) {
 		this._ipcPending = new Map();
 
 		this._panel = window.createWebviewPanel(
-			"CodeStream.stream",
-			"CodeStream",
+			"CodeStream.log",
+			"CodeStream (Logs)",
 			{ viewColumn: ViewColumn.Beside, preserveFocus: false },
 			{
 				retainContextWhenHidden: true,
@@ -99,8 +107,25 @@ export class CodeStreamWebviewPanel implements WebviewLike, Disposable {
 			this._panel.onDidChangeViewState(this.onPanelViewStateChanged, this),
 			window.onDidChangeWindowState(this.onWindowStateChanged, this)
 		);
-		this._panel.webview.html = this._html;
-		this.onInitializedCallback();
+		const pathToExt = this._panel.webview
+			.asWebviewUri(Uri.file(this.context.extensionUri.fsPath))
+			.toString();
+
+		const webviewPath = Uri.joinPath(this.context.extensionUri, "editor.html");
+
+		fs.readFile(webviewPath.fsPath, {
+			encoding: "utf8"
+		}).then(data => {
+			this._panel.webview.html = data
+				.replace(/{{root}}/g, pathToExt)
+				// here's some magic for inserting default data onload
+				.replace(
+					"</head>",
+					`<script>window._cs = ${JSON.stringify(parameters || {})};</script></head>`
+				);
+			this._html = this._panel.webview.html;
+			this.onInitializedCallback();
+		});
 	}
 
 	dispose() {
@@ -196,7 +221,7 @@ export class CodeStreamWebviewPanel implements WebviewLike, Disposable {
 	async reload(): Promise<void> {
 		// Reset the html to get the webview to reload
 		this._panel.webview.html = "";
-		this._panel.webview.html = this._html;
+		this._panel.webview.html = this._html!;
 		this._panel.reveal(this._panel.viewColumn, false);
 
 		void (await this.waitForWebviewIpcReadyNotification());

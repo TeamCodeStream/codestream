@@ -62,7 +62,9 @@ export class Container {
 		context.subscriptions.push(new CodemarkPatchContentProvider());
 		context.subscriptions.push((this._statusBar = new StatusBarController()));
 
-		context.subscriptions.push((this._sidebar = new SidebarController(this._session, sidebar)));
+		context.subscriptions.push(
+			(this._sidebar = new SidebarController(context, this._session, sidebar))
+		);
 		context.subscriptions.push(configuration.onWillChange(this.onConfigurationChanging, this));
 		context.subscriptions.push(configuration.onDidChangeAny(this.onConfigurationChangeAny, this));
 

@@ -138,8 +138,6 @@ export async function activate(context: ExtensionContext) {
 	}
 
 	let webviewSidebar: (WebviewLike & CodeStreamWebviewSidebar) | undefined = undefined;
-	//let webviewEditor: (WebviewViewProvider & WebviewEditor) | undefined = undefined;
-
 	// this plumping lives here rather than the WebviewController as it needs to get activated here
 	webviewSidebar = new CodeStreamWebviewSidebar(Container.session, context.extensionUri);
 
