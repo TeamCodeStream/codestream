@@ -1961,7 +1961,7 @@ export interface Entity {
 	alertSeverity?: string;
 	guid: string;
 	name: string;
-	type?: "APPLICATION" | "REPOSITORY";
+	type?: "APPLICATION" | "REPOSITORY" | "SERVICE" | "AWSLAMBDAFUNCTION";
 	entityType?: EntityType;
 	tags?: {
 		key: string;

@@ -168,7 +168,10 @@ export class ReposProvider implements Disposable {
 					applicationAssociations = entitiesReponse?.actor?.entities?.filter(
 						_ =>
 							_?.relatedEntities?.results?.filter(
-								r => r.source?.entity?.type === "APPLICATION" || "SERVICE" || "AWSLAMBDAFUNCTION"
+								r =>
+									r.source?.entity?.type === "APPLICATION" ||
+									r.source?.entity?.type === "SERVICE" ||
+									r.source?.entity?.type === "AWSLAMBDAFUNCTION"
 							).length
 					);
 					hasRepoAssociation = applicationAssociations?.length > 0;
