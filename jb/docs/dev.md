@@ -20,9 +20,9 @@ The CodeStream clients all live in a single git mono-repo. Each IDE has their ow
 
 ### JVM Setup
 
-On macos, due to a strange bug in [byte-buddy or JBR jvm](https://github.com/raphw/byte-buddy/issues/732), you need
+On macOS, due to a strange bug in [byte-buddy or JBR jvm](https://github.com/raphw/byte-buddy/issues/732), you need
 to copy the JBR jvm to a directory without spaces. If you do not, you will not be able to run tests.
-(symbolic link does no twork) For example:
+(symbolic link does not work) For example:
 
 ```shell
 cd ~
@@ -37,9 +37,11 @@ export PATH="$JAVA_HOME/bin:$PATH"
 > If you utilize JetBrains Toolbox for managing the installation of their IDEs / utilities, then your installation path will be available by clicking 'Settings' next to the application in JetBrains Toolbox. By default, it will look similar to:
 >
 > `/Users/<your home dir>/Library/Application Support/JetBrains/Toolbox/apps/IDEA-U/ch-0/231.8109.175`
+> or
+> `/Applications/IntelliJ IDEA.app` (and note this means ~/Applications and not just /Applications)
 
 The Jetbrains JVM is required to run tests and build the plugin. The project is preconfigured to use a
-JVM Runtime called jbr-17. You need to setup this JMV yourself by going to 
+JVM Runtime called jbr-17. You need to set up this JMV yourself by going to 
 `File -> Project Structure` and then click on `SDK` and in the dropdown choose `Add Sdk`. 
 Choose `Add JDK` and browse to `/Users/<your home dir>/jbr`
 (or where ever you have copied IntelliJ java runtime) and click OK. It should have defaulted to the name `jbr-17` or `jbr-17 (2)`.
