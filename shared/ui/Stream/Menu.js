@@ -6,7 +6,7 @@ import { logWarning } from "../logger";
 import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
 import { shortUuid } from "../utils";
 import Icon from "./Icon";
-import { ModalContext } from "./Modal";
+import { ModalContext } from "./ModalContext";
 
 /**
  * Modal menu that attaches to #modal-root

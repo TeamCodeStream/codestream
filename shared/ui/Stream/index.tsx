@@ -563,7 +563,8 @@ export class SimpleStream extends PureComponent<Props> {
 							{activePanel === WebviewPanels.MethodLevelTelemetry && <MethodLevelTelemetryPanel />}
 							{activePanel === WebviewPanels.TransactionSpan && <TransactionSpanPanel />}
 							{activePanel === WebviewPanels.ObservabilityAnomaly && <ObservabilityAnomalyPanel />}
-							{activePanel === WebviewPanels.APMLoggingSearch && <APMLogSearchPanel />}
+							{/** TODO unused?? */}
+							{/* {activePanel === WebviewPanels.APMLoggingSearch && <APMLogSearchPanel />} */}
 							{activePanel === WebviewPanels.Integrations && <IntegrationsPanel />}
 							{activePanel === WebviewPanels.Profile && <ProfilePanel />}
 							{activePanel === WebviewPanels.NewPullRequest && (

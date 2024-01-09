@@ -1,16 +1,13 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import Icon from "../Icon";
-import { Dialog } from "../../src/components/Dialog";
 import { PanelHeader } from "../../src/components/PanelHeader";
 import styled from "styled-components";
 import ScrollBox from "../ScrollBox";
-import { HostApi } from "../../webview-api";
-import { CodeStreamState } from "../../store";
-import { closePanel } from "../actions";
-import { useAppDispatch, useAppSelector, useDidMount } from "../../utilities/hooks";
+import { useDidMount } from "../../utilities/hooks";
 import Button from "../Button";
 import Select from "react-select";
 import Timestamp from "../Timestamp";
+import { HostApi } from "../../webview-api";
 import { Link } from "../Link";
 import {
 	GetLogFieldDefinitionsRequestType,
@@ -20,6 +17,7 @@ import {
 	LogResult,
 	isNRErrorResponse,
 } from "@codestream/protocols/agent";
+import { SaveFileRequestType, ShellPromptFolderRequestType } from "@codestream/protocols/webview";
 
 interface SelectedOption {
 	value: string;
@@ -103,10 +101,7 @@ const columnSpanMapping = {
 	level: 2,
 };
 
-export const APMLogSearchPanel = () => {
-	const dispatch = useAppDispatch();
-	const searchInput = useRef<HTMLInputElement>(null);
-
+export const APMLogSearchPanel = (props: { entityGuid: string }) => {
 	const [fieldDefinitions, setFieldDefinitions] = useState<LogFieldDefinition[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -131,19 +126,10 @@ export const APMLogSearchPanel = () => {
 	const [logError, setLogError] = useState<string | undefined>("");
 	const [isUIDisabled, setIsUIDisabled] = useState<boolean>(false);
 
-	const derivedState = useAppSelector((state: CodeStreamState) => {
-		return {
-			entityGuid: state.context.currentAPMLoggingEntityGuid,
-			searchTerm: state.context.currentAPMLoggingSearchTerm,
-		};
-	});
-
-	useEffect(() => {
-		if (derivedState.searchTerm && derivedState.entityGuid) {
-			setQuery(derivedState.searchTerm);
-			fetchLogs(derivedState.entityGuid, derivedState.searchTerm);
-		}
-	}, [derivedState.searchTerm]);
+	const derivedState = {
+		entityGuid: props.entityGuid,
+		searchTerm: "",
+	};
 
 	useDidMount(() => {
 		const defaultOption: SelectedOption = {
@@ -175,10 +161,9 @@ export const APMLogSearchPanel = () => {
 
 		fetchFieldDefinitions(derivedState.entityGuid);
 
-		if (derivedState.searchTerm) {
-			setQuery(derivedState.searchTerm);
-			fetchLogs(derivedState.entityGuid, derivedState.searchTerm);
-		}
+		// possible there is no searchTerm
+		setQuery(derivedState.searchTerm);
+		fetchLogs(derivedState.entityGuid, derivedState.searchTerm);
 	});
 
 	const handleError = (message: string) => {
@@ -276,7 +261,8 @@ export const APMLogSearchPanel = () => {
 			const response = await HostApi.instance.send(GetLogsRequestType, {
 				entityGuid,
 				filterText,
-				limit: "MAX",
+				// TODO. MAX kills ui performance here
+				limit: 100,
 				since: selectedSinceOption?.value || "30 MINUTES AGO",
 				order: {
 					field: "timestamp",
@@ -403,21 +389,13 @@ export const APMLogSearchPanel = () => {
 	};
 
 	return (
-		<Dialog
-			maximizable
-			wide
-			noPadding
-			onMaximize={() => setMaximized(true)}
-			onMinimize={() => setMaximized(false)}
-			onClose={() => dispatch(closePanel())}
-		>
+		<>
 			<PanelHeader title="Logs">
 				<SearchBar className="search-bar">
 					<div className="search-input" style={{ width: "70%", paddingRight: "10px" }}>
 						<Icon name="search" className="search" />
 						<input
 							name="q"
-							ref={searchInput}
 							value={query}
 							className="input-text control"
 							type="text"
@@ -462,8 +440,31 @@ export const APMLogSearchPanel = () => {
 				}}
 			>
 				{!isLoading && totalItems > 0 && (
-					<div style={{ fontSize: "14px", fontWeight: "bold", paddingBottom: "10px" }}>
-						{totalItems.toLocaleString()} Logs
+					<div>
+						<span style={{ fontSize: "14px", fontWeight: "bold", paddingBottom: "10px" }}>
+							{totalItems.toLocaleString()} Logs
+						</span>{" "}
+						<a
+							style={{ display: "none", float: "right", cursor: "pointer" }}
+							href="#"
+							onClick={e => {
+								e.preventDefault();
+								HostApi.instance
+									.send(ShellPromptFolderRequestType, { message: "Choose a location" })
+									.then(_ => {
+										if (_.path) {
+											HostApi.instance.send(SaveFileRequestType, {
+												path: _.path,
+												data: results,
+											});
+										} else {
+											setLogError("Unable to download");
+										}
+									});
+							}}
+						>
+							<Icon name="download" title="Download as JSON" />
+						</a>
 					</div>
 				)}
 
@@ -512,6 +513,6 @@ export const APMLogSearchPanel = () => {
 					</div>
 				</ScrollBox>
 			</div>
-		</Dialog>
+		</>
 	);
 };

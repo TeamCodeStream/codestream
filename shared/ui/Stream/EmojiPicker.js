@@ -6,7 +6,7 @@ import { logWarning } from "../logger";
 import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
 import { safe, shortUuid } from "../utils";
 import * as actions from "./actions";
-import { ModalContext } from "./Modal";
+import { ModalContext } from "./ModalContext";
 
 /**
  * Modal emoji picker that attaches to #modal-root

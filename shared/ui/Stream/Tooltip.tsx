@@ -1,7 +1,7 @@
 import * as React from "react";
 import { default as RCTooltip, RCTooltip as RCT } from "rc-tooltip";
 import { AnyObject, emptyObject } from "../utils";
-import { ModalContext } from "./Modal";
+import { ModalContext } from "./ModalContext";
 import styled from "styled-components";
 
 export const TipTitle = styled.div`

@@ -47,6 +47,7 @@ export enum WebviewPanels {
 	CICD = "ci-cd",
 	CodeAnalyzers = "code-analyzers",
 	TransactionSpan = "transaction-span",
+	// TODO remove me [unused?]
 	APMLoggingSearch = "apm-logging-search",
 }
 export interface CSEntity {

@@ -70,6 +70,7 @@ import {
 	ReviewCloseDiffRequestType,
 	ReviewShowDiffRequestType,
 	ReviewShowLocalDiffRequestType,
+	OpenEditorLogViewNotificationType,
 	ShellPromptFolderRequestType,
 	ShowCodemarkNotificationType,
 	ShowNextChangedFileNotificationType,
@@ -110,7 +111,8 @@ import {
 	ViewColumn,
 	window,
 	workspace,
-	SymbolInformation
+	SymbolInformation,
+	ExtensionContext
 } from "vscode";
 import { NotificationType, RequestType } from "vscode-languageclient";
 
@@ -136,6 +138,8 @@ import * as csUri from "../system/uri";
 import * as TokenManager from "../api/tokenManager";
 import { SaveTokenReason } from "../api/tokenManager";
 import { copySymbol, replaceSymbol } from "./symbolEditController";
+import { CodeStreamWebviewPanel } from "webviews/webviewPanel";
+import { EditorController } from "./editorController";
 
 const emptyObj = {};
 
@@ -149,6 +153,11 @@ export interface WebviewState {
 	teamless?: TeamlessContext;
 }
 
+interface PanelInitialization {
+	panel: CodeStreamWebviewPanel;
+	controller: EditorController;
+}
+
 export class SidebarController implements Disposable {
 	private _bootstrapPromise: Promise<BootstrapResponse> | undefined;
 	private _context: WebviewContext | undefined;
@@ -160,9 +169,12 @@ export class SidebarController implements Disposable {
 	private _providerSessionIds: { [key: string]: string } = {};
 	private _hasShownAfterOnVersionChanged: boolean = false;
 
+	private _logPanelInitializations: { [Identifier: string]: PanelInitialization } = {};
+
 	private readonly _notifyActiveEditorChangedDebounced: (e: TextEditor | undefined) => void;
 
 	constructor(
+		private context: ExtensionContext,
 		public readonly session: CodeStreamSession,
 		private _sidebar?: WebviewLike
 	) {
@@ -822,7 +834,7 @@ export class SidebarController implements Disposable {
 		this.closeWebview("user");
 	}
 
-	private async onWebviewMessageReceived(webview: WebviewLike, e: WebviewIpcMessage) {
+	async onWebviewMessageReceived(webview: WebviewLike, e: WebviewIpcMessage) {
 		try {
 			Logger.log(`WebviewController: Received message ${toLoggableIpcMessage(e)} from the webview`);
 
@@ -861,6 +873,27 @@ export class SidebarController implements Disposable {
 
 	private onWebviewNotification(webview: WebviewLike, e: WebviewIpcNotificationMessage) {
 		switch (e.method) {
+			case OpenEditorLogViewNotificationType.method: {
+				if (!this._logPanelInitializations[e.params.entityGuid]) {
+					const panel = new CodeStreamWebviewPanel(this.session, this.context, e.params, () => {});
+
+					const controller = new EditorController(this.session, panel);
+					const onDidClose = () => {
+						const initialization = this._logPanelInitializations[e.params.entityGuid];
+						initialization.controller?.dispose();
+						initialization.panel?.dispose();
+						delete this._logPanelInitializations[e.params.entityGuid];
+					};
+					panel.onDidClose(() => {
+						onDidClose();
+					});
+					this._logPanelInitializations[e.params.entityGuid] = {
+						panel: panel,
+						controller: controller
+					};
+				}
+				break;
+			}
 			case WebviewDidInitializeNotificationType.method: {
 				// view is rendered and ready to receive messages
 				webview.onIpcReady();

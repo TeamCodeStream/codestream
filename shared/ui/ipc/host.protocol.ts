@@ -17,7 +17,7 @@ import {
 	CSUser,
 } from "@codestream/protocols/api";
 
-import { RequestType } from "vscode-jsonrpc";
+import { NotificationType, RequestType } from "vscode-jsonrpc";
 import { EditorContext, IpcRoutes, SessionState, WebviewContext } from "./webview.protocol.common";
 
 export interface Collaborator {
@@ -156,6 +156,18 @@ export const UpdateConfigurationRequestType = new RequestType<
 	void
 >(`${IpcRoutes.Host}/configuration/update`);
 
+export interface SaveFileRequest {
+	path: string;
+	data: any;
+}
+export interface SaveFileResponse {
+	success: boolean;
+}
+
+export const SaveFileRequestType = new RequestType<SaveFileRequest, SaveFileResponse, void, void>(
+	`${IpcRoutes.Host}/file/save`
+);
+
 export interface ShellPromptFolderRequest {
 	message: string;
 }
@@ -272,3 +284,12 @@ export const RefreshEditorsCodeLensRequestType = new RequestType<
 	void,
 	void
 >(`${IpcRoutes.Host}/editors/codelens/refresh`);
+
+export interface OpenEditorLogViewNotification {
+	entityGuid?: string;
+}
+
+export const OpenEditorLogViewNotificationType = new NotificationType<
+	OpenEditorLogViewNotification,
+	void
+>(`${IpcRoutes.Host}/editor/logs/open`);
