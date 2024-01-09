@@ -88,6 +88,11 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
         }
     }
 
+    @JsonNotification("codestream/didChangeSessionTokenStatus")
+    fun didChangeSessionTokenStatus(json: JsonElement) {
+        project.webViewService?.postNotification("codestream/didChangeSessionTokenStatus", json)
+    }
+
     @JsonNotification("codestream/didChangeConnectionStatus")
     fun didChangeConnectionStatus(json: JsonElement) {
         project.webViewService?.postNotification("codestream/didChangeConnectionStatus", json)
