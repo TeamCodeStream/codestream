@@ -40,20 +40,20 @@ export function generateCsv() {
 					: {};
 				const repo = derivedState.repos[marker.repoId];
 				const repoName = repo ? repo.name : "";
-				output.push(
-					{ repo: repoName },
-					{ file: marker.file },
-					{ commitSha: location.commitHash },
-					{ location: location.location ? location.location[0] : "" },
-					{ date: codemark.createdAt },
-					{ author: codemark.creatorId },
-					{ id: codemark.id },
-					{ parentId: codemark.parentPostId },
-					{ type: codemark.type },
-					{ title: codemark.title || codemark.text },
-					{ body: codemark.title ? codemark.text : "" },
-					{ assignees: codemark.assignees }
-				);
+				output.push({
+					repo: repoName,
+					file: marker.file,
+					commitSha: location.commitHash,
+					location: location.location ? location.location[0] : "",
+					date: codemark.createdAt,
+					author: codemark.creatorId,
+					id: codemark.id,
+					parentId: codemark.parentPostId,
+					type: codemark.type,
+					title: codemark.title || codemark.text,
+					body: codemark.title ? codemark.text : "",
+					assignees: codemark.assignees,
+				});
 			});
 		}
 	});
