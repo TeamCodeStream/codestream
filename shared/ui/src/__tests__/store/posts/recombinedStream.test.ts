@@ -1,10 +1,10 @@
 import { describe, expect, it } from "@jest/globals";
 import {
 	advanceRecombinedStream,
+	extractParts,
 	GROK_TIMEOUT,
 	isGrokStreamDone,
 	RecombinedStream,
-	updateParts,
 } from "@codestream/webview/store/posts/recombinedStream";
 
 describe("RecombinedStream", () => {
@@ -15,10 +15,10 @@ describe("RecombinedStream", () => {
 				"INTRO:\nintro\nblah blah\nCODE_FIX:\ncodeFix\nblah blah\nDESCRIPTION:\ndescription\nblahblah\n",
 			receivedDoneEvent: false,
 		};
-		updateParts(recombinedStream);
-		expect(recombinedStream.parts?.intro).toBe("INTRO:\nintro\nblah blah\n");
-		expect(recombinedStream.parts?.codeFix).toBe("CODE_FIX:\ncodeFix\nblah blah\n");
-		expect(recombinedStream.parts?.description).toBe("DESCRIPTION:\ndescription\nblahblah\n");
+		const parts = extractParts(recombinedStream.content);
+		expect(parts?.intro).toBe("INTRO:\nintro\nblah blah\n");
+		expect(parts?.codeFix).toBe("CODE_FIX:\ncodeFix\nblah blah\n");
+		expect(parts?.description).toBe("DESCRIPTION:\ndescription\nblahblah\n");
 	});
 
 	it("should updateParts when only DESCRIPTION is present", () => {
@@ -27,10 +27,10 @@ describe("RecombinedStream", () => {
 			content: "DESCRIPTION:\ndescription\nblahblah\n",
 			receivedDoneEvent: false,
 		};
-		updateParts(recombinedStream);
-		expect(recombinedStream.parts?.intro).toBe("");
-		expect(recombinedStream.parts?.codeFix).toBe("");
-		expect(recombinedStream.parts?.description).toBe("DESCRIPTION:\ndescription\nblahblah\n");
+		const parts = extractParts(recombinedStream.content);
+		expect(parts?.intro).toBe("");
+		expect(parts?.codeFix).toBe("");
+		expect(parts?.description).toBe("DESCRIPTION:\ndescription\nblahblah\n");
 	});
 
 	it("should updateParts when only INTRO is present", () => {
@@ -39,10 +39,10 @@ describe("RecombinedStream", () => {
 			content: "INTRO:\nintro\nblah blah\n",
 			receivedDoneEvent: false,
 		};
-		updateParts(recombinedStream);
-		expect(recombinedStream.parts?.intro).toBe("INTRO:\nintro\nblah blah\n");
-		expect(recombinedStream.parts?.codeFix).toBe("");
-		expect(recombinedStream.parts?.description).toBe("");
+		const parts = extractParts(recombinedStream.content);
+		expect(parts?.intro).toBe("INTRO:\nintro\nblah blah\n");
+		expect(parts?.codeFix).toBe("");
+		expect(parts?.description).toBe("");
 	});
 
 	it("should updateParts when only CODE_FIX is present", () => {
@@ -51,10 +51,10 @@ describe("RecombinedStream", () => {
 			content: "CODE_FIX:\ncodeFix\nblah blah\n",
 			receivedDoneEvent: false,
 		};
-		updateParts(recombinedStream);
-		expect(recombinedStream.parts?.intro).toBe("");
-		expect(recombinedStream.parts?.codeFix).toBe("CODE_FIX:\ncodeFix\nblah blah\n");
-		expect(recombinedStream.parts?.description).toBe("");
+		const parts = extractParts(recombinedStream.content);
+		expect(parts?.intro).toBe("");
+		expect(parts?.codeFix).toBe("CODE_FIX:\ncodeFix\nblah blah\n");
+		expect(parts?.description).toBe("");
 	});
 
 	it("should updateParts when CODE_FIX is missing", () => {
@@ -63,10 +63,10 @@ describe("RecombinedStream", () => {
 			content: "INTRO:\nintro\nblah blah\nDESCRIPTION:\ndescription\nblahblah\n",
 			receivedDoneEvent: false,
 		};
-		updateParts(recombinedStream);
-		expect(recombinedStream.parts?.intro).toBe("INTRO:\nintro\nblah blah\n");
-		expect(recombinedStream.parts?.codeFix).toBe("");
-		expect(recombinedStream.parts?.description).toBe("DESCRIPTION:\ndescription\nblahblah\n");
+		const parts = extractParts(recombinedStream.content);
+		expect(parts?.intro).toBe("INTRO:\nintro\nblah blah\n");
+		expect(parts?.codeFix).toBe("");
+		expect(parts?.description).toBe("DESCRIPTION:\ndescription\nblahblah\n");
 	});
 
 	it("should start from empty without dupes", () => {

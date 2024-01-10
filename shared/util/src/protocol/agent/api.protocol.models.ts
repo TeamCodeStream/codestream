@@ -406,12 +406,19 @@ export interface Attachment {
 	size: number;
 }
 
+export type PostParts = {
+	intro: string;
+	codeFix: string;
+	description: string;
+};
+
 export interface CSPost extends CSEntity {
 	teamId: string;
 	streamId: string;
 	parentPostId?: string;
 	numReplies: number;
 	text: string;
+	parts?: PostParts;
 	seqNum: number | string;
 	hasBeenEdited: boolean;
 	mentionedUserIds?: string[];

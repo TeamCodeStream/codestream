@@ -1,15 +1,12 @@
 import { GrokStreamEvent } from "@codestream/webview/store/posts/types";
+import { PostParts } from "@codestream/protocols/api";
 
 export const GROK_TIMEOUT = 2 * 60 * 1000; // 2 minutes
 
 export type RecombinedStream = {
 	items: GrokStreamEvent[];
 	content: string;
-	parts?: {
-		intro: string;
-		codeFix: string;
-		description: string;
-	};
+	parts?: PostParts;
 	receivedDoneEvent: boolean;
 	lastContentIndex?: number;
 	lastMessageReceivedAt?: number;
@@ -18,7 +15,7 @@ export type RecombinedStream = {
 const sections = ["INTRO:", "CODE_FIX:", "DESCRIPTION:"];
 const partsMap = { "INTRO:": "intro", "CODE_FIX:": "codeFix", "DESCRIPTION:": "description" };
 
-export function updateParts(recombinedStream: RecombinedStream) {
+export function extractParts(content: string): PostParts {
 	const parts = {
 		intro: "",
 		codeFix: "",
@@ -26,31 +23,20 @@ export function updateParts(recombinedStream: RecombinedStream) {
 	};
 	// Parse 'INTRO:', 'CODE_FIX:', 'DESCRIPTION:' out of recombinedStream.content and put them in parts
 	for (const section of sections) {
-		const start = recombinedStream.content.indexOf(section);
+		const start = content.indexOf(section);
 		if (start !== -1) {
 			for (let i = sections.indexOf(section) + 1; i <= sections.length; i++) {
 				const nextSection = sections[i];
-				const end = nextSection
-					? recombinedStream.content.indexOf(nextSection, start)
-					: recombinedStream.content.length;
+				const end = nextSection ? content.indexOf(nextSection, start) : content.length;
 				if (end !== -1) {
-					const content = recombinedStream.content.substring(start, end);
-					parts[partsMap[section]] = content;
+					const finalContent = content.substring(start, end);
+					parts[partsMap[section]] = finalContent;
 					break;
 				}
 			}
-
-			// const nextSection = sections[sections.indexOf(section) + 1];
-			// const end = nextSection
-			// 	? recombinedStream.content.indexOf(nextSection, start) - 1
-			// 	: recombinedStream.content.length;
-			// if (end !== -1) {
-			// 	const content = recombinedStream.content.substring(start, end + 1);
-			// 	parts[partsMap[section]] = content;
-			// }
 		}
 	}
-	recombinedStream.parts = parts;
+	return parts;
 }
 
 export function advanceRecombinedStream(
@@ -73,7 +59,7 @@ export function advanceRecombinedStream(
 			recombinedStream.lastContentIndex = i;
 		}
 	}
-	updateParts(recombinedStream);
+	recombinedStream.parts = extractParts(recombinedStream.content);
 }
 
 // A stream is done if it has a done event and there are no gaps in the sequence and it is not timed out

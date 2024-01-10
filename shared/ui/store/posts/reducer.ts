@@ -8,6 +8,7 @@ import { isPending, Post, PostsActionsType, PostsState } from "./types";
 import { PostPlus } from "@codestream/protocols/agent";
 import {
 	advanceRecombinedStream,
+	extractParts,
 	isGrokStreamDone,
 	RecombinedStream,
 } from "@codestream/webview/store/posts/recombinedStream";
@@ -25,6 +26,10 @@ const initialState: PostsState = {
 const addPost = (byStream: { [streamId: string]: Index<PostPlus> }, post: CSPost) => {
 	const streamId = post.streamId;
 	const streamPosts = byStream[streamId] || {};
+	// if (post.forGrok) {
+	// 	post.parts = extractParts(post.text);
+	// 	console.log("*** addPost: extracted post.parts", post.parts);
+	// }
 	return { ...byStream, [streamId]: { ...streamPosts, [post.id]: post } };
 };
 
@@ -70,12 +75,19 @@ export function reducePosts(state: PostsState = initialState, action: PostsActio
 			if (recombinedStream.content && post) {
 				post.text = recombinedStream.content;
 			}
+			if (recombinedStream.parts && post) {
+				post.parts = recombinedStream.parts;
+			}
 			return nextState;
 		}
 		case PostsActionsType.AddForStream: {
 			const { streamId, posts } = action.payload;
 			const streamPosts = { ...(state.byStream[streamId] || {}) };
 			posts.filter(Boolean).forEach(post => {
+				if (post.forGrok) {
+					post.parts = extractParts(post.text);
+					// console.log("*** AddForStream: extracted post.parts", post.parts);
+				}
 				streamPosts[post.id] = post;
 			});
 

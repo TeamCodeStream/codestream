@@ -34,6 +34,7 @@ import Timestamp from "../Timestamp";
 import { RepliesToPostContext } from "./RepliesToPost";
 import { GrokFeedback } from "@codestream/webview/Stream/Posts/GrokFeedback";
 import { GrokLoading } from "@codestream/webview/Stream/CodeError/GrokLoading";
+import { NrAiComponent } from "@codestream/webview/Stream/Posts/NrAiComponent";
 
 const AuthorInfo = styled.div`
 	display: flex;
@@ -160,7 +161,7 @@ const ParentPreview = styled.span`
 	white-space: pre;
 `;
 
-const MarkdownContent = styled.div`
+export const MarkdownContent = styled.div`
 	margin-left: 27px;
 	display: flex;
 	flex-direction: column;
@@ -273,6 +274,7 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 	const isNestedReply = props.showParentPreview && parentPost.parentPostId != null;
 	const numNestedReplies = props.nestedReplies ? props.nestedReplies.length : 0;
 	const hasNestedReplies = numNestedReplies > 0;
+	const isForGrok = !isPending(props.post) && props.post.forGrok;
 
 	const postText = codemark != null ? codemark.text : props.post.text;
 	const escapedPostText = escapeHtml(postText);
@@ -322,7 +324,7 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 
 	const author = props.author || { username: "???" };
 
-	const showGrokLoader = !isPending(props.post) && props.post.forGrok && !postText;
+	const showGrokLoader = isForGrok && !postText;
 
 	return (
 		<Root ref={ref} className={props.className}>
@@ -438,7 +440,10 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 						</div>
 					</>
 				)}
-				{emote || isEditing ? null : (
+				{isForGrok && (
+					<NrAiComponent post={props.post as PostPlus} author={props.author} postText={postText} />
+				)}
+				{emote || isEditing || isForGrok ? null : (
 					<>
 						{showGrokLoader && <GrokLoading />}
 						<MarkdownContent className="reply-content-container">
