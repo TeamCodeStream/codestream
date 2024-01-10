@@ -200,19 +200,17 @@ export class GoldenSignalsProvider {
 					100;
 
 				const pillsErrorChange = errorRatePercentageChange
-					? Math.floor(errorRatePercentageChange)
+					? Math.round(errorRatePercentageChange)
 					: undefined;
 				const pillsResponseTimeChange = responseTimePercentageChange
-					? Math.floor(responseTimePercentageChange)
+					? Math.round(responseTimePercentageChange)
 					: undefined;
 
 				function getPillsSeverityColor(num: number) {
-					if (num >= 0) {
-						if (num >= 0 && num <= 5) {
-							return "#FFD23D";
-						} else {
-							return "#DF2D24";
-						}
+					if (num >= 0 && num <= 5) {
+						return "#FFD23D";
+					} else if (num > 5) {
+						return "#DF2D24";
 					} else {
 						return undefined;
 					}
