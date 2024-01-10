@@ -26,10 +26,10 @@ const initialState: PostsState = {
 const addPost = (byStream: { [streamId: string]: Index<PostPlus> }, post: CSPost) => {
 	const streamId = post.streamId;
 	const streamPosts = byStream[streamId] || {};
-	// if (post.forGrok) {
-	// 	post.parts = extractParts(post.text);
-	// 	console.log("*** addPost: extracted post.parts", post.parts);
-	// }
+	if (post.forGrok) {
+		post.parts = extractParts(post.text);
+		// console.log("*** addPost: extracted post.parts", post.parts);
+	}
 	return { ...byStream, [streamId]: { ...streamPosts, [post.id]: post } };
 };
 
