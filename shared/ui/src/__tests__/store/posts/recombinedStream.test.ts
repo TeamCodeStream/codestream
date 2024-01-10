@@ -16,9 +16,9 @@ describe("RecombinedStream", () => {
 			receivedDoneEvent: false,
 		};
 		const parts = extractParts(recombinedStream.content);
-		expect(parts?.intro).toBe("INTRO:\nintro\nblah blah\n");
-		expect(parts?.codeFix).toBe("CODE_FIX:\ncodeFix\nblah blah\n");
-		expect(parts?.description).toBe("DESCRIPTION:\ndescription\nblahblah\n");
+		expect(parts?.intro).toBe("intro\nblah blah\n");
+		expect(parts?.codeFix).toBe("codeFix\nblah blah\n");
+		expect(parts?.description).toBe("description\nblahblah\n");
 	});
 
 	it("should updateParts when only DESCRIPTION is present", () => {
@@ -30,7 +30,7 @@ describe("RecombinedStream", () => {
 		const parts = extractParts(recombinedStream.content);
 		expect(parts?.intro).toBe("");
 		expect(parts?.codeFix).toBe("");
-		expect(parts?.description).toBe("DESCRIPTION:\ndescription\nblahblah\n");
+		expect(parts?.description).toBe("description\nblahblah\n");
 	});
 
 	it("should updateParts when only INTRO is present", () => {
@@ -40,7 +40,7 @@ describe("RecombinedStream", () => {
 			receivedDoneEvent: false,
 		};
 		const parts = extractParts(recombinedStream.content);
-		expect(parts?.intro).toBe("INTRO:\nintro\nblah blah\n");
+		expect(parts?.intro).toBe("intro\nblah blah\n");
 		expect(parts?.codeFix).toBe("");
 		expect(parts?.description).toBe("");
 	});
@@ -53,7 +53,7 @@ describe("RecombinedStream", () => {
 		};
 		const parts = extractParts(recombinedStream.content);
 		expect(parts?.intro).toBe("");
-		expect(parts?.codeFix).toBe("CODE_FIX:\ncodeFix\nblah blah\n");
+		expect(parts?.codeFix).toBe("codeFix\nblah blah\n");
 		expect(parts?.description).toBe("");
 	});
 
@@ -64,9 +64,9 @@ describe("RecombinedStream", () => {
 			receivedDoneEvent: false,
 		};
 		const parts = extractParts(recombinedStream.content);
-		expect(parts?.intro).toBe("INTRO:\nintro\nblah blah\n");
+		expect(parts?.intro).toBe("intro\nblah blah\n");
 		expect(parts?.codeFix).toBe("");
-		expect(parts?.description).toBe("DESCRIPTION:\ndescription\nblahblah\n");
+		expect(parts?.description).toBe("description\nblahblah\n");
 	});
 
 	it("should start from empty without dupes", () => {

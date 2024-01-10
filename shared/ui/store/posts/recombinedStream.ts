@@ -29,8 +29,9 @@ export function extractParts(content: string): PostParts {
 				const nextSection = sections[i];
 				const end = nextSection ? content.indexOf(nextSection, start) : content.length;
 				if (end !== -1) {
-					const finalContent = content.substring(start, end);
-					parts[partsMap[section]] = finalContent;
+					parts[partsMap[section]] = content
+						.substring(start, end)
+						.replace(/^(INTRO:|CODE_FIX:|DESCRIPTION:)\s+/, "");
 					break;
 				}
 			}
