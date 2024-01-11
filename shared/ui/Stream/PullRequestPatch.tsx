@@ -188,14 +188,14 @@ export const PullRequestPatch = (props: {
 		return (
 			<PRPatchRoot className={(props.className || "") + " pr-patch"}>
 				<div style={{ position: "relative" }}>
-					{patch.split("\n").map((_, index) => {
+					{patch.split("\n").map((patchLine, index) => {
 						const shouldSkipLine =
 							props.truncateLargePatches &&
 							patchLength > patchShowContextLines * 2 + 2 &&
 							index > patchShowContextLines &&
 							index < patchLength - patchShowContextLines;
 
-						if (_ === "\\ No newline at end of file") return null;
+						if (patchLine === "\\ No newline at end of file") return null;
 
 						const renderCommentForm = (
 							oldLineNumber: number | undefined = undefined,
@@ -207,7 +207,7 @@ export const PullRequestPatch = (props: {
 										pr={props.pr}
 										mode={props.mode}
 										filename={filename}
-										contents={_}
+										contents={patchLine}
 										// gitlab needs an old line number
 										// if commenting on non-new code
 										oldLineNumber={
@@ -266,8 +266,8 @@ export const PullRequestPatch = (props: {
 							);
 						};
 
-						if (_.indexOf("@@ ") === 0) {
-							const matches = _.match(/@@ \-(\d+).*? \+(\d+)/);
+						if (patchLine.indexOf("@@ ") === 0) {
+							const matches = patchLine.match(/@@ \-(\d+).*? \+(\d+)/);
 							if (matches) {
 								leftLine = parseInt(matches[1], 10) - 1;
 								rightLine = parseInt(matches[2]) - 1;
@@ -279,13 +279,13 @@ export const PullRequestPatch = (props: {
 									<div className="line header">
 										{renderLineNum("")}
 										{renderLineNum("")}
-										<pre className="prettyprint">{_}</pre>
+										<pre className="prettyprint">{patchLine}</pre>
 									</div>
 									{renderComments()}
 									{renderCommentForm()}
 								</React.Fragment>
 							);
-						} else if (_.indexOf("+") === 0) {
+						} else if (patchLine.indexOf("+") === 0) {
 							rightLine++;
 							switch (true) {
 								case shouldSkipLine && index === patchLength - patchShowContextLines - 1:
@@ -298,14 +298,14 @@ export const PullRequestPatch = (props: {
 											<div className="line added">
 												{renderLineNum("")}
 												{renderLineNum(rightLine)}
-												{syntaxHighlight(_, index)}
+												{syntaxHighlight(patchLine, index)}
 											</div>
 											{renderComments()}
 											{renderCommentForm()}
 										</React.Fragment>
 									);
 							}
-						} else if (_.indexOf("-") === 0) {
+						} else if (patchLine.indexOf("-") === 0) {
 							leftLine++;
 							switch (true) {
 								case shouldSkipLine && index === patchLength - patchShowContextLines - 1:
@@ -318,7 +318,7 @@ export const PullRequestPatch = (props: {
 											<div className="line deleted">
 												{renderLineNum(leftLine)}
 												{renderLineNum("")}
-												{syntaxHighlight(_, index)}
+												{syntaxHighlight(patchLine, index)}
 											</div>
 											{renderComments("-")}
 											{renderCommentForm(leftLine, "-")}
@@ -339,7 +339,7 @@ export const PullRequestPatch = (props: {
 											<div className="line same">
 												{renderLineNum(leftLine)}
 												{renderLineNum(rightLine)}
-												{syntaxHighlight(_, index)}
+												{syntaxHighlight(patchLine, index)}
 											</div>
 											{renderComments()}
 											{renderCommentForm(leftLine)}

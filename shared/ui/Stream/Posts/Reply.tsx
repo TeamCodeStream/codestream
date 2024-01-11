@@ -210,6 +210,7 @@ const ComposeWrapper = styled.div.attrs(() => ({
 export interface ReplyProps {
 	author: Partial<CSUser>;
 	post: Post;
+	file?: string;
 	codeErrorId?: string;
 	nestedReplies?: PostPlus[];
 	renderMenu?: (target: any, onClose: () => void) => React.ReactNode;
@@ -441,7 +442,12 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 					</>
 				)}
 				{isForGrok && (
-					<NrAiComponent post={props.post as PostPlus} author={props.author} postText={postText} />
+					<NrAiComponent
+						post={props.post as PostPlus}
+						author={props.author}
+						postText={postText}
+						file={props.file!}
+					/>
 				)}
 				{emote || isEditing || isForGrok ? null : (
 					<>

@@ -114,6 +114,7 @@ export interface BaseCodeErrorProps extends CardProps {
 	resolutionTip?: any;
 	setGrokRequested: () => void;
 	readOnly: boolean;
+	setCurrentNrAiFile: (file: string) => void;
 }
 
 export interface BaseCodeErrorHeaderProps {
@@ -1163,6 +1164,7 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 
 const BaseCodeError = (props: BaseCodeErrorProps) => {
 	const dispatch = useAppDispatch();
+
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const codeError: CSCodeError = state.codeErrors[props.codeError.id] || props.codeError;
 		const codeAuthorId = (props.codeError.codeAuthorIds || [])[0];
@@ -1318,14 +1320,17 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 					setTimeout(() => {
 						try {
 							// console.debug(`===--- symbol useEffect calling jumpToStackLine`);
-							dispatch(
-								jumpToStackLine(
-									jumpLocation,
-									stackInfo.lines[jumpLocation],
-									stackInfo.sha!,
-									stackInfo.repoId!
-								)
-							);
+							const stackLine = stackInfo.lines[jumpLocation];
+							if (stackLine.fileRelativePath && stackInfo.sha && stackInfo.repoId) {
+								console.log("*** setCurrentNrAiFile", stackLine.fileRelativePath);
+								props.setCurrentNrAiFile(stackLine.fileRelativePath);
+								dispatch(jumpToStackLine(jumpLocation, stackLine, stackInfo.sha, stackInfo.repoId));
+							} else {
+								console.warn(
+									"nrai jumpToStackLine missing fileRelativePath, sha, or repoId",
+									stackLine
+								);
+							}
 						} catch (ex) {
 							console.warn(ex);
 						}
@@ -1855,6 +1860,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 		undefined
 	);
 	const [isGrokRequested, setIsGrokRequested] = useState(false);
+	const [currentNrAiFile, setCurrentNrAiFile] = useState<string | undefined>(undefined);
 	const currentGrokRepliesLength = useAppSelector(state =>
 		getGrokPostLength(state, props.codeError.streamId, props.codeError.postId)
 	);
@@ -1917,6 +1923,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 								scrollNewTargetCallback={scrollNewTargetCallback}
 								codeErrorId={props.codeError.id}
 								noReply={true}
+								file={currentNrAiFile}
 							/>
 							{grokError && (
 								<DelayedRender>
@@ -1973,6 +1980,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 				headerError={headerError}
 				setGrokRequested={setGrokRequested}
 				readOnly={props.readOnly === true}
+				setCurrentNrAiFile={setCurrentNrAiFile}
 			/>
 		</>
 	);
