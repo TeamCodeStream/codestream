@@ -13,3 +13,6 @@ jb/bin/main/
 jb/bin/test/
 
 shared/agent/newrelic_agent.log
+
+
+**/node_modules/

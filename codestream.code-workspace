@@ -20,6 +20,9 @@
 		},
 		{
 			"path": "shared/ui"
+		},
+		{
+			"path": "build"
 		}
 	],
 	"launch": {
