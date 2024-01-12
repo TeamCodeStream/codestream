@@ -1864,6 +1864,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 	const currentGrokRepliesLength = useAppSelector(state =>
 		getGrokPostLength(state, props.codeError.streamId, props.codeError.postId)
 	);
+	const functionToEdit = useAppSelector(state => state.codeErrors.functionToEdit);
 
 	function scrollToNew() {
 		const target = scrollNewTarget?.current;
@@ -1924,6 +1925,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 								codeErrorId={props.codeError.id}
 								noReply={true}
 								file={currentNrAiFile}
+								codeBlockStartLine={functionToEdit?.codeBlockStartLine}
 							/>
 							{grokError && (
 								<DelayedRender>

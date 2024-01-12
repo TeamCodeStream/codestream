@@ -211,6 +211,7 @@ export interface ReplyProps {
 	author: Partial<CSUser>;
 	post: Post;
 	file?: string;
+	codeBlockStartLine?: number;
 	codeErrorId?: string;
 	nestedReplies?: PostPlus[];
 	renderMenu?: (target: any, onClose: () => void) => React.ReactNode;
@@ -447,6 +448,7 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 						author={props.author}
 						postText={postText}
 						file={props.file!}
+						codeBlockStartLine={props.codeBlockStartLine}
 					/>
 				)}
 				{emote || isEditing || isForGrok ? null : (
@@ -485,6 +487,7 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 						editingPostId={props.editingPostId}
 						key={r.id}
 						post={r}
+						codeBlockStartLine={props.codeBlockStartLine}
 						threadId={props.post.id}
 						lastNestedReply={index === numNestedReplies - 1}
 					/>
@@ -496,6 +499,7 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 const NestedReply = (props: {
 	post: Post;
 	threadId: string;
+	codeBlockStartLine?: number;
 	editingPostId?: string;
 	lastNestedReply?: boolean;
 }) => {
@@ -555,6 +559,7 @@ const NestedReply = (props: {
 			editingPostId={props.editingPostId}
 			threadId={props.threadId}
 			lastNestedReply={props.lastNestedReply}
+			codeBlockStartLine={props.codeBlockStartLine}
 			renderMenu={(target, close) => <Menu target={target} action={close} items={menuItems} />}
 		/>
 	);

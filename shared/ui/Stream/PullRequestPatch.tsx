@@ -1,6 +1,6 @@
 import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
 import { prettyPrintOne } from "code-prettify";
-import * as Path from "path-browserify";
+import Path from "path-browserify";
 import React from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
@@ -20,8 +20,8 @@ export const PRPatchRoot = styled.div`
 	border-top: 0;
 	tab-size: 2;
 	pre {
-		white-space: pre !important;
-		padding: 1px 10px !important;
+		white-space: pre;
+		padding: 1px 10px;
 		margin: 0;
 		display: inline-block;
 	}
@@ -31,10 +31,15 @@ export const PRPatchRoot = styled.div`
 	}
 	.line {
 		display: flex;
-		padding: 0px;
+		padding: 0;
 		.linenum {
-			padding: 1px 10px;
+			white-space: pre;
+			padding: 1px 5px 1px 0;
 			color: var(--text-color-subtle);
+		}
+		.prettyprint {
+			white-space: pre;
+			padding-left: 5px;
 		}
 		margin: 0;
 		width: 100%;
@@ -368,24 +373,24 @@ export const PullRequestPatch = (props: {
 										@@ -{hunk.oldStart},{hunk.oldLines} +{hunk.newStart},{hunk.newLines} @@
 									</pre>
 								</div>
-								{hunk.lines.map((_, i) => {
-									if (_ === "\\ No newline at end of file") return null;
-									if (_.indexOf("+") === 0) {
+								{hunk.lines.map((hunkLine, i) => {
+									if (hunkLine === "\\ No newline at end of file") return null;
+									if (hunkLine.indexOf("+") === 0) {
 										rightLine++;
 										return (
 											<div className="line added" key={`line-added-${i}`}>
 												{renderLineNum("")}
 												{renderLineNum(rightLine)}
-												{syntaxHighlight(_, index)}
+												{syntaxHighlight(hunkLine, index)}
 											</div>
 										);
-									} else if (_.indexOf("-") === 0) {
+									} else if (hunkLine.indexOf("-") === 0) {
 										leftLine++;
 										return (
 											<div className="line deleted" key={`line-deleted-${i}`}>
 												{renderLineNum(leftLine)}
 												{renderLineNum("")}
-												{syntaxHighlight(_, index)}
+												{syntaxHighlight(hunkLine, index)}
 											</div>
 										);
 									} else {
@@ -395,7 +400,7 @@ export const PullRequestPatch = (props: {
 											<div className="line same" key={`line-same-${i}`}>
 												{renderLineNum(leftLine)}
 												{renderLineNum(rightLine)}
-												{syntaxHighlight(_, index)}
+												{syntaxHighlight(hunkLine, index)}
 											</div>
 										);
 									}

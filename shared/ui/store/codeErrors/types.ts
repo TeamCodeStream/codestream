@@ -24,6 +24,7 @@ export type FunctionToEdit = {
 	codeBlock: string;
 	symbol: string;
 	uri: string;
+	codeBlockStartLine: number;
 };
 
 export type CodeErrorsState = {

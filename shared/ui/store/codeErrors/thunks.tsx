@@ -567,6 +567,7 @@ export const copySymbolFromIde =
 					codeBlock: symbolDetails.text,
 					symbol: stackLine.method,
 					uri: lookupPath,
+					codeBlockStartLine: symbolDetails.range.start.line,
 				})
 			);
 		} else {

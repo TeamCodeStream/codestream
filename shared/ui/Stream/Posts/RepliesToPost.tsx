@@ -46,6 +46,7 @@ export const RepliesToPost = (props: {
 	codeErrorId?: string;
 	noReply?: boolean;
 	file?: string;
+	codeBlockStartLine?: number;
 	scrollNewTargetCallback?: (target: RefObject<HTMLElement>) => void;
 }) => {
 	const dispatch = useAppDispatch();
@@ -160,6 +161,7 @@ export const RepliesToPost = (props: {
 							ref={idx === replies.length ? lastCommentRef : null}
 							author={allUsers[reply.creatorId]}
 							file={props.file}
+							codeBlockStartLine={props.codeBlockStartLine}
 							post={reply}
 							editingPostId={editingPostId}
 							nestedReplies={nestedRepliesByParent[reply.id]}
