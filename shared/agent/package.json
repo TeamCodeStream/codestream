@@ -89,7 +89,7 @@
 		"string-similarity": "3.0.0",
 		"tiny-async-pool": "1.2.0",
 		"tmp": "0.1.0",
-		"undici": "6.2.1",
+		"undici": "5.28.2",
 		"utf-8-validate": "5.0.8",
 		"uuid": "3.3.2",
 		"vscode-languageserver": "5.2.1",
@@ -97,11 +97,6 @@
 		"write-file-atomic": "3.0.3"
 	},
 	"devDependencies": {
-		"@babel/core": "7.18.9",
-		"@babel/plugin-proposal-class-properties": "7.18.6",
-		"@babel/plugin-proposal-decorators": "7.18.9",
-		"@babel/preset-env": "7.18.9",
-		"@babel/preset-typescript": "7.18.6",
 		"@luckycatfactory/esbuild-graphql-loader": "3.8.1",
 		"@microsoft/microsoft-graph-types": "1.10.0",
 		"@types/analytics-node": "3.1.7",
