@@ -104,12 +104,14 @@ export class SegmentTelemetryService {
 
 		try {
 			Logger.debug(`Telemetry identify ${this._distinctId}`);
+			/*
 			this._segmentInstance.identify({
 				userId: this._distinctId,
 				anonymousId: this._anonymousId,
 				traits: props,
 			});
 			this._segmentInstance.flush();
+			*/
 		} catch (ex) {
 			Logger.error(ex);
 		}
@@ -122,10 +124,12 @@ export class SegmentTelemetryService {
 		try {
 			Logger.debug(`Telemetry setAnonymousId ${id}`);
 			this._anonymousId = id;
+			/*
 			this._segmentInstance.identify({
 				anonymousId: id,
 			});
 			this._segmentInstance.flush();
+			*/
 		} catch (ex) {
 			Logger.error(ex);
 		}
