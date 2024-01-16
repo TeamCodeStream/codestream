@@ -173,7 +173,11 @@ const SubtleRight = styled.time`
 	}
 `;
 
-type TelemetryState = "No Entities" | "No Services" | "Services" | "Not Connected";
+type TelemetryState =
+	| "state: no_entities"
+	| "state: no_services"
+	| "state: services"
+	| "Not Connected";
 
 export const ErrorRow = (props: {
 	title: string;
@@ -596,16 +600,16 @@ export const Observability = React.memo((props: Props) => {
 			)} and genericError ${JSON.stringify(genericError)}`
 		);
 		if (!hasEntities && !genericError) {
-			telemetryStateValue = "No Entities";
+			telemetryStateValue = "state: no_entities";
 		}
 		// "No Services" - There are entities but the current repo isn’t associated with one, so we’re
 		//  displaying the repo-association prompt.
 		if (hasEntities && !_isEmpty(repoForEntityAssociator)) {
-			telemetryStateValue = "No Services";
+			telemetryStateValue = "state: no_services";
 		}
 		// "Services" - We’re displaying one or more services for the current repo.
 		if (currentEntityAccounts && currentEntityAccounts?.length !== 0 && hasEntities) {
-			telemetryStateValue = "Services";
+			telemetryStateValue = "state: services";
 		}
 
 		// "Not Connected" - not connected to NR, this goes away with UID completion
@@ -614,19 +618,19 @@ export const Observability = React.memo((props: Props) => {
 		}
 
 		if (!_isEmpty(telemetryStateValue)) {
-			console.debug("o11y: O11y Rendered", telemetryStateValue);
+			console.debug("o11y: codestream/o11y rendered", telemetryStateValue);
 			const properties: AnyObject = {
-				State: telemetryStateValue,
+				meta_data: telemetryStateValue,
 			};
-			if (telemetryStateValue === "No Services") {
+			if (telemetryStateValue === "state: no_services") {
 				properties.Meta = {
-					hasEntities,
-					hasRepoForEntityAssociator: !_isEmpty(repoForEntityAssociator),
-					currentEntityAccounts: currentEntityAccounts?.length ?? -1,
-					observabilityRepoCount: observabilityRepos?.length ?? -1,
+					meta_data_2: `meta: ${hasEntities},
+					hasRepoForEntityAssociator: ${!_isEmpty(repoForEntityAssociator)},
+					currentEntityAccounts: ${currentEntityAccounts?.length ?? -1},
+					observabilityRepoCount: ${observabilityRepos?.length ?? -1}`,
 				};
 			}
-			HostApi.instance.track("O11y Rendered", properties);
+			HostApi.instance.track("codestream/o11y rendered", properties);
 		}
 	};
 
