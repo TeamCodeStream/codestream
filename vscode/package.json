@@ -18,7 +18,7 @@
 		"url": "https://github.com/TeamCodeStream/CodeStream"
 	},
 	"engines": {
-		"vscode": "^1.50.0"
+		"vscode": "^1.73.0"
 	},
 	"main": "./dist/extension",
 	"icon": "assets/images/codestream.png",
@@ -309,7 +309,7 @@
 		"agent:watch": "pushd \"../shared/agent\" && npm run watch -- --ide vscode && popd",
 		"build": "tsx esbuild.ts",
 		"bundle:ci": "npm run clean:ci && npm run bundle",
-		"bundle": "npm install --no-save && npm run webview:verify && npm run agent:bundle && tsx esbuild.ts --prod",
+		"bundle": "npm install --no-save && npm run verify:compile && npm run webview:verify && npm run agent:bundle && tsx esbuild.ts --prod",
 		"cistart": "echo 'starting tests'",
 		"cistop": "echo 'starting tests'",
 		"citest": "npm run agent:test:ci && npm run webview:test:ci",
@@ -358,7 +358,7 @@
 		"@types/node-fetch": "2.6.1",
 		"@types/sinon": "10.0.11",
 		"@types/uuid": "3.4.5",
-		"@types/vscode": "1.49.0",
+		"@types/vscode": "1.73.1",
 		"@typescript-eslint/eslint-plugin": "6.0.0",
 		"@typescript-eslint/parser": "6.0.0",
 		"@vscode/test-electron": "2.1.2",
