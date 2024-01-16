@@ -257,8 +257,8 @@ export const authenticate =
 			}
 		}
 
-		api.track("Signed In", {
-			Source: context.pendingProtocolHandlerQuery?.src,
+		api.track("codestream/user signed_in", {
+			meta_data: `source: ${context.pendingProtocolHandlerQuery?.src}`,
 		});
 
 		return dispatch(onLogin(response));
@@ -582,18 +582,19 @@ export const validateSignup =
 			const signupStatus = response.loginResponse?.signupStatus;
 
 			let trackingInfo = {
-				"Org Created": false,
-				"User Created": false,
-				"Open in IDE Flow": false,
-				Source: context.pendingProtocolHandlerQuery?.src,
+				meta_data_2: `org_created: false`,
+				meta_data_3: `user_created: false`,
+				meta_data_4: `openinide_flow: false`,
+				meta_data: `source: ${context.pendingProtocolHandlerQuery?.src}`,
 			};
 			if (signupStatus === "teamCreated") {
-				trackingInfo["Org Created"] = true;
-				trackingInfo["User Created"] = true;
+				trackingInfo["meta_data_2"] = "org_created: true";
+				trackingInfo["meta_data_3"] = "user_created true";
 			}
-			if (signupStatus === "userCreated") trackingInfo["User Created"] = true;
-			if (!_isEmpty(context.pendingProtocolHandlerUrl)) trackingInfo["Open in IDE Flow"] = true;
-			HostApi.instance.track("Signed In", trackingInfo);
+			if (signupStatus === "userCreated") trackingInfo["meta_data_3"] = "user_created: true";
+			if (!_isEmpty(context.pendingProtocolHandlerUrl))
+				trackingInfo["meta_data_4"] = "openinide_flow: true";
+			HostApi.instance.track("codestream/user signed_in", trackingInfo);
 			if (localStore.get("enablingRealTime") === true) {
 				localStore.delete("enablingRealTime");
 				HostApi.instance.track("Slack Chat Enabled");
