@@ -1107,8 +1107,6 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 			props.skip();
 			return;
 		}
-		if (derivedState.webviewFocused)
-			HostApi.instance.track("Page Viewed", { "Page Name": "Invite Teammates - Onboarding" });
 		getSuggestedInvitees();
 	});
 

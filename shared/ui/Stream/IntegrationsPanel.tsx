@@ -10,8 +10,7 @@ import { Button } from "../src/components/Button";
 import { Dialog } from "../src/components/Dialog";
 import { CodeStreamState } from "../store";
 import { getConnectedSharingTargets, isConnected } from "../store/providers/reducer";
-import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
-import { HostApi } from "../webview-api";
+import { useAppDispatch, useAppSelector } from "../utilities/hooks";
 import { closePanel } from "./actions";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { DropdownButton } from "./DropdownButton";
@@ -298,11 +297,6 @@ export const IntegrationsPanel = () => {
 			return elements;
 		});
 	};
-
-	useDidMount(() => {
-		if (derivedState.webviewFocused)
-			HostApi.instance.track("Page Viewed", { "Page Name": "Integrations" });
-	});
 
 	if (propsForPrePRProviderInfoModal) {
 		return <PrePRProviderInfoModal {...propsForPrePRProviderInfoModal} />;
