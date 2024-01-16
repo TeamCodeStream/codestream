@@ -268,7 +268,7 @@ export class SidebarController implements Disposable {
 		}
 	}
 
-	private onVisibleEditorsChanged(e: TextEditor[]) {
+	private onVisibleEditorsChanged(e: readonly TextEditor[]) {
 		if (this._sidebar) {
 			this._sidebar.notify(HostDidChangeVisibleEditorsNotificationType, { count: e.length });
 		}

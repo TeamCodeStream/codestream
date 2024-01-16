@@ -38,7 +38,7 @@
 		"node-fetch": "2.6.7",
 		"patch-package": "7.0.2",
 		"typescript": "5.3.3",
-		"vscode-languageclient": "8.0.2",
+		"vscode-languageclient": "5.2.1",
 		"vscode-languageserver-protocol": "3.14.1"
 	},
 	"dependencies": {

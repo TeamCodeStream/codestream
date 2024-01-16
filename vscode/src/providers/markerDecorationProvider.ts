@@ -278,7 +278,7 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 		this._markersCache.delete(e.uri.toString());
 	}
 
-	private async onEditorVisibilityChanged(e: TextEditor[]) {
+	private async onEditorVisibilityChanged(e: readonly TextEditor[]) {
 		this.applyToApplicableVisibleEditors(e);
 	}
 
