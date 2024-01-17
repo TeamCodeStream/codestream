@@ -509,11 +509,11 @@ export const api =
 			// );
 			logError(error, { providerId, pullRequestId, method, message: errorString });
 
-			HostApi.instance.track("ErrorGroup Error", {
-				Host: providerId,
-				Operation: method,
-				Error: errorString,
-				IsOAuthError: errorString && errorString.indexOf("OAuth App access restrictions") > -1,
+			HostApi.instance.track("codestream/error_group repo_association_failed", {
+				meta_data: `error: ${errorString}`,
+				meta_data_2: `oauth_error: ${
+					errorString && errorString.indexOf("OAuth App access restrictions") > -1
+				}`,
 			});
 			return {
 				error: errorString,
