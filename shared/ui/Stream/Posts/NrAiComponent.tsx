@@ -8,6 +8,8 @@ import { PullRequestPatch } from "@codestream/webview/Stream/PullRequestPatch";
 import styled from "styled-components";
 import { Button } from "@codestream/webview/src/components/Button";
 import { reconstitutePatch } from "@codestream/webview/Stream/Posts/patchHelper";
+import { useAppSelector } from "@codestream/webview/utilities/hooks";
+import { isGrokStreamLoading } from "@codestream/webview/store/posts/reducer";
 
 export const DiffSection = styled.div`
 	margin: 10px 0;
@@ -38,7 +40,10 @@ function Markdown(props: { text: string }) {
 }
 
 export function NrAiComponent(props: NrAiComponentProps) {
-	const showGrokLoader = props.post.forGrok && !props.postText;
+	const isGrokLoading = useAppSelector(isGrokStreamLoading);
+	const hasIntro = props.post.parts?.intro && props.post.parts.intro.length > 0;
+	const showGrokLoader = !hasIntro && isGrokLoading;
+	const showApplyFix = !!props.post.parts?.codeFix && isGrokLoading === false;
 	console.log("NrAiComponent file", props.file);
 
 	const applyFix = () => {
@@ -55,7 +60,7 @@ export function NrAiComponent(props: NrAiComponentProps) {
 	return (
 		<>
 			{showGrokLoader && <GrokLoading />}
-			<Markdown text={parts?.intro ?? ""} />
+			{hasIntro && <Markdown text={parts?.intro ?? ""} />}
 			{props.file && patch && (
 				<DiffSection>
 					<PullRequestPatch
@@ -65,7 +70,7 @@ export function NrAiComponent(props: NrAiComponentProps) {
 						canComment={false}
 					/>
 					<ButtonRow>
-						<Button onClick={() => applyFix()}>Apply Fix</Button>
+						{showApplyFix && <Button onClick={() => applyFix()}>Apply Fix</Button>}
 					</ButtonRow>
 				</DiffSection>
 			)}

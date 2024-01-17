@@ -35,7 +35,17 @@ export async function copySymbol(
 				return {
 					success: true,
 					text: theText,
-					range: symbol.range
+					// just assigning the range direcly results in an array of Positions instead of a start / end Position - not sure why?????
+					range: {
+						start: {
+							line: symbol.range.start.line,
+							character: symbol.range.start.character
+						},
+						end: {
+							line: symbol.range.end.line,
+							character: symbol.range.end.character
+						}
+					}
 				};
 			}
 		}
