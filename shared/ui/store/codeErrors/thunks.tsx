@@ -276,9 +276,10 @@ export const openErrorGroup =
 		}
 
 		if (message) {
-			HostApi.instance.track("Error Roadblocked", {
-				"Error Group ID": errorGroupGuid,
-				"NR Account ID": response && response.accountId,
+			HostApi.instance.track("codestream/errors/error_group roadblocked", {
+				meta_data: `error_group_id: ${errorGroupGuid}`,
+				account_id: response && response.accountId,
+				entity_guid: "",
 			});
 			confirmPopup({
 				title: "Error Can't Be Opened",
