@@ -650,15 +650,17 @@ export const Observability = React.memo((props: Props) => {
 				observabilityAnomalies.responseTime.length > 0;
 
 			const event = {
-				"Errors Listed": !_isEmpty(filteredCurrentRepoErrors) || !_isEmpty(filteredAssignments),
-				"SLOs Listed": hasServiceLevelObjectives,
-				"CLM Anomalies Listed": hasAnomalies,
-				"Vulnerabilities Listed": isVulnPresent,
+				meta_data: `errors_listed ${
+					!_isEmpty(filteredCurrentRepoErrors) || !_isEmpty(filteredAssignments)
+				}`,
+				meta_data_2: `slos_listed: ${hasServiceLevelObjectives}`,
+				meta_data_4: `anomalies_listed: ${hasAnomalies}`,
+				meta_data_3: `vulnerabilities_listed: ${isVulnPresent}`,
 			};
 
-			console.debug(`o11y: NR Service Clicked`, event);
+			console.debug(`o11y: codestream/service rendered`, event);
 
-			HostApi.instance.track("NR Service Clicked", event);
+			HostApi.instance.track("codestream/service rendered", event);
 			setPendingServiceClickedTelemetryCall(false);
 		} catch (ex) {
 			console.error(ex);
