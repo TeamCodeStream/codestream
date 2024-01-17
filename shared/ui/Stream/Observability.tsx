@@ -797,6 +797,7 @@ export const Observability = React.memo((props: Props) => {
 			if (response && response.isSupported === false) {
 				setAnomalyDetectionSupported(false);
 			} else {
+				setAnomalyDetectionSupported(true);
 				setObservabilityAnomalies(response);
 				dispatch(setRefreshAnomalies(false));
 			}
