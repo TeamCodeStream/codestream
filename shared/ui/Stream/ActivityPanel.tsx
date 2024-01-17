@@ -662,7 +662,7 @@ export const ActivityPanel = () => {
 											return;
 										dispatch(
 											setCurrentCodeError(record.id, {
-												openType: "Activity Feed",
+												openType: "activity_feed",
 											})
 										);
 									}}

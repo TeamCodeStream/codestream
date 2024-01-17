@@ -652,7 +652,7 @@ function listenForEvents(store) {
 								relatedRepos: response?.relatedRepos,
 								pendingEntityId: definedQuery.query.entityId,
 								pendingErrorGroupGuid: definedQuery.query.errorGroupGuid,
-								openType: "Open in IDE Flow",
+								openType: "open_in_ide",
 								environment: definedQuery.query.env,
 								stackSourceMap: response?.stackSourceMap,
 							})

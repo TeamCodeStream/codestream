@@ -610,19 +610,23 @@ export function CodeErrorNav(props: Props) {
 			setIsResolved(true);
 
 			let trackingData = {
-				"Error Group ID": errorGroupResult?.errorGroup?.guid || codeError?.objectInfo?.entityId,
-				"NR Account ID": errorGroupResult?.accountId || codeError?.objectInfo?.accountId || "0",
-				"Entry Point": derivedState.currentCodeErrorData?.openType || "Open in IDE Flow",
-				"Stack Trace": !!(stackInfo && !stackInfo.error),
+				meta_data: `error_group_id: ${
+					errorGroupResult?.errorGroup?.guid || codeError?.objectInfo?.entityId
+				}`,
+				entity_guid: entityIdToUse,
+				account_id: errorGroupResult?.accountId || codeError?.objectInfo?.accountId || "0",
+				meta_data_2: `entry_point: ${derivedState.currentCodeErrorData?.openType || "open_in_ide"}`,
+				meta_data_3: `stack_trace: ${!!(stackInfo && !stackInfo.error)}`,
+				meta_data_4: `build_sha: missing`,
 			};
 			if (trackingData["Stack Trace"]) {
-				trackingData["Build ref"] = !refToUse
-					? "Missing"
+				trackingData["meta_data_4"] = !refToUse
+					? "build_sha: missing"
 					: stackInfo?.warning
-					? "Warning"
-					: "Populated";
+					? "build_sha: warning"
+					: "build_sha: populated";
 			}
-			HostApi.instance.track("Error Opened", trackingData);
+			HostApi.instance.track("codestream/errors/error_group displayed", trackingData);
 		} catch (ex) {
 			console.warn(ex);
 			const title = "Unexpected Error";

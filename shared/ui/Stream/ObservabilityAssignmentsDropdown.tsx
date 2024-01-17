@@ -100,7 +100,7 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 															pendingEntityId: response.entityId,
 															occurrenceId: response.occurrenceId,
 															pendingErrorGroupGuid: _.errorGroupGuid,
-															openType: "Observability Section",
+															openType: "observability_section",
 															remote: _?.remote || undefined,
 															stackSourceMap: response?.stackSourceMap,
 															domain: props.domain,

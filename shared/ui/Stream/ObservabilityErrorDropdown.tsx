@@ -139,7 +139,7 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 															pendingEntityId: response?.entityId || err.entityId,
 															occurrenceId: response?.occurrenceId || err.occurrenceId,
 															pendingErrorGroupGuid: err.errorGroupGuid,
-															openType: "Observability Section",
+															openType: "observability_section",
 															remote: err?.remote || undefined,
 															stackSourceMap: response?.stackSourceMap,
 															domain: props?.domain,

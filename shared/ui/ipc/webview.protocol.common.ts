@@ -104,7 +104,7 @@ export interface CodeErrorData {
 	occurrenceId?: string;
 	lineIndex?: number;
 	timestamp?: number;
-	openType?: "Open in IDE Flow" | "Observability Section" | "Activity Feed";
+	openType?: "open_in_ide" | "observability_section" | "activity_feed";
 	multipleRepos?: boolean;
 	claimWhenConnected?: boolean;
 }
