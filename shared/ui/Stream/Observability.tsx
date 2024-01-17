@@ -389,8 +389,8 @@ export const Observability = React.memo((props: Props) => {
 		} catch (ex) {
 			setLoadingAssignments(false);
 			if (ex.code === ERROR_NR_INSUFFICIENT_API_KEY) {
-				HostApi.instance.track("NR Access Denied", {
-					Query: "GetObservabilityErrorAssignments",
+				HostApi.instance.track("codestream/o11y fetch_failed", {
+					meta_data: `query: GetObservabilityErrorAssignments`,
 				});
 				setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
 			} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
@@ -443,8 +443,8 @@ export const Observability = React.memo((props: Props) => {
 				}
 			} catch (err) {
 				if (err.code === ERROR_NR_INSUFFICIENT_API_KEY) {
-					HostApi.instance.track("NR Access Denied", {
-						Query: "GetObservabilityErrors",
+					HostApi.instance.track("codestream/o11y fetch_failed", {
+						meta_data: `query: GetObservabilityErrors`,
 					});
 					setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
 				} else if (err.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
@@ -718,8 +718,8 @@ export const Observability = React.memo((props: Props) => {
 		} catch (ex) {
 			console.debug(`o11y: fetchObservabilityRepos nope`, ex);
 			if (ex.code === ERROR_NR_INSUFFICIENT_API_KEY) {
-				HostApi.instance.track("NR Access Denied", {
-					Query: "GetObservabilityRepos",
+				HostApi.instance.track("codestream/o11y fetch_failed", {
+					meta_data: `query: GetObservabilityRepos`,
 				});
 				setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
 			} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
