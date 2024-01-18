@@ -137,6 +137,16 @@ export const ObservabilityAnomalyPanel = () => {
 				timeseriesGroup: "1 day",
 			});
 
+			response.goldenMetrics?.sort((a, b) => {
+				const aIsAnomaly =
+					derivedState.currentObservabilityAnomaly.chartHeaderTexts[a.title || ""] != null;
+				const bIsAnomaly =
+					derivedState.currentObservabilityAnomaly.chartHeaderTexts[b.title || ""] != null;
+				if (aIsAnomaly) return -1;
+				if (bIsAnomaly) return 1;
+				return 0;
+			});
+
 			response.goldenMetrics?.forEach(gm => {
 				gm.result.forEach(r => {
 					if (r.endTimeSeconds) {
