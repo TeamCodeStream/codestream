@@ -87,8 +87,7 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 
 	// Avoid circular dependency between NewRelicGraphqlClient and NrOrgProvider
 	newRelicGraphqlClient.addOnGraphqlClientConnected(async (newRelicUserId: number) => {
-		const { orgId } = await nrOrgProvider.updateOrgId({ teamId: session.teamId });
-		await session.addNewRelicSuperProps(newRelicUserId, orgId);
+		await nrOrgProvider.updateOrgId({ teamId: session.teamId });
 	});
 
 	const nrHttpClient = new HttpClient(newRelicProviderConfig, session, newRelicProviderInfo);

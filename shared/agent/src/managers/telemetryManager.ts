@@ -39,12 +39,6 @@ export class TelemetryManager {
 		this._providers.forEach(provider => provider.addSuperProps(props));
 	}
 
-	setFirstSessionProps(firstSessionStartedAt: number, firstSessionTimesOutAfter: number) {
-		this._providers.forEach(provider =>
-			provider.setFirstSessionProps(firstSessionStartedAt, firstSessionTimesOutAfter)
-		);
-	}
-
 	ready(): Promise<void[]> {
 		return Promise.all(
 			this._providers.map(provider => {

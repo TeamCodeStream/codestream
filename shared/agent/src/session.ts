@@ -1584,80 +1584,35 @@ export class CodeStreamSession {
 		// Set super props
 		this._telemetryData.hasCreatedPost = user.totalPosts > 0;
 
+		const metaData: { [key: string]: any } = {
+			codestream_first_signin: new Date(user.createdAt!).toISOString(),
+			codestream_endpoint: this.versionInfo.ide.name,
+			codestream_endpoint_detail: this.versionInfo.ide.detail,
+			codestream_ide_version: this.versionInfo.ide.version,
+			codestream_extension_version: this.versionInfo.extension.versionFormatted,
+		};
+		if (this.environmentName) {
+			metaData["codestream_region"] = this.environmentName;
+		}
+
 		const props: { [key: string]: any } = {
-			$email: user.email,
-			name: user.fullName,
-			"Team ID": this._teamId,
-			//"Join Method": user.joinMethod,
-			//"Last Invite Type": user.lastInviteType,
-			"Plugin Version": this.versionInfo.extension.versionFormatted,
-			Endpoint: this.versionInfo.ide.name,
-			"Endpoint Detail": this.versionInfo.ide.detail,
-			"IDE Version": this.versionInfo.ide.version,
-			//Deployment: this.isOnPrem ? "OnPrem" : "Cloud",
-			Country: user.countryCode,
-			"NR User ID": user.nrUserId,
-			"NR Tier": user.nrUserInfo && user.nrUserInfo.userTier,
+			user_id: user.nrUserId,
+			platform: "codestream",
+			path: "N/A (codestream)",
+			section: "N/A (codestream)",
 		};
 
-		if (team != null && companies != null) {
-			const company = companies.find(c => c.id === team.companyId);
-			props["Company ID"] = team.companyId;
-			props["Team Created Date"] = new Date(team.createdAt!).toISOString();
-			//props["Team Name"] = team.name;
-			if (company) {
-				props["Team Size"] = company.memberCount || team.memberIds.length;
-				//props["Plan"] = company.plan;
-				props["Reporting Group"] = company.reportingGroup;
-				props["Company Name"] = company.name;
-				//props["company"] = {
-				//	id: company.id,
-				//	name: company.name,
-				//	plan: company.plan,
-				//	created_at: new Date(company.createdAt!).toISOString(),
-				//};
-				//if (company.trialStartDate && company.trialEndDate) {
-				//	props["company"]["trialStart_at"] = new Date(company.trialStartDate).toISOString();
-				//	props["company"]["trialEnd_at"] = new Date(company.trialEndDate).toISOString();
-				//}
-
-				if (company.testGroups) {
-					props["AB Test"] = Object.keys(company.testGroups).map(
-						key => `${key}|${company.testGroups![key]}`
-					);
-				}
-				//props["CodeStream Only"] = !!company.codestreamOnly;
-				//props["Org Origination"] = company.orgOrigination || "";
-				props["NR Organization ID"] = company.linkedNROrgId || "";
-			}
+		if (team) {
+			props["codestream_organization_id"] = team.companyId;
+			props["codestream_organization_created"] = new Date(team.createdAt!).toISOString();
 		}
 
-		if (user.registeredAt) {
-			props.$created = new Date(user.registeredAt).toISOString();
-		}
-
-		//if (user.lastPostCreatedAt) {
-		//	props["Date of Last Post"] = new Date(user.lastPostCreatedAt).toISOString();
-		//}
-
-		props["First Session"] =
-			!!user.firstSessionStartedAt &&
-			user.firstSessionStartedAt <= Date.now() + FIRST_SESSION_TIMEOUT;
-
-		let userId = this._nrUserId || user.nrUserId; //this._codestreamUserId || user.id;
-
-		const environmentName = this.environmentName;
-		if (environmentName) {
-			props["Region"] = environmentName;
-		}
+		props["meta_data_15"] = JSON.stringify(metaData);
 
 		const { telemetry } = Container.instance();
 		await telemetry.ready();
-		telemetry.identify(userId.toString(), props);
+		telemetry.identify(user.nrUserId.toString(), props);
 		telemetry.setSuperProps(props);
-		if (user.firstSessionStartedAt !== undefined) {
-			telemetry.setFirstSessionProps(user.firstSessionStartedAt, FIRST_SESSION_TIMEOUT);
-		}
 	}
 
 	@log()
@@ -1666,13 +1621,6 @@ export class CodeStreamSession {
 		await telemetry.ready();
 		telemetry.identify((this._nrUserId || "").toString(), props);
 		telemetry.addSuperProps(props);
-	}
-
-	async addNewRelicSuperProps(userId: number, orgId?: number) {
-		return this.addSuperProps({
-			"NR User ID": userId,
-			"NR Organization ID": orgId,
-		});
 	}
 
 	@log()
