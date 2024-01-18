@@ -1609,6 +1609,12 @@ export class CodeStreamSession {
 		};
 
 		if (team) {
+			if (companies) {
+				const company = companies.find(c => c.id === team.companyId);
+				if (company) {
+					props["codestream_nr_organization_id"] = company.linkedNROrgId;
+				}
+			}
 			props["codestream_organization_id"] = team.companyId;
 			props["codestream_organization_created"] = new Date(team.createdAt!).toISOString();
 		}
