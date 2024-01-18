@@ -127,6 +127,7 @@ describe("newRelicProvider", () => {
 				createdAt: 0,
 				modifiedAt: 0,
 				id: "",
+				nrUserId: 0,
 				creatorId: "",
 			},
 			{

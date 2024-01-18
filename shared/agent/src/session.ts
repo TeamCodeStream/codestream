@@ -749,6 +749,11 @@ export class CodeStreamSession {
 		return this._codestreamUserId!;
 	}
 
+	private _nrUserId: number | undefined;
+	get nrUserId() {
+		return this._nrUserId;
+	}
+
 	private _email: string | undefined;
 	get email() {
 		return this._email!;
@@ -1186,6 +1191,7 @@ export class CodeStreamSession {
 		this.api.setAccessToken(token.value, response.accessTokenInfo);
 		this._teamId = (this._options as any).teamId = token.teamId;
 		this._codestreamUserId = response.user.id;
+		this._nrUserId = response.user.nrUserId;
 		this._userId = response.user.id;
 		this._email = response.user.email;
 
@@ -1644,7 +1650,7 @@ export class CodeStreamSession {
 			!!user.firstSessionStartedAt &&
 			user.firstSessionStartedAt <= Date.now() + FIRST_SESSION_TIMEOUT;
 
-		let userId = this._codestreamUserId || user.id;
+		let userId = this._nrUserId || user.nrUserId; //this._codestreamUserId || user.id;
 
 		const environmentName = this.environmentName;
 		if (environmentName) {
@@ -1653,7 +1659,7 @@ export class CodeStreamSession {
 
 		const { telemetry } = Container.instance();
 		await telemetry.ready();
-		telemetry.identify(userId, props);
+		telemetry.identify(userId.toString(), props);
 		telemetry.setSuperProps(props);
 		if (user.firstSessionStartedAt !== undefined) {
 			telemetry.setFirstSessionProps(user.firstSessionStartedAt, FIRST_SESSION_TIMEOUT);
@@ -1664,7 +1670,7 @@ export class CodeStreamSession {
 	async addSuperProps(props: { [key: string]: any }) {
 		const { telemetry } = Container.instance();
 		await telemetry.ready();
-		telemetry.identify(this._codestreamUserId!, props);
+		telemetry.identify((this._nrUserId || "").toString(), props);
 		telemetry.addSuperProps(props);
 	}
 

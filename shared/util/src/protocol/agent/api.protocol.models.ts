@@ -750,7 +750,7 @@ export interface CSUser extends CSEntity {
 	firstSessionStartedAt?: number;
 	hasGitLens?: boolean;
 	countryCode?: string;
-	nrUserId?: number;
+	nrUserId: number;
 }
 
 export interface CSLastReads {
