@@ -334,13 +334,18 @@ namespace CodeStream.VisualStudio.Shared.Services
 			);
 		}
 
-		public Task TrackAsync(string eventName, TelemetryProperties properties)
+		public Task TrackAsync(string eventName, TelemetryProperties properties, string event_type)
 		{
 			try
 			{
 				return SendAsync<JToken>(
 					"codestream/telemetry",
-					new TelemetryRequest { EventName = eventName, Properties = properties }
+					new TelemetryRequest
+					{
+						EventName = eventName,
+						Properties = properties,
+						EventType = event_type
+					}
 				);
 			}
 			catch (Exception ex)

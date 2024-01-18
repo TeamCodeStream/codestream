@@ -820,6 +820,9 @@ namespace CodeStream.VisualStudio.Shared.Models
 
 		[JsonProperty("properties", NullValueHandling = NullValueHandling.Ignore)]
 		public TelemetryProperties Properties { get; set; }
+
+		[JsonProperty("event_type", NullValueHandling = NullValueHandling.Ignore)]
+		public string EventType { get; set; }
 	}
 
 	public class FetchCodemarksRequest
