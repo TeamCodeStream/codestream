@@ -152,6 +152,8 @@ export class NRManager {
 				telemetry.track({
 					eventName: "codestream/errors/error_group error_parsing_stack_trace",
 					properties: {
+						entity_guid: errorGroupGuid ? errorGroupGuid : "",
+						account_id: parsed?.accountId ? parsed.accountId : "",
 						meta_data: `error_group_id: ${errorGroupGuid!}`,
 						meta_data_2: `trace_id: ${parsed?.accountId || 0}`,
 					},
