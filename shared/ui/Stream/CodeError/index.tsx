@@ -319,11 +319,11 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 		if (!props.errorGroup) return;
 
 		const _setAssignee = async (type: AssigneeType) => {
-			HostApi.instance.track("Error Assigned", {
-				"Error Group ID": props.errorGroup?.guid,
-				"NR Account ID": props.errorGroup?.accountId,
-				Assignment: props.errorGroup?.assignee ? "Change" : "New",
-				"Assignee Type": type,
+			HostApi.instance.track("codestream/errors/error_group assigned", {
+				meta_data: `error_group_id: ${props.errorGroup?.guid}`,
+				account_id: props.errorGroup?.accountId,
+				entity_guid: props.errorGroup?.entityGuid,
+				event_type: "response",
 			});
 
 			setIsAssigneeChanging(true);
