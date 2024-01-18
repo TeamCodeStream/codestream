@@ -1219,6 +1219,7 @@ export const Observability = React.memo((props: Props) => {
 																const showErrors = ea?.domain
 																	? ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS.includes(ea.domain)
 																	: false;
+
 																return (
 																	<>
 																		<PaneNodeName
@@ -1409,9 +1410,20 @@ export const Observability = React.memo((props: Props) => {
 																</span>
 															}
 															onSuccess={async e => {
-																HostApi.instance.track("NR Entity Association", {
-																	"Repo ID": repoForEntityAssociator.repoId,
-																});
+																HostApi.instance.track(
+																	"codestream/entity associated_with_repo",
+																	{
+																		entity_guid: e.entityGuid ? e.entityGuid : "",
+																		account_id: currentEntityAccounts?.find(
+																			_ => _.entityGuid === e.entityGuid
+																		)
+																			? currentEntityAccounts?.find(
+																					_ => _.entityGuid === e.entityGuid
+																			  )
+																			: "",
+																	},
+																	"response"
+																);
 
 																_useDidMount(true);
 															}}

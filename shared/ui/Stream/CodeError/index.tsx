@@ -319,12 +319,15 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 		if (!props.errorGroup) return;
 
 		const _setAssignee = async (type: AssigneeType) => {
-			HostApi.instance.track("codestream/errors/error_group assigned", {
-				meta_data: `error_group_id: ${props.errorGroup?.guid}`,
-				account_id: props.errorGroup?.accountId,
-				entity_guid: props.errorGroup?.entityGuid,
-				event_type: "response",
-			});
+			HostApi.instance.track(
+				"codestream/errors/error_group assigned",
+				{
+					meta_data: `error_group_id: ${props.errorGroup?.guid}`,
+					account_id: props.errorGroup?.accountId,
+					entity_guid: props.errorGroup?.entityGuid,
+				},
+				"response"
+			);
 
 			setIsAssigneeChanging(true);
 			await dispatch(upgradePendingCodeError(props.codeError.id, "Assignee Change"));
@@ -436,13 +439,16 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 								notify();
 								setIsStateChanging(false);
 
-								HostApi.instance.track("codestream/error_group status_changed", {
-									account_id: props.errorGroup?.accountId ? props.errorGroup.accountId : "",
-									entity_guid: props.errorGroup?.entityGuid ? props.errorGroup.entityGuid : "",
-									meta_data: `error_group_id: ${props.errorGroup?.guid}`,
-									meta_data_2: `error_status: ${STATES_TO_ACTION_STRINGS[_]}`,
-									event_type: "response",
-								});
+								HostApi.instance.track(
+									"codestream/error_group status_changed",
+									{
+										account_id: props.errorGroup?.accountId ? props.errorGroup.accountId : "",
+										entity_guid: props.errorGroup?.entityGuid ? props.errorGroup.entityGuid : "",
+										meta_data: `error_group_id: ${props.errorGroup?.guid}`,
+										meta_data_2: `error_status: ${STATES_TO_ACTION_STRINGS[_]}`,
+									},
+									"response"
+								);
 							},
 						};
 					}) as DropdownButtonItems[]
