@@ -368,20 +368,20 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 					key: "documentation",
 					action: () => openUrl("https://docs.newrelic.com/docs/codestream"),
 				},
-				{
-					label: "Keybindings",
-					key: "keybindings",
-					action: () => dispatch(openModal(WebviewModals.Keybindings)),
-				},
+				//{
+				//	label: "Keybindings",
+				//	key: "keybindings",
+				//	action: () => dispatch(openModal(WebviewModals.Keybindings)),
+				//},
 				// {
 				// 	label: "Getting Started Guide",
 				// 	key: "getting-started",
 				// 	action: () => dispatch(openPanel(WebviewPanels.GettingStarted))
 				// },
 				{
-					label: "Report an Issue",
+					label: "Support",
 					key: "issue",
-					action: () => openUrl("https://github.com/TeamCodeStream/codestream/issues"),
+					action: () => openUrl("https://one.newrelic.com/help-xp"),
 				},
 			],
 		},
