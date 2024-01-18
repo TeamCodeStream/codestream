@@ -304,10 +304,11 @@ export class HostApi extends EventEmitter {
 		});
 	}
 
-	track(eventName: string, properties?: AnyObject) {
+	track(eventName: string, properties?: AnyObject, event_type?: string) {
 		this.send(TelemetryRequestType, {
 			eventName,
 			properties,
+			event_type,
 		});
 	}
 }

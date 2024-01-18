@@ -525,7 +525,10 @@ function trackPostCreation(
 							"Parent ID": request.codemark.reviewId,
 							"Parent Type": "Review",
 						};
-						telemetry.track({ eventName: "Reply Created", properties: properties });
+						telemetry.track({
+							eventName: "Reply Created",
+							properties: properties,
+						});
 					} else if (request.codemark) {
 						// this is a standard codemark -- note its event name includes "created" rather than "reply"
 						const { markers = [] } = request.codemark;
@@ -553,7 +556,10 @@ function trackPostCreation(
 								}
 							}
 						}
-						telemetry.track({ eventName: "Codemark Created", properties: codemarkProperties });
+						telemetry.track({
+							eventName: "Codemark Created",
+							properties: codemarkProperties,
+						});
 					} else if (request.parentPostId) {
 						const parentPost = await SessionContainer.instance().posts.getById(
 							request.parentPostId
@@ -569,7 +575,10 @@ function trackPostCreation(
 										"Parent ID": parentPost.codemarkId,
 										"Parent Type": "Review.Codemark",
 									};
-									telemetry.track({ eventName: "Reply Created", properties: postProperties });
+									telemetry.track({
+										eventName: "Reply Created",
+										properties: postProperties,
+									});
 								}
 								if (parentPost.codemarkId && grandParentPost && grandParentPost.codeErrorId) {
 									// reply to a codemark in a code error
@@ -577,21 +586,30 @@ function trackPostCreation(
 										"Parent ID": parentPost.codemarkId,
 										"Parent Type": "Error.Codemark",
 									};
-									telemetry.track({ eventName: "Reply Created", properties: postProperties });
+									telemetry.track({
+										eventName: "Reply Created",
+										properties: postProperties,
+									});
 								} else if (grandParentPost && grandParentPost.reviewId) {
 									// reply to a reply in a review
 									const postProperties = {
 										"Parent ID": grandParentPost.reviewId,
 										"Parent Type": "Review.Reply",
 									};
-									telemetry.track({ eventName: "Reply Created", properties: postProperties });
+									telemetry.track({
+										eventName: "Reply Created",
+										properties: postProperties,
+									});
 								} else if (grandParentPost && grandParentPost.codeErrorId) {
 									// reply to a reply in a code error
 									const postProperties = {
 										"Parent ID": grandParentPost.codeErrorId,
 										"Parent Type": "Error.Reply",
 									};
-									telemetry.track({ eventName: "Reply Created", properties: postProperties });
+									telemetry.track({
+										eventName: "Reply Created",
+										properties: postProperties,
+									});
 								}
 							} else if (parentPost.reviewId) {
 								// reply to a review
@@ -599,14 +617,20 @@ function trackPostCreation(
 									"Parent ID": parentPost.reviewId,
 									"Parent Type": "Review",
 								};
-								telemetry.track({ eventName: "Reply Created", properties: postProperties });
+								telemetry.track({
+									eventName: "Reply Created",
+									properties: postProperties,
+								});
 							} else if (parentPost.codeErrorId) {
 								// reply to a code error
 								const postProperties = {
 									"Parent ID": parentPost.codeErrorId,
 									"Parent Type": "Error",
 								};
-								telemetry.track({ eventName: "Reply Created", properties: postProperties });
+								telemetry.track({
+									eventName: "Reply Created",
+									properties: postProperties,
+								});
 							} else if (parentPost.codemarkId) {
 								// reply to a standard codemark
 								const codemark = await SessionContainer.instance().codemarks.getById(
@@ -617,7 +641,10 @@ function trackPostCreation(
 									"Parent Type": "Codemark",
 									Following: (codemark.followerIds || []).includes(session.userId),
 								};
-								telemetry.track({ eventName: "Reply Created", properties: postProperties });
+								telemetry.track({
+									eventName: "Reply Created",
+									properties: postProperties,
+								});
 							}
 						}
 					}

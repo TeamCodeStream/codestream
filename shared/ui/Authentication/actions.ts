@@ -257,9 +257,13 @@ export const authenticate =
 			}
 		}
 
-		api.track("codestream/user signed_in", {
-			meta_data: `source: ${context.pendingProtocolHandlerQuery?.src}`,
-		});
+		api.track(
+			"codestream/user signed_in",
+			{
+				meta_data: `source: ${context.pendingProtocolHandlerQuery?.src}`,
+			},
+			"response"
+		);
 
 		return dispatch(onLogin(response));
 	};
@@ -594,7 +598,7 @@ export const validateSignup =
 			if (signupStatus === "userCreated") trackingInfo["meta_data_3"] = "user_created: true";
 			if (!_isEmpty(context.pendingProtocolHandlerUrl))
 				trackingInfo["meta_data_4"] = "openinide_flow: true";
-			HostApi.instance.track("codestream/user signed_in", trackingInfo);
+			HostApi.instance.track("codestream/user signed_in", trackingInfo, "response");
 			if (localStore.get("enablingRealTime") === true) {
 				localStore.delete("enablingRealTime");
 				HostApi.instance.track("Slack Chat Enabled");

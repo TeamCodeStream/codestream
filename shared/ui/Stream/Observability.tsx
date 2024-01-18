@@ -389,9 +389,13 @@ export const Observability = React.memo((props: Props) => {
 		} catch (ex) {
 			setLoadingAssignments(false);
 			if (ex.code === ERROR_NR_INSUFFICIENT_API_KEY) {
-				HostApi.instance.track("codestream/o11y fetch_failed", {
-					meta_data: `query: GetObservabilityErrorAssignments`,
-				});
+				HostApi.instance.track(
+					"codestream/o11y fetch_failed",
+					{
+						meta_data: `query: GetObservabilityErrorAssignments`,
+					},
+					"response"
+				);
 				setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
 			} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
 				setNoErrorsAccess(ex.message || GENERIC_ERROR_MESSAGE);
@@ -443,9 +447,13 @@ export const Observability = React.memo((props: Props) => {
 				}
 			} catch (err) {
 				if (err.code === ERROR_NR_INSUFFICIENT_API_KEY) {
-					HostApi.instance.track("codestream/o11y fetch_failed", {
-						meta_data: `query: GetObservabilityErrors`,
-					});
+					HostApi.instance.track(
+						"codestream/o11y fetch_failed",
+						{
+							meta_data: `query: GetObservabilityErrors`,
+						},
+						"response"
+					);
 					setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
 				} else if (err.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
 					setNoErrorsAccess(err.message || GENERIC_ERROR_MESSAGE);
@@ -630,7 +638,7 @@ export const Observability = React.memo((props: Props) => {
 					observabilityRepoCount: ${observabilityRepos?.length ?? -1}`,
 				};
 			}
-			HostApi.instance.track("codestream/o11y rendered", properties);
+			HostApi.instance.track("codestream/o11y rendered", properties, "state_load");
 		}
 	};
 
@@ -649,7 +657,13 @@ export const Observability = React.memo((props: Props) => {
 				observabilityAnomalies.errorRate.length > 0 ||
 				observabilityAnomalies.responseTime.length > 0;
 
+			const entity = derivedState.observabilityRepoEntities.find(_ => _.repoId === currentRepoId);
+
+			const account = currentEntityAccounts?.find(_ => _.entityGuid === entity?.entityGuid);
+
 			const event = {
+				entity_guid: entity?.entityGuid ? entity?.entityGuid : "",
+				account_id: account?.accountId ? account.accountId : null,
 				meta_data: `errors_listed ${
 					!_isEmpty(filteredCurrentRepoErrors) || !_isEmpty(filteredAssignments)
 				}`,
@@ -660,7 +674,7 @@ export const Observability = React.memo((props: Props) => {
 
 			console.debug(`o11y: codestream/service rendered`, event);
 
-			HostApi.instance.track("codestream/service rendered", event);
+			HostApi.instance.track("codestream/service rendered", event, "state_load");
 			setPendingServiceClickedTelemetryCall(false);
 		} catch (ex) {
 			console.error(ex);
@@ -718,9 +732,13 @@ export const Observability = React.memo((props: Props) => {
 		} catch (ex) {
 			console.debug(`o11y: fetchObservabilityRepos nope`, ex);
 			if (ex.code === ERROR_NR_INSUFFICIENT_API_KEY) {
-				HostApi.instance.track("codestream/o11y fetch_failed", {
-					meta_data: `query: GetObservabilityRepos`,
-				});
+				HostApi.instance.track(
+					"codestream/o11y fetch_failed",
+					{
+						meta_data: `query: GetObservabilityRepos`,
+					},
+					"response"
+				);
 				setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
 			} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
 				setNoErrorsAccess(ex.message || GENERIC_ERROR_MESSAGE);

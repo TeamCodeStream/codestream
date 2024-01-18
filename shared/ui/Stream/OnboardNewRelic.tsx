@@ -330,8 +330,8 @@ export const OnboardNewRelic = React.memo(function OnboardNewRelic() {
 									Instrument your app
 								</h1>
 								<p className="explainer">
-									New Relic's APM agent helps developers make data-driven decisions. Improve
-									system performance, and your customers' experience.
+									New Relic's APM agent helps developers make data-driven decisions. Improve system
+									performance, and your customers' experience.
 								</p>
 								<CenterRow>
 									<Button variant="new-relic" size="xl" onClick={() => setStep(1)}>

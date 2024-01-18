@@ -150,12 +150,12 @@ export class NRManager {
 				const parsed = parseId(errorGroupGuid || "");
 
 				telemetry.track({
-					eventName: "Error Parsing Trace",
+					eventName: "codestream/errors/error_group error_parsing_stack_trace",
 					properties: {
-						"Error Group ID": errorGroupGuid!,
-						"NR Account ID": parsed?.accountId || 0,
-						Language: lang || "Not Detected",
+						meta_data: `error_group_id: ${errorGroupGuid!}`,
+						meta_data_2: `trace_id: ${parsed?.accountId || 0}`,
 					},
+					event_type: "response",
 				});
 			} catch (ex) {
 				// ignore

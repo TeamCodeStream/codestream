@@ -283,12 +283,14 @@ export const ReportBreadcrumbRequestType = new RequestType<
 >("codestream/reporting/breadcrumb");
 
 /**
- * @param eventName The name of the telemetry event you want to track, eg: "Page Viewed"
- * @param properties Optional properties to pass along with eventName
+ * @param eventName The name of the telemetry event you want to track, eg: "codestream/sign_in page_viewed"
+ * @param properties Optional properties to pass along with event_name
+ * @param event_type The event type of the telemetry event you want to track, eg: "page_view"
  */
 export interface TelemetryRequest {
 	eventName: string;
 	properties?: { [key: string]: string | number | boolean };
+	event_type?: string;
 }
 
 export interface TelemetrySetAnonymousIdRequest {

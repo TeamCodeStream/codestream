@@ -276,11 +276,13 @@ export const openErrorGroup =
 		}
 
 		if (message) {
-			HostApi.instance.track("codestream/errors/error_group roadblocked", {
-				meta_data: `error_group_id: ${errorGroupGuid}`,
-				account_id: response && response.accountId,
-				entity_guid: "",
-			});
+			HostApi.instance.track(
+				"codestream/errors/error_group roadblocked",
+				{
+					meta_data: `error_group_id: ${errorGroupGuid}`,
+				},
+				"response"
+			);
 			confirmPopup({
 				title: "Error Can't Be Opened",
 				message,
@@ -510,12 +512,6 @@ export const api =
 			// );
 			logError(error, { providerId, pullRequestId, method, message: errorString });
 
-			HostApi.instance.track("codestream/errors/error_group repo_association_failed", {
-				meta_data: `error: ${errorString}`,
-				meta_data_2: `oauth_error: ${
-					errorString && errorString.indexOf("OAuth App access restrictions") > -1
-				}`,
-			});
 			return {
 				error: errorString,
 			};

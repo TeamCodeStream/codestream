@@ -613,7 +613,7 @@ export function CodeErrorNav(props: Props) {
 				meta_data: `error_group_id: ${
 					errorGroupResult?.errorGroup?.guid || codeError?.objectInfo?.entityId
 				}`,
-				entity_guid: entityIdToUse,
+				entity_guid: entityIdToUse ? entityIdToUse : "",
 				account_id: errorGroupResult?.accountId || codeError?.objectInfo?.accountId || "0",
 				meta_data_2: `entry_point: ${derivedState.currentCodeErrorData?.openType || "open_in_ide"}`,
 				meta_data_3: `stack_trace: ${!!(stackInfo && !stackInfo.error)}`,
@@ -626,7 +626,11 @@ export function CodeErrorNav(props: Props) {
 					? "build_sha: warning"
 					: "build_sha: populated";
 			}
-			HostApi.instance.track("codestream/errors/error_group displayed", trackingData);
+			HostApi.instance.track(
+				"codestream/errors/error_group displayed",
+				trackingData,
+				"modal_display"
+			);
 		} catch (ex) {
 			console.warn(ex);
 			const title = "Unexpected Error";
