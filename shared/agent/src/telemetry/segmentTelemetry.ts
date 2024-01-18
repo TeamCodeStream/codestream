@@ -16,8 +16,6 @@ export class SegmentTelemetryService {
 	private _hasOptedOut: boolean;
 	private _session: CodeStreamSession;
 	private _readyPromise: Promise<void>;
-	private _firstSessionStartedAt?: number;
-	private _firstSessionTimesOutAfter?: number;
 	private _eventQueue: {
 		event: string;
 		data?: { [key: string]: string | number | boolean };
@@ -154,11 +152,6 @@ export class SegmentTelemetryService {
 		};
 	}
 
-	setFirstSessionProps(firstSessionStartedAt: number, firstSessionTimesOutAfter: number) {
-		this._firstSessionStartedAt = firstSessionStartedAt;
-		this._firstSessionTimesOutAfter = firstSessionTimesOutAfter;
-	}
-
 	@debug()
 	track(event: string, data?: { [key: string]: string | number | boolean }) {
 		const cc = Logger.getCorrelationContext();
@@ -166,14 +159,6 @@ export class SegmentTelemetryService {
 		if (this._hasOptedOut || this._segmentInstance == null) {
 			Logger.debug("Cannot track, user has opted out or no segment instance");
 			return;
-		}
-
-		if (
-			this._firstSessionStartedAt &&
-			this._firstSessionTimesOutAfter &&
-			Date.now() > this._firstSessionStartedAt + this._firstSessionTimesOutAfter
-		) {
-			this._superProps["First Session"] = false;
 		}
 
 		const payload: { [key: string]: any } = { ...data, ...this._superProps };

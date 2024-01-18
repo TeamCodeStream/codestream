@@ -13,8 +13,6 @@ export class NewRelicTelemetryService {
 	private _hasOptedOut: boolean;
 	private _session: CodeStreamSession;
 	private _readyPromise: Promise<void>;
-	private _firstSessionStartedAt?: number;
-	private _firstSessionTimesOutAfter?: number;
 	private _enabled?: boolean;
 
 	private _onReady: () => void = () => {};
@@ -107,11 +105,6 @@ export class NewRelicTelemetryService {
 		};
 	}
 
-	setFirstSessionProps(firstSessionStartedAt: number, firstSessionTimesOutAfter: number) {
-		this._firstSessionStartedAt = firstSessionStartedAt;
-		this._firstSessionTimesOutAfter = firstSessionTimesOutAfter;
-	}
-
 	@debug()
 	track(event: string, data?: { [key: string]: string | number | boolean }) {
 		if (!this._enabled) return;
@@ -125,14 +118,6 @@ export class NewRelicTelemetryService {
 		if (this._hasOptedOut || !this._session?.agent?.agentOptions?.newRelicTelemetryEnabled) {
 			Logger.debug("Cannot track, user has opted out");
 			return;
-		}
-
-		if (
-			this._firstSessionStartedAt &&
-			this._firstSessionTimesOutAfter &&
-			Date.now() > this._firstSessionStartedAt + this._firstSessionTimesOutAfter
-		) {
-			this._superProps["First Session"] = false;
 		}
 
 		let payload: { [key: string]: any } = { ...data, ...this._superProps };
