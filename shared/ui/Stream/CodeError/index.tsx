@@ -436,10 +436,12 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 								notify();
 								setIsStateChanging(false);
 
-								HostApi.instance.track("Error Status Changed", {
-									"Error Group ID": props.errorGroup?.guid,
-									"NR Account ID": props.errorGroup?.accountId,
-									"Error Status": STATES_TO_ACTION_STRINGS[_],
+								HostApi.instance.track("codestream/error_group status_changed", {
+									account_id: props.errorGroup?.accountId ? props.errorGroup.accountId : "",
+									entity_guid: props.errorGroup?.entityGuid ? props.errorGroup.entityGuid : "",
+									meta_data: `error_group_id: ${props.errorGroup?.guid}`,
+									meta_data_2: `error_status: ${STATES_TO_ACTION_STRINGS[_]}`,
+									event_type: "response",
 								});
 							},
 						};
