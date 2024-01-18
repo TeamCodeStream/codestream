@@ -285,11 +285,15 @@ export const RefreshEditorsCodeLensRequestType = new RequestType<
 	void
 >(`${IpcRoutes.Host}/editors/codelens/refresh`);
 
-export interface OpenEditorLogViewNotification {
+export interface OpenEditorViewNotification {
+	panel: string;
+	title: string;
+
 	entityGuid?: string;
+	searchTerm?: string;
 }
 
-export const OpenEditorLogViewNotificationType = new NotificationType<
-	OpenEditorLogViewNotification,
+export const OpenEditorViewNotificationType = new NotificationType<
+	OpenEditorViewNotification,
 	void
->(`${IpcRoutes.Host}/editor/logs/open`);
+>(`${IpcRoutes.Host}/editor/open`);

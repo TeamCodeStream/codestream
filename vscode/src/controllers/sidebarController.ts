@@ -70,7 +70,7 @@ import {
 	ReviewCloseDiffRequestType,
 	ReviewShowDiffRequestType,
 	ReviewShowLocalDiffRequestType,
-	OpenEditorLogViewNotificationType,
+	OpenEditorViewNotificationType,
 	ShellPromptFolderRequestType,
 	ShowCodemarkNotificationType,
 	ShowNextChangedFileNotificationType,
@@ -93,7 +93,8 @@ import {
 	WebviewDidInitializeNotificationType,
 	WebviewIpcMessage,
 	WebviewIpcNotificationMessage,
-	WebviewIpcRequestMessage
+	WebviewIpcRequestMessage,
+	OpenEditorViewNotification
 } from "@codestream/protocols/webview";
 import {
 	authentication,
@@ -140,6 +141,7 @@ import { SaveTokenReason } from "../api/tokenManager";
 import { copySymbol, replaceSymbol } from "./symbolEditController";
 import { CodeStreamWebviewPanel } from "webviews/webviewPanel";
 import { EditorController } from "./editorController";
+import { randomUUID } from "crypto";
 
 const emptyObj = {};
 
@@ -545,12 +547,6 @@ export class SidebarController implements Disposable {
 
 	@log()
 	async logSearch(args: InitiateLogSearchNotification): Promise<void> {
-		if (this.visible) {
-			await this._sidebar!.show();
-		} else {
-			await this.show();
-		}
-
 		if (!this._sidebar) {
 			// it's possible that the webview is closing...
 			return;
@@ -871,27 +867,40 @@ export class SidebarController implements Disposable {
 		}
 	}
 
+	private initializeOrShowEditor(e: OpenEditorViewNotification) {
+		let editorKey = `${e.panel}-${e.entityGuid}`;
+
+		if (e.searchTerm) {
+			// hack until I can figure out how to funnel a search term into an already open logs window.
+			editorKey = `${editorKey}-${randomUUID()}`;
+		}
+
+		if (!this._logPanelInitializations[editorKey]) {
+			const panel = new CodeStreamWebviewPanel(this.session, this.context, e, () => {});
+
+			const controller = new EditorController(this.session, panel);
+			const onDidClose = () => {
+				const initialization = this._logPanelInitializations[editorKey];
+				initialization.controller?.dispose();
+				initialization.panel?.dispose();
+				delete this._logPanelInitializations[editorKey];
+			};
+			panel.onDidClose(() => {
+				onDidClose();
+			});
+			this._logPanelInitializations[editorKey] = {
+				panel: panel,
+				controller: controller
+			};
+		} else {
+			const { panel } = this._logPanelInitializations[editorKey];
+			panel.show();
+		}
+	}
 	private onWebviewNotification(webview: WebviewLike, e: WebviewIpcNotificationMessage) {
 		switch (e.method) {
-			case OpenEditorLogViewNotificationType.method: {
-				if (!this._logPanelInitializations[e.params.entityGuid]) {
-					const panel = new CodeStreamWebviewPanel(this.session, this.context, e.params, () => {});
-
-					const controller = new EditorController(this.session, panel);
-					const onDidClose = () => {
-						const initialization = this._logPanelInitializations[e.params.entityGuid];
-						initialization.controller?.dispose();
-						initialization.panel?.dispose();
-						delete this._logPanelInitializations[e.params.entityGuid];
-					};
-					panel.onDidClose(() => {
-						onDidClose();
-					});
-					this._logPanelInitializations[e.params.entityGuid] = {
-						panel: panel,
-						controller: controller
-					};
-				}
+			case OpenEditorViewNotificationType.method: {
+				this.initializeOrShowEditor(e.params);
 				break;
 			}
 			case WebviewDidInitializeNotificationType.method: {

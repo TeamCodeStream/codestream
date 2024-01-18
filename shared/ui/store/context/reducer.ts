@@ -287,14 +287,6 @@ export function reduceContext(
 			};
 		}
 
-		case ContextActionsType.SetCurrentAPMLoggingSearchContext: {
-			return {
-				...state,
-				currentAPMLoggingEntityGuid: action.payload.entityGuid,
-				currentAPMLoggingSearchTerm: action.payload.searchTerm,
-			};
-		}
-
 		case "RESET":
 			return {
 				...initialState,

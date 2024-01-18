@@ -76,6 +76,8 @@ import {
 	WebviewDidInitializeNotificationType,
 	ViewAnomalyNotificationType,
 	InitiateLogSearchNotificationType,
+	OpenEditorViewNotification,
+	OpenEditorViewNotificationType,
 } from "./ipc/webview.protocol";
 import { WebviewPanels } from "@codestream/protocols/api";
 import { store } from "./store";
@@ -101,7 +103,6 @@ import {
 	setCurrentCodemark,
 	setCurrentMethodLevelTelemetry,
 	setCurrentObservabilityAnomaly,
-	setCurrentAPMLoggingSearchContext,
 	setCurrentPullRequest,
 	setCurrentReview,
 	setCurrentStream,
@@ -990,8 +991,14 @@ function listenForEvents(store) {
 			? (currentUser?.preferences?.activeO11y?.[currentRepoId] as string)
 			: undefined;
 
-		store.dispatch(setCurrentAPMLoggingSearchContext(currentEntityGuid, params.searchTerm));
-		store.dispatch(openPanel(WebviewPanels.APMLoggingSearch));
+		const props: OpenEditorViewNotification = {
+			entityGuid: currentEntityGuid,
+			panel: "logs",
+			title: "Logs",
+			searchTerm: params.searchTerm,
+		};
+
+		HostApi.instance.notify(OpenEditorViewNotificationType, props);
 	});
 }
 

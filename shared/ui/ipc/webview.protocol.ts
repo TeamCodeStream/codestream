@@ -206,7 +206,6 @@ export const HandlePullRequestDirectivesNotificationType = new NotificationType<
 >(`${IpcRoutes.Webview}/pullRequest/handleDirectives`);
 
 export interface InitiateLogSearchNotification {
-	entityGuid?: string;
 	searchTerm?: string;
 }
 

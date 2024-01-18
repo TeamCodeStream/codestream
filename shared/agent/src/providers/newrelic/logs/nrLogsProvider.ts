@@ -24,12 +24,13 @@ export class NrLogsProvider {
 	@lspHandler(GetLogsRequestType)
 	@log()
 	public async getLogs(request: GetLogsRequest): Promise<GetLogsResponse> {
+		const entityGuid = request.entityGuid;
+		const accountId = parseId(entityGuid)!.accountId;
+
 		try {
-			const { entityGuid, since, limit, order, filterText } = {
+			const { since, limit, order, filterText } = {
 				...request,
 			};
-
-			const parsedId = parseId(entityGuid)!;
 
 			let queryWhere = `WHERE entity.guid = '${entityGuid}' AND newrelic.source = 'logs.APM'`;
 			const querySince = `SINCE ${since}`;
@@ -44,7 +45,7 @@ export class NrLogsProvider {
 
 			ContextLogger.log(`getLogs query: ${query}`);
 
-			const logs = await this.graphqlClient.runNrql<LogResult>(parsedId.accountId, query, 400);
+			const logs = await this.graphqlClient.runNrql<LogResult>(accountId, query, 400);
 
 			let messageAttribute: string = "message";
 			const hasMessageAttribute = logs.some(lr => Object.keys(lr).includes("message"));
@@ -80,13 +81,14 @@ export class NrLogsProvider {
 				logs,
 				messageAttribute,
 				severityAttribute,
+				accountId,
 			};
 		} catch (ex) {
 			ContextLogger.warn("getLogs failure", {
 				request,
 				error: ex,
 			});
-			return { error: mapNRErrorResponse(ex) };
+			return { error: mapNRErrorResponse(ex), accountId };
 		}
 	}
 

@@ -87,9 +87,9 @@ export class CodeStreamWebviewPanel implements WebviewLike, Disposable {
 		this._ipcPending = new Map();
 
 		this._panel = window.createWebviewPanel(
-			"CodeStream.log",
-			"CodeStream (Logs)",
-			{ viewColumn: ViewColumn.Beside, preserveFocus: false },
+			"CodeStream.editor",
+			`CodeStream (${parameters.title})`,
+			{ viewColumn: ViewColumn.Active, preserveFocus: false },
 			{
 				retainContextWhenHidden: true,
 				enableFindWidget: true,

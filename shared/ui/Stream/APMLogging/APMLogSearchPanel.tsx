@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import Icon from "../Icon";
 import { PanelHeader } from "../../src/components/PanelHeader";
 import styled from "styled-components";
-import ScrollBox from "../ScrollBox";
 import { useDidMount } from "../../utilities/hooks";
 import Button from "../Button";
 import Select from "react-select";
@@ -101,7 +100,7 @@ const columnSpanMapping = {
 	level: 2,
 };
 
-export const APMLogSearchPanel = (props: { entityGuid: string }) => {
+export const APMLogSearchPanel = (props: { entityGuid: string; searchTerm?: string }) => {
 	const [fieldDefinitions, setFieldDefinitions] = useState<LogFieldDefinition[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -126,11 +125,6 @@ export const APMLogSearchPanel = (props: { entityGuid: string }) => {
 	const [logError, setLogError] = useState<string | undefined>("");
 	const [isUIDisabled, setIsUIDisabled] = useState<boolean>(false);
 
-	const derivedState = {
-		entityGuid: props.entityGuid,
-		searchTerm: "",
-	};
-
 	useDidMount(() => {
 		const defaultOption: SelectedOption = {
 			value: "30 MINUTES AGO",
@@ -151,7 +145,7 @@ export const APMLogSearchPanel = (props: { entityGuid: string }) => {
 		setSelectSinceOptions(sinceOptions);
 		setSelectedSinceOption(defaultOption);
 
-		if (!derivedState.entityGuid) {
+		if (!props.entityGuid) {
 			handleError(
 				"We were unable to locate the Entity GUID for the selected service; please contact support."
 			);
@@ -159,11 +153,13 @@ export const APMLogSearchPanel = (props: { entityGuid: string }) => {
 			return;
 		}
 
-		fetchFieldDefinitions(derivedState.entityGuid);
+		fetchFieldDefinitions(props.entityGuid);
 
 		// possible there is no searchTerm
-		setQuery(derivedState.searchTerm);
-		fetchLogs(derivedState.entityGuid, derivedState.searchTerm);
+		if (props.searchTerm) {
+			setQuery(props.searchTerm);
+		}
+		fetchLogs(props.entityGuid, props.searchTerm);
 	});
 
 	const handleError = (message: string) => {
@@ -200,7 +196,7 @@ export const APMLogSearchPanel = (props: { entityGuid: string }) => {
 	const checkKeyPress = (e: { keyCode: Number }) => {
 		const { keyCode } = e;
 		if (keyCode === 13) {
-			fetchLogs(derivedState.entityGuid!);
+			fetchLogs(props.entityGuid!);
 		}
 	};
 
@@ -292,7 +288,7 @@ export const APMLogSearchPanel = (props: { entityGuid: string }) => {
 				setDisplayColumns(["timestamp", response.severityAttribute!, response.messageAttribute!]);
 			}
 
-			trackTelemetry(entityGuid, (response?.logs?.length ?? 0) > 0);
+			trackTelemetry(entityGuid, response.accountId, (response?.logs?.length ?? 0) > 0);
 		} catch (ex) {
 			handleError(ex);
 		} finally {
@@ -300,10 +296,11 @@ export const APMLogSearchPanel = (props: { entityGuid: string }) => {
 		}
 	};
 
-	const trackTelemetry = (entityGuid: string, resultsReturned: boolean) => {
+	const trackTelemetry = (entityGuid: string, accountId: number, resultsReturned: boolean) => {
 		HostApi.instance.track("codestream/logs searched", {
-			meta_data: `entity_guid: ${entityGuid}`,
-			meta_data_2: `results_returned: ${resultsReturned}`,
+			entity_guid: `${entityGuid}`,
+			account_id: `${accountId}`,
+			meta_data: `results_returned: ${resultsReturned}`,
 		});
 	};
 
@@ -423,7 +420,7 @@ export const APMLogSearchPanel = (props: { entityGuid: string }) => {
 					</div>
 					<Button
 						style={{ paddingLeft: "8px", paddingRight: "8px" }}
-						onClick={() => fetchLogs(derivedState.entityGuid!)}
+						onClick={() => fetchLogs(props.entityGuid)}
 						loading={isLoading}
 						disabled={isUIDisabled}
 					>
@@ -433,8 +430,6 @@ export const APMLogSearchPanel = (props: { entityGuid: string }) => {
 			</PanelHeader>
 			<div
 				style={{
-					height: maximized ? "calc(100vh - 100px)" : "calc(100vh - 200px)",
-					overflow: "hidden",
 					padding: "0px 20px 0px 20px",
 					marginBottom: "20px",
 				}}
@@ -468,50 +463,48 @@ export const APMLogSearchPanel = (props: { entityGuid: string }) => {
 					</div>
 				)}
 
-				<ScrollBox>
-					<div className="vscroll">
-						{/* {isLoading && (
+				<div>
+					{/* {isLoading && (
 							TODO: Skeleton loader? Couldn't get it to work when I tried
 						)} */}
 
-						{!logError && !isLoading && results && totalItems > 0 && fieldDefinitions && (
-							// TODO: Using a table is pretty terrible here...
-							<table style={{ width: "100%", borderCollapse: "collapse" }}>
-								<thead>{renderHeaderRow()}</thead>
-								<tbody>
-									{results.map(r => (
-										<LogRow logResult={r} />
-									))}
-								</tbody>
-							</table>
-						)}
+					{!logError && !isLoading && results && totalItems > 0 && fieldDefinitions && (
+						// TODO: Using a table is pretty terrible here...
+						<table style={{ width: "100%", borderCollapse: "collapse" }}>
+							<thead>{renderHeaderRow()}</thead>
+							<tbody>
+								{results.map(r => (
+									<LogRow logResult={r} />
+								))}
+							</tbody>
+						</table>
+					)}
 
-						{!logError && !totalItems && !isLoading && !hasSearched && (
-							<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
-								<span>Enter search criteria above, or just click Query to see recent logs.</span>
-							</div>
-						)}
+					{!logError && !totalItems && !isLoading && !hasSearched && (
+						<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
+							<span>Enter search criteria above, or just click Query to see recent logs.</span>
+						</div>
+					)}
 
-						{!logError && !totalItems && !isLoading && hasSearched && (
-							<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
-								<h4>No logs found during this time range</h4>
-								<span>
-									Try adjusting your time range or{" "}
-									<Link href="https://docs.newrelic.com/docs/logs/logs-context/annotate-logs-logs-context-using-apm-agent-apis/">
-										set up log management
-									</Link>
-								</span>
-							</div>
-						)}
+					{!logError && !totalItems && !isLoading && hasSearched && (
+						<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
+							<h4>No logs found during this time range</h4>
+							<span>
+								Try adjusting your time range or{" "}
+								<Link href="https://docs.newrelic.com/docs/logs/logs-context/annotate-logs-logs-context-using-apm-agent-apis/">
+									set up log management
+								</Link>
+							</span>
+						</div>
+					)}
 
-						{logError && (
-							<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
-								<h4>Uh oh, we've encounted an error!</h4>
-								<span>{logError}</span>
-							</div>
-						)}
-					</div>
-				</ScrollBox>
+					{logError && (
+						<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
+							<h4>Uh oh, we've encounted an error!</h4>
+							<span>{logError}</span>
+						</div>
+					)}
+				</div>
 			</div>
 		</>
 	);

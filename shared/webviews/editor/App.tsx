@@ -5,6 +5,13 @@ import { APMLogSearchPanel } from "../../ui/Stream/APMLogging/APMLogSearchPanel"
 
 export function App() {
 	// TODO typing for _cs
-	const entityGuidWindow = (window as any)._cs.entityGuid;
-	return <APMLogSearchPanel entityGuid={entityGuidWindow}></APMLogSearchPanel>;
+	const codestreamProps = (window as any)._cs;
+
+	return (
+		<div className="stream">
+			{codestreamProps.panel === "logs" && (
+				<APMLogSearchPanel entityGuid={codestreamProps.entityGuid} searchTerm={codestreamProps.searchTerm}></APMLogSearchPanel>
+			)}
+		</div>
+	)
 }

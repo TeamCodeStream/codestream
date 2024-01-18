@@ -33,14 +33,14 @@ import {
 	ObservabilityLoadingServiceEntity,
 } from "@codestream/webview/Stream/ObservabilityLoading";
 import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
-import { setCurrentAPMLoggingSearchContext, setRefreshAnomalies } from "../store/context/actions";
+import { setRefreshAnomalies } from "../store/context/actions";
 
 import { HealthIcon } from "@codestream/webview/src/components/HealthIcon";
 import {
 	HostDidChangeWorkspaceFoldersNotificationType,
 	OpenUrlRequestType,
 	RefreshEditorsCodeLensRequestType,
-	OpenEditorLogViewNotificationType,
+	OpenEditorViewNotificationType,
 } from "@codestream/protocols/webview";
 import { SecurityIssuesWrapper } from "@codestream/webview/Stream/SecurityIssuesWrapper";
 import { ObservabilityServiceLevelObjectives } from "@codestream/webview/Stream/ObservabilityServiceLevelObjectives";
@@ -1350,16 +1350,12 @@ export const Observability = React.memo((props: Props) => {
 																									onClick={e => {
 																										e.preventDefault();
 																										e.stopPropagation();
-																										// TODO remove this?
-																										dispatch(
-																											setCurrentAPMLoggingSearchContext(
-																												ea.entityGuid
-																											)
-																										);
 
 																										HostApi.instance.notify(
-																											OpenEditorLogViewNotificationType,
+																											OpenEditorViewNotificationType,
 																											{
+																												panel: "logs",
+																												title: "Logs",
 																												entityGuid: ea.entityGuid,
 																											}
 																										);
