@@ -550,6 +550,7 @@ export function fromSlackUser(user: any, teamId: string): CSUser {
 		firstName: user.profile.first_name,
 		fullName: user.real_name,
 		id: user.id,
+		nrUserId: user.get("nrUserId"),
 		codestreamId: codestreamId,
 		isRegistered: codestreamId !== undefined,
 		iWorkOn: undefined,
