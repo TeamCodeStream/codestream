@@ -10,6 +10,14 @@ import { Button } from "@codestream/webview/src/components/Button";
 import { reconstitutePatch } from "@codestream/webview/Stream/Posts/patchHelper";
 import { useAppSelector } from "@codestream/webview/utilities/hooks";
 import { isGrokStreamLoading } from "@codestream/webview/store/posts/reducer";
+import { isPending } from "@codestream/webview/store/posts/types";
+import { NrAiFeedback } from "./NrAiFeedback";
+
+/* TODOS
+- [ ] don't call copySymbol if there is already a nrai response
+- [X] move feedback component to this file
+- [ ] move everything to this file?
+*/
 
 export const DiffSection = styled.div`
 	margin: 10px 0;
@@ -25,6 +33,7 @@ export type NrAiComponentProps = {
 	post: PostPlus;
 	author: Partial<CSUser>;
 	postText: string;
+	codeErrorId?: string;
 	codeBlockStartLine?: number;
 	file?: string;
 };
@@ -41,10 +50,19 @@ function Markdown(props: { text: string }) {
 
 export function NrAiComponent(props: NrAiComponentProps) {
 	const isGrokLoading = useAppSelector(isGrokStreamLoading);
-	const hasIntro = props.post.parts?.intro && props.post.parts.intro.length > 0;
-	const showGrokLoader = !hasIntro && isGrokLoading;
-	const showApplyFix = !!props.post.parts?.codeFix && isGrokLoading === false;
-	console.log("NrAiComponent file", props.file);
+	const hasIntro = useMemo(
+		() => props.post.parts?.intro && props.post.parts.intro.length > 0,
+		[props.post.parts?.intro]
+	);
+	const showGrokLoader = useMemo(() => !hasIntro && isGrokLoading, [isGrokLoading, hasIntro]);
+	const showApplyFix = useMemo(
+		() => !!props.post.parts?.codeFix && isGrokLoading === false,
+		[props.post.parts?.codeFix, isGrokLoading]
+	);
+
+	const showFeedback = useMemo(() => {
+		return !isGrokLoading && !isPending(props.post) && props.codeErrorId && props.post.forGrok;
+	}, [props.post, isGrokLoading, props.codeErrorId]);
 
 	const applyFix = () => {
 		console.log("Apply fix");
@@ -75,6 +93,11 @@ export function NrAiComponent(props: NrAiComponentProps) {
 				</DiffSection>
 			)}
 			<Markdown text={parts?.description ?? ""} />
+			{showFeedback && (
+				<>
+					<NrAiFeedback postId={props.post.id} errorId={props.codeErrorId!} />
+				</>
+			)}
 		</>
 	);
 }

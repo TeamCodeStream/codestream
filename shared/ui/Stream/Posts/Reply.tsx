@@ -32,8 +32,6 @@ import { AddReactionIcon, Reactions } from "../Reactions";
 import Tag from "../Tag";
 import Timestamp from "../Timestamp";
 import { RepliesToPostContext } from "./RepliesToPost";
-import { GrokFeedback } from "@codestream/webview/Stream/Posts/GrokFeedback";
-import { GrokLoading } from "@codestream/webview/Stream/CodeError/GrokLoading";
 import { NrAiComponent } from "@codestream/webview/Stream/Posts/NrAiComponent";
 
 const AuthorInfo = styled.div`
@@ -444,6 +442,7 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 				)}
 				{isForGrok && (
 					<NrAiComponent
+						codeErrorId={props.codeErrorId}
 						post={props.post as PostPlus}
 						author={props.author}
 						postText={postText}
@@ -453,7 +452,6 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 				)}
 				{emote || isEditing || isForGrok ? null : (
 					<>
-						{showGrokLoader && <GrokLoading />}
 						<MarkdownContent className="reply-content-container">
 							<MarkdownText
 								text={postText}
@@ -476,9 +474,6 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 					</>
 				)}
 				{!isPending(props.post) && <Reactions post={props.post} />}
-				{!isPending(props.post) && props.codeErrorId && props.post.forGrok && (
-					<GrokFeedback postId={props.post.id} errorId={props.codeErrorId} />
-				)}
 			</ReplyBody>
 			{props.nestedReplies &&
 				props.nestedReplies.length > 0 &&

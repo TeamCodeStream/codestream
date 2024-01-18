@@ -26,14 +26,14 @@ const FeedbackCompleted = styled.div`
 	color: green;
 `;
 
-export interface GrokFeedbackProps {
+export interface NrAiFeedbackProps {
 	postId: string;
 	errorId: string;
 }
 
 type FeedbackType = "up" | "down";
 
-export function GrokFeedback(props: GrokFeedbackProps) {
+export function NrAiFeedback(props: NrAiFeedbackProps) {
 	const [showForm, setShowForm] = useState(false);
 	const [type, setType] = useState<FeedbackType | undefined>(undefined);
 	const [success, setSuccess] = useState(false);
@@ -54,7 +54,7 @@ export function GrokFeedback(props: GrokFeedbackProps) {
 				<Modal translucent>
 					<Dialog title={"AI Feedback"} wide={true} onClose={() => setShowForm(false)}>
 						<Root>
-							<GrokFeedbackForm {...props} feedbackType={type} onSuccess={onSuccessHandler} />
+							<NrAiFeedbackForm {...props} feedbackType={type} onSuccess={onSuccessHandler} />
 						</Root>
 					</Dialog>
 				</Modal>
@@ -77,7 +77,7 @@ export function GrokFeedback(props: GrokFeedbackProps) {
 	);
 }
 
-export interface GrokFeedbackFormProps extends GrokFeedbackProps {
+export interface NrAiFeedbackFormProps extends NrAiFeedbackProps {
 	feedbackType: FeedbackType;
 	onSuccess: () => void;
 }
@@ -87,7 +87,7 @@ const thumbMap = new Map<FeedbackType, string>([
 	["down", "Thumbs Down"],
 ]);
 
-export function GrokFeedbackForm(props: GrokFeedbackFormProps) {
+export function NrAiFeedbackForm(props: NrAiFeedbackFormProps) {
 	const [isLoading, setIsLoading] = useState(false);
 	const [text, setText] = useState("");
 	const [notTrue, setNotTrue] = useState(false);
