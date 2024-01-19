@@ -1,34 +1,38 @@
 // eslint-disable: Keep unused vars to make it easy to inject objects into new dependencies as they are added
 /* eslint-disable  unused-imports/no-unused-vars */
-import { NewRelicGraphqlClient } from "./newRelicGraphqlClient";
-import { CodeStreamSession } from "../../session";
-import { SessionContainer, SessionServiceContainer } from "../../container";
+import { NewThirdPartyProviderConfig } from "@codestream/protocols/agent";
 import { CSNewRelicProviderInfo } from "@codestream/protocols/api";
+import { CompletionItem, CompletionParams } from "vscode-languageserver";
+import { CodeStreamAgent } from "../../agent";
 import { User } from "../../api/extensions";
 import { HttpClient } from "../../api/httpClient";
-import { NewThirdPartyProviderConfig } from "@codestream/protocols/agent";
-import { DeploymentsProvider } from "./deployments/deploymentsProvider";
+import { SessionServiceContainer } from "../../container";
+import { CodeStreamSession } from "../../session";
+import { Disposable } from "../../system/disposable";
 import { AnomaliesProvider } from "./anomalies/anomaliesProvider";
 import { ClmManager } from "./clm/clmManager";
+import { ClmProvider } from "./clm/clmProvider";
 import { EntityAccountResolver } from "./clm/entityAccountResolver";
+import { DeploymentsProvider } from "./deployments/deploymentsProvider";
+import { NrDirectives } from "./directives/nrDirectives";
 import { EntityProvider } from "./entity/entityProvider";
-import { ReposProvider } from "./repos/reposProvider";
-import { NrApiConfig } from "./nrApiConfig";
 import { ObservabilityErrorsProvider } from "./errors/observabilityErrorsProvider";
 import { GoldenSignalsProvider } from "./goldenSignals/goldenSignalsProvider";
+import { NrLogsProvider } from "./logs/nrLogsProvider";
+import { NewRelicGraphqlClient } from "./newRelicGraphqlClient";
+import { NrApiConfig } from "./nrApiConfig";
+import { NrNRQLProvider } from "./nrql/nrqlProvider";
 import { NrOrgProvider } from "./orgs/nrOrgProvider";
+import { ReposProvider } from "./repos/reposProvider";
 import { SloProvider } from "./slo/sloProvider";
-import { NewRelicVulnerabilitiesProvider } from "./vuln/nrVulnerability";
-import { ClmProvider } from "./clm/clmProvider";
-import { NrDirectives } from "./directives/nrDirectives";
-import { Disposable } from "../../system/disposable";
-import { CodeStreamAgent } from "../../agent";
 import { SpansProvider } from "./spans/spansProvider";
 import { NraiProvider } from "./nrai/nraiProvider";
 import { NrLogsProvider } from "./logs/nrLogsProvider";
 import { NrNRQLProvider } from "./nrql/nrqlProvider";
 import { CompletionItemKind } from "vscode-languageserver";
 import { parseId } from "./utils";
+import { NewRelicVulnerabilitiesProvider } from "./vuln/nrVulnerability";
+import { NrqlCompletionProvider } from "./nrql/nrqlCompletionProvider";
 
 let nrDirectives: NrDirectives | undefined;
 let disposables: Disposable[] = [];
@@ -203,179 +207,22 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 		reposProvider
 	);
 
-	const nrqlFunctions = [
-		"average",
-		"count",
-		"filter",
-		"percentage",
-		"percentile",
-		"stddev",
-		"sum",
-		"uniqueCount",
-		"rate",
-		"histogram",
-		"since",
-		"until",
-		"compareWith",
-		"timeSlice",
-		"timeofday",
-		"dateOf",
-		"monthOf",
-		"yearOf",
-		"facet",
-		"timeWindow",
-		"beginningOfMonth",
-		"beginningOfWeek",
-		"beginningOfYear",
-		"endOfMonth",
-		"endOfWeek",
-		"endOfYear",
-		"now",
-		"previousDay",
-		"previousMonth",
-		"previousWeek",
-		"previousYear",
-		"thisDay",
-		"thisMonth",
-		"thisWeek",
-		"thisYear",
-	];
-	const nrqlKeywords = [
-		"SELECT",
-		"*",
-		"FROM",
-		"WHERE",
-		"AND",
-		"OR",
-		"LIKE",
-		"LIMIT",
-		"FACET",
-		"TIMESERIES",
-		"SINCE",
-		"UNTIL",
-		"WITH TIMEZONE",
-		"COMPARE WITH",
-		"AS",
-		"INCLUDE ZERO",
-		"EXTRAPOLATE",
-		"TIMESTAMP",
-		"DESC",
-		"ASC",
-		"AS OF",
-		"WITH",
-		"COMPARE WITH",
-		"USING",
-		"INSERT INTO",
-		"UPDATE",
-		"DELETE FROM",
-		"ALTER",
-		"SHOW DATABASES",
-		"SHOW MEASUREMENTS",
-		"SHOW RETENTION POLICIES",
-		"SHOW SERIES",
-		"SHOW TAG KEYS",
-		"SHOW TAG VALUES",
-		"SHOW FIELD KEYS",
-	];
-	let nrCollections: string[] | undefined = undefined;
-	let nrCollectionsAsObject: any = {};
-	let candidates: string[] = [];
-	let accountId = 0;
-
-	candidates = candidates.concat(...nrqlFunctions);
-	candidates = candidates.concat(...nrqlKeywords);
-	session.agent.connection.onCompletion(async textDocumentPosition => {
-		const { textDocument, position } = textDocumentPosition;
-		const { line, character } = position;
-
-		// Retrieve the document's text
-		const document = session.agent.documents.get(textDocument.uri)!;
-
-		const text = document.getText();
-
-		// Determine the range of the current word
-		let wordRange = {
-			start: { line: line, character: character },
-			end: { line: line, character: character },
-		};
-		while (wordRange.start.character > 0 && /\w/.test(text.charAt(wordRange.start.character - 1))) {
-			wordRange.start.character--;
-		}
-
-		// Extract the current word
-		const currentWord = text
-			.slice(wordRange.start.character, wordRange.end.character)
-			.toUpperCase();
-
-		const completionItems = []; // Array to store completion items
-
-		if (nrCollections == null) {
-			(async () => {
-				try {
-					const { users } = SessionContainer.instance();
-					const me = await users.getMe();
-					const currentRepoId = me?.preferences?.currentO11yRepoId;
-					const currentEntityGuid = currentRepoId
-						? (me?.preferences?.activeO11y?.[currentRepoId] as string)
-						: undefined;
-					const result = parseId(currentEntityGuid!);
-					if (result) {
-						accountId = result.accountId;
-						const response = await newRelicGraphqlClient.runNrql<any>(
-							result.accountId,
-							"SHOW EVENT TYPES"
-						);
-						nrCollections = response.map(_ => _.eventType) as string[];
-						nrCollectionsAsObject = nrCollections.reduce((obj: any, item: any) => {
-							obj[item] = true;
-							return obj;
-						}, {});
-						candidates.sort();
-					}
-				} catch (ex) {
-					nrCollections = [];
-				}
-			})();
-		}
-		if (nrCollections != null && (text.endsWith("FROM") || text.endsWith("FROM "))) {
-			for (const candidate of nrCollections) {
-				completionItems.push({
-					label: candidate,
-					kind: CompletionItemKind.Text,
+	const nrqlCompletionProvider = new NrqlCompletionProvider(session, newRelicGraphqlClient);
+	session.agent.connection.onCompletion(async (textDocumentPosition: CompletionParams) => {
+		return new Promise<CompletionItem[]>((resolve, reject) => {
+			nrqlCompletionProvider
+				.onCompletion(textDocumentPosition)
+				.then((data: CompletionItem[]) => {
+					resolve(data);
+				})
+				.catch((error: any) => {
+					reject(error);
 				});
-			}
-			return completionItems;
-		}
-		if (nrCollections != null && (text.endsWith("WHERE") || text.endsWith("WHERE "))) {
-			const collection = text.split(" ").find(_ => nrCollectionsAsObject[_]);
-			if (collection) {
-				const response = await newRelicGraphqlClient.runNrql<any>(
-					accountId,
-					`SELECT keyset() FROM ${collection}`
-				);
-				if (response) {
-					for (const candidate of response.map(_ => _.key)) {
-						completionItems.push({
-							label: candidate,
-							kind: CompletionItemKind.Text,
-						});
-					}
-					return completionItems;
-				}
-			}
-		}
-		// Filter and generate completion items based on the current word
+		});
+	});
 
-		for (const candidate of [...candidates, ...nrCollections!]) {
-			if (candidate.startsWith(currentWord)) {
-				completionItems.push({
-					label: candidate,
-					kind: CompletionItemKind.Text,
-				});
-			}
-		}
-
-		return completionItems;
+	session.agent.connection.onCompletionResolve((item: CompletionItem) => {
+		return nrqlCompletionProvider.onCompletionResolve(item);
 	});
 }
 
