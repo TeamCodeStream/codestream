@@ -216,6 +216,10 @@ export class CodeStreamAgent implements Disposable {
 			return {
 				capabilities: {
 					textDocumentSync: TextDocumentSyncKind.Full,
+					completionProvider: {
+						resolveProvider: true,
+						triggerCharacters: [" "], // Language specific trigger characters for autocompletion
+					},
 					// hoverProvider: true
 				},
 				result: {},
