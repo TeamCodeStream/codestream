@@ -167,7 +167,7 @@ export async function activate(context: ExtensionContext) {
 			let lenses = [];
 			for (let line = 0; line < document.lineCount; line++) {
 				let text = document.lineAt(line).text.trim();
-				if (text.startsWith("SELECT") || text.startsWith("FROM")) {
+				if (text.startsWith("SELECT") || text.startsWith("FROM") || text.startsWith("SHOW")) {
 					let range = new Range(line, 0, line, 0);
 					let command = {
 						title: "Execute ▶️",
