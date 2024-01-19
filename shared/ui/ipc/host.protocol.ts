@@ -285,10 +285,26 @@ export const RefreshEditorsCodeLensRequestType = new RequestType<
 	void
 >(`${IpcRoutes.Host}/editors/codelens/refresh`);
 
+// for now, this needs to stay synced with vscode.ViewColumn
+export enum ViewColumn {
+	Active = -1,
+	Beside = -2,
+	One = 1,
+	Two = 2,
+	Three = 3,
+	Four = 4,
+	Five = 5,
+	Six = 6,
+	Seven = 7,
+	Eight = 8,
+	Nine = 9,
+}
+
 export interface OpenEditorViewNotification {
 	panel: string;
 	title: string;
 
+	panelLocation?: ViewColumn;
 	entityGuid: string;
 	query?: string;
 }

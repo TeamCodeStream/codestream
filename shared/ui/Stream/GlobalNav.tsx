@@ -1,5 +1,6 @@
 import {
 	LocalFilesCloseDiffRequestType,
+	OpenEditorViewNotificationType,
 	ReviewCloseDiffRequestType,
 } from "@codestream/protocols/webview";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
@@ -38,6 +39,8 @@ export function GlobalNav() {
 				}
 			});
 		}
+		const currentRepoId = user?.preferences?.currentO11yRepoId;
+
 		return {
 			currentUserId: state.session.userId,
 			activePanel: state.context.panelStack[0],
@@ -49,6 +52,9 @@ export function GlobalNav() {
 			currentCodemarkId: state.context.currentCodemarkId,
 			currentPullRequestId: state.context.currentPullRequest
 				? state.context.currentPullRequest.id
+				: undefined,
+			currentEntityGuid: currentRepoId
+				? (user?.preferences?.activeO11y?.[currentRepoId] as string)
 				: undefined,
 			eligibleJoinCompanies,
 			inviteCount,
@@ -87,6 +93,14 @@ export function GlobalNav() {
 
 	const togglePlusMenu = event => {
 		setPlusMenuOpen(plusMenuOpen ? undefined : event.target.closest("label"));
+	};
+
+	const launchNrqlEditor = () => {
+		HostApi.instance.notify(OpenEditorViewNotificationType, {
+			panel: "nrql",
+			title: "NRQL",
+			entityGuid: derivedState.currentEntityGuid!,
+		});
 	};
 
 	const go = panel => {
@@ -178,6 +192,18 @@ export function GlobalNav() {
 								menuTarget={ellipsisMenuOpen}
 							/>
 						)}
+					</label>
+
+					<label onClick={launchNrqlEditor} id="global-nav-query-label">
+						<span>
+							<Icon
+								name="terminal"
+								title="Query your data"
+								placement="bottom"
+								delay={1}
+								trigger={["hover"]}
+							/>
+						</span>
 					</label>
 
 					<label

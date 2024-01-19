@@ -79,6 +79,7 @@ import {
 	OpenEditorViewNotification,
 	OpenEditorViewNotificationType,
 	InitiateNrqlExecutionNotificationType,
+	ViewColumn,
 } from "./ipc/webview.protocol";
 import { WebviewPanels } from "@codestream/protocols/api";
 import { store } from "./store";
@@ -133,6 +134,7 @@ import { confirmPopup } from "./Stream/Confirm";
 import translations from "./translations/en";
 import { parseProtocol } from "./utilities/urls";
 import { HostApi } from "./webview-api";
+
 // import translationsEs from "./translations/es";
 
 export function setupCommunication(host: { postMessage: (message: any) => void }) {
@@ -993,6 +995,7 @@ function listenForEvents(store) {
 			: undefined;
 
 		const props: OpenEditorViewNotification = {
+			panelLocation: ViewColumn.Active,
 			entityGuid: currentEntityGuid!,
 			panel: "logs",
 			title: "Logs",
@@ -1012,6 +1015,7 @@ function listenForEvents(store) {
 			: undefined;
 
 		const props: OpenEditorViewNotification = {
+			panelLocation: ViewColumn.Beside,
 			entityGuid: currentEntityGuid!,
 			panel: "nrql",
 			title: "NRQL",

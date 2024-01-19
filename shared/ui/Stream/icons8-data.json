@@ -228,7 +228,6 @@
 	},
 	"checkbox-add": {
 		"name": "checkbox-add",
-
 		"path": "<path fill=\"none\" d=\"M14 8V12.6667C14 13.0203 13.8595 13.3594 13.6095 13.6095C13.3594 13.8595 13.0203 14 12.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V3.33333C2 2.97971 2.14048 2.64057 2.39052 2.39052C2.64057 2.14048 2.97971 2 3.33333 2H8\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><line x1=\"11.5\" y1=\"8.5\" x2=\"11.5\" y2=\"0.5\" stroke=\"currentColor\" stroke-linecap=\"round\"/><line x1=\"7.5\" y1=\"4.5\" x2=\"15.5\" y2=\"4.5\" stroke=\"currentColor\" stroke-linecap=\"round\"/>",
 		"path_old": "<path fill=\"none\" d=\"M14 8V12.6667C14 13.0203 13.8595 13.3594 13.6095 13.6095C13.3594 13.8595 13.0203 14 12.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V3.33333C2 2.97971 2.14048 2.64057 2.39052 2.39052C2.64057 2.14048 2.97971 2 3.33333 2H8\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><line x1=\"12.5\" y1=\"6.5\" x2=\"12.5\" y2=\"0.5\" stroke=\"currentColor\" stroke-linecap=\"round\"/><line x1=\"9.5\" y1=\"3.5\" x2=\"15.5\" y2=\"3.5\" stroke=\"currentColor\" stroke-linecap=\"round\"/>"
 	},
@@ -686,7 +685,6 @@
 	"double-chevron-right": {
 		"path": "<path d=\"M8 14L14 8L8 2\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M3 14L9 8L3 2\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
 	},
-
 	"screen-full": {
 		"viewBox": "0 0 24 24",
 		"path": "<path fill-rule=\"evenodd\" d=\"M4.75 4.5a.25.25 0 00-.25.25v3.5a.75.75 0 01-1.5 0v-3.5C3 3.784 3.784 3 4.75 3h3.5a.75.75 0 010 1.5h-3.5zM15 3.75a.75.75 0 01.75-.75h3.5c.966 0 1.75.784 1.75 1.75v3.5a.75.75 0 01-1.5 0v-3.5a.25.25 0 00-.25-.25h-3.5a.75.75 0 01-.75-.75zM3.75 15a.75.75 0 01.75.75v3.5c0 .138.112.25.25.25h3.5a.75.75 0 010 1.5h-3.5A1.75 1.75 0 013 19.25v-3.5a.75.75 0 01.75-.75zm16.5 0a.75.75 0 01.75.75v3.5A1.75 1.75 0 0119.25 21h-3.5a.75.75 0 010-1.5h3.5a.25.25 0 00.25-.25v-3.5a.75.75 0 01.75-.75z\"></path>"
@@ -755,6 +753,10 @@
 	"metric": {
 		"viewBox": "0 0 16 16",
 		"path": "<path fill-rule=\"evenodd\" d=\"M2 1v12h13v1H1V1h1zm5 1h1v9H7V2zM4 5h1v6H4V5zm7-1h-1v7h1V4zm2 1h1v6h-1V5z\" clip-rule=\"evenodd\"></path>"
+	},
+	"terminal": {
+		"viewBox": "0 0 16 16",
+		"path": "<path fill-rule=\"evenodd\" d=\"M13 1H2C.9 1 0 1.9 0 3v10c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2zm1 12c0 .6-.4 1-1 1H2c-.6 0-1-.4-1-1V5h13v8zM1 4h13V3c0-.6-.4-1-1-1H2c-.6 0-1 .4-1 1v1zm3.4 8.4l2.8-2.9-2.8-2.9-.8.8 2.2 2.1-2.2 2.1.8.8zM12 11H8v1h4v-1z\" clip-rule=\"evenodd\"></path>"
 	},
 	"anomaly": {
 		"viewBox": "0 0 512 512",

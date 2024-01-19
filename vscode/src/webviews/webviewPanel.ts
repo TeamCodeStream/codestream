@@ -7,7 +7,8 @@ import {
 	WebviewIpcMessage,
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage,
-	WebviewIpcResponseMessage
+	WebviewIpcResponseMessage,
+	OpenEditorViewNotification
 } from "@codestream/protocols/webview";
 import {
 	Disposable,
@@ -81,7 +82,7 @@ export class CodeStreamWebviewPanel implements WebviewLike, Disposable {
 	constructor(
 		public readonly session: CodeStreamSession,
 		private readonly context: ExtensionContext,
-		public readonly parameters: any | undefined,
+		public readonly parameters: OpenEditorViewNotification,
 		private onInitializedCallback: Function
 	) {
 		this._ipcPending = new Map();
@@ -89,7 +90,7 @@ export class CodeStreamWebviewPanel implements WebviewLike, Disposable {
 		this._panel = window.createWebviewPanel(
 			"CodeStream.editor",
 			`CodeStream (${parameters.title})`,
-			{ viewColumn: ViewColumn.Active, preserveFocus: false },
+			{ viewColumn: parameters.panelLocation ?? ViewColumn.Active, preserveFocus: false },
 			{
 				retainContextWhenHidden: true,
 				enableFindWidget: true,

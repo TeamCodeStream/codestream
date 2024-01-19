@@ -1342,63 +1342,33 @@ export const Observability = React.memo((props: Props) => {
 																							)}
 
 																							{derivedState.showLogSearch && (
-																								<>
-																									<Row
-																										style={{
-																											padding: "2px 10px 2px 30px",
-																										}}
-																										className={"pr-row"}
-																										onClick={e => {
-																											e.preventDefault();
-																											e.stopPropagation();
+																								<Row
+																									style={{
+																										padding: "2px 10px 2px 30px",
+																									}}
+																									className={"pr-row"}
+																									onClick={e => {
+																										e.preventDefault();
+																										e.stopPropagation();
 
-																											HostApi.instance.notify(
-																												OpenEditorViewNotificationType,
-																												{
-																													panel: "logs",
-																													title: "Logs",
-																													entityGuid: ea.entityGuid,
-																												}
-																											);
-																										}}
+																										HostApi.instance.notify(
+																											OpenEditorViewNotificationType,
+																											{
+																												panel: "logs",
+																												title: "Logs",
+																												entityGuid: ea.entityGuid,
+																											}
+																										);
+																									}}
+																								>
+																									<span
+																										data-testid={`view-logs-${ea.entityGuid}`}
+																										style={{ marginLeft: "2px" }}
 																									>
-																										<span
-																											data-testid={`view-logs-${ea.entityGuid}`}
-																											style={{ marginLeft: "2px" }}
-																										>
-																											<Icon name="search" title="View Logs" />
-																											View Logs
-																										</span>
-																									</Row>
-
-																									<Row
-																										style={{
-																											padding: "2px 10px 2px 30px",
-																										}}
-																										className={"pr-row"}
-																										onClick={e => {
-																											e.preventDefault();
-																											e.stopPropagation();
-
-																											HostApi.instance.notify(
-																												OpenEditorViewNotificationType,
-																												{
-																													panel: "nrql",
-																													title: "NRQL",
-																													entityGuid: ea.entityGuid,
-																												}
-																											);
-																										}}
-																									>
-																										<span
-																											data-testid={`execute-nql-${ea.entityGuid}`}
-																											style={{ marginLeft: "2px" }}
-																										>
-																											<Icon name="star" title="Execute NRQL" />
-																											Execute NRQL
-																										</span>
-																									</Row>
-																								</>
+																										<Icon name="search" title="View Logs" />
+																										View Logs
+																									</span>
+																								</Row>
 																							)}
 																						</>
 																					</>
