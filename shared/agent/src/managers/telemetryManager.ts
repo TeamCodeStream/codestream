@@ -12,9 +12,13 @@ import { debug, lsp, lspHandler } from "../system";
 import { TelemetryService } from "../telemetry/telemetryService";
 import { SegmentTelemetryService } from "../telemetry/segmentTelemetry";
 import { NewRelicTelemetryService } from "../telemetry/newRelicTelemetry";
+import UUID from "uuid";
+
 @lsp
 export class TelemetryManager {
 	private readonly _providers: TelemetryService[];
+	private _lastEventTime: number = 0;
+	private _sessionId: string | undefined;
 
 	constructor(session: CodeStreamSession) {
 		this._providers = [
@@ -51,6 +55,16 @@ export class TelemetryManager {
 	@lspHandler(TelemetryRequestType)
 	track(request: TelemetryRequest) {
 		const cc = Logger.getCorrelationContext();
+		const now = Date.now();
+
+		// session ID times out after 30 minutes since last event
+		if (!this._sessionId || !this._lastEventTime || now - this._lastEventTime > 30 * 60 * 1000) {
+			this._sessionId = UUID();
+		}
+		this._lastEventTime = now;
+		request.properties = request.properties || {};
+		request.properties["session_id"] = this._sessionId;
+
 		this._providers.forEach(provider => {
 			try {
 				void provider.track(request.eventName, request.properties);
