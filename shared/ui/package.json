@@ -69,7 +69,6 @@
 		"@testing-library/react": "12.1.5",
 		"@testing-library/user-event": "14.4.3",
 		"@types/classnames": "2.2.9",
-		"@types/diff": "4.0.2",
 		"@types/emoji-mart": "2.8.4",
 		"@types/jest": "29.5.3",
 		"@types/lodash-es": "4.17.7",

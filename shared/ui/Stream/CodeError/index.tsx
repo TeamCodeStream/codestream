@@ -1264,7 +1264,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 		if (stackInfo && stackInfo.lines[lineIndex] && stackInfo.lines[lineIndex].line !== undefined) {
 			setCurrentSelectedLineIndex(lineIndex);
 			dispatch(
-				jumpToStackLine(lineIndex, stackInfo.lines[lineIndex], stackInfo.sha!, stackInfo.repoId!)
+				jumpToStackLine(lineIndex, stackInfo.lines[lineIndex], stackInfo.repoId!, stackInfo.sha)
 			);
 		}
 	};
@@ -1311,25 +1311,25 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 					const stackInfo = stackTraces?.[0];
 					// console.debug(`===--- symbol useEffect`, line.method);
 					try {
-						// console.debug(`===--- symbol useEffect calling copySymbolFromIde`);
-						dispatch(copySymbolFromIde(line, stackInfo.repoId, stackInfo.sha));
+						// Need to call copySymbolFromIde every time to get the codeBlockStartLine
+						// TODO handle the case where the code has changed since the error was created - can't use streaming patch from openai
+						// TODO or store diff / startLineNo in the codeError?
+						dispatch(copySymbolFromIde(line, stackInfo.repoId, undefined));
 					} catch (ex) {
-						console.warn(ex);
+						console.warn("===--- symbol useEffect copySymbolFromIde failed", ex);
 					}
 					setDidCopyMethod(true);
 					setTimeout(() => {
 						try {
 							// console.debug(`===--- symbol useEffect calling jumpToStackLine`);
 							const stackLine = stackInfo.lines[jumpLocation];
-							if (stackLine.fileRelativePath && stackInfo.sha && stackInfo.repoId) {
-								console.log("*** setCurrentNrAiFile", stackLine.fileRelativePath);
+							if (stackLine.fileRelativePath && stackInfo.repoId) {
+								console.log("===--- setCurrentNrAiFile", stackLine.fileRelativePath);
 								props.setCurrentNrAiFile(stackLine.fileRelativePath);
-								dispatch(jumpToStackLine(jumpLocation, stackLine, stackInfo.sha, stackInfo.repoId));
+								// Open actual file for NRAI - no ref param
+								dispatch(jumpToStackLine(jumpLocation, stackLine, stackInfo.repoId, undefined));
 							} else {
-								console.warn(
-									"nrai jumpToStackLine missing fileRelativePath, sha, or repoId",
-									stackLine
-								);
+								console.warn("nrai jumpToStackLine missing fileRelativePath, or repoId", stackLine);
 							}
 						} catch (ex) {
 							console.warn(ex);

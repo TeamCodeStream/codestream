@@ -30,6 +30,7 @@ import { NrNRQLProvider } from "./nrql/nrqlProvider";
 import { NewRelicVulnerabilitiesProvider } from "./vuln/nrVulnerability";
 import { NrqlCompletionProvider } from "./nrql/nrqlCompletionProvider";
 import { AccountProvider } from "./account/accountProvider";
+import { PatchProvider } from "./patches/patchProvider";
 
 let nrDirectives: NrDirectives | undefined;
 let disposables: Disposable[] = [];
@@ -222,6 +223,9 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 	session.agent.connection.onCompletionResolve((item: CompletionItem) => {
 		return nrqlCompletionProvider.onCompletionResolve(item);
 	});
+
+	const patchProvider = new PatchProvider();
+	disposables.push(patchProvider);
 }
 
 export function getNrDirectives(): NrDirectives | undefined {

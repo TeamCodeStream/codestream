@@ -80,7 +80,7 @@ export const DidResolveStackTraceLineNotificationType = new NotificationType<
 >("codestream/nr/didResolveStackTraceLine");
 
 export interface ResolveStackTracePositionRequest {
-	ref: string;
+	ref?: string;
 	repoId: string;
 	filePath: string;
 	line?: number;

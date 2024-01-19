@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { GrokLoading } from "@codestream/webview/Stream/CodeError/GrokLoading";
 import { CSUser } from "@codestream/protocols/api";
-import { PostPlus } from "@codestream/protocols/agent";
+import { ApplyPatchType, PostPlus } from "@codestream/protocols/agent";
 import { MarkdownText } from "@codestream/webview/Stream/MarkdownText";
 import { MarkdownContent } from "@codestream/webview/Stream/Posts/Reply";
 import { PullRequestPatch } from "@codestream/webview/Stream/PullRequestPatch";
@@ -12,9 +12,10 @@ import { useAppSelector } from "@codestream/webview/utilities/hooks";
 import { isGrokStreamLoading } from "@codestream/webview/store/posts/reducer";
 import { isPending } from "@codestream/webview/store/posts/types";
 import { NrAiFeedback } from "./NrAiFeedback";
+import { HostApi } from "@codestream/webview/webview-api";
 
 /* TODOS
-- [ ] don't call copySymbol if there is already a nrai response
+- [X] don't call copySymbol if there is already a nrai response (actually needed currently)
 - [X] move feedback component to this file
 - [ ] move everything to this file?
 */
@@ -49,6 +50,8 @@ function Markdown(props: { text: string }) {
 }
 
 export function NrAiComponent(props: NrAiComponentProps) {
+	console.debug("NrAiComponent", props);
+	const textEditorUri = useAppSelector(state => state.editorContext.textEditorUri);
 	const isGrokLoading = useAppSelector(isGrokStreamLoading);
 	const hasIntro = useMemo(
 		() => props.post.parts?.intro && props.post.parts.intro.length > 0,
@@ -64,16 +67,29 @@ export function NrAiComponent(props: NrAiComponentProps) {
 		return !isGrokLoading && !isPending(props.post) && props.codeErrorId && props.post.forGrok;
 	}, [props.post, isGrokLoading, props.codeErrorId]);
 
-	const applyFix = () => {
-		console.log("Apply fix");
-	};
-
 	const parts = props.post.parts;
 
 	const patch = useMemo(
 		() => reconstitutePatch(parts?.codeFix, props.codeBlockStartLine),
-		[props.post.parts, props.codeBlockStartLine]
+		[props.post.parts?.codeFix, props.codeBlockStartLine]
 	);
+
+	const applyFix = async () => {
+		console.log("===--- Apply fix");
+		if (!textEditorUri || !patch) {
+			console.error("No textEditorUri or patch");
+			return;
+		}
+		try {
+			const result = await HostApi.instance.send(ApplyPatchType, {
+				fileUri: textEditorUri,
+				patch: patch,
+			});
+			console.log("===--- Applied fix", result);
+		} catch (e) {
+			console.error("===--- Error applying fix", e);
+		}
+	};
 
 	return (
 		<>

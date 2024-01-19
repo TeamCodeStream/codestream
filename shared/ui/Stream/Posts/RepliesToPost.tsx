@@ -66,7 +66,7 @@ export const RepliesToPost = (props: {
 	const [newReplyText, setNewReplyText] = React.useState("");
 	const [attachments, setAttachments] = React.useState<AttachmentField[]>([]);
 	const [isLoading, setIsLoading] = React.useState(false);
-	const lastCommentRef = React.useRef<HTMLElement>(null);
+	const lastCommentRef = React.useRef<HTMLDivElement>(null);
 
 	const contextValue = React.useMemo(
 		() => ({

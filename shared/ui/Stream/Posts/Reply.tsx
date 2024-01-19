@@ -221,7 +221,7 @@ export interface ReplyProps {
 	noReply?: boolean;
 }
 
-export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
+export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) => {
 	const dispatch = useAppDispatch();
 	const { setEditingPostId, setReplyingToPostId } = React.useContext(RepliesToPostContext);
 	const [menuState, setMenuState] = React.useState<{

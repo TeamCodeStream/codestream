@@ -576,7 +576,7 @@ export const copySymbolFromIde =
 	};
 
 export const jumpToStackLine =
-	(lineIndex: number, stackLine: CSStackTraceLine, ref: string, repoId: string) =>
+	(lineIndex: number, stackLine: CSStackTraceLine, repoId: string, ref?: string) =>
 	async (dispatch, getState: () => CodeStreamState) => {
 		const state = getState();
 		dispatch(

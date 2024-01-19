@@ -2745,3 +2745,16 @@ export const GetNRQLRecentQueriesType = new RequestType<
 	void,
 	void
 >("codestream/newrelic/nrql/queries/recent");
+
+export type ApplyPatchRequest = {
+	fileUri: string;
+	patch: string;
+};
+
+export type ApplyPatchResponse = {
+	success: boolean;
+};
+
+export const ApplyPatchType = new RequestType<ApplyPatchRequest, ApplyPatchResponse, void, void>(
+	"codestream/newrelic/applyPatch"
+);
