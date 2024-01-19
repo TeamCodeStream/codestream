@@ -1213,14 +1213,8 @@ export class CodeStreamSession {
 		}
 
 		this._providers = currentTeam.providerHosts || {};
-		// const combinedProviders = { ...currentTeam.providerHosts };
-		// registerProviders(
-		// 	{ combinedProviders }
-		// 		? omit(combinedProviders, Object.keys(PROVIDERS_TO_REGISTER_BEFORE_SIGNIN))
-		// 		: {},
-		// 	this,
-		// 	false
-		// );
+		const combinedProviders = { ...currentTeam.providerHosts };
+		registerProviders(combinedProviders, this, false);
 
 		const cc = Logger.getCorrelationContext();
 
