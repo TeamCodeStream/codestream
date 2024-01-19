@@ -89,7 +89,7 @@ export function lspProvider<T extends object>(name: string): Function {
 export function registerProviders(
 	providers: ThirdPartyProviders,
 	session: CodeStreamSession,
-	clear: boolean = true
+	clear = true
 ): void {
 	if (clear) {
 		providerRegistry.clear();
