@@ -624,11 +624,15 @@ export class Commands implements Disposable {
 	}
 
 	@command("executeNrql")
-	async executeNrql() {
-		const editor = window.activeTextEditor;
-		if (editor === undefined) return;
+	async executeNrql(suppliedQuery?: string) {
+		let nrqlQuery = suppliedQuery;
 
-		let nrqlQuery = editor.document.getText(editor.selection);
+		if (!suppliedQuery) {
+			const editor = window.activeTextEditor;
+			if (editor === undefined) return;
+
+			nrqlQuery = editor.document.getText(editor.selection);
+		}
 
 		if (!nrqlQuery) {
 			// notification of some sort that we couldn't find anything to search on?

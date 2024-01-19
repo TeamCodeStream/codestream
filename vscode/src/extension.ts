@@ -12,7 +12,14 @@ import {
 	extensions,
 	version as vscodeVersion,
 	window,
-	workspace
+	workspace,
+	languages,
+	CodeLensProvider,
+	CancellationToken,
+	ProviderResult,
+	TextDocument,
+	Range,
+	CodeLens
 } from "vscode";
 import { WebviewLike } from "./webviews/webviewLike";
 import { CodeStreamWebviewSidebar } from "./webviews/webviewSidebar";
@@ -152,6 +159,33 @@ export async function activate(context: ExtensionContext) {
 	// const codelensProvider = new CodelensProvider();
 
 	// languages.registerCodeLensProvider("*", codelensProvider);
+	const myCodeLensProvider: CodeLensProvider = {
+		provideCodeLenses: function (
+			document: TextDocument,
+			token: CancellationToken
+		): ProviderResult<CodeLens[]> {
+			let lenses = [];
+			for (let line = 0; line < document.lineCount; line++) {
+				let text = document.lineAt(line).text.trim();
+				if (text.startsWith("SELECT") || text.startsWith("FROM")) {
+					let range = new Range(line, 0, line, 0);
+					let command = {
+						title: "Execute ▶️",
+						command: "codestream.executeNrql",
+						arguments: [text]
+					};
+					lenses.push(new CodeLens(range, command));
+				}
+			}
+			return lenses;
+		}
+	};
+
+	let disposable = languages.registerCodeLensProvider(
+		{ scheme: "file", language: "nrql" },
+		myCodeLensProvider
+	);
+	context.subscriptions.push(disposable);
 
 	await Container.initialize(
 		context,
