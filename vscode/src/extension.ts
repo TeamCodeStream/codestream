@@ -172,7 +172,7 @@ export async function activate(context: ExtensionContext) {
 					let command = {
 						title: "Execute ▶️",
 						command: "codestream.executeNrql",
-						arguments: [text]
+						arguments: [document.uri, line]
 					};
 					lenses.push(new CodeLens(range, command));
 				}

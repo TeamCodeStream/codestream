@@ -624,14 +624,19 @@ export class Commands implements Disposable {
 	}
 
 	@command("executeNrql")
-	async executeNrql(suppliedQuery?: string) {
-		let nrqlQuery = suppliedQuery;
+	async executeNrql(fileUri?: Uri, lineNumber?: number): Promise<void> {
+		// fileUri is passed in by both CodeLens provider and the command provider
+		// but we actually don't need it.
+		// lineNumber is only passed by the CodeLens provider, which we do need.
 
-		if (!suppliedQuery) {
-			const editor = window.activeTextEditor;
-			if (editor === undefined) return;
+		let nrqlQuery: string;
+		const editor = window.activeTextEditor;
+		if (editor === undefined) return;
 
+		if (!lineNumber) {
 			nrqlQuery = editor.document.getText(editor.selection);
+		} else {
+			nrqlQuery = editor.document.lineAt(lineNumber).text;
 		}
 
 		if (!nrqlQuery) {
@@ -643,7 +648,7 @@ export class Commands implements Disposable {
 	}
 
 	@command("logSearch")
-	async logSearch() {
+	async logSearch(): Promise<void> {
 		const editor = window.activeTextEditor;
 		if (editor === undefined) return;
 
