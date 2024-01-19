@@ -2590,3 +2590,22 @@ export const GetLogFieldDefinitionsRequestType = new RequestType<
 	void,
 	void
 >("codestream/newrelic/logs/fieldDefinitions");
+
+export interface GetNRQLRequest {
+	entityGuid: string;
+	query: string;
+}
+
+export interface NRQLResult {
+	[key: string]: string;
+}
+
+export interface GetNRQLResponse {
+	results?: NRQLResult[];
+	accountId: number;
+	error?: NRErrorResponse;
+}
+
+export const GetNRQLRequestType = new RequestType<GetNRQLRequest, GetNRQLResponse, void, void>(
+	"codestream/newrelic/nrql/search"
+);
