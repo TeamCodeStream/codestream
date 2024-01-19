@@ -100,7 +100,7 @@ const columnSpanMapping = {
 	level: 2,
 };
 
-export const APMLogSearchPanel = (props: { entityGuid: string; searchTerm?: string }) => {
+export const APMLogSearchPanel = (props: { entityGuid: string; suppliedQuery?: string }) => {
 	const [fieldDefinitions, setFieldDefinitions] = useState<LogFieldDefinition[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -156,10 +156,10 @@ export const APMLogSearchPanel = (props: { entityGuid: string; searchTerm?: stri
 		fetchFieldDefinitions(props.entityGuid);
 
 		// possible there is no searchTerm
-		if (props.searchTerm) {
-			setQuery(props.searchTerm);
+		if (props.suppliedQuery) {
+			setQuery(props.suppliedQuery);
 		}
-		fetchLogs(props.entityGuid, props.searchTerm);
+		fetchLogs(props.entityGuid, props.suppliedQuery);
 	});
 
 	const handleError = (message: string) => {
@@ -242,7 +242,7 @@ export const APMLogSearchPanel = (props: { entityGuid: string; searchTerm?: stri
 		}
 	};
 
-	const fetchLogs = async (entityGuid: string, searchTerm?: string) => {
+	const fetchLogs = async (entityGuid: string, suppliedQuery?: string) => {
 		try {
 			setLogError(undefined);
 			setHasSearched(true);
@@ -252,7 +252,7 @@ export const APMLogSearchPanel = (props: { entityGuid: string; searchTerm?: stri
 			setMessageAttribute(undefined);
 			setTotalItems(0);
 
-			const filterText = searchTerm || query;
+			const filterText = suppliedQuery || query;
 
 			const response = await HostApi.instance.send(GetLogsRequestType, {
 				entityGuid,

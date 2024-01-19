@@ -78,6 +78,7 @@ import {
 	InitiateLogSearchNotificationType,
 	OpenEditorViewNotification,
 	OpenEditorViewNotificationType,
+	InitiateNrqlExecutionNotificationType,
 } from "./ipc/webview.protocol";
 import { WebviewPanels } from "@codestream/protocols/api";
 import { store } from "./store";
@@ -992,10 +993,29 @@ function listenForEvents(store) {
 			: undefined;
 
 		const props: OpenEditorViewNotification = {
-			entityGuid: currentEntityGuid,
+			entityGuid: currentEntityGuid!,
 			panel: "logs",
 			title: "Logs",
-			searchTerm: params.searchTerm,
+			query: params.query,
+		};
+
+		HostApi.instance.notify(OpenEditorViewNotificationType, props);
+	});
+
+	api.on(InitiateNrqlExecutionNotificationType, params => {
+		const { session, users } = store.getState();
+		const currentUser = session.userId ? (users[session.userId] as CSMe) : null;
+		const currentRepoId = currentUser?.preferences?.currentO11yRepoId;
+
+		const currentEntityGuid = currentRepoId
+			? (currentUser?.preferences?.activeO11y?.[currentRepoId] as string)
+			: undefined;
+
+		const props: OpenEditorViewNotification = {
+			entityGuid: currentEntityGuid!,
+			panel: "nrql",
+			title: "NRQL",
+			query: params.query,
 		};
 
 		HostApi.instance.notify(OpenEditorViewNotificationType, props);

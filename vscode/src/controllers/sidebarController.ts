@@ -94,7 +94,9 @@ import {
 	WebviewIpcMessage,
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage,
-	OpenEditorViewNotification
+	OpenEditorViewNotification,
+	InitiateNrqlExecutionNotification,
+	InitiateNrqlExecutionNotificationType
 } from "@codestream/protocols/webview";
 import {
 	authentication,
@@ -556,6 +558,16 @@ export class SidebarController implements Disposable {
 	}
 
 	@log()
+	async executeNrql(args: InitiateNrqlExecutionNotification): Promise<void> {
+		if (!this._sidebar) {
+			// it's possible that the webview is closing...
+			return;
+		}
+
+		this._sidebar!.notify(InitiateNrqlExecutionNotificationType, args);
+	}
+
+	@log()
 	async viewAnomaly(args: ViewAnomalyNotification): Promise<void> {
 		if (this.visible) {
 			await this._sidebar!.show();
@@ -870,7 +882,7 @@ export class SidebarController implements Disposable {
 	private initializeOrShowEditor(e: OpenEditorViewNotification) {
 		let editorKey = `${e.panel}-${e.entityGuid}`;
 
-		if (e.searchTerm) {
+		if (e.query) {
 			// hack until I can figure out how to funnel a search term into an already open logs window.
 			editorKey = `${editorKey}-${randomUUID()}`;
 		}

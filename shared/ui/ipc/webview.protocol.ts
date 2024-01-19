@@ -206,10 +206,19 @@ export const HandlePullRequestDirectivesNotificationType = new NotificationType<
 >(`${IpcRoutes.Webview}/pullRequest/handleDirectives`);
 
 export interface InitiateLogSearchNotification {
-	searchTerm?: string;
+	query?: string;
 }
 
 export const InitiateLogSearchNotificationType = new NotificationType<
 	InitiateLogSearchNotification,
 	void
 >(`${IpcRoutes.Webview}/logs/search`);
+
+export interface InitiateNrqlExecutionNotification {
+	query: string;
+}
+
+export const InitiateNrqlExecutionNotificationType = new NotificationType<
+	InitiateNrqlExecutionNotification,
+	void
+>(`${IpcRoutes.Webview}/nrql/execute`);

@@ -289,8 +289,8 @@ export interface OpenEditorViewNotification {
 	panel: string;
 	title: string;
 
-	entityGuid?: string;
-	searchTerm?: string;
+	entityGuid: string;
+	query?: string;
 }
 
 export const OpenEditorViewNotificationType = new NotificationType<

@@ -623,6 +623,21 @@ export class Commands implements Disposable {
 		}
 	}
 
+	@command("executeNrql")
+	async executeNrql() {
+		const editor = window.activeTextEditor;
+		if (editor === undefined) return;
+
+		let nrqlQuery = editor.document.getText(editor.selection);
+
+		if (!nrqlQuery) {
+			// notification of some sort that we couldn't find anything to search on?
+			await window.showErrorMessage("Please select a NRQL query to execute", "Dismiss");
+		} else {
+			await Container.sidebar.executeNrql({ query: nrqlQuery });
+		}
+	}
+
 	@command("logSearch")
 	async logSearch() {
 		const editor = window.activeTextEditor;
@@ -648,7 +663,7 @@ export class Commands implements Disposable {
 				"Dismiss"
 			);
 		} else {
-			await Container.sidebar.logSearch({ searchTerm });
+			await Container.sidebar.logSearch({ query: searchTerm });
 		}
 	}
 

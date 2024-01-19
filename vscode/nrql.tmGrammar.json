@@ -1,0 +1,79 @@
+{
+	"scopeName": "source.nrql",
+	"patterns": [
+		{
+			"match": "\\bSELECT\\b",
+			"name": "keyword.select.nrql"
+		},
+		{
+			"match": "\\FROM\\b",
+			"name": "keyword.from.nrql"
+		},
+		{
+			"match": "\\bWHERE\\b",
+			"name": "keyword.where.nrql"
+		},
+		{
+			"match": "\\bAS\\b",
+			"name": "keyword.as.nrql"
+		},
+		{
+			"name": "string.quoted.single.nrql",
+			"begin": "'",
+			"end": "'",
+			"patterns": [
+				{
+					"name": "constant.character.escape.nrql",
+					"match": "\\\\."
+				}
+			]
+		},
+		{
+			"name": "comment.line.double-slash.nrql",
+			"begin": "(//|--)",
+			"end": "\\n",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.comment.nrql"
+				}
+			}
+		},
+		{
+			"name": "comment.block.nrql",
+			"begin": "/\\*",
+			"end": "\\*/",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.comment.nrql"
+				}
+			},
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.comment.nrql"
+				}
+			}
+		},
+		{
+			"name": "separator.nrql",
+			"match": "###",
+			"captures": {
+				"0": {
+					"name": "keyword.operator.nrql"
+				}
+			}
+		},
+		{
+			"name": "support.function.nrql",
+			"match": "\\b(count|keyset|max|median|min|mod|sum|uniques|uniquecount)\\b",
+			"captures": {
+				"0": {
+					"name": "keyword.function.nrql"
+				}
+			}
+		},
+		{
+			"match": "\\b[a-zA-Z_][a-zA-Z_0-9]*\\b",
+			"name": "entity.name.attribute.nrql"
+		}
+	]
+}

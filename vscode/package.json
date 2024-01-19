@@ -38,6 +38,21 @@
 		"slack"
 	],
 	"contributes": {
+		"languages": [
+			{
+				"id": "nrql",
+				"extensions": [
+					".nrql"
+				]
+			}
+		],
+		"grammars": [
+			{
+				"language": "nrql",
+				"scopeName": "source.nrql",
+				"path": "./nrql.tmGrammar.json"
+			}
+		],
 		"viewsContainers": {
 			"activitybar": [
 				{
@@ -188,6 +203,10 @@
 			{
 				"command": "codestream.logSearch",
 				"title": "Find in Logs"
+			},
+			{
+				"command": "codestream.executeNrql",
+				"title": "Execute Selected NRQL"
 			}
 		],
 		"keybindings": [
@@ -288,6 +307,11 @@
 					"command": "codestream.logSearch",
 					"when": "codestream:status == signedIn && editorTextFocus",
 					"group": "9_zcodestream@3"
+				},
+				{
+					"command": "codestream.executeNrql",
+					"when": "codestream:status == signedIn && editorTextFocus && resourceExtName == .nrql && editorHasSelection",
+					"group": "9_zcodestream@4"
 				}
 			]
 		},

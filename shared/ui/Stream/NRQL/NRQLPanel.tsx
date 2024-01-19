@@ -4,6 +4,7 @@ import styled from "styled-components";
 import Button from "../Button";
 import { HostApi } from "../../webview-api";
 import { GetNRQLRequestType, NRQLResult, isNRErrorResponse } from "@codestream/protocols/agent";
+import { useDidMount } from "@codestream/webview/utilities/hooks";
 
 const SearchBar = styled.div`
 	display: flex;
@@ -26,7 +27,7 @@ const SearchBar = styled.div`
 	}
 `;
 
-export const NRQLPanel = (props: { entityGuid: string }) => {
+export const NRQLPanel = (props: { entityGuid: string; suppliedQuery?: string }) => {
 	const [query, setQuery] = useState<string>("");
 	const [results, setResults] = useState<NRQLResult[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -39,9 +40,18 @@ export const NRQLPanel = (props: { entityGuid: string }) => {
 		console.error(message);
 	};
 
-	const executeNRQL = async (entityGuid: string) => {
+	useDidMount(() => {
+		if (props.suppliedQuery) {
+			setQuery(props.suppliedQuery);
+			executeNRQL(props.entityGuid, props.suppliedQuery);
+		}
+	});
+
+	const executeNRQL = async (entityGuid: string, suppliedQuery?: string) => {
 		try {
-			if (!query) {
+			const nrqlQuery = suppliedQuery || query;
+
+			if (!nrqlQuery) {
 				handleError("Please provide a query to execute");
 				return;
 			}
@@ -52,7 +62,7 @@ export const NRQLPanel = (props: { entityGuid: string }) => {
 			setTotalItems(0);
 
 			const response = await HostApi.instance.send(GetNRQLRequestType, {
-				query,
+				query: nrqlQuery,
 				entityGuid,
 			});
 
