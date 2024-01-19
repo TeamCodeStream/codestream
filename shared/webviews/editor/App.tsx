@@ -12,10 +12,10 @@ export function App() {
 	return (
 		<div className="stream">
 			{codestreamProps.panel === "logs" && (
-				<APMLogSearchPanel entityGuid={codestreamProps.entityGuid} suppliedQuery={codestreamProps.query}></APMLogSearchPanel>
+				<APMLogSearchPanel entityAccounts={codestreamProps.entityAccounts} entityGuid={codestreamProps.entityGuid} suppliedQuery={codestreamProps.query}></APMLogSearchPanel>
 			)}
 			{codestreamProps.panel === "nrql" && (
-				<NRQLPanel entityGuid={codestreamProps.entityGuid} suppliedQuery={codestreamProps.query}></NRQLPanel>
+				<NRQLPanel entityAccounts={codestreamProps.entityAccounts} entityGuid={codestreamProps.entityGuid} suppliedQuery={codestreamProps.query}></NRQLPanel>
 			)}
 		</div>
 	)

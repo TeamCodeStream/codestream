@@ -53,6 +53,7 @@ const initialState: ContextState = {
 	currentPixieDynamicLoggingOptions: undefined,
 	wantNewRelicOptions: undefined,
 	currentPullRequestNeedsRefresh: { needsRefresh: false, providerId: "", pullRequestId: "" },
+	entityAccounts: [],
 };
 
 export function reduceContext(
@@ -284,6 +285,13 @@ export function reduceContext(
 			return {
 				...state,
 				currentTransactionSpan: action.payload.data,
+			};
+		}
+
+		case ContextActionsType.SetEntityAccounts: {
+			return {
+				...state,
+				entityAccounts: action.payload.entityAccounts,
 			};
 		}
 

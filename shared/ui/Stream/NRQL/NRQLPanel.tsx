@@ -3,7 +3,12 @@ import { PanelHeader } from "../../src/components/PanelHeader";
 import styled from "styled-components";
 import Button from "../Button";
 import { HostApi } from "../../webview-api";
-import { GetNRQLRequestType, NRQLResult, isNRErrorResponse } from "@codestream/protocols/agent";
+import {
+	EntityAccount,
+	GetNRQLRequestType,
+	NRQLResult,
+	isNRErrorResponse,
+} from "@codestream/protocols/agent";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 
 const SearchBar = styled.div`
@@ -27,7 +32,11 @@ const SearchBar = styled.div`
 	}
 `;
 
-export const NRQLPanel = (props: { entityGuid: string; suppliedQuery?: string }) => {
+export const NRQLPanel = (props: {
+	entityAccounts: EntityAccount[];
+	entityGuid?: string;
+	suppliedQuery?: string;
+}) => {
 	const [query, setQuery] = useState<string>("");
 	const [results, setResults] = useState<NRQLResult[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -43,7 +52,7 @@ export const NRQLPanel = (props: { entityGuid: string; suppliedQuery?: string })
 	useDidMount(() => {
 		if (props.suppliedQuery) {
 			setQuery(props.suppliedQuery);
-			executeNRQL(props.entityGuid, props.suppliedQuery);
+			executeNRQL(props.entityGuid!, props.suppliedQuery);
 		}
 	});
 
@@ -144,7 +153,7 @@ export const NRQLPanel = (props: { entityGuid: string; suppliedQuery?: string })
 					</div>
 					<Button
 						style={{ paddingLeft: "8px", paddingRight: "8px" }}
-						onClick={() => executeNRQL(props.entityGuid)}
+						onClick={() => executeNRQL(props.entityGuid!)}
 						loading={isLoading}
 					>
 						Execute NRQL

@@ -1,4 +1,5 @@
 import {
+	EntityAccount,
 	MetricTimesliceNameMapping,
 	ObservabilityAnomaly,
 	RepoProjectType,
@@ -62,6 +63,7 @@ export enum ContextActionsType {
 	SetClearNewRelicOptions = "@context/SetClearNewRelicOptions",
 	SetCurrentMethodLevelTelemetry = "@context/SetCurrentMethodLevelTelemetry",
 	SetCurrentObservabilityAnomaly = "@context/SetCurrentObservabilityAnomaly",
+	SetEntityAccounts = "@context/SetEntityAccounts",
 	SetCurrentTransactionSpan = "@context/SetCurrentTransactionSpan",
 	SetCurrentAPMLoggingSearchContext = "@context/SetCurrentObservabilityLogSearchContext",
 }
@@ -142,8 +144,7 @@ export interface ContextState extends WebviewContext {
 	currentObservabilityAnomalyEntityName?: string;
 	currentTransactionSpan?: CurrentTransactionSpan;
 
-	currentAPMLoggingEntityGuid?: string;
-	currentAPMLoggingSearchTerm?: string;
+	entityAccounts?: EntityAccount[];
 
 	selectedRegion?: string;
 }

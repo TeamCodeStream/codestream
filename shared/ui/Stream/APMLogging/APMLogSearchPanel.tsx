@@ -9,6 +9,7 @@ import Timestamp from "../Timestamp";
 import { HostApi } from "../../webview-api";
 import { Link } from "../Link";
 import {
+	EntityAccount,
 	GetLogFieldDefinitionsRequestType,
 	GetLogsRequestType,
 	GetSurroundingLogsRequestType,
@@ -100,7 +101,12 @@ const columnSpanMapping = {
 	level: 2,
 };
 
-export const APMLogSearchPanel = (props: { entityGuid: string; suppliedQuery?: string }) => {
+export const APMLogSearchPanel = (props: {
+	entityAccounts: EntityAccount[];
+	entityGuid?: string;
+	suppliedQuery?: string;
+}) => {
+	const [hasEntityGuid, setHasEntityGuid] = useState<boolean>();
 	const [fieldDefinitions, setFieldDefinitions] = useState<LogFieldDefinition[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -111,6 +117,12 @@ export const APMLogSearchPanel = (props: { entityGuid: string; suppliedQuery?: s
 		undefined
 	);
 	const [selectSinceOptions, setSelectSinceOptions] = useState<SelectedOption[]>([]);
+
+	const [selectedEntityAccount, setSelectedEntityAccount] = useState<SelectedOption | undefined>(
+		undefined
+	);
+	const [selectEntityAccounts, setSelectEntityAccounts] = useState<SelectedOption[]>([]);
+
 	const [maximized, setMaximized] = useState<boolean>(false);
 	const [results, setResults] = useState<LogResult[]>([]);
 	const [severityAttribute, setSeverityAttribute] = useState<string>();
@@ -145,21 +157,40 @@ export const APMLogSearchPanel = (props: { entityGuid: string; suppliedQuery?: s
 		setSelectSinceOptions(sinceOptions);
 		setSelectedSinceOption(defaultOption);
 
-		if (!props.entityGuid) {
-			handleError(
-				"We were unable to locate the Entity GUID for the selected service; please contact support."
-			);
-			setIsUIDisabled(true);
-			return;
-		}
+		if (props.entityGuid) {
+			const entityAccount = props.entityAccounts.find(ea => ea.entityGuid === props.entityGuid)!;
 
-		fetchFieldDefinitions(props.entityGuid);
+			setSelectedEntityAccount({
+				value: entityAccount.entityGuid,
+				label: `${entityAccount.entityName} (${entityAccount.entityGuid}) in ${entityAccount.accountName} (${entityAccount.accountId})`,
+			});
 
-		// possible there is no searchTerm
-		if (props.suppliedQuery) {
-			setQuery(props.suppliedQuery);
+			setHasEntityGuid(true);
+			fetchFieldDefinitions(props.entityGuid);
+
+			// possible there is no searchTerm
+			if (props.suppliedQuery) {
+				setQuery(props.suppliedQuery);
+			}
+
+			fetchLogs(props.entityGuid, props.suppliedQuery);
+		} else {
+			let entityAccountOptions: SelectedOption[] = [];
+
+			props.entityAccounts
+				.sort((a, b) => {
+					return a.accountId - b.accountId;
+				})
+				.map(ea => {
+					entityAccountOptions.push({
+						value: ea.entityGuid,
+						label: `${ea.entityName} (${ea.entityGuid}) in ${ea.accountName} (${ea.accountId})`,
+					});
+				});
+
+			setHasEntityGuid(false);
+			setSelectEntityAccounts(entityAccountOptions);
 		}
-		fetchLogs(props.entityGuid, props.suppliedQuery);
 	});
 
 	const handleError = (message: string) => {
@@ -242,7 +273,7 @@ export const APMLogSearchPanel = (props: { entityGuid: string; suppliedQuery?: s
 		}
 	};
 
-	const fetchLogs = async (entityGuid: string, suppliedQuery?: string) => {
+	const fetchLogs = async (entityGuid?: string, suppliedQuery?: string) => {
 		try {
 			setLogError(undefined);
 			setHasSearched(true);
@@ -253,6 +284,11 @@ export const APMLogSearchPanel = (props: { entityGuid: string; suppliedQuery?: s
 			setTotalItems(0);
 
 			const filterText = suppliedQuery || query;
+
+			if (!entityGuid) {
+				handleError("Please select an Entity / Account from the drop down before searching.");
+				return;
+			}
 
 			const response = await HostApi.instance.send(GetLogsRequestType, {
 				entityGuid,
@@ -388,6 +424,19 @@ export const APMLogSearchPanel = (props: { entityGuid: string; suppliedQuery?: s
 	return (
 		<>
 			<PanelHeader title="Logs">
+				{selectedEntityAccount && <h3>{selectedEntityAccount?.label}</h3>}
+				{!hasEntityGuid && (
+					<Select
+						id="input-entity-selector"
+						name="entity"
+						classNamePrefix="react-select"
+						value={selectedEntityAccount}
+						placeholder="Entity / Account"
+						options={selectEntityAccounts}
+						onChange={value => setSelectedEntityAccount(value)}
+						isDisabled={isUIDisabled}
+					/>
+				)}
 				<SearchBar className="search-bar">
 					<div className="search-input" style={{ width: "70%", paddingRight: "10px" }}>
 						<Icon name="search" className="search" />
@@ -420,7 +469,7 @@ export const APMLogSearchPanel = (props: { entityGuid: string; suppliedQuery?: s
 					</div>
 					<Button
 						style={{ paddingLeft: "8px", paddingRight: "8px" }}
-						onClick={() => fetchLogs(props.entityGuid)}
+						onClick={() => fetchLogs(selectedEntityAccount?.value)}
 						loading={isLoading}
 						disabled={isUIDisabled}
 					>

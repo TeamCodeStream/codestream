@@ -986,7 +986,7 @@ function listenForEvents(store) {
 	});
 
 	api.on(InitiateLogSearchNotificationType, params => {
-		const { session, users } = store.getState();
+		const { session, users, context } = store.getState();
 		const currentUser = session.userId ? (users[session.userId] as CSMe) : null;
 		const currentRepoId = currentUser?.preferences?.currentO11yRepoId;
 
@@ -997,6 +997,7 @@ function listenForEvents(store) {
 		const props: OpenEditorViewNotification = {
 			panelLocation: ViewColumn.Active,
 			entityGuid: currentEntityGuid!,
+			entityAccounts: store.context.entityAccounts,
 			panel: "logs",
 			title: "Logs",
 			query: params.query,
@@ -1017,6 +1018,7 @@ function listenForEvents(store) {
 		const props: OpenEditorViewNotification = {
 			panelLocation: ViewColumn.Beside,
 			entityGuid: currentEntityGuid!,
+			entityAccounts: store.context.entityAccounts,
 			panel: "nrql",
 			title: "NRQL",
 			query: params.query,

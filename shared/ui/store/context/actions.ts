@@ -1,4 +1,5 @@
 import {
+	EntityAccount,
 	ObservabilityAnomaly,
 	RegisterUserRequest,
 	RepoProjectType,
@@ -141,6 +142,9 @@ export const setCurrentCodemark = (codemarkId?: string, markerId?: string) =>
 
 export const setCurrentMethodLevelTelemetry = (data: any) =>
 	action(ContextActionsType.SetCurrentMethodLevelTelemetry, { data });
+
+export const setEntityAccounts = (entityAccounts: EntityAccount[]) =>
+	action(ContextActionsType.SetEntityAccounts, { entityAccounts });
 
 export const setCurrentObservabilityAnomaly = (
 	anomaly?: ObservabilityAnomaly,

@@ -33,7 +33,7 @@ import {
 	ObservabilityLoadingServiceEntity,
 } from "@codestream/webview/Stream/ObservabilityLoading";
 import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
-import { setRefreshAnomalies } from "../store/context/actions";
+import { setEntityAccounts, setRefreshAnomalies } from "../store/context/actions";
 
 import { HealthIcon } from "@codestream/webview/src/components/HealthIcon";
 import {
@@ -349,6 +349,7 @@ export const Observability = React.memo((props: Props) => {
 	const [currentEntityAccounts, setCurrentEntityAccounts] = useState<EntityAccount[] | undefined>(
 		[]
 	);
+	const [allEntityAccounts, setAllEntityAccounts] = useState<EntityAccount[]>([]);
 	const [currentObsRepo, setCurrentObsRepo] = useState<ObservabilityRepo | undefined>();
 	const [recentIssues, setRecentIssues] = useState<GetIssuesResponse | undefined>();
 	const [recentIssuesError, setRecentIssuesError] = useState<string>();
@@ -1042,11 +1043,18 @@ export const Observability = React.memo((props: Props) => {
 							`o11y: useEffect on scmInfo calling setObservabilityRepos ${JSON.stringify(_.repos)}`
 						);
 						setObservabilityRepos(_.repos || []);
-						// updateCurrentEntityAccounts();
 					});
 			}
 		}
 	}, [derivedState.scmInfo]);
+
+	useEffect(() => {
+		const entityAccounts = observabilityRepos.flatMap(or => {
+			return or.entityAccounts;
+		});
+		dispatch(setEntityAccounts(entityAccounts));
+		setAllEntityAccounts(entityAccounts);
+	}, [observabilityRepos]);
 
 	useEffect(() => {
 		if (!_isEmpty(currentRepoId) && _isEmpty(observabilityRepos) && didMount) {
@@ -1357,6 +1365,7 @@ export const Observability = React.memo((props: Props) => {
 																												panel: "logs",
 																												title: "Logs",
 																												entityGuid: ea.entityGuid,
+																												entityAccounts: allEntityAccounts,
 																											}
 																										);
 																									}}
@@ -1365,7 +1374,7 @@ export const Observability = React.memo((props: Props) => {
 																										data-testid={`view-logs-${ea.entityGuid}`}
 																										style={{ marginLeft: "2px" }}
 																									>
-																										<Icon name="search" title="View Logs" />
+																										<Icon name="logs" title="View Logs" />
 																										View Logs
 																									</span>
 																								</Row>

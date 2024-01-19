@@ -56,6 +56,7 @@ export function GlobalNav() {
 			currentEntityGuid: currentRepoId
 				? (user?.preferences?.activeO11y?.[currentRepoId] as string)
 				: undefined,
+			entityAccounts: state.context.entityAccounts || [],
 			eligibleJoinCompanies,
 			inviteCount,
 		};
@@ -100,6 +101,15 @@ export function GlobalNav() {
 			panel: "nrql",
 			title: "NRQL",
 			entityGuid: derivedState.currentEntityGuid!,
+			entityAccounts: derivedState.entityAccounts,
+		});
+	};
+
+	const launchLogSearch = () => {
+		HostApi.instance.notify(OpenEditorViewNotificationType, {
+			panel: "logs",
+			title: "Logs",
+			entityAccounts: derivedState.entityAccounts,
 		});
 	};
 
@@ -199,6 +209,18 @@ export function GlobalNav() {
 							<Icon
 								name="terminal"
 								title="Query your data"
+								placement="bottom"
+								delay={1}
+								trigger={["hover"]}
+							/>
+						</span>
+					</label>
+
+					<label onClick={launchLogSearch} id="global-nav-logs-label">
+						<span>
+							<Icon
+								name="logs"
+								title="View Logs"
 								placement="bottom"
 								delay={1}
 								trigger={["hover"]}
