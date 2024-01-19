@@ -576,6 +576,9 @@ export const Signup = (props: Props) => {
 						</div>
 					)}
 
+					<p style={{ opacity: 0.5, fontSize: ".9em", textAlign: "center" }}>
+						CodeStream Version {derivedState.pluginVersion}
+					</p>
 					{false && ( // enable me if you need CodeStream login
 						<div>
 							<h2>(Remove me when New Relic sign-in is fully supported)</h2>
