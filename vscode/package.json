@@ -310,7 +310,7 @@
 				},
 				{
 					"command": "codestream.executeNrql",
-					"when": "codestream:status == signedIn && editorTextFocus && resourceExtName == .nrql && editorHasSelection",
+					"when": "codestream:status == signedIn && editorTextFocus && resourceExtname == .nrql && editorHasSelection",
 					"group": "9_zcodestream@4"
 				}
 			]

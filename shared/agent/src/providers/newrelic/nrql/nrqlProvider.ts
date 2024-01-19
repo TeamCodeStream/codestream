@@ -9,6 +9,7 @@ import { log } from "../../../system/decorators/log";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 import { ContextLogger } from "../../contextLogger";
 import { mapNRErrorResponse, parseId } from "../utils";
+import { escapeNrql } from "@codestream/utils/system/string";
 
 @lsp
 export class NrNRQLProvider {
@@ -21,7 +22,8 @@ export class NrNRQLProvider {
 		const accountId = parseId(entityGuid)!.accountId;
 
 		try {
-			const results = await this.graphqlClient.runNrql<LogResult>(accountId, request.query, 400);
+			const query = escapeNrql(request.query);
+			const results = await this.graphqlClient.runNrql<LogResult>(accountId, query, 400);
 
 			return {
 				results,
