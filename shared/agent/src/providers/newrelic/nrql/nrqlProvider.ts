@@ -3,7 +3,6 @@ import {
 	GetNRQLRequest,
 	GetNRQLRequestType,
 	GetNRQLResponse,
-	LogResult,
 } from "@codestream/protocols/agent";
 import { log } from "../../../system/decorators/log";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
@@ -18,12 +17,22 @@ export class NrNRQLProvider {
 	@lspHandler(GetNRQLRequestType)
 	@log()
 	public async executeNRQL(request: GetNRQLRequest): Promise<GetNRQLResponse> {
-		const entityGuid = request.entityGuid;
-		const accountId = parseId(entityGuid)!.accountId;
+		let accountId;
+		if (request.accountId) {
+			accountId = request.accountId;
+		} else {
+			const entityGuid = request.entityGuid;
+			if (entityGuid) {
+				accountId = parseId(entityGuid)!.accountId;
+			}
+		}
+		if (!accountId) {
+			throw new Error("Missing accountId or entityGuid");
+		}
 
 		try {
 			const query = escapeNrql(request.query);
-			const results = await this.graphqlClient.runNrql<LogResult>(accountId, query, 400);
+			const results = await this.graphqlClient.runNrql<any>(accountId, query, 400);
 
 			return {
 				results,

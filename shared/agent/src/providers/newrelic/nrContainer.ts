@@ -207,7 +207,7 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 		reposProvider
 	);
 
-	const nrqlCompletionProvider = new NrqlCompletionProvider(session, newRelicGraphqlClient);
+	const nrqlCompletionProvider = new NrqlCompletionProvider(session, nrqlProvider);
 	session.agent.connection.onCompletion(async (textDocumentPosition: CompletionParams) => {
 		return new Promise<CompletionItem[]>((resolve, reject) => {
 			nrqlCompletionProvider

@@ -6,115 +6,11 @@ import {
 } from "vscode-languageserver";
 import { parseId } from "../utils";
 import { SessionContainer } from "container";
-import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 import { Logger } from "logger";
+import { NrNRQLProvider } from "./nrqlProvider";
+import { nrqlFunctions, nrqlKeywords, nrqlOperators } from "./constants";
 // import * as tmGrammar from "./nrql.tmGrammar.json";
 
-const nrqlFunctions = [
-	"average",
-	"beginningOfMonth",
-	"beginningOfWeek",
-	"beginningOfYear",
-	"compareWith",
-	"count",
-	"dateOf",
-	"endOfMonth",
-	"endOfWeek",
-	"endOfYear",
-	"facet",
-	"filter",
-	"histogram",
-	"monthOf",
-	"now",
-	"percentage",
-	"percentile",
-	"previousDay",
-	"previousMonth",
-	"previousWeek",
-	"previousYear",
-	"rate",
-	"since",
-	"stddev",
-	"sum",
-	"thisDay",
-	"thisMonth",
-	"thisWeek",
-	"thisYear",
-	"timeOfDay",
-	"timeSlice",
-	"timeWindow",
-	"uniqueCount",
-	"until",
-	"yearOf",
-];
-const nrqlKeywords = [
-	"*",
-	"AGGREGATE",
-	"AGO",
-	"ALTER",
-	"ASC",
-	"AS",
-	"AS OF",
-	"COMPARE WITH",
-	"DAY",
-	"DAYS",
-	"DELETE FROM",
-	"DESC",
-	"EXTRAPOLATE",
-	"FACET",
-	"FIELD KEYS",
-	"FROM",
-	"HOUR",
-	"HOURS",
-	"INCLUDE ZERO",
-	"INSERT INTO",
-	"JOIN",
-	"LIMIT",
-	"MEASUREMENTS",
-	"MINUTE",
-	"MINUTES",
-	"MONTH",
-	"MONTHS",
-	"OF",
-	"ORDER BY",
-	"POLICIES",
-	"RETENTION",
-	"SELECT",
-	"SECOND",
-	"SECONDS",
-	"SERIES",
-	"SHOW DATABASES",
-	"SHOW TAG KEYS",
-	"SHOW TAG VALUES",
-	"SINCE",
-	"TIMESERIES",
-	"TIMESTAMP",
-	"UNTIL",
-	"UPDATE",
-	"USING",
-	"VALUES",
-	"WEEK",
-	"WEEKS",
-	"WHERE",
-	"WITH",
-	"WITH TIMEZONE",
-];
-const nrqlOperators = [
-	"=",
-	"!=",
-	">",
-	"<",
-	">=",
-	"<=",
-	"LIKE",
-	"NOT LIKE",
-	"AND",
-	"OR",
-	"IN",
-	"NOT IN",
-	"IS NULL",
-	"IS NOT NULL",
-];
 const nrItemsToDocSelector: any = {
 	AS: "#sel-as",
 	FROM: "#sel-from",
@@ -137,29 +33,9 @@ nrBuiltIns = nrBuiltIns.concat(...nrqlKeywords);
 export class NrqlCompletionProvider {
 	constructor(
 		private session: CodeStreamSession,
-		private newRelicGraphqlClient: NewRelicGraphqlClient
+		private nrNRQLProvider: NrNRQLProvider
 	) {}
 
-	// parseText(text: string, grammar: any) {
-	// 	const tokens = [];
-
-	// 	for (const pattern of grammar.patterns) {
-	// 		const regex = new RegExp(pattern.match, "g");
-	// 		let match;
-
-	// 		while ((match = regex.exec(text)) !== null) {
-	// 			tokens.push({
-	// 				name: pattern.name,
-	// 				start: match.index,
-	// 				end: regex.lastIndex,
-	// 			});
-	// 			// Update the lastIndex to start the next search from the end of the matched token
-	// 			regex.lastIndex = match.index + 1;
-	// 		}
-	// 	}
-
-	// 	return tokens;
-	// }
 	async onCompletion(textDocumentPosition: TextDocumentPositionParams): Promise<CompletionItem[]> {
 		try {
 			const { textDocument, position } = textDocumentPosition;
@@ -319,8 +195,11 @@ export class NrqlCompletionProvider {
 
 			if (nrCollectionsByAccount[accountId]!.length) return;
 
-			const response = await this.newRelicGraphqlClient.runNrql<any>(accountId, "SHOW EVENT TYPES");
-			const mapped = response.map(_ => _.eventType) as string[];
+			const response = await this.nrNRQLProvider.executeNRQL({
+				accountId: accountId,
+				query: "SHOW EVENT TYPES",
+			});
+			const mapped = response.results!.map(_ => _.eventType) as string[];
 			nrCollectionsByAccount[accountId] = mapped;
 			nrCollectionsByAccountAsObject[accountId] = mapped.reduce((obj: any, item: any) => {
 				obj[item] = true;
@@ -347,13 +226,15 @@ export class NrqlCompletionProvider {
 			}
 			if (nrColumnsByAccountByCollectionName[accountId][collectionName].length) return;
 
-			const response = await this.newRelicGraphqlClient.runNrql<any>(
-				accountId,
-				`SELECT keyset() FROM ${collectionName}`
-			);
+			const response = await this.nrNRQLProvider.executeNRQL({
+				accountId: accountId,
+				query: `SELECT keyset() FROM ${collectionName}`,
+			});
 
 			if (response) {
-				nrColumnsByAccountByCollectionName[accountId][collectionName] = response.map(_ => _.key);
+				nrColumnsByAccountByCollectionName[accountId][collectionName] = response.results!.map(
+					_ => _.key
+				);
 			}
 		} catch (ex) {
 			Logger.warn(`Failed to fetchColumns for ${collectionName}`, { error: ex });
