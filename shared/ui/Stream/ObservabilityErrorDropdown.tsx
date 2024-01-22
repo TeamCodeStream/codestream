@@ -21,6 +21,7 @@ interface Props {
 	observabilityErrors?: any;
 	observabilityRepo?: any;
 	entityGuid?: string;
+	domain?: string;
 }
 
 const SubtleDropdown = styled.span`
@@ -141,6 +142,7 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 															openType: "Observability Section",
 															remote: err?.remote || undefined,
 															stackSourceMap: response?.stackSourceMap,
+															domain: props?.domain,
 														})
 													);
 												} catch (ex) {

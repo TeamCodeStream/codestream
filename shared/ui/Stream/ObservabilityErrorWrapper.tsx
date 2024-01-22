@@ -16,6 +16,7 @@ interface Props {
 	noAccess?: string;
 	errorMsg?: string;
 	errorInboxError?: string;
+	domain?: string;
 }
 
 export const ObservabilityErrorWrapper = React.memo((props: Props) => {
@@ -101,11 +102,13 @@ export const ObservabilityErrorWrapper = React.memo((props: Props) => {
 							observabilityAssignments={props.observabilityAssignments}
 							entityGuid={props.entityGuid}
 							errorInboxError={props.errorInboxError}
+							domain={props?.domain}
 						/>
 						<ObservabilityErrorDropdown
 							observabilityErrors={props.observabilityErrors}
 							observabilityRepo={props.observabilityRepo}
 							entityGuid={props.entityGuid}
+							domain={props?.domain}
 						/>
 					</>
 				))}

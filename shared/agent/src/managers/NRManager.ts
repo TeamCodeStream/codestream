@@ -35,7 +35,7 @@ import {
 } from "@codestream/protocols/agent";
 import { CSStackTraceInfo, CSStackTraceLine } from "@codestream/protocols/api";
 import { structuredPatch } from "diff";
-
+import { isEmpty } from "lodash";
 import { Container, SessionContainer } from "../container";
 import { isWindows } from "../git/shell";
 import { Logger } from "../logger";
@@ -197,6 +197,7 @@ export class NRManager {
 		occurrenceId,
 		codeErrorId,
 		stackSourceMap,
+		domain,
 	}: ResolveStackTraceRequest): Promise<ResolveStackTraceResponse> {
 		const { git, repos } = SessionContainer.instance();
 		const matchingRepo = await git.getRepositoryById(repoId);
@@ -209,6 +210,14 @@ export class NRManager {
 			// only set the warning if we haven't already set it.
 			if (!firstWarning) firstWarning = warning;
 		};
+
+		if (domain === "BROWSER" && isEmpty(stackSourceMap)) {
+			setWarning({
+				message: `[Upload a source map] so that an un-minified stack trace can be displayed.`,
+				helpUrl: `https://docs.newrelic.com/docs/browser/browser-monitoring/browser-pro-features/upload-source-maps-un-minify-js-errors/`,
+			});
+		}
+
 		if (!matchingRepoPath) {
 			const repo = await repos.getById(repoId);
 			setWarning({
