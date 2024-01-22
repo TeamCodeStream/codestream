@@ -1,4 +1,4 @@
-import { SymbolLocator } from "providers/symbolLocator";
+import { InstrumentableSymbol, SymbolLocator } from "providers/symbolLocator";
 import {
 	EditorCopySymbolRequest,
 	EditorCopySymbolResponse,
@@ -6,12 +6,30 @@ import {
 	EditorReplaceSymbolResponse
 } from "@codestream/protocols/webview";
 import { Editor } from "extensions";
-import { Uri, commands, Range } from "vscode";
+import { Uri, commands, Range, DocumentSymbol } from "vscode";
 import { CancellationTokenSource } from "vscode-languageclient";
 import { BuiltInCommands } from "../constants";
 import { Logger } from "logger";
 
 const symbolLocator = new SymbolLocator();
+
+function findSymbol(
+	symbols: {
+		instrumentableSymbols: InstrumentableSymbol[];
+		allSymbols: DocumentSymbol[];
+	},
+	symbolName: string
+): DocumentSymbol | undefined {
+	const fullList = [...symbols.allSymbols, ...symbols.instrumentableSymbols.map(s => s.symbol)];
+	for (const symbol of fullList) {
+		// Strip () out of method name .i.e getVets() becomes getVets
+		const simpleSymbolName = symbol.name.replace(/\(.*?\)$/, "");
+		if (simpleSymbolName === symbolName) {
+			return symbol;
+		}
+	}
+	return undefined;
+}
 
 export async function copySymbol(
 	params: EditorCopySymbolRequest
@@ -25,32 +43,29 @@ export async function copySymbol(
 			editor?.document,
 			new CancellationTokenSource().token
 		);
-		const fullList = [...symbols.allSymbols, ...symbols.instrumentableSymbols.map(s => s.symbol)];
-		for (const symbol of fullList) {
-			// Strip () out of method name .i.e getVets() becomes getVets
-			const simpleSymbolName = symbol.name.replace(/\(.*?\)$/, "");
-			if (simpleSymbolName === params.symbolName) {
-				// Logger.warn(`Found symbol ${JSON.stringify(symbol)}`);
-				const theText = editor.document.getText(symbol.range);
-				return {
-					success: true,
-					text: theText,
-					// just assigning the range direcly results in an array of Positions instead of a start / end Position - not sure why?????
-					range: {
-						start: {
-							line: symbol.range.start.line,
-							character: symbol.range.start.character
-						},
-						end: {
-							line: symbol.range.end.line,
-							character: symbol.range.end.character
-						}
-					}
-				};
-			}
+		const symbol = findSymbol(symbols, params.symbolName);
+		if (!symbol) {
+			return {
+				success: false
+			};
 		}
+
+		// Logger.warn(`Found symbol ${JSON.stringify(symbol)}`);
+		const theText = editor.document.getText(symbol.range);
 		return {
-			success: false
+			success: true,
+			text: theText,
+			// just assigning the range direcly results in an array of Positions instead of a start / end Position - not sure why?????
+			range: {
+				start: {
+					line: symbol.range.start.line,
+					character: symbol.range.start.character
+				},
+				end: {
+					line: symbol.range.end.line,
+					character: symbol.range.end.character
+				}
+			}
 		};
 	} catch (ex) {
 		// TODO fix vscode error logging (logs errors as {})
@@ -79,7 +94,7 @@ export async function replaceSymbol(
 			editor?.document,
 			new CancellationTokenSource().token
 		);
-		const targetSymbol = symbols.allSymbols.find(s => s.name === params.symbolName);
+		const targetSymbol = findSymbol(symbols, params.symbolName);
 		if (!targetSymbol) {
 			return {
 				success: false
@@ -93,7 +108,7 @@ export async function replaceSymbol(
 			editor?.document,
 			new CancellationTokenSource().token
 		);
-		const updatedTargetSymbol = updatedSymbols.allSymbols.find(s => s.name === params.symbolName);
+		const updatedTargetSymbol = findSymbol(updatedSymbols, params.symbolName);
 		if (!updatedTargetSymbol) {
 			// we still win but not formatted?
 			return {

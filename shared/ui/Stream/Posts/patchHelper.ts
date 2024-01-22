@@ -6,8 +6,6 @@ export function createDiffFromSnippets(currentCode: string, codeFix: string): st
 	currentCode = currentCode.replace(/\t/g, "    ");
 	// just the first line of currentCode had it's indent removed, so add it back :(
 	currentCode = currentCode.replace(/^(?!\s*$)/, "    ");
-	// add 4 spaces to beginning of each line in codeFix since openai strips out first indent
-	codeFix = codeFix.replace(/^(?!\s*$)/gm, "    ");
 	// Add trailing newline to both currentCode and codeFix if they don't already have one
 	if (!currentCode.endsWith("\n")) currentCode += "\n";
 	if (!codeFix.endsWith("\n")) codeFix += "\n";

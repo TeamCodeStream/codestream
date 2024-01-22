@@ -8,10 +8,11 @@ import { PullRequestPatch } from "@codestream/webview/Stream/PullRequestPatch";
 import styled from "styled-components";
 import { Button } from "@codestream/webview/src/components/Button";
 import { createDiffFromSnippets } from "@codestream/webview/Stream/Posts/patchHelper";
-import { useAppSelector } from "@codestream/webview/utilities/hooks";
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { isGrokStreamLoading } from "@codestream/webview/store/posts/reducer";
 import { isPending } from "@codestream/webview/store/posts/types";
 import { NrAiFeedback } from "./NrAiFeedback";
+import { replaceSymbol } from "@codestream/webview/store/codeErrors/thunks";
 
 /* TODOS
 - [X] don't call copySymbol if there is already a nrai response (actually needed currently)
@@ -54,7 +55,8 @@ function Markdown(props: { text: string }) {
 }
 
 export function NrAiComponent(props: NrAiComponentProps) {
-	console.debug("NrAiComponent", props);
+	// console.debug("NrAiComponent", props);
+	const dispatch = useAppDispatch();
 	const textEditorUri = useAppSelector(state => state.editorContext.textEditorUri);
 	const isGrokLoading = useAppSelector(isGrokStreamLoading);
 	const functionToEdit = useAppSelector(state => state.codeErrors.functionToEdit);
@@ -74,31 +76,42 @@ export function NrAiComponent(props: NrAiComponentProps) {
 
 	const parts = props.post.parts;
 
-	const patch = useMemo(() => {
-		if (!props.post.parts?.codeFix || !functionToEdit?.codeBlock) return undefined;
-		// Make sure codeFix is fully streamed - we know this if description is present
-		if (!props.post.parts.description) return undefined;
+	const normalizedCodeFix = useMemo(() => {
+		if (!props.post.parts?.codeFix) return undefined;
 		// Strip out leading markdown ```
 		let codeFix = props.post.parts.codeFix.replace('```\n"', "");
 		// Strip out end markdown
 		codeFix = codeFix.replace(/"\n*```\n+/, "\n");
-		const patch = createDiffFromSnippets(functionToEdit.codeBlock, codeFix);
-		console.log("===--- Patch", patch);
+		// add 4 spaces to beginning of each line in codeFix since chatgpt strips out first indent
+		codeFix = codeFix.replace(/^(?!\s*$)/gm, "    ");
+		return codeFix;
+	}, [props.post.parts?.codeFix]);
+
+	const patch = useMemo(() => {
+		if (!normalizedCodeFix || !functionToEdit?.codeBlock) return undefined;
+		// Make sure codeFix is fully streamed - we know this if description is present
+		if (!props.post.parts?.description) return undefined;
+		// Strip out leading markdown ```
+		const patch = createDiffFromSnippets(functionToEdit.codeBlock, normalizedCodeFix);
+		// console.log("===--- Patch", patch);
 		return patch;
-	}, [props.post.parts?.codeFix, functionToEdit, props.post.parts?.description]);
+	}, [normalizedCodeFix, functionToEdit, props.post.parts?.description]);
 
 	const applyFix = async () => {
-		console.log("===--- Apply fix");
-		if (!textEditorUri || !patch) {
-			console.error("No textEditorUri or patch");
+		if (!textEditorUri || !functionToEdit?.symbol || !normalizedCodeFix) {
+			console.error("No textEditorUri symbol or codeBlock");
 			return;
 		}
 		try {
-			// const result = await HostApi.instance.send(ApplyPatchType, {
-			// 	fileUri: textEditorUri,
-			// 	patch: patch,
-			// });
-			// console.log("===--- Applied fix", result);
+			// remove trailing linefeed on normalizedCodeFix
+			const normalizedCodeFixWithoutTrailingLinefeed = normalizedCodeFix.replace(/\r?\n$/, "");
+			await dispatch(
+				replaceSymbol(
+					textEditorUri,
+					functionToEdit.symbol,
+					normalizedCodeFixWithoutTrailingLinefeed
+				)
+			);
 		} catch (e) {
 			console.error("===--- Error applying fix", e);
 		}
