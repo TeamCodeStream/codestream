@@ -59,13 +59,10 @@ export const SignupNewRelic = () => {
 
 	useDidMount(() => {
 		if (derivedState.webviewFocused) {
-			HostApi.instance.track(
-				"codestream/sign_in page_viewed",
-				{
-					"Page Name": "Signup with NR",
-				},
-				"page_view"
-			);
+			HostApi.instance.track("codestream/sign_in page_viewed", {
+				"Page Name": "Signup with NR",
+				event_type: "page_view",
+			});
 		}
 	});
 

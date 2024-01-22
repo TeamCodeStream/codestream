@@ -315,7 +315,6 @@ class TelemetryParams(
     val eventName: String,
     val properties: Map<String, Any?>? = null,
     val options: TelemetryParamsOptions? = null,
-    val event_type: String?
 )
 
 class TelemetryParamsOptions(

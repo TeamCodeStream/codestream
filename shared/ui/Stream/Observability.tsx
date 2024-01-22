@@ -389,13 +389,10 @@ export const Observability = React.memo((props: Props) => {
 		} catch (ex) {
 			setLoadingAssignments(false);
 			if (ex.code === ERROR_NR_INSUFFICIENT_API_KEY) {
-				HostApi.instance.track(
-					"codestream/o11y fetch_failed",
-					{
-						meta_data: `query: GetObservabilityErrorAssignments`,
-					},
-					"response"
-				);
+				HostApi.instance.track("codestream/o11y fetch_failed", {
+					meta_data: `query: GetObservabilityErrorAssignments`,
+					event_type: "response",
+				});
 				setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
 			} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
 				setNoErrorsAccess(ex.message || GENERIC_ERROR_MESSAGE);
@@ -447,13 +444,10 @@ export const Observability = React.memo((props: Props) => {
 				}
 			} catch (err) {
 				if (err.code === ERROR_NR_INSUFFICIENT_API_KEY) {
-					HostApi.instance.track(
-						"codestream/o11y fetch_failed",
-						{
-							meta_data: `query: GetObservabilityErrors`,
-						},
-						"response"
-					);
+					HostApi.instance.track("codestream/o11y fetch_failed", {
+						meta_data: `query: GetObservabilityErrors`,
+						event_type: "response",
+					});
 					setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
 				} else if (err.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
 					setNoErrorsAccess(err.message || GENERIC_ERROR_MESSAGE);
@@ -629,6 +623,7 @@ export const Observability = React.memo((props: Props) => {
 			console.debug("o11y: codestream/o11y rendered", telemetryStateValue);
 			const properties: AnyObject = {
 				meta_data: telemetryStateValue,
+				event_type: "state_load",
 			};
 			if (telemetryStateValue === "state: no_services") {
 				properties.Meta = {
@@ -638,7 +633,7 @@ export const Observability = React.memo((props: Props) => {
 					observabilityRepoCount: ${observabilityRepos?.length ?? -1}`,
 				};
 			}
-			HostApi.instance.track("codestream/o11y rendered", properties, "state_load");
+			HostApi.instance.track("codestream/o11y rendered", properties);
 		}
 	};
 
@@ -662,6 +657,7 @@ export const Observability = React.memo((props: Props) => {
 			const account = currentEntityAccounts?.find(_ => _.entityGuid === entity?.entityGuid);
 
 			const event = {
+				event_type: "state_load",
 				entity_guid: entity?.entityGuid ? entity?.entityGuid : "",
 				account_id: account?.accountId ? account.accountId : null,
 				meta_data: `errors_listed ${
@@ -674,7 +670,7 @@ export const Observability = React.memo((props: Props) => {
 
 			console.debug(`o11y: codestream/service rendered`, event);
 
-			HostApi.instance.track("codestream/service rendered", event, "state_load");
+			HostApi.instance.track("codestream/service rendered", event);
 			setPendingServiceClickedTelemetryCall(false);
 		} catch (ex) {
 			console.error(ex);
@@ -732,13 +728,10 @@ export const Observability = React.memo((props: Props) => {
 		} catch (ex) {
 			console.debug(`o11y: fetchObservabilityRepos nope`, ex);
 			if (ex.code === ERROR_NR_INSUFFICIENT_API_KEY) {
-				HostApi.instance.track(
-					"codestream/o11y fetch_failed",
-					{
-						meta_data: `query: GetObservabilityRepos`,
-					},
-					"response"
-				);
+				HostApi.instance.track("codestream/o11y fetch_failed", {
+					meta_data: `query: GetObservabilityRepos`,
+					event_type: "response",
+				});
 				setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
 			} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
 				setNoErrorsAccess(ex.message || GENERIC_ERROR_MESSAGE);
@@ -1410,20 +1403,17 @@ export const Observability = React.memo((props: Props) => {
 																</span>
 															}
 															onSuccess={async e => {
-																HostApi.instance.track(
-																	"codestream/entity associated_with_repo",
-																	{
-																		entity_guid: e.entityGuid ? e.entityGuid : "",
-																		account_id: currentEntityAccounts?.find(
-																			_ => _.entityGuid === e.entityGuid
-																		)
-																			? currentEntityAccounts?.find(
-																					_ => _.entityGuid === e.entityGuid
-																			  )
-																			: "",
-																	},
-																	"response"
-																);
+																HostApi.instance.track("codestream/entity associated_with_repo", {
+																	event_type: "response",
+																	entity_guid: e.entityGuid ? e.entityGuid : "",
+																	account_id: currentEntityAccounts?.find(
+																		_ => _.entityGuid === e.entityGuid
+																	)
+																		? currentEntityAccounts?.find(
+																				_ => _.entityGuid === e.entityGuid
+																		  )
+																		: "",
+																});
 
 																_useDidMount(true);
 															}}

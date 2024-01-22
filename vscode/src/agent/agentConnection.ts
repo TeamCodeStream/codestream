@@ -925,19 +925,14 @@ export class CodeStreamAgentConnection implements Disposable {
 	private readonly _telemetry = new (class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
-		async track(
-			eventName: string,
-			properties?: { [key: string]: string | number | boolean },
-			event_type?: string
-		) {
+		async track(eventName: string, properties?: { [key: string]: string | number | boolean }) {
 			if (!this._connection.started) return;
 
 			Logger.debug("(5) track called from agentConnection.ts :: ", eventName);
 			try {
 				const resp = await this._connection.sendRequest(TelemetryRequestType, {
 					eventName: eventName,
-					properties: properties,
-					event_type: event_type
+					properties: properties
 				});
 
 				return resp;

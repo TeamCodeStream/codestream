@@ -222,7 +222,9 @@ export const OnboardNewRelic = React.memo(function OnboardNewRelic() {
 			}
 		})();
 
-		HostApi.instance.track("codestream/instrumentation_wizard displayed", {}, "modal_display");
+		HostApi.instance.track("codestream/instrumentation_wizard displayed", {
+			event_type: "modal_display",
+		});
 	});
 
 	// check when you connect to a host provider
@@ -259,25 +261,19 @@ export const OnboardNewRelic = React.memo(function OnboardNewRelic() {
 
 	const setStep = (step: number, options?: { appName?: string }) => {
 		if (step === NUM_STEPS - 1) {
-			HostApi.instance.track(
-				"codestream/instrumentation_wizard completed",
-				{
-					meta_data: `selected_language: ${projectType}`,
-				},
-				"modal_display"
-			);
+			HostApi.instance.track("codestream/instrumentation_wizard completed", {
+				meta_data: `selected_language: ${projectType}`,
+				event_type: "modal_display",
+			});
 		}
 
 		if (step === 1) {
-			HostApi.instance.track(
-				"codestream/instrumentation_wizard started",
-				{
-					target: "get_started",
-					"target text": "Get Started",
-					meta_data: `detected_language: ${derivedState.wantNewRelicOptions?.projectType}`,
-				},
-				"click"
-			);
+			HostApi.instance.track("codestream/instrumentation_wizard started", {
+				target: "get_started",
+				"target text": "Get Started",
+				meta_data: `detected_language: ${derivedState.wantNewRelicOptions?.projectType}`,
+				event_type: "click",
+			});
 		}
 
 		if (step >= NUM_STEPS) {

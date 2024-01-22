@@ -1143,8 +1143,8 @@ export class CodeStreamSession {
 							eventName: "codestream/user login_failed",
 							properties: {
 								meta_data: `error: ${ex.info && ex.info.error}`,
+								event_type: "response",
 							},
-							event_type: "response",
 						});
 						// map the reason for provider auth failure
 						error = loginApiErrorMappings[ex.info.error];

@@ -618,6 +618,7 @@ export function CodeErrorNav(props: Props) {
 				meta_data_2: `entry_point: ${derivedState.currentCodeErrorData?.openType || "open_in_ide"}`,
 				meta_data_3: `stack_trace: ${!!(stackInfo && !stackInfo.error)}`,
 				meta_data_4: `build_sha: missing`,
+				event_type: "modal_display",
 			};
 			if (trackingData["Stack Trace"]) {
 				trackingData["meta_data_4"] = !refToUse
@@ -626,11 +627,7 @@ export function CodeErrorNav(props: Props) {
 					? "build_sha: warning"
 					: "build_sha: populated";
 			}
-			HostApi.instance.track(
-				"codestream/errors/error_group displayed",
-				trackingData,
-				"modal_display"
-			);
+			HostApi.instance.track("codestream/errors/error_group displayed", trackingData);
 		} catch (ex) {
 			console.warn(ex);
 			const title = "Unexpected Error";

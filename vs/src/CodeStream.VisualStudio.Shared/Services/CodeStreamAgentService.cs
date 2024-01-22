@@ -334,7 +334,7 @@ namespace CodeStream.VisualStudio.Shared.Services
 			);
 		}
 
-		public Task TrackAsync(string eventName, TelemetryProperties properties, string event_type)
+		public Task TrackAsync(string eventName, TelemetryProperties properties)
 		{
 			try
 			{
@@ -344,7 +344,6 @@ namespace CodeStream.VisualStudio.Shared.Services
 					{
 						EventName = eventName,
 						Properties = properties,
-						EventType = event_type
 					}
 				);
 			}

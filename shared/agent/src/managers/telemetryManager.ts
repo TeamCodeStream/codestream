@@ -59,7 +59,7 @@ export class TelemetryManager {
 		const cc = Logger.getCorrelationContext();
 		this._providers.forEach(provider => {
 			try {
-				void provider.track(request.eventName, request.properties, request.event_type);
+				void provider.track(request.eventName, request.properties);
 			} catch (ex) {
 				Logger.error(ex, cc);
 			}

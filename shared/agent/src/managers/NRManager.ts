@@ -156,8 +156,8 @@ export class NRManager {
 						account_id: parsed?.accountId ? parsed.accountId : "",
 						meta_data: `error_group_id: ${errorGroupGuid!}`,
 						meta_data_2: `trace_id: ${parsed?.accountId || 0}`,
+						event_type: "response",
 					},
-					event_type: "response",
 				});
 			} catch (ex) {
 				// ignore
