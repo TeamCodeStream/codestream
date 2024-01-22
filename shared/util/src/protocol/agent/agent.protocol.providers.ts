@@ -2337,16 +2337,12 @@ export interface EntityGoldenMetrics {
 	}[];
 	pillsData?: {
 		errorRateData?: {
-			isDisplayErrorChange?: boolean;
-			percentChange?: number;
-			color?: string;
-			permalinkUrl?: string;
+			percentChange: string;
+			permalinkUrl: string;
 		};
 		responseTimeData?: {
-			isDisplayTimeResponseChange?: boolean;
-			percentChange?: number;
-			color?: string;
-			permalinkUrl?: string;
+			percentChange: string;
+			permalinkUrl: string;
 		};
 	};
 }
