@@ -10,6 +10,9 @@ import {
 	isNRErrorResponse,
 } from "@codestream/protocols/agent";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
+import { NRQLResultsTable } from "./NRQLResultsTable";
+import { NRQLResultsBillboard } from "./NRQLResultsBillboard";
+import { NRQLResultsJSON } from "./NRQLResultsJSON";
 
 const SearchBar = styled.div`
 	display: flex;
@@ -39,6 +42,7 @@ export const NRQLPanel = (props: {
 }) => {
 	const [query, setQuery] = useState<string>("");
 	const [results, setResults] = useState<NRQLResult[]>([]);
+	const [resultsType, setResultsType] = useState<string>("table");
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [columnHeaders, setColumnHeaders] = useState<string[]>([]);
 	const [totalItems, setTotalItems] = useState<number>(0);
@@ -55,6 +59,14 @@ export const NRQLPanel = (props: {
 			executeNRQL(props.entityGuid!, props.suppliedQuery);
 		}
 	});
+
+	const checkKeyPress = e => {
+		if (e.key === "Enter" || e.which === 13 || e.keyCode === 13) {
+			if (e.metaKey || e.ctrlKey) {
+				executeNRQL(props.entityGuid!);
+			}
+		}
+	};
 
 	const executeNRQL = async (entityGuid: string, suppliedQuery?: string) => {
 		try {
@@ -90,6 +102,7 @@ export const NRQLPanel = (props: {
 			if (response.results && response.results.length > 0) {
 				setResults(response.results);
 				setTotalItems(response.results.length);
+				setResultsType(response.resultsType);
 				setColumnHeaders(Object.keys(response.results[0]));
 			}
 		} catch (ex) {
@@ -97,43 +110,6 @@ export const NRQLPanel = (props: {
 		} finally {
 			setIsLoading(false);
 		}
-	};
-
-	const renderHeaderRow = () => {
-		return (
-			<tr>
-				{columnHeaders &&
-					columnHeaders.map(ch => {
-						return (
-							<th
-								style={{
-									border: "1px solid darkgray",
-									padding: "3px 8px 3px 8px",
-								}}
-							>
-								{ch}
-							</th>
-						);
-					})}
-			</tr>
-		);
-	};
-
-	const NRQLResultRow = (props: { result: NRQLResult }) => {
-		return (
-			<tr
-				style={{
-					color: "lightgray",
-					borderBottom: "1px solid lightgray",
-				}}
-			>
-				{props.result &&
-					columnHeaders &&
-					columnHeaders.map(ch => {
-						return <td>{props.result[ch]}</td>;
-					})}
-			</tr>
-		);
 	};
 
 	return (
@@ -145,6 +121,7 @@ export const NRQLPanel = (props: {
 							name="q"
 							value={query}
 							className="input-text control"
+							onKeyDown={checkKeyPress}
 							onChange={e => {
 								setQuery(e.target.value);
 							}}
@@ -169,21 +146,20 @@ export const NRQLPanel = (props: {
 				{!isLoading && totalItems > 0 && (
 					<div>
 						<span style={{ fontSize: "14px", fontWeight: "bold", paddingBottom: "10px" }}>
-							{totalItems.toLocaleString()} Records
+							{totalItems.toLocaleString()} {totalItems === 1 ? "Record" : "Records"}
 						</span>{" "}
 					</div>
 				)}
 
 				<div>
-					{!nrqlError && !isLoading && results && totalItems > 0 && (
-						<table style={{ width: "100%", borderCollapse: "collapse" }}>
-							<thead>{renderHeaderRow()}</thead>
-							<tbody>
-								{results.map(r => (
-									<NRQLResultRow result={r} />
-								))}
-							</tbody>
-						</table>
+					{!nrqlError && !isLoading && results && totalItems > 0 && resultsType === "table" && (
+						<NRQLResultsTable columnHeaders={columnHeaders} results={results} />
+					)}
+					{!nrqlError && !isLoading && results && totalItems > 0 && resultsType === "billboard" && (
+						<NRQLResultsBillboard results={results} />
+					)}
+					{!nrqlError && !isLoading && results && totalItems > 0 && resultsType === "json" && (
+						<NRQLResultsJSON results={results} />
 					)}
 
 					{nrqlError && (
