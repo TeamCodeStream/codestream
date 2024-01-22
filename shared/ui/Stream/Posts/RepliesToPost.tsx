@@ -43,6 +43,7 @@ export const RepliesToPost = (props: {
 	parentPostId: string;
 	itemId: string;
 	numReplies: number;
+	codeBlock?: string;
 	codeErrorId?: string;
 	noReply?: boolean;
 	file?: string;

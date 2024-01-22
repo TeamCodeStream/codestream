@@ -1,24 +1,23 @@
-export function reconstitutePatch(
-	codeFix: string | undefined,
-	startLineNo: number | undefined
-): string | undefined {
-	if (!codeFix || !startLineNo) return undefined;
+import { createPatch } from "diff";
 
-	// Use regex to remove first line if it is ``` or ```diff
-	codeFix = codeFix.replace(/^```(diff)?\n/, "");
-	// Use regex to remove the last line if it is ``` or ```\n
-	codeFix = codeFix.replace(/```(\n){0,2}$/, "");
+export function createDiffFromSnippets(currentCode: string, codeFix: string): string | undefined {
+	// filename not used in output, but required by createPatch
+	// in currentCode conver tabs to spaces (4 spaces) to match non-tabbed output that comes from codeFix / openai
+	currentCode = currentCode.replace(/\t/g, "    ");
+	// just the first line of currentCode had it's indent removed, so add it back :(
+	currentCode = currentCode.replace(/^(?!\s*$)/, "    ");
+	// add 4 spaces to beginning of each line in codeFix since openai strips out first indent
+	codeFix = codeFix.replace(/^(?!\s*$)/gm, "    ");
+	// Add trailing newline to both currentCode and codeFix if they don't already have one
+	if (!currentCode.endsWith("\n")) currentCode += "\n";
+	if (!codeFix.endsWith("\n")) codeFix += "\n";
 
-	// Parse existing unified diff header with regex
-	const headerLine = codeFix.split("\n")[0];
-	const headerMatch = /@@ -(\d+),(\d+) \+(\d+),(\d+) @@/.exec(headerLine);
-	if (!headerMatch) return undefined;
-	const [, _startLine, startLineCount, _endLine, endLineCount] = headerMatch;
-
-	const lines = codeFix.split("\n");
-	// Replace the first line with the new unified diff header
-	lines[0] = `@@ -${startLineNo},${startLineCount} +${startLineNo},${endLineCount} @@`;
-	const result = lines.join("\n");
-	console.log("*** reconstitutePatch result", result);
-	return result;
+	const sp = createPatch("filename.java", currentCode, codeFix, undefined, undefined, {
+		ignoreWhitespace: false,
+	});
+	// Detect if patch uses windows or linux line endings
+	const lineEnding = sp.split("\n")[1].includes("\\r\\n") ? "\r\n" : "\n";
+	// Remove first 4 lines of patch (diff header) and preserve windows or linux line endings
+	const formattedPatch = sp.split("\n").slice(4).join(lineEnding);
+	return formattedPatch;
 }

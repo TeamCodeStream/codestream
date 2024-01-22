@@ -1925,6 +1925,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 								codeErrorId={props.codeError.id}
 								noReply={true}
 								file={currentNrAiFile}
+								codeBlock={functionToEdit?.codeBlock}
 								codeBlockStartLine={functionToEdit?.codeBlockStartLine}
 							/>
 							{grokError && (
