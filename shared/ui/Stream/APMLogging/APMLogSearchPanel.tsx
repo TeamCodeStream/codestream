@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Icon from "../Icon";
 import { PanelHeader } from "../../src/components/PanelHeader";
 import styled from "styled-components";
+import { components, OptionProps } from "react-select";
 import { useDidMount } from "../../utilities/hooks";
 import Button from "../Button";
 import Select from "react-select";
@@ -10,14 +11,17 @@ import { HostApi } from "../../webview-api";
 import { Link } from "../Link";
 import {
 	EntityAccount,
+	EntityType,
 	GetLogFieldDefinitionsRequestType,
 	GetLogsRequestType,
+	GetObservabilityEntitiesRequestType,
 	GetSurroundingLogsRequestType,
 	LogFieldDefinition,
 	LogResult,
 	isNRErrorResponse,
 } from "@codestream/protocols/agent";
 import { SaveFileRequestType, ShellPromptFolderRequestType } from "@codestream/protocols/webview";
+import { AsyncPaginate } from "react-select-async-paginate";
 
 interface SelectedOption {
 	value: string;
@@ -99,6 +103,36 @@ const logSeverityToColor = {
 
 const columnSpanMapping = {
 	level: 2,
+};
+
+type AdditionalType = { nextCursor?: string };
+
+const OptionName = styled.div`
+	color: var(--text-color);
+	white-space: nowrap;
+	overflow: hidden;
+`;
+
+const OptionType = styled.span`
+	color: var(--text-color-subtle);
+	font-size: smaller;
+`;
+
+const OptionAccount = styled.div`
+	color: var(--text-color-subtle);
+	font-size: smaller;
+`;
+
+const Option = (props: OptionProps) => {
+	const children = (
+		<>
+			<OptionName>
+				{props.data?.label} <OptionType>{props.data?.labelAppend}</OptionType>
+			</OptionName>
+			<OptionAccount>{props.data?.sublabel}</OptionAccount>
+		</>
+	);
+	return <components.Option {...props} children={children} />;
 };
 
 export const APMLogSearchPanel = (props: {
@@ -286,7 +320,7 @@ export const APMLogSearchPanel = (props: {
 			const filterText = suppliedQuery || query;
 
 			if (!entityGuid) {
-				handleError("Please select an Entity / Account from the drop down before searching.");
+				handleError("Please select a service from the drop down before searching.");
 				return;
 			}
 
@@ -421,21 +455,62 @@ export const APMLogSearchPanel = (props: {
 		);
 	};
 
+	async function loadEntities(search: string, _loadedOptions, additional?: AdditionalType) {
+		const result = await HostApi.instance.send(GetObservabilityEntitiesRequestType, {
+			searchCharacters: search,
+			nextCursor: additional?.nextCursor,
+		});
+		const options = result.entities.map(e => {
+			const typeLabel = (t: EntityType) => {
+				switch (t) {
+					case "BROWSER_APPLICATION_ENTITY":
+						return "Browser";
+					case "MOBILE_APPLICATION_ENTITY":
+						return "Mobile";
+					case "THIRD_PARTY_SERVICE_ENTITY":
+						return "OTEL";
+					case "INFRASTRUCTURE_AWS_LAMBDA_FUNCTION_ENTITY":
+						return "Lambda";
+					default:
+						return "APM";
+				}
+			};
+			return {
+				label: e.name,
+				value: e.guid,
+				sublabel: e.account,
+				labelAppend: typeLabel(e.entityType),
+			};
+		});
+		return {
+			options,
+			hasMore: !!result.nextCursor,
+			additional: {
+				nextCursor: result.nextCursor,
+			},
+		};
+	}
 	return (
 		<>
 			<PanelHeader title="Logs">
 				{selectedEntityAccount && <h3>{selectedEntityAccount?.label}</h3>}
 				{!hasEntityGuid && (
-					<Select
-						id="input-entity-selector"
-						name="entity"
-						classNamePrefix="react-select"
-						value={selectedEntityAccount}
-						placeholder="Entity / Account"
-						options={selectEntityAccounts}
-						onChange={value => setSelectedEntityAccount(value)}
-						isDisabled={isUIDisabled}
-					/>
+					<div style={{ marginBottom: "15px" }}>
+						<AsyncPaginate
+							id="input-entity-autocomplete"
+							name="entity-autocomplete"
+							classNamePrefix="react-select"
+							loadOptions={loadEntities}
+							value={selectedEntityAccount}
+							isClearable
+							debounceTimeout={750}
+							placeholder={`Type to search for services...`}
+							onChange={newValue => {
+								setSelectedEntityAccount(newValue);
+							}}
+							components={{ Option }}
+						/>
+					</div>
 				)}
 				<SearchBar className="search-bar">
 					<div className="search-input" style={{ width: "70%", paddingRight: "10px" }}>
