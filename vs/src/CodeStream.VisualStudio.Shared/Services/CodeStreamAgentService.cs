@@ -340,11 +340,7 @@ namespace CodeStream.VisualStudio.Shared.Services
 			{
 				return SendAsync<JToken>(
 					"codestream/telemetry",
-					new TelemetryRequest
-					{
-						EventName = eventName,
-						Properties = properties,
-					}
+					new TelemetryRequest { EventName = eventName, Properties = properties, }
 				);
 			}
 			catch (Exception ex)
