@@ -192,45 +192,31 @@ export class GoldenSignalsProvider {
 				if (!currentMetrics || !previousMetrics) return undefined;
 
 				const errorRatePercentageChange =
-					((currentMetrics.errorRate - previousMetrics.errorRate) / previousMetrics.errorRate) *
-					100;
+					previousMetrics.errorRate > 0
+						? `${Math.round(
+								((currentMetrics.errorRate - previousMetrics.errorRate) /
+									previousMetrics.errorRate) *
+									100
+						  )}`
+						: undefined;
 				const responseTimePercentageChange =
-					((currentMetrics.responseTimeMs - previousMetrics.responseTimeMs) /
-						previousMetrics.responseTimeMs) *
-					100;
-
-				const pillsErrorChange = errorRatePercentageChange
-					? Math.round(errorRatePercentageChange)
-					: undefined;
-				const pillsResponseTimeChange = responseTimePercentageChange
-					? Math.round(responseTimePercentageChange)
-					: undefined;
-
-				function getPillsSeverityColor(num: number) {
-					if (num >= 0 && num <= 5) {
-						return "#FFD23D";
-					} else if (num > 5) {
-						return "#DF2D24";
-					} else {
-						return undefined;
-					}
-				}
+					previousMetrics.responseTimeMs > 0
+						? `${Math.round(
+								((currentMetrics.responseTimeMs - previousMetrics.responseTimeMs) /
+									previousMetrics.responseTimeMs) *
+									100
+						  )}`
+						: undefined;
 
 				return {
 					errorRateData: {
-						isDisplayErrorChange:
-							pillsErrorChange && getPillsSeverityColor(pillsErrorChange) ? true : false,
-						percentChange: pillsErrorChange,
-						color: pillsErrorChange && getPillsSeverityColor(pillsErrorChange),
+						percentChange:
+							Number(errorRatePercentageChange) >= 0 ? errorRatePercentageChange : undefined,
 						permalinkUrl: deployListUrl,
 					},
 					responseTimeData: {
-						isDisplayTimeResponseChange:
-							pillsResponseTimeChange && getPillsSeverityColor(pillsResponseTimeChange)
-								? true
-								: false,
-						percentChange: pillsResponseTimeChange,
-						color: pillsResponseTimeChange && getPillsSeverityColor(pillsResponseTimeChange),
+						percentChange:
+							Number(responseTimePercentageChange) >= 0 ? responseTimePercentageChange : undefined,
 						permalinkUrl: deployListUrl,
 					},
 				};

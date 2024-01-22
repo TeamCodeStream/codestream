@@ -46,15 +46,30 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 						{displayUnits && <>{displayUnits} </>}
 					</>
 
-					{pillsData?.errorRateData?.isDisplayErrorChange && (
-						<span style={{ color: pillsData?.errorRateData?.color }}>
-							{pillsData?.errorRateData?.isDisplayErrorChange && (
-								<>(+{pillsData?.errorRateData?.percentChange}%)</>
-							)}
+					{Number(pillsData?.errorRateData?.percentChange) >= 0 ? (
+						<span
+							style={
+								Number(pillsData?.errorRateData?.percentChange) >= 0 &&
+								Number(pillsData?.errorRateData?.percentChange) <= 5
+									? { color: "#FFD23D" }
+									: Number(pillsData?.errorRateData?.percentChange) > 5
+									? { color: "#DF2D24" }
+									: {}
+							}
+						>
+							<>
+								{Number(pillsData?.errorRateData?.percentChange) === 0 ? (
+									<>(+{"<"}1%)</>
+								) : (
+									<>(+{pillsData?.errorRateData?.percentChange}%)</>
+								)}
+							</>
 						</span>
+					) : (
+						<></>
 					)}
 				</span>
-				{<span>{getGlobeIcon()}</span>}
+				<span>{getGlobeIcon()}</span>
 			</>
 		);
 	}
@@ -68,15 +83,30 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 						{displayUnits && <>{displayUnits} </>}
 					</>
 
-					{pillsData?.responseTimeData?.isDisplayTimeResponseChange && (
-						<span style={{ color: pillsData?.responseTimeData?.color }}>
-							{pillsData?.responseTimeData?.isDisplayTimeResponseChange && (
-								<>(+{pillsData?.responseTimeData?.percentChange}%)</>
-							)}
+					{Number(pillsData?.responseTimeData?.percentChange) >= 0 ? (
+						<span
+							style={
+								Number(pillsData?.responseTimeData?.percentChange) >= 0 &&
+								Number(pillsData?.responseTimeData?.percentChange) <= 5
+									? { color: "#FFD23D" }
+									: Number(pillsData?.responseTimeData?.percentChange) > 5
+									? { color: "#DF2D24" }
+									: {}
+							}
+						>
+							<>
+								{Number(pillsData?.responseTimeData?.percentChange) === 0 ? (
+									<>(+{"<"}1%)</>
+								) : (
+									<>(+{pillsData?.responseTimeData?.percentChange}%)</>
+								)}
+							</>
 						</span>
+					) : (
+						<></>
 					)}
 				</span>
-				{<span>{getGlobeIcon()}</span>}
+				<span>{getGlobeIcon()}</span>
 			</>
 		);
 	}
