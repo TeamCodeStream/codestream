@@ -11,7 +11,6 @@ import { HostApi } from "../../webview-api";
 import { Link } from "../Link";
 import {
 	EntityAccount,
-	EntityType,
 	GetLogFieldDefinitionsRequestType,
 	GetLogsRequestType,
 	GetObservabilityEntitiesRequestType,
@@ -101,6 +100,13 @@ const logSeverityToColor = {
 	debug: "",
 };
 
+const entityTypeToLabel = {
+	BROWSER_APPLICATION_ENTITY: "Browser",
+	MOBILE_APPLICATION_ENTITY: "Mobile",
+	THIRD_PARTY_SERVICE_ENTITY: "OTEL",
+	INFRASTRUCTURE_AWS_LAMBDA_FUNCTION_ENTITY: "Lambda",
+};
+
 const columnSpanMapping = {
 	level: 2,
 };
@@ -127,9 +133,9 @@ const Option = (props: OptionProps) => {
 	const children = (
 		<>
 			<OptionName>
-				{props.data?.label} <OptionType>{props.data?.labelAppend}</OptionType>
+				{props.data?.entityName} <OptionType>{props.data?.entityType}</OptionType>
 			</OptionName>
-			<OptionAccount>{props.data?.sublabel}</OptionAccount>
+			<OptionAccount>{props.data?.accountName}</OptionAccount>
 		</>
 	);
 	return <components.Option {...props} children={children} />;
@@ -152,12 +158,10 @@ export const APMLogSearchPanel = (props: {
 	);
 	const [selectSinceOptions, setSelectSinceOptions] = useState<SelectedOption[]>([]);
 
-	const [selectedEntityAccount, setSelectedEntityAccount] = useState<SelectedOption | undefined>(
+	const [selectedEntityAccount, setSelectedEntityAccount] = useState<OptionProps | undefined>(
 		undefined
 	);
-	const [selectEntityAccounts, setSelectEntityAccounts] = useState<SelectedOption[]>([]);
 
-	const [maximized, setMaximized] = useState<boolean>(false);
 	const [results, setResults] = useState<LogResult[]>([]);
 	const [severityAttribute, setSeverityAttribute] = useState<string>();
 	const [messageAttribute, setMessageAttribute] = useState<string>();
@@ -169,7 +173,6 @@ export const APMLogSearchPanel = (props: {
 
 	const [totalItems, setTotalItems] = useState<number>(0);
 	const [logError, setLogError] = useState<string | undefined>("");
-	const [isUIDisabled, setIsUIDisabled] = useState<boolean>(false);
 
 	useDidMount(() => {
 		const defaultOption: SelectedOption = {
@@ -196,7 +199,9 @@ export const APMLogSearchPanel = (props: {
 
 			setSelectedEntityAccount({
 				value: entityAccount.entityGuid,
-				label: `${entityAccount.entityName} (${entityAccount.entityGuid}) in ${entityAccount.accountName} (${entityAccount.accountId})`,
+				label: entityAccount.entityName,
+				accountName: entityAccount.accountName,
+				entityType: entityAccount.domain,
 			});
 
 			setHasEntityGuid(true);
@@ -208,22 +213,6 @@ export const APMLogSearchPanel = (props: {
 			}
 
 			fetchLogs(props.entityGuid, props.suppliedQuery);
-		} else {
-			let entityAccountOptions: SelectedOption[] = [];
-
-			props.entityAccounts
-				.sort((a, b) => {
-					return a.accountId - b.accountId;
-				})
-				.map(ea => {
-					entityAccountOptions.push({
-						value: ea.entityGuid,
-						label: `${ea.entityName} (${ea.entityGuid}) in ${ea.accountName} (${ea.accountId})`,
-					});
-				});
-
-			setHasEntityGuid(false);
-			setSelectEntityAccounts(entityAccountOptions);
 		}
 	});
 
@@ -460,28 +449,16 @@ export const APMLogSearchPanel = (props: {
 			searchCharacters: search,
 			nextCursor: additional?.nextCursor,
 		});
+
 		const options = result.entities.map(e => {
-			const typeLabel = (t: EntityType) => {
-				switch (t) {
-					case "BROWSER_APPLICATION_ENTITY":
-						return "Browser";
-					case "MOBILE_APPLICATION_ENTITY":
-						return "Mobile";
-					case "THIRD_PARTY_SERVICE_ENTITY":
-						return "OTEL";
-					case "INFRASTRUCTURE_AWS_LAMBDA_FUNCTION_ENTITY":
-						return "Lambda";
-					default:
-						return "APM";
-				}
-			};
 			return {
 				label: e.name,
 				value: e.guid,
-				sublabel: e.account,
-				labelAppend: typeLabel(e.entityType),
+				accountName: e.account,
+				entityType: e.entityType,
 			};
 		});
+
 		return {
 			options,
 			hasMore: !!result.nextCursor,
@@ -493,7 +470,15 @@ export const APMLogSearchPanel = (props: {
 	return (
 		<>
 			<PanelHeader title="Logs">
-				{selectedEntityAccount && <h3>{selectedEntityAccount?.label}</h3>}
+				{selectedEntityAccount && (
+					<>
+						<OptionName>
+							{selectedEntityAccount.label}{" "}
+							<OptionType>{selectedEntityAccount.entityType}</OptionType>
+						</OptionName>
+						<OptionAccount>{selectedEntityAccount.accountName}</OptionAccount>
+					</>
+				)}
 				{!hasEntityGuid && (
 					<div style={{ marginBottom: "15px" }}>
 						<AsyncPaginate
@@ -526,7 +511,6 @@ export const APMLogSearchPanel = (props: {
 							onKeyDown={checkKeyPress}
 							placeholder="Query logs in the selected entity"
 							autoFocus
-							disabled={isUIDisabled}
 						/>
 						<Icon name="x" className="clear" onClick={e => setQuery("")} />
 					</div>
@@ -539,14 +523,12 @@ export const APMLogSearchPanel = (props: {
 							placeholder="Since"
 							options={selectSinceOptions}
 							onChange={value => setSelectedSinceOption(value)}
-							isDisabled={isUIDisabled}
 						/>
 					</div>
 					<Button
 						style={{ paddingLeft: "8px", paddingRight: "8px" }}
 						onClick={() => fetchLogs(selectedEntityAccount?.value)}
 						loading={isLoading}
-						disabled={isUIDisabled}
 					>
 						Query Logs
 					</Button>
