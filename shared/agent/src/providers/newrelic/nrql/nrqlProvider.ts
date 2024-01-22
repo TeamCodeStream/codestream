@@ -48,7 +48,7 @@ export class NrNRQLProvider {
 		if (!results || !results.length) return "table";
 
 		if (results.length === 1) {
-			if (Object.keys(results).length === 1) {
+			if (Object.keys(results[0]).length === 1) {
 				return "billboard";
 			}
 		}
