@@ -4,8 +4,6 @@ import { NotificationType, RequestType } from "vscode-languageserver-protocol";
 
 import { Project, RepoProjectType } from "./agent.protocol.scm";
 import { CSRepository, CSStackTraceInfo, CSStackTraceLine } from "./api.protocol.models";
-import { Uri } from "vscode";
-import { JsxAttribute } from "typescript";
 
 export interface ParseStackTraceRequest {
 	errorGroupGuid: string;
