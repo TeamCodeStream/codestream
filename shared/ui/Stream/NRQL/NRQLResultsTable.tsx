@@ -18,12 +18,14 @@ const NRQLResultsTableRow = (props: { result: NRQLResult; columnHeaders: string[
 	);
 };
 
-export const NRQLResultsTable = (props: { columnHeaders: string[]; results: NRQLResult[] }) => {
+export const NRQLResultsTable = (props: { results: NRQLResult[] }) => {
+	const columnHeaders = Object.keys(props.results[0]);
+
 	const renderHeaderRow = () => {
 		return (
 			<tr>
-				{props.columnHeaders &&
-					props.columnHeaders.map(columnHeader => {
+				{columnHeaders &&
+					columnHeaders.map(columnHeader => {
 						return (
 							<th
 								style={{
@@ -45,7 +47,7 @@ export const NRQLResultsTable = (props: { columnHeaders: string[]; results: NRQL
 				<thead>{renderHeaderRow()}</thead>
 				<tbody>
 					{props.results.map(r => (
-						<NRQLResultsTableRow result={r} columnHeaders={props.columnHeaders} />
+						<NRQLResultsTableRow result={r} columnHeaders={columnHeaders} />
 					))}
 				</tbody>
 			</table>

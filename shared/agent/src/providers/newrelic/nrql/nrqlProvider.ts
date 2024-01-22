@@ -53,8 +53,11 @@ export class NrNRQLProvider {
 			}
 		}
 		query = query.toUpperCase();
-		if (query.indexOf("TIMESERIES") > -1 || query.indexOf("FACET") > -1) {
-			return "json";
+		if (query.indexOf("TIMESERIES") > -1) {
+			return "line";
+		}
+		if (query.indexOf("FACET") > -1) {
+			return "json"; // should be "bar"??
 		}
 		return "table";
 	}

@@ -13,6 +13,8 @@ import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { NRQLResultsTable } from "./NRQLResultsTable";
 import { NRQLResultsBillboard } from "./NRQLResultsBillboard";
 import { NRQLResultsJSON } from "./NRQLResultsJSON";
+import { NRQLResultsLine } from "./NRQLResultsLine";
+import { NRQLResultsBar } from "./NRQLResultsBar";
 
 const SearchBar = styled.div`
 	display: flex;
@@ -44,7 +46,6 @@ export const NRQLPanel = (props: {
 	const [results, setResults] = useState<NRQLResult[]>([]);
 	const [resultsType, setResultsType] = useState<string>("table");
 	const [isLoading, setIsLoading] = useState<boolean>(false);
-	const [columnHeaders, setColumnHeaders] = useState<string[]>([]);
 	const [totalItems, setTotalItems] = useState<number>(0);
 	const [nrqlError, setNRQLError] = useState<string | undefined>("");
 
@@ -103,7 +104,6 @@ export const NRQLPanel = (props: {
 				setResults(response.results);
 				setTotalItems(response.results.length);
 				setResultsType(response.resultsType);
-				setColumnHeaders(Object.keys(response.results[0]));
 			}
 		} catch (ex) {
 			handleError(ex);
@@ -153,13 +153,19 @@ export const NRQLPanel = (props: {
 
 				<div>
 					{!nrqlError && !isLoading && results && totalItems > 0 && resultsType === "table" && (
-						<NRQLResultsTable columnHeaders={columnHeaders} results={results} />
+						<NRQLResultsTable results={results} />
 					)}
 					{!nrqlError && !isLoading && results && totalItems > 0 && resultsType === "billboard" && (
 						<NRQLResultsBillboard results={results} />
 					)}
+					{!nrqlError && !isLoading && results && totalItems > 0 && resultsType === "line" && (
+						<NRQLResultsLine results={results} />
+					)}
 					{!nrqlError && !isLoading && results && totalItems > 0 && resultsType === "json" && (
 						<NRQLResultsJSON results={results} />
+					)}
+					{!nrqlError && !isLoading && results && totalItems > 0 && resultsType === "bar" && (
+						<NRQLResultsBar results={results} />
 					)}
 
 					{nrqlError && (
