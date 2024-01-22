@@ -1,5 +1,24 @@
 # Change Log
 
+## [15.1.0] - 2023-1-23
+
+### Added
+
+- Adds support for errors from Browser services
+- Adds change in error rate and response time in Golden Metrics section from three hours before your last deployment to three hours after
+- Adds display of Golden Metrics, SLOs and Related Services for OTel services
+- Adds display of Golden Metrics for Lambda functions
+
+### Changed
+
+- Anomalies in the Code-Level Metrics section are now displayed in a hierarchy of transactions and metrics
+- When viewing anomaly details, the chart appropriate to the type of anomaly is now displayed first
+
+### Fixed
+
+- Addresses [#1682](https://github.com/TeamCodeStream/codestream/issues/1682) &mdash; Export data has bad header
+- Addresses [#1683](https://github.com/TeamCodeStream/codestream/issues/1683) &mdash; Export data corrupt when comment has a comma
+
 ## [15.0.1] - 2023-12-15
 
 ### Changed
