@@ -59,6 +59,8 @@ export function GlobalNav() {
 			entityAccounts: state.context.entityAccounts || [],
 			eligibleJoinCompanies,
 			inviteCount,
+			showNrqlBuilder: true, // TODO: NRQL BUILDER - isFeatureEnabled(state, "showNrqlBuilder"),
+			showLogSearch: true, // TODO: LOG SEARCH - isFeatureEnabled(state, "showLogSearch"),
 		};
 	});
 
@@ -204,29 +206,33 @@ export function GlobalNav() {
 						)}
 					</label>
 
-					<label onClick={launchNrqlEditor} id="global-nav-query-label">
-						<span>
-							<Icon
-								name="terminal"
-								title="Query your data"
-								placement="bottom"
-								delay={1}
-								trigger={["hover"]}
-							/>
-						</span>
-					</label>
+					{derivedState.showNrqlBuilder && (
+						<label onClick={launchNrqlEditor} id="global-nav-query-label">
+							<span>
+								<Icon
+									name="terminal"
+									title="Query your data"
+									placement="bottom"
+									delay={1}
+									trigger={["hover"]}
+								/>
+							</span>
+						</label>
+					)}
 
-					<label onClick={launchLogSearch} id="global-nav-logs-label">
-						<span>
-							<Icon
-								name="logs"
-								title="View Logs"
-								placement="bottom"
-								delay={1}
-								trigger={["hover"]}
-							/>
-						</span>
-					</label>
+					{derivedState.showLogSearch && (
+						<label onClick={launchLogSearch} id="global-nav-logs-label">
+							<span>
+								<Icon
+									name="logs"
+									title="View Logs"
+									placement="bottom"
+									delay={1}
+									trigger={["hover"]}
+								/>
+							</span>
+						</label>
+					)}
 
 					<label
 						className={cx({ active: plusMenuOpen })}

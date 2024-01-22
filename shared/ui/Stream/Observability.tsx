@@ -295,7 +295,7 @@ export const Observability = React.memo((props: Props) => {
 			currentObservabilityAnomalyEntityGuid: state.context.currentObservabilityAnomalyEntityGuid,
 			isO11yPaneOnly,
 			company,
-			showLogSearch: true, // isFeatureEnabled(state, "showLogSearch"),
+			showLogSearch: true, // TODO: LOG SEARCH - isFeatureEnabled(state, "showLogSearch"),
 		};
 	}, shallowEqual);
 
