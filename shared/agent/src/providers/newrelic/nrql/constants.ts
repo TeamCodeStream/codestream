@@ -35,6 +35,7 @@ export const nrqlFunctions = [
 	"until",
 	"yearOf",
 ];
+
 export const nrqlKeywords = [
 	"*",
 	"AGGREGATE",

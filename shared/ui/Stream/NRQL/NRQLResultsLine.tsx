@@ -2,13 +2,28 @@ import React from "react";
 import { NRQLResult } from "@codestream/protocols/agent";
 import { Line, LineChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from "recharts";
 
-const COLOR_LINE_1 = "#8884d8";
+const colorHash = {
+	0: "#e6b223",
+	1: "#9558af",
+	2: "#8884d8",
+	3: "#7aa7d2",
+	4: "#84d888",
+	5: "#d2d27a",
+	6: "#d88884",
+	7: "#7ad2a7",
+	8: "#d27aa7",
+	9: "#a77ad2",
+};
 
 const formatXAxisTime = time => {
 	return new Date(time).toLocaleTimeString();
 };
 
 export const NRQLResultsLine = (props: { results: NRQLResult[] }) => {
+	const result = props.results ? props.results[0] : undefined;
+	const dataKeys = Object.keys(result || {}).filter(
+		_ => _ !== "beginTimeSeconds" && _ !== "endTimeSeconds"
+	);
 	return (
 		<div className="histogram-chart">
 			<div style={{ marginLeft: "0px", marginBottom: "20px" }}>
@@ -34,7 +49,10 @@ export const NRQLResultsLine = (props: { results: NRQLResult[] }) => {
 
 						<YAxis tick={{ fontSize: 12 }} />
 
-						<Line dataKey="count" fill={COLOR_LINE_1} />
+						{dataKeys.map((_, index) => {
+							const color = colorHash[index % 10];
+							return <Line dataKey={_} stroke={color} fill={color} />;
+						})}
 					</LineChart>
 				</ResponsiveContainer>
 			</div>

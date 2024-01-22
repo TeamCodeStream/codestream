@@ -9,7 +9,6 @@ import { SessionContainer } from "container";
 import { Logger } from "logger";
 import { NrNRQLProvider } from "./nrqlProvider";
 import { nrqlFunctions, nrqlKeywords, nrqlOperators } from "./constants";
-// import * as tmGrammar from "./nrql.tmGrammar.json";
 
 const nrItemsToDocSelector: any = {
 	AS: "#sel-as",
