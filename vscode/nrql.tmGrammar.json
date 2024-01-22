@@ -1,79 +1,46 @@
 {
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
 	"scopeName": "source.nrql",
 	"patterns": [
 		{
-			"match": "\\bSELECT\\b",
-			"name": "keyword.select.nrql"
+			"name": "keyword.nrql",
+			"match": "(?i)\\b(\\*|AGGREGATE|AGO|ALTER|ASC|AS|AS OF|COMPARE WITH|DAY|DAYS|DELETE FROM|DESC|EXTRAPOLATE|FACET|FIELD KEYS|FROM|HOUR|HOURS|INCLUDE ZERO|INSERT INTO|JOIN|LIMIT|MEASUREMENTS|MINUTE|MINUTES|MONTH|MONTHS|OF|ORDER BY|POLICIES|RETENTION|SELECT|SECOND|SECONDS|SERIES|SHOW DATABASES|SHOW TAG KEYS|SHOW TAG VALUES|SINCE|TIMESERIES|TIMESTAMP|UNTIL|UPDATE|USING|VALUES|WEEK|WEEKS|WHERE|WITH|WITH TIMEZONE)\\b"
 		},
 		{
-			"match": "\\FROM\\b",
-			"name": "keyword.from.nrql"
+			"name": "support.function.nrql",
+			"match": "(?i)\\b(average|beginningOfMonth|beginningOfWeek|beginningOfYear|compareWith|count|dateOf|endOfMonth|endOfWeek|endOfYear|facet|filter|histogram|monthOf|now|percentage|percentile|previousDay|previousMonth|previousWeek|previousYear|rate|since|stddev|sum|thisDay|thisMonth|thisWeek|thisYear|timeOfDay|timeSlice|timeWindow|uniqueCount|until|yearOf)\\b"
 		},
 		{
-			"match": "\\bWHERE\\b",
-			"name": "keyword.where.nrql"
-		},
-		{
-			"match": "\\bAS\\b",
-			"name": "keyword.as.nrql"
+			"name": "keyword.operator.nrql",
+			"match": "(?i)\\b(=|!=|<|<=|>|>=|and|or|is null|is not null|in|not in|like|not like|\\+|-|\\/|\\*)\\b"
 		},
 		{
 			"name": "string.quoted.single.nrql",
 			"begin": "'",
-			"end": "'",
-			"patterns": [
-				{
-					"name": "constant.character.escape.nrql",
-					"match": "\\\\."
-				}
-			]
+			"end": "'"
+		},
+		{
+			"name": "string.quoted.double.nrql",
+			"begin": "\"",
+			"end": "\""
 		},
 		{
 			"name": "comment.line.double-slash.nrql",
 			"begin": "(//|--)",
-			"end": "\\n",
-			"beginCaptures": {
-				"0": {
-					"name": "punctuation.definition.comment.nrql"
-				}
-			}
+			"end": "\\n"
 		},
 		{
 			"name": "comment.block.nrql",
 			"begin": "/\\*",
-			"end": "\\*/",
-			"beginCaptures": {
-				"0": {
-					"name": "punctuation.definition.comment.nrql"
-				}
-			},
-			"endCaptures": {
-				"0": {
-					"name": "punctuation.definition.comment.nrql"
-				}
-			}
+			"end": "\\*/"
 		},
 		{
-			"name": "separator.nrql",
-			"match": "###",
-			"captures": {
-				"0": {
-					"name": "keyword.operator.nrql"
-				}
-			}
+			"name": "meta.preprocessor.nrql",
+			"match": "###"
 		},
 		{
-			"name": "support.function.nrql",
-			"match": "\\b(count|keyset|max|median|min|mod|sum|uniques|uniquecount)\\b",
-			"captures": {
-				"0": {
-					"name": "keyword.function.nrql"
-				}
-			}
-		},
-		{
-			"match": "\\b[a-zA-Z_][a-zA-Z_0-9]*\\b",
-			"name": "entity.name.attribute.nrql"
+			"name": "entity.other.attribute-name.nrql",
+			"match": "\\b[a-zA-Z_][a-zA-Z_0-9]*\\b"
 		}
 	]
 }
