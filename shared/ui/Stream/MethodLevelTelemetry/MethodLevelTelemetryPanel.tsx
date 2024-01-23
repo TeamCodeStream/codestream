@@ -145,9 +145,12 @@ export const MethodLevelTelemetryPanel = () => {
 	};
 
 	useDidMount(() => {
-		HostApi.instance.track("MLT Codelens Clicked", {
-			"NR Account ID": derivedState.currentMethodLevelTelemetry?.newRelicAccountId + "",
-			Language: derivedState.currentMethodLevelTelemetry.languageId,
+		HostApi.instance.track("codestream/codelense clicked", {
+			entity_guid: derivedState.currentMethodLevelTelemetry?.newRelicEntityGuid,
+			account_id: derivedState.currentMethodLevelTelemetry?.newRelicAccountId + "",
+			meta_data: `language: ${derivedState.currentMethodLevelTelemetry.languageId}`,
+			target: "codelens",
+			event_type: "click",
 		});
 		if (!derivedState.currentMethodLevelTelemetry.error) {
 			loadData(derivedState.currentMethodLevelTelemetry.newRelicEntityGuid!);
