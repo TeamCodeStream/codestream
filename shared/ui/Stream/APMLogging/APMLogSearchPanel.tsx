@@ -19,7 +19,6 @@ import {
 	LogResult,
 	isNRErrorResponse,
 } from "@codestream/protocols/agent";
-import { SaveFileRequestType, ShellPromptFolderRequestType } from "@codestream/protocols/webview";
 import { AsyncPaginate } from "react-select-async-paginate";
 
 interface SelectedOption {
@@ -528,13 +527,13 @@ export const APMLogSearchPanel = (props: {
 					marginBottom: "20px",
 				}}
 			>
-				{!isLoading && totalItems > 0 && (
+				{/* {!isLoading && totalItems > 0 && (
 					<div style={{ paddingBottom: "10px" }}>
 						<span style={{ fontSize: "14px", fontWeight: "bold" }}>
 							{totalItems.toLocaleString()} Logs
 						</span>{" "}
 						<a
-							style={{ display: "none", float: "right", cursor: "pointer" }}
+							style={{ float: "right", cursor: "pointer" }}
 							href="#"
 							onClick={e => {
 								e.preventDefault();
@@ -555,7 +554,7 @@ export const APMLogSearchPanel = (props: {
 							<Icon name="download" title="Download as JSON" />
 						</a>
 					</div>
-				)}
+				)} */}
 
 				<div>
 					{/* {isLoading && (
