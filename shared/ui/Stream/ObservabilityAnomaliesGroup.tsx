@@ -172,13 +172,13 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 											}}
 										>
 											<TransactionIconSpan>
-												<Icon className="subtle" name="transaction" />
+												<Icon style={{ paddingTop: "2px" }} className="subtle" name="anomaly" />
 											</TransactionIconSpan>
 											<Tooltip title={tooltipContent(anomaly)} placement="topRight" delay={1}>
 												{formatFilePath(anomaly.text)}
 											</Tooltip>
 
-											<AnomalyIcon
+											<AnomalyValue
 												anomaly={anomaly}
 												noAnomaly={props?.noAnomaly}
 												isHovered={hoveredRowIndex === `parent_${index}` ? true : false}
@@ -205,12 +205,16 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 															}}
 														>
 															<TransactionIconSpan>
-																<Icon className="subtle" name="metric" />
+																<Icon
+																	style={{ paddingTop: "2px" }}
+																	className="subtle"
+																	name="anomaly"
+																/>
 															</TransactionIconSpan>
 															<Tooltip title={tooltipContent(child)} placement="topRight" delay={1}>
 																{formatFilePath(child.text)}
 															</Tooltip>
-															<AnomalyIcon
+															<AnomalyValue
 																anomaly={child}
 																noAnomaly={props?.noAnomaly}
 																isHovered={
@@ -242,23 +246,12 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 	);
 });
 
-interface AnomalyIconsProps {
+interface AnomalyValueProps {
 	anomaly: ObservabilityAnomaly;
 	noAnomaly?: boolean;
 	isHovered: boolean;
 }
-const AnomalyIcon = React.memo((props: AnomalyIconsProps) => {
-	const getAnomalyTypeLabel = (type: "errorRate" | "duration") => {
-		switch (type) {
-			case "duration":
-				return "clock";
-			case "errorRate":
-				return "alert";
-			default:
-				return "";
-		}
-	};
-
+const AnomalyValue = React.memo((props: AnomalyValueProps) => {
 	const getRoundedPercentage = ratio => {
 		const percentage = (ratio - 1) * 100;
 		const factor = Math.pow(10, 2);
@@ -270,7 +263,6 @@ const AnomalyIcon = React.memo((props: AnomalyIconsProps) => {
 		const roundedPercentage = getRoundedPercentage(ratio);
 		let roundedPercentageText =
 			roundedPercentage > 0 ? `${roundedPercentage}%+` : `${roundedPercentage}%+`;
-		const iconName = getAnomalyTypeLabel(type);
 
 		return (
 			<div
@@ -291,16 +283,6 @@ const AnomalyIcon = React.memo((props: AnomalyIconsProps) => {
 				>
 					{roundedPercentageText}
 				</span>
-				<Icon
-					style={{
-						transform: "scale(0.8)",
-						marginLeft: "0px",
-						display: "inline-block",
-						paddingLeft: "2px",
-					}}
-					className="subtle"
-					name={iconName}
-				/>
 			</div>
 		);
 	};
