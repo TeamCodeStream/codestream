@@ -1536,6 +1536,8 @@ export interface EntityAccount {
 	accountName: string;
 	entityGuid: string;
 	entityName: string;
+	entityType?: EntityType;
+	entityTypeDescription?: string;
 	domain?: string;
 	url?: string;
 	tags: {
@@ -1570,7 +1572,13 @@ export interface GetObservabilityEntitiesRequest {
 
 export interface GetObservabilityEntitiesResponse {
 	totalResults: number;
-	entities: { guid: string; name: string; account: string; entityType: EntityType }[];
+	entities: {
+		guid: string;
+		name: string;
+		account: string;
+		entityType: EntityType;
+		entityTypeDescription: string;
+	}[];
 	nextCursor?: string;
 }
 
@@ -1580,6 +1588,14 @@ export const GetObservabilityEntitiesRequestType = new RequestType<
 	void,
 	void
 >("codestream/newrelic/entities");
+
+// reusing request/response types - internally we're just omitting a filter
+export const GetAllEntitiesRequestType = new RequestType<
+	GetObservabilityEntitiesRequest,
+	GetObservabilityEntitiesResponse,
+	void,
+	void
+>("codestream/newrelic/entities/all");
 
 export interface GetObservabilityErrorAssignmentsRequest {}
 
@@ -2001,7 +2017,6 @@ export type EntityType =
 	| "APM_DATABASE_INSTANCE_ENTITY"
 	| "APM_EXTERNAL_SERVICE_ENTITY"
 	| "BROWSER_APPLICATION_ENTITY"
-	| "THIRD_PARTY_SERVICE_ENTITY"
 	| "DASHBOARD_ENTITY"
 	| "EXTERNAL_ENTITY"
 	| "GENERIC_ENTITY"
@@ -2012,9 +2027,31 @@ export type EntityType =
 	| "MOBILE_APPLICATION_ENTITY"
 	| "SECURE_CREDENTIAL_ENTITY"
 	| "SYNTHETIC_MONITOR_ENTITY"
+	| "TEAM"
 	| "THIRD_PARTY_SERVICE_ENTITY"
 	| "UNAVAILABLE_ENTITY"
 	| "WORKLOAD_ENTITY";
+
+export const EntityTypeMap = {
+	APM_APPLICATION_ENTITY: "APM Application",
+	APM_DATABASE_INSTANCE_ENTITY: "APM Database",
+	APM_EXTERNAL_SERVICE_ENTITY: "APM External",
+	BROWSER_APPLICATION_ENTITY: "Browser",
+	DASHBOARD_ENTITY: "Dashboard",
+	EXTERNAL_ENTITY: "External",
+	GENERIC_ENTITY: "Generic",
+	GENERIC_INFRASTRUCTURE_ENTITY: "Generic Infrastructure",
+	INFRASTRUCTURE_AWS_LAMBDA_FUNCTION_ENTITY: "Lambda",
+	INFRASTRUCTURE_HOST_ENTITY: "Infrastructure Host",
+	KEY_TRANSACTION_ENTITY: "Key Transaction",
+	MOBILE_APPLICATION_ENTITY: "Mobile",
+	SECURE_CREDENTIAL_ENTITY: "Secure Credential",
+	SYNTHETIC_MONITOR_ENTITY: "Synthetic Monitor",
+	TEAM: "Team",
+	THIRD_PARTY_SERVICE_ENTITY: "OTEL",
+	UNAVAILABLE_ENTITY: "Unavailable",
+	WORKLOAD_ENTITY: "Workload",
+};
 
 export interface Entity {
 	account?: {

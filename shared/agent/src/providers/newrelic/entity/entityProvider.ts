@@ -1,9 +1,11 @@
 import { lsp, lspHandler } from "../../../system/decorators/lsp";
 import {
 	EntityType,
+	EntityTypeMap,
 	ERROR_GENERIC_USE_ERROR_MESSAGE,
 	ERROR_NRQL_GENERIC,
 	ERROR_NRQL_TIMEOUT,
+	GetAllEntitiesRequestType,
 	GetEntityCountRequest,
 	GetEntityCountRequestType,
 	GetEntityCountResponse,
@@ -133,6 +135,7 @@ export class EntityProvider implements Disposable {
 						name: _.name,
 						account: _.account.name,
 						entityType: _.entityType,
+						entityTypeDescription: EntityTypeMap[_.entityType],
 					};
 				}
 			);
@@ -144,6 +147,65 @@ export class EntityProvider implements Disposable {
 			};
 		} catch (ex) {
 			ContextLogger.error(ex, "getEntities");
+			throw ex;
+		}
+	}
+
+	@lspHandler(GetAllEntitiesRequestType)
+	@log({ timed: true })
+	async getAllEntities(
+		request: GetObservabilityEntitiesRequest
+	): Promise<GetObservabilityEntitiesResponse> {
+		const { limit = 50 } = request;
+		try {
+			const statement = this.generateEntityQueryStatement(request.searchCharacters);
+
+			const query = `query search($cursor:String){
+				actor {
+				  entitySearch(query: "${statement}", 
+				  sortByWithDirection: { attribute: NAME, direction: ASC },
+				  options: { limit: ${limit} }) {
+					count
+					results(cursor:$cursor) {
+					  nextCursor
+					  entities {
+						guid
+						name
+						entityType
+						account {
+							name
+						  }
+						}
+					  }
+					}
+				  }
+			  }`;
+
+			const response: EntitySearchResult = await this.graphqlClient.query<EntitySearchResult>(
+				query,
+				{
+					cursor: request.nextCursor ?? null,
+				}
+			);
+			const entities = response.actor.entitySearch.results.entities.map(
+				(_: { guid: string; name: string; account: { name: string }; entityType: EntityType }) => {
+					return {
+						guid: _.guid,
+						name: _.name,
+						account: _.account.name,
+						entityType: _.entityType,
+						entityTypeDescription: EntityTypeMap[_.entityType],
+					};
+				}
+			);
+
+			return {
+				totalResults: response.actor.entitySearch.count,
+				entities,
+				nextCursor: response.actor.entitySearch.results.nextCursor,
+			};
+		} catch (ex) {
+			ContextLogger.error(ex, "getAllEntities");
 			throw ex;
 		}
 	}

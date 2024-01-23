@@ -11,9 +11,9 @@ import { HostApi } from "../../webview-api";
 import { Link } from "../Link";
 import {
 	EntityAccount,
+	GetAllEntitiesRequestType,
 	GetLogFieldDefinitionsRequestType,
 	GetLogsRequestType,
-	GetObservabilityEntitiesRequestType,
 	GetSurroundingLogsRequestType,
 	LogFieldDefinition,
 	LogResult,
@@ -27,6 +27,52 @@ interface SelectedOption {
 	label: string;
 }
 
+const LogFilterBarContainer = styled.div`
+	padding-top: 10px;
+	padding-bottom: 10px;
+
+	.log-filter-bar-row {
+		display: flex;
+
+		.log-filter-bar-service {
+			flex: 8;
+		}
+
+		.log-filter-bar-since {
+			padding-left: 10px;
+			flex: 2;
+			justify-content: flex-end;
+		}
+
+		.log-filter-bar-query {
+			flex: 9;
+
+			.icon.search {
+				top: 24px;
+				left: 8px;
+			}
+
+			input.control {
+				width: 100%;
+				padding-left: 30px !important;
+				border: 1px solid var(--base-border-color);
+			}
+		}
+
+		.log-filter-bar-search {
+			padding-left: 10px;
+			flex: 1;
+			justify-content: flex-end;
+
+			button.query {
+				width: 100%;
+				height: 28px;
+				margin-top: 18px;
+			}
+		}
+	}
+`;
+
 const LogSeverity = styled.span`
 	border-radius: 1px;
 	box-sizing: border-box;
@@ -38,59 +84,6 @@ const LogSeverity = styled.span`
 	margin: 3.5px auto;
 `;
 
-const SearchBar = styled.div`
-	display: flex;
-	flex-direction: row;
-	button {
-		z-index: 2;
-	}
-	.search-input {
-		position: relative;
-		flex-grow: 10;
-		width: 100%;
-		input.control {
-			// make space for the search icon
-			padding-left: 32px !important;
-			// the bookmark icon is narrower so requires less space
-			padding-right: 32px !important;
-			height: 100%;
-			border: 1px solid var(--base-border-color);
-			border-left: none;
-			margin-left: -1px;
-		}
-		.icon.search {
-			position: absolute;
-			left: 8px;
-			top: 6px;
-			opacity: 0.5;
-		}
-		.icon.clear {
-			position: absolute;
-			right: 18px;
-			top: 6px;
-			opacity: 0.5;
-		}
-		.save {
-			position: absolute;
-			right: 6px;
-			top: 6px;
-			opacity: 0.5;
-			&:hover {
-				opacity: 1;
-			}
-		}
-		.clear {
-			position: absolute;
-			right: 28px;
-			top: 6px;
-			opacity: 0.5;
-			&:hover {
-				opacity: 1;
-			}
-		}
-	}
-`;
-
 const logSeverityToColor = {
 	fatal: "#df2d24",
 	error: "#df2d24",
@@ -98,13 +91,6 @@ const logSeverityToColor = {
 	info: "#0c74df",
 	trace: "",
 	debug: "",
-};
-
-const entityTypeToLabel = {
-	BROWSER_APPLICATION_ENTITY: "Browser",
-	MOBILE_APPLICATION_ENTITY: "Mobile",
-	THIRD_PARTY_SERVICE_ENTITY: "OTEL",
-	INFRASTRUCTURE_AWS_LAMBDA_FUNCTION_ENTITY: "Lambda",
 };
 
 const columnSpanMapping = {
@@ -133,7 +119,7 @@ const Option = (props: OptionProps) => {
 	const children = (
 		<>
 			<OptionName>
-				{props.data?.entityName} <OptionType>{props.data?.entityType}</OptionType>
+				{props.data?.label} <OptionType>{props.data?.entityType}</OptionType>
 			</OptionName>
 			<OptionAccount>{props.data?.accountName}</OptionAccount>
 		</>
@@ -201,7 +187,7 @@ export const APMLogSearchPanel = (props: {
 				value: entityAccount.entityGuid,
 				label: entityAccount.entityName,
 				accountName: entityAccount.accountName,
-				entityType: entityAccount.domain,
+				entityType: entityAccount.entityTypeDescription,
 			});
 
 			setHasEntityGuid(true);
@@ -445,7 +431,7 @@ export const APMLogSearchPanel = (props: {
 	};
 
 	async function loadEntities(search: string, _loadedOptions, additional?: AdditionalType) {
-		const result = await HostApi.instance.send(GetObservabilityEntitiesRequestType, {
+		const result = await HostApi.instance.send(GetAllEntitiesRequestType, {
 			searchCharacters: search,
 			nextCursor: additional?.nextCursor,
 		});
@@ -455,7 +441,7 @@ export const APMLogSearchPanel = (props: {
 				label: e.name,
 				value: e.guid,
 				accountName: e.account,
-				entityType: e.entityType,
+				entityType: e.entityTypeDescription,
 			};
 		});
 
@@ -467,73 +453,70 @@ export const APMLogSearchPanel = (props: {
 			},
 		};
 	}
+
 	return (
 		<>
 			<PanelHeader title="Logs">
-				{selectedEntityAccount && (
-					<>
-						<OptionName>
-							{selectedEntityAccount.label}{" "}
-							<OptionType>{selectedEntityAccount.entityType}</OptionType>
-						</OptionName>
-						<OptionAccount>{selectedEntityAccount.accountName}</OptionAccount>
-					</>
-				)}
-				{!hasEntityGuid && (
-					<div style={{ marginBottom: "15px" }}>
-						<AsyncPaginate
-							id="input-entity-autocomplete"
-							name="entity-autocomplete"
-							classNamePrefix="react-select"
-							loadOptions={loadEntities}
-							value={selectedEntityAccount}
-							isClearable
-							debounceTimeout={750}
-							placeholder={`Type to search for services...`}
-							onChange={newValue => {
-								setSelectedEntityAccount(newValue);
-							}}
-							components={{ Option }}
-						/>
+				<LogFilterBarContainer>
+					<div className="log-filter-bar-row">
+						<div className="log-filter-bar-service">
+							<AsyncPaginate
+								id="input-entity-autocomplete"
+								name="entity-autocomplete"
+								classNamePrefix="react-select"
+								loadOptions={loadEntities}
+								value={selectedEntityAccount}
+								debounceTimeout={750}
+								placeholder={`Type to search for services...`}
+								onChange={newValue => {
+									setSelectedEntityAccount(newValue);
+								}}
+								components={{ Option }}
+							/>
+						</div>
+
+						<div className="log-filter-bar-since">
+							<Select
+								id="input-since"
+								name="since"
+								classNamePrefix="react-select"
+								value={selectedSinceOption}
+								placeholder="Since"
+								options={selectSinceOptions}
+								onChange={value => setSelectedSinceOption(value)}
+							/>
+						</div>
 					</div>
-				)}
-				<SearchBar className="search-bar">
-					<div className="search-input" style={{ width: "70%", paddingRight: "10px" }}>
-						<Icon name="search" className="search" />
-						<input
-							name="q"
-							value={query}
-							className="input-text control"
-							type="text"
-							onChange={e => {
-								setQuery(e.target.value);
-							}}
-							onKeyDown={checkKeyPress}
-							placeholder="Query logs in the selected entity"
-							autoFocus
-						/>
-						<Icon name="x" className="clear" onClick={e => setQuery("")} />
+
+					<div className="log-filter-bar-row">
+						<div className="log-filter-bar-query">
+							<Icon name="search" className="search" />
+							<input
+								name="q"
+								value={query}
+								className="input-text control"
+								type="text"
+								onChange={e => {
+									setQuery(e.target.value);
+								}}
+								onKeyDown={checkKeyPress}
+								placeholder="Query logs in the selected entity"
+							/>
+						</div>
+
+						<div className="log-filter-bar-search">
+							<Button
+								className="query"
+								onClick={() => fetchLogs(selectedEntityAccount?.value)}
+								loading={isLoading}
+							>
+								Query Logs
+							</Button>
+						</div>
 					</div>
-					<div style={{ width: "25%", paddingRight: "10px" }}>
-						<Select
-							id="input-since"
-							name="since"
-							classNamePrefix="react-select"
-							value={selectedSinceOption}
-							placeholder="Since"
-							options={selectSinceOptions}
-							onChange={value => setSelectedSinceOption(value)}
-						/>
-					</div>
-					<Button
-						style={{ paddingLeft: "8px", paddingRight: "8px" }}
-						onClick={() => fetchLogs(selectedEntityAccount?.value)}
-						loading={isLoading}
-					>
-						Query Logs
-					</Button>
-				</SearchBar>
+				</LogFilterBarContainer>
 			</PanelHeader>
+
 			<div
 				style={{
 					padding: "0px 20px 0px 20px",
@@ -541,12 +524,12 @@ export const APMLogSearchPanel = (props: {
 				}}
 			>
 				{!isLoading && totalItems > 0 && (
-					<div>
-						<span style={{ fontSize: "14px", fontWeight: "bold", paddingBottom: "10px" }}>
+					<div style={{ paddingBottom: "10px" }}>
+						<span style={{ fontSize: "14px", fontWeight: "bold" }}>
 							{totalItems.toLocaleString()} Logs
 						</span>{" "}
 						<a
-							style={{ display: "none", float: "right", cursor: "pointer" }}
+							style={{ float: "right", cursor: "pointer" }}
 							href="#"
 							onClick={e => {
 								e.preventDefault();
@@ -554,12 +537,12 @@ export const APMLogSearchPanel = (props: {
 									.send(ShellPromptFolderRequestType, { message: "Choose a location" })
 									.then(_ => {
 										if (_.path) {
+											// undefined can also mean cancel, but there isn't any other flag to indicate that, so
+											// no error if path is undefined
 											HostApi.instance.send(SaveFileRequestType, {
 												path: _.path,
 												data: results,
 											});
-										} else {
-											setLogError("Unable to download");
 										}
 									});
 							}}

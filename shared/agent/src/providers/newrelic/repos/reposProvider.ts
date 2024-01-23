@@ -6,6 +6,7 @@ import {
 	Entity,
 	EntityAccount,
 	EntitySearchResponse,
+	EntityTypeMap,
 	GetObservabilityReposRequest,
 	GetObservabilityReposRequestType,
 	GetObservabilityReposResponse,
@@ -257,6 +258,10 @@ export class ReposProvider implements Disposable {
 							accountName: entity.account?.name || "Account",
 							entityGuid: entity.guid,
 							entityName: entity.name,
+							entityType: entity.entityType,
+							entityTypeDescription: entity.entityType
+								? EntityTypeMap[entity.entityType]
+								: undefined,
 							tags: entity.tags,
 							domain: entity.domain,
 							alertSeverity: entity?.alertSeverity,
