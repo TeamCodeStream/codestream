@@ -17,6 +17,7 @@ module.exports = {
 		"^react-native$": "react-native-web",
 		"^.+\\.module\\.(css|sass|scss)$": "identity-obj-proxy",
 		"^lodash-es$": "lodash",
+		"^csv-stringify/browser/esm/sync$": "csv-stringify/sync",
 		"@codestream/webview/Stream/Markdowner": "<rootDir>/Stream/Markdowner.ts",
 		"@codestream/webview/logger": ["<rootDir>/logger.ts"],
 		"^@codestream/protocols/agent$": "<rootDir>../util/src/protocol/agent/agent.protocol.ts",
