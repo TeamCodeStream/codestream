@@ -1,9 +1,9 @@
-import { stringify } from "csv-stringify/browser/esm/sync";
+import { stringify } from "csv-stringify/sync";
 import { useAppSelector } from "../utilities/hooks";
 import { CodeStreamState } from "../store";
 import { mapFilter } from "../utils";
 import { createSelector } from "reselect";
-import { CodemarkType } from "../../util/src/protocol/agent/api.protocol.models";
+import { CodemarkType } from "@codestream/protocols/api";
 
 const getSearchableCodemarks = createSelector(
 	(state: CodeStreamState) => state.codemarks,
