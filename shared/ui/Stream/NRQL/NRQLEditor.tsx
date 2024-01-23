@@ -1,8 +1,7 @@
 import React, { useContext, useRef } from "react";
 import { HostApi } from "@codestream/webview/webview-api";
 import {
-	GetNRQLCollectionsRequestType,
-	GetNRQLColumnsRequestType,
+	GetNRQLCompletionItemsType,
 	GetNRQLConstantsRequestType,
 } from "../../../util/src/protocol/agent/agent.protocol.providers";
 import { MonacoEditor } from "./MonacoEditor";
@@ -19,7 +18,14 @@ export function NRQLEditor(props: {
 
 	const handleEditorDidMount = async (editor: any, monaco: any) => {
 		editor.updateOptions({
-			find: false,
+			find: {
+				seedSearchStringFromSelection: false,
+				decorationsIgnoredDuringNavigation: [],
+				autoFindInSelection: false,
+				addExtraSpaceOnTop: false,
+				jumpToNextFindMatch: false,
+				jumpToPrevFindMatch: false,
+			},
 			folding: false,
 			glyphMargin: false,
 			lineDecorationsWidth: 0,
@@ -32,8 +38,6 @@ export function NRQLEditor(props: {
 			wordwrap: "on",
 		});
 		monacoRef.current = monaco;
-
-		// Register your language with Monaco
 		monaco.languages.register({ id: "nrql" });
 
 		const response = await HostApi.instance.send(GetNRQLConstantsRequestType, {});
@@ -44,84 +48,49 @@ export function NRQLEditor(props: {
 			provideCompletionItems: async (model, position) => {
 				const currentLine = model.getLineContent(position.lineNumber);
 				const currentWord = model.getWordUntilPosition(position).word;
-				let items: any[] = [];
-				if (
-					(currentLine && currentLine.toLowerCase().trim().endsWith("from")) ||
-					(currentWord && currentWord.toLowerCase() === "from")
-				) {
-					try {
-						const collectionsResponse = await HostApi.instance.send(
-							GetNRQLCollectionsRequestType,
-							{}
-						);
-						if (collectionsResponse?.list?.length) {
-							collectionsResponse.list.forEach(_ => {
-								items.push({
-									label: _,
-									kind: monaco.languages.CompletionItemKind.Module,
-									insertText: _,
-								});
-							});
-							return {
-								suggestions: items,
-							};
-						}
-					} catch (ex) {}
+				try {
+					const response = await HostApi.instance.send(GetNRQLCompletionItemsType, {
+						text: currentLine,
+						currentWord: currentWord,
+					});
+					return {
+						suggestions: response?.items?.length
+							? response.items.map(_ => {
+									// these won't render correctly without a <Link /> component
+									return {
+										..._,
+										documentation: null,
+									};
+							  })
+							: [],
+					};
+				} catch (ex) {
+					return { suggestions: [] };
 				}
-				if (
-					(currentLine && currentLine.toLowerCase().trim().endsWith("where")) ||
-					(currentWord && currentWord.toLowerCase() === "where")
-				) {
-					try {
-						const columnsResponse = await HostApi.instance.send(GetNRQLColumnsRequestType, {
-							query: currentLine,
-						});
-						if (columnsResponse?.columns?.length) {
-							columnsResponse.columns.forEach(_ => {
-								items.push({
-									label: _,
-									kind: monaco.languages.CompletionItemKind.Module,
-									insertText: _,
-								});
-							});
-							return {
-								suggestions: items,
-							};
-						}
-					} catch (ex) {}
-				}
-				return {
-					suggestions: [
-						...response.functions.map(_ => {
-							return {
-								label: _,
-								kind: monaco.languages.CompletionItemKind.Function,
-								insertText: _,
-							};
-						}),
-						...response.keywords.map(_ => {
-							return {
-								label: _,
-								kind: monaco.languages.CompletionItemKind.Keyword,
-								insertText: _,
-							};
-						}),
-					],
-				};
 			},
+		});
+
+		monaco.languages.setLanguageConfiguration("nrql", {
+			autoClosingPairs: [
+				{ open: "{", close: "}" },
+				{ open: "[", close: "]" },
+				{ open: "(", close: ")" },
+			],
 		});
 
 		monaco.languages.setMonarchTokensProvider("nrql", {
 			tokenizer: {
 				root: [
-					[new RegExp(response.keywords.join("|")), "keyword.nrql"],
+					[new RegExp(response.keywords.map(_ => _.label).join("|")), "keyword.nrql"],
 					[
 						new RegExp(
-							response.operators.map(_ => _.replace(/[.*+\-?^${}()|[\]\\]/g, "\\$&")).join("|")
+							response.operators
+								.map(_ => _.label.replace(/[.*+\-?^${}()|[\]\\]/g, "\\$&"))
+								.join("|")
 						),
-						"operator.nrql",
+						"keyword.operator.nrql",
 					],
-					[new RegExp(response.functions.join("|")), "function.nrql"],
+					[new RegExp(response.functions.map(_ => _.label).join("|")), "support.function.nrql"],
 				],
 			},
 		});

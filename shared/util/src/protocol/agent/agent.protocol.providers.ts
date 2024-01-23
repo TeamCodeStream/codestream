@@ -1,15 +1,14 @@
 "use strict";
-import { NotificationType, RequestType } from "vscode-languageserver-protocol";
+import { CompletionItem, NotificationType, RequestType } from "vscode-languageserver-protocol";
 
 import {
 	BitbucketParticipantRole,
 	CrossPostIssueValues,
-	DidResolveStackTraceLineNotification,
 	GitLabMergeRequest,
 } from "./agent.protocol";
 import { CodeErrorPlus } from "./agent.protocol.codeErrors";
 import { CodemarkPlus } from "./agent.protocol.codemarks";
-import { IssueParams, LicenseDependencyIssue, VulnerabilityIssue } from "./agent.protocol.fossa";
+import { LicenseDependencyIssue, VulnerabilityIssue } from "./agent.protocol.fossa";
 import { ReviewPlus } from "./agent.protocol.reviews";
 import { CSRepository, PullRequestQuery } from "./api.protocol.models";
 import { TrunkCheckResults } from "./agent.protocol.trunk";
@@ -2652,9 +2651,9 @@ export const GetNRQLRequestType = new RequestType<GetNRQLRequest, GetNRQLRespons
 export interface GetNRQLConstantsRequest {}
 
 export interface GetNRQLConstantsResponse {
-	operators: string[];
-	keywords: string[];
-	functions: string[];
+	operators: CompletionItem[];
+	keywords: CompletionItem[];
+	functions: CompletionItem[];
 }
 
 export const GetNRQLConstantsRequestType = new RequestType<
@@ -2692,3 +2691,17 @@ export const GetNRQLColumnsRequestType = new RequestType<
 	void,
 	void
 >("codestream/newrelic/nrql/columns");
+
+export interface GetNRQLCompletionItemsRequest {
+	text?: string;
+	currentWord?: string;
+}
+export interface GetNRQLCompletionItemsResponse {
+	items: CompletionItem[];
+}
+export const GetNRQLCompletionItemsType = new RequestType<
+	GetNRQLCompletionItemsRequest,
+	GetNRQLCompletionItemsResponse,
+	void,
+	void
+>("codestream/newrelic/nrql/completions");

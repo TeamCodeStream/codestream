@@ -1,3 +1,11 @@
+export const nrItemsToDocSelector: any = {
+	AS: "#sel-as",
+	FROM: "#sel-from",
+	LIMIT: "#sel-limit",
+	SELECT: "#state-select",
+	WHERE: "#sel-where",
+};
+
 export const nrqlFunctions = [
 	"average",
 	"beginningOfMonth",

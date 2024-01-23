@@ -1,4 +1,3 @@
-import { lsp, lspHandler } from "../../../system/decorators/lsp";
 import {
 	GetNRQLCollectionsRequest,
 	GetNRQLCollectionsRequestType,
@@ -13,14 +12,16 @@ import {
 	GetNRQLRequestType,
 	GetNRQLResponse,
 } from "@codestream/protocols/agent";
-import { log } from "../../../system/decorators/log";
-import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
-import { ContextLogger } from "../../contextLogger";
-import { mapNRErrorResponse, parseId } from "../utils";
 import { escapeNrql } from "@codestream/utils/system/string";
-import { nrqlFunctions, nrqlKeywords, nrqlOperators } from "./constants";
-import { Logger } from "../../../logger";
+import { CompletionItemKind } from "vscode-languageserver";
 import { SessionContainer } from "../../../container";
+import { Logger } from "../../../logger";
+import { log } from "../../../system/decorators/log";
+import { lsp, lspHandler } from "../../../system/decorators/lsp";
+import { ContextLogger } from "../../contextLogger";
+import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
+import { mapNRErrorResponse, parseId } from "../utils";
+import { nrItemsToDocSelector, nrqlFunctions, nrqlKeywords, nrqlOperators } from "./constants";
 
 interface NrCollectionsByAccount {
 	[accountId: string]: string[];
@@ -34,6 +35,7 @@ interface NrColumnsByAccountByCollectionName {
 		[collectionName: string]: string[];
 	};
 }
+let nrConstantsCache: GetNRQLConstantsResponse;
 
 let nrCollectionsByAccount: NrCollectionsByAccount = {};
 let nrCollectionsByAccountAsObject: NrCollectionsByAccountAsObject = {};
@@ -80,11 +82,53 @@ export class NrNRQLProvider {
 	@lspHandler(GetNRQLConstantsRequestType)
 	@log()
 	public async getConstants(request: GetNRQLConstantsRequest): Promise<GetNRQLConstantsResponse> {
-		return {
-			operators: nrqlOperators,
-			functions: nrqlFunctions,
-			keywords: nrqlKeywords,
+		if (nrConstantsCache) return nrConstantsCache;
+
+		nrConstantsCache = {
+			operators: nrqlOperators.map(candidate => {
+				return {
+					label: candidate,
+					kind: CompletionItemKind.Operator,
+					detail: `${candidate} Operator`,
+					documentation: {
+						kind: "markdown",
+						value: `[Documentation](https://docs.newrelic.com/docs/query-your-data/nrql-new-relic-query-language/get-started/nrql-syntax-clauses-functions/#sel-where)`,
+					},
+					insertText: candidate,
+				};
+			}),
+			functions: nrqlFunctions.map(candidate => {
+				const documentation = nrItemsToDocSelector[candidate];
+				return {
+					label: candidate,
+					kind: CompletionItemKind.Function,
+					detail: `${candidate} Function`,
+					documentation: {
+						kind: "markdown",
+						value: `[Documentation](https://docs.newrelic.com/docs/query-your-data/nrql-new-relic-query-language/get-started/nrql-syntax-clauses-functions/${
+							documentation || "#clauses"
+						})`,
+					},
+					insertText: candidate,
+				};
+			}),
+			keywords: nrqlKeywords.map(candidate => {
+				const documentation = nrItemsToDocSelector[candidate];
+				return {
+					label: candidate,
+					kind: CompletionItemKind.Keyword,
+					detail: `${candidate} Keyword`,
+					documentation: {
+						kind: "markdown",
+						value: `[Documentation](https://docs.newrelic.com/docs/query-your-data/nrql-new-relic-query-language/get-started/nrql-syntax-clauses-functions/${
+							documentation || "#functions"
+						})`,
+					},
+					insertText: candidate,
+				};
+			}),
 		};
+		return nrConstantsCache;
 	}
 
 	@lspHandler(GetNRQLCollectionsRequestType)
