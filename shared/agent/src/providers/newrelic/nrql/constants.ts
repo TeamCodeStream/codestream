@@ -37,7 +37,6 @@ export const nrqlFunctions = [
 ];
 
 export const nrqlKeywords = [
-	"*",
 	"AGGREGATE",
 	"AGO",
 	"ALTER",
@@ -89,6 +88,7 @@ export const nrqlKeywords = [
 	"WITH TIMEZONE",
 ];
 export const nrqlOperators = [
+	"*",
 	"=",
 	"!=",
 	">",

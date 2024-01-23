@@ -15,12 +15,14 @@ import { NRQLResultsBillboard } from "./NRQLResultsBillboard";
 import { NRQLResultsJSON } from "./NRQLResultsJSON";
 import { NRQLResultsLine } from "./NRQLResultsLine";
 import { NRQLResultsBar } from "./NRQLResultsBar";
+import { NRQLEditor } from "./NRQLEditor";
 
 const SearchBar = styled.div`
 	display: flex;
 	flex-direction: row;
 	button {
 		z-index: 2;
+		float: right;
 	}
 	.search-input {
 		position: relative;
@@ -116,8 +118,8 @@ export const NRQLPanel = (props: {
 		<>
 			<PanelHeader title="NRQL Query">
 				<SearchBar className="search-bar">
-					<div className="search-input" style={{ width: "100%", paddingRight: "10px" }}>
-						<textarea
+					<div className="search-input" style={{ width: "100%" }}>
+						{/* <textarea
 							name="q"
 							value={query}
 							className="input-text control"
@@ -126,16 +128,35 @@ export const NRQLPanel = (props: {
 								setQuery(e.target.value);
 							}}
 							autoFocus
+						/> */}
+						<NRQLEditor
+							className="input-text control"
+							defaultQuery={props.suppliedQuery}
+							onChange={e => {
+								setQuery(e.value || "");
+							}}
 						/>
 					</div>
+				</SearchBar>
+				<div style={{ float: "right", width: "100%", paddingRight: "10px" }}>
+					{/* <Link
+						href="#"
+						style={{ float: "right" }}
+						onClick={e => {
+							e.preventDefault();
+							setQuery("");
+						}}
+					>
+						Clear
+					</Link> */}
 					<Button
-						style={{ paddingLeft: "8px", paddingRight: "8px" }}
+						style={{ float: "right" }}
 						onClick={() => executeNRQL(props.entityGuid!)}
 						loading={isLoading}
 					>
-						Execute NRQL
+						Run
 					</Button>
-				</SearchBar>
+				</div>
 			</PanelHeader>
 			<div
 				style={{

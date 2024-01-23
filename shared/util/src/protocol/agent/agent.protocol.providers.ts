@@ -2611,3 +2611,47 @@ export interface GetNRQLResponse {
 export const GetNRQLRequestType = new RequestType<GetNRQLRequest, GetNRQLResponse, void, void>(
 	"codestream/newrelic/nrql/search"
 );
+
+export interface GetNRQLConstantsRequest {}
+
+export interface GetNRQLConstantsResponse {
+	operators: string[];
+	keywords: string[];
+	functions: string[];
+}
+
+export const GetNRQLConstantsRequestType = new RequestType<
+	GetNRQLConstantsRequest,
+	GetNRQLConstantsResponse,
+	void,
+	void
+>("codestream/newrelic/nrql/constants");
+
+export interface GetNRQLCollectionsRequest {}
+export interface GetNRQLCollectionsResponse {
+	list: string[];
+	obj: any;
+}
+export const GetNRQLCollectionsRequestType = new RequestType<
+	GetNRQLCollectionsRequest,
+	GetNRQLCollectionsResponse,
+	void,
+	void
+>("codestream/newrelic/nrql/collections");
+
+export interface GetNRQLColumnsRequest {
+	/**
+	 * The user-entered query (unmodified)
+	 */
+	query?: string;
+	collectionName?: string;
+}
+export interface GetNRQLColumnsResponse {
+	columns: string[];
+}
+export const GetNRQLColumnsRequestType = new RequestType<
+	GetNRQLColumnsRequest,
+	GetNRQLColumnsResponse,
+	void,
+	void
+>("codestream/newrelic/nrql/columns");

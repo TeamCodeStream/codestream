@@ -19,6 +19,7 @@
 	"license": "UNLICENSED",
 	"dependencies": {
 		"@formatjs/intl-listformat": "3.0.2",
+		"@monaco-editor/react": "4.6.0",
 		"@primer/octicons": "9.1.1",
 		"@reduxjs/toolkit": "1.8.5",
 		"classnames": "2.2.6",

@@ -19,11 +19,11 @@ export interface Args {
 }
 
 export function processArgs(): Args {
-	const watchMode = process.argv.findIndex((arg) => arg === "--watch") !== -1;
-	const reset = process.argv.findIndex((arg) => arg === "--reset") !== -1;
+	const watchMode = process.argv.findIndex(arg => arg === "--watch") !== -1;
+	const reset = process.argv.findIndex(arg => arg === "--reset") !== -1;
 	const mode =
-		process.argv.findIndex((arg) => arg === "--prod") !== -1 ? "production" : "development";
-	const ideIndex = process.argv.findIndex((arg) => arg === "--ide");
+		process.argv.findIndex(arg => arg === "--prod") !== -1 ? "production" : "development";
+	const ideIndex = process.argv.findIndex(arg => arg === "--ide");
 	const ide =
 		ideIndex !== -1 && process.argv.length >= ideIndex + 1
 			? (process.argv[ideIndex + 1] as IdeType)
@@ -49,13 +49,13 @@ export function commonEsbuildOptions(
 	return {
 		bundle: true,
 		define: { "process.env.NODE_ENV": '"production"' },
-		loader: isWeb ? { ".js": "jsx" } : undefined,
+		loader: isWeb ? { ".js": "jsx", ".ttf": "file" } : undefined,
 		inject: isWeb ? [path.resolve(__dirname, "../../webviews/vscode-jsonrpc.shim.ts")] : undefined,
 		minify: args.mode === "production",
 		// To support @log
 		keepNames: true,
 		plugins,
-		sourcemap: "linked",
+		sourcemap: "linked"
 	};
 }
 

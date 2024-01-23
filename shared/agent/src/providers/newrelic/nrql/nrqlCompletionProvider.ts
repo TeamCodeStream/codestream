@@ -4,11 +4,9 @@ import {
 	CompletionItemKind,
 	TextDocumentPositionParams,
 } from "vscode-languageserver";
-import { parseId } from "../utils";
-import { SessionContainer } from "container";
 import { Logger } from "logger";
 import { NrNRQLProvider } from "./nrqlProvider";
-import { nrqlFunctions, nrqlKeywords, nrqlOperators } from "./constants";
+import { Range } from "vscode-languageserver";
 
 const nrItemsToDocSelector: any = {
 	AS: "#sel-as",
@@ -17,17 +15,6 @@ const nrItemsToDocSelector: any = {
 	SELECT: "#state-select",
 	WHERE: "#sel-where",
 };
-let nrCollectionsByAccount: any = {};
-let nrCollectionsByAccountAsObject: any = {};
-
-let lastAccountId = 0;
-
-let nrColumnsByAccountByCollectionName: any = {};
-// let valuesByCollectionNameAndColumn: any = {};
-
-let nrBuiltIns: string[] = [];
-nrBuiltIns = nrBuiltIns.concat(...nrqlFunctions);
-nrBuiltIns = nrBuiltIns.concat(...nrqlKeywords);
 
 export class NrqlCompletionProvider {
 	constructor(
@@ -44,7 +31,8 @@ export class NrqlCompletionProvider {
 			const { line, character } = position;
 			// Retrieve the document's text
 			const document = this.session.agent.documents.get(textDocument.uri)!;
-			const text = document.getText();
+
+			const text = document.getText(Range.create(position.line, 0, position.line + 1, 0));
 
 			// Determine the range of the current word
 			let wordRange = {
@@ -59,20 +47,19 @@ export class NrqlCompletionProvider {
 			}
 
 			// Extract the current word
-			const currentWord = text
+			const currentWordAsUpperCase = text
 				.slice(wordRange.start.character, wordRange.end.character)
 				.toUpperCase();
 
 			const completionItems: CompletionItem[] = []; // Array to store completion items
 
-			if (!Object.keys(nrCollectionsByAccount).length) {
-				// fire this off, but don't block
-				void this.fetchCollections();
-			}
+			// fire this off, but don't block
+			const collectionsResponse = await this.nrNRQLProvider.fetchCollections();
+
 			const lastText = text.toLocaleLowerCase().trimEnd();
-			if (Object.keys(nrCollectionsByAccount).length) {
+			if (collectionsResponse.list.length) {
 				if (lastText.endsWith("from")) {
-					for (const candidate of nrCollectionsByAccount[lastAccountId]) {
+					for (const candidate of collectionsResponse.list) {
 						completionItems.push({
 							label: candidate,
 							kind: CompletionItemKind.Text,
@@ -80,49 +67,28 @@ export class NrqlCompletionProvider {
 					}
 					return completionItems;
 				} else if (lastText.endsWith("where")) {
-					// this is a little fragile here...
-					const collection = text
-						.split(" ")
-						.findLast(_ => nrCollectionsByAccountAsObject[lastAccountId][_]);
-					if (collection) {
-						// fire this off, but don't block
-						return new Promise(resolve => {
-							this.fetchColumns(collection).then(_ => {
-								const columns = nrColumnsByAccountByCollectionName[lastAccountId][collection];
-								if (columns) {
-									for (const candidate of columns) {
-										completionItems.push({
-											label: candidate,
-											kind: CompletionItemKind.Property,
-										});
-									}
-									resolve(completionItems);
+					// fire this off, but don't block
+					return new Promise(resolve => {
+						this.nrNRQLProvider.fetchColumns({ query: text }).then(_ => {
+							if (_.columns) {
+								for (const candidate of _.columns) {
+									completionItems.push({
+										label: candidate,
+										kind: CompletionItemKind.Property,
+									});
 								}
-							});
+								resolve(completionItems);
+							}
 						});
-					}
+					});
 				}
-				// else if (nrqlOperators.some(suffix => text.endsWith(suffix))) {
-				// 	return new Promise(resolve => {
-				// 		this.fetchValues(collection).then(_ => {
-				// 			const columns = columnsByCollectionName[collection];
-				// 			if (columnsByCollectionName[collection]) {
-				// 				for (const candidate of columns) {
-				// 					completionItems.push({
-				// 						label: candidate,
-				// 						kind: CompletionItemKind.Text,
-				// 					});
-				// 				}
-				// 				resolve(completionItems);
-				// 			}
-				// 		});
-				// 	});
-				// }
 			}
 
+			const builtIns = await this.nrNRQLProvider.getConstants({});
+
 			// Filter and generate completion items based on the current word
-			for (const candidate of nrqlFunctions) {
-				if (candidate.startsWith(currentWord)) {
+			for (const candidate of builtIns.functions) {
+				if (candidate.startsWith(currentWordAsUpperCase)) {
 					const documentation = nrItemsToDocSelector[candidate];
 
 					completionItems.push({
@@ -138,8 +104,8 @@ export class NrqlCompletionProvider {
 					});
 				}
 			}
-			for (const candidate of nrqlKeywords) {
-				if (candidate.startsWith(currentWord)) {
+			for (const candidate of builtIns.keywords) {
+				if (candidate.startsWith(currentWordAsUpperCase)) {
 					const documentation = nrItemsToDocSelector[candidate];
 
 					completionItems.push({
@@ -156,8 +122,8 @@ export class NrqlCompletionProvider {
 				}
 			}
 
-			for (const candidate of nrqlOperators) {
-				if (candidate.startsWith(currentWord)) {
+			for (const candidate of builtIns.operators) {
+				if (candidate.startsWith(currentWordAsUpperCase)) {
 					completionItems.push({
 						label: candidate,
 						kind: CompletionItemKind.Operator,
@@ -182,65 +148,6 @@ export class NrqlCompletionProvider {
 		return item;
 	}
 
-	async fetchCollections() {
-		let accountId = 0;
-		try {
-			accountId = await this.getCurrentAccountId();
-			if (!accountId) return;
-
-			if (!nrCollectionsByAccount[accountId]) {
-				nrCollectionsByAccount[accountId] = [];
-			}
-
-			if (nrCollectionsByAccount[accountId]!.length) return;
-
-			const response = await this.nrNRQLProvider.executeNRQL({
-				accountId: accountId,
-				query: "SHOW EVENT TYPES",
-			});
-			const mapped = response.results!.map(_ => _.eventType) as string[];
-			nrCollectionsByAccount[accountId] = mapped;
-			nrCollectionsByAccountAsObject[accountId] = mapped.reduce((obj: any, item: any) => {
-				obj[item] = true;
-				return obj;
-			}, {});
-		} catch (ex) {
-			Logger.warn("Failed to fetchCollections", { error: ex });
-			nrCollectionsByAccount[accountId] = [];
-		}
-	}
-
-	async fetchColumns(collectionName: string) {
-		if (!collectionName) return;
-		let accountId = 0;
-		try {
-			accountId = await this.getCurrentAccountId();
-			if (!accountId) return;
-
-			if (!nrColumnsByAccountByCollectionName[accountId]) {
-				nrColumnsByAccountByCollectionName[accountId] = [];
-			}
-			if (!nrColumnsByAccountByCollectionName[accountId][collectionName]) {
-				nrColumnsByAccountByCollectionName[accountId][collectionName] = [];
-			}
-			if (nrColumnsByAccountByCollectionName[accountId][collectionName].length) return;
-
-			const response = await this.nrNRQLProvider.executeNRQL({
-				accountId: accountId,
-				query: `SELECT keyset() FROM ${collectionName}`,
-			});
-
-			if (response) {
-				nrColumnsByAccountByCollectionName[accountId][collectionName] = response.results!.map(
-					_ => _.key
-				);
-			}
-		} catch (ex) {
-			Logger.warn(`Failed to fetchColumns for ${collectionName}`, { error: ex });
-			nrColumnsByAccountByCollectionName[accountId][collectionName] = [];
-		}
-	}
-
 	// async fetchValues(collectionName: string, column: string) {
 	// 	if (!collectionName) return;
 	// 	const key = `${collectionName}-${column}`;
@@ -262,25 +169,4 @@ export class NrqlCompletionProvider {
 	// 		valuesByCollectionNameAndColumn[key] = [];
 	// 	}
 	// }
-
-	private async getCurrentAccountId() {
-		try {
-			const { users } = SessionContainer.instance();
-			// this is cached, and should be _fast_
-			const me = await users.getMe();
-			const currentRepoId = me?.preferences?.currentO11yRepoId;
-			const currentEntityGuid = currentRepoId
-				? (me?.preferences?.activeO11y?.[currentRepoId] as string)
-				: undefined;
-			const result = parseId(currentEntityGuid!);
-			if (result) {
-				lastAccountId = result.accountId;
-				return result.accountId;
-			}
-		} catch (ex) {
-			Logger.warn(`Failed to getCurrentAccountId`, { error: ex });
-			return 0;
-		}
-		return 0;
-	}
 }

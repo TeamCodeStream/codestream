@@ -14,6 +14,7 @@ interface Props {
 	disabled?: boolean;
 	disabledHover?: string;
 	"data-testid"?: string;
+	style?: any;
 }
 
 export const Link = React.memo((props: PropsWithChildren<Props>) => {
@@ -54,6 +55,7 @@ export const Link = React.memo((props: PropsWithChildren<Props>) => {
 				</Tooltip>
 			) : (
 				<a
+					style={props.style}
 					data-testid={props["data-testid"]}
 					href={props.href}
 					onClickCapture={onClick}
