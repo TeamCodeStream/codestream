@@ -92,8 +92,8 @@ export class NrDirectives {
 			}
 
 			const repoEntityId =
-				response.referenceEntityCreateOrUpdateRepository.updated[0] ||
-				response.referenceEntityCreateOrUpdateRepository.created[0];
+				response?.referenceEntityCreateOrUpdateRepository.updated[0] ||
+				response?.referenceEntityCreateOrUpdateRepository.created[0];
 
 			if (!repoEntityId) {
 				ContextLogger.warn(
