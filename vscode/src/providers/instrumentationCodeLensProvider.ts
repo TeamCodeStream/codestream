@@ -609,7 +609,10 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 						? fileLevelTelemetryResponse.newRelicAccountId.toString()
 						: "",
 					document.languageId,
-					codeLenses.length
+					codeLenses.length,
+					fileLevelTelemetryResponse.newRelicEntityGuid
+						? fileLevelTelemetryResponse.newRelicEntityGuid
+						: ""
 				);
 			}
 		} catch (ex) {
@@ -621,14 +624,22 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 		return codeLenses;
 	}
 
-	private tryTrack(cacheKey: string, accountId: string, languageId: string, codeLensCount: number) {
+	private tryTrack(
+		cacheKey: string,
+		accountId: string,
+		languageId: string,
+		codeLensCount: number,
+		entity_guid: string
+	) {
 		const doc = this.documentManager[cacheKey];
 		if (doc && !doc.tracked) {
 			try {
-				this.telemetryService.track("MLT Codelenses Rendered", {
-					"NR Account ID": accountId,
-					Language: languageId,
-					"Codelense Count": codeLensCount
+				this.telemetryService.track("codestream/codelenses displayed", {
+					entity_guid: entity_guid ? entity_guid : "",
+					account_id: accountId ? accountId : "",
+					meta_data: `language: ${languageId}`,
+					meta_data_2: `codelens_count: ${codeLensCount}`,
+					event_type: "state_load"
 				});
 				doc.tracked = true;
 			} catch {}
