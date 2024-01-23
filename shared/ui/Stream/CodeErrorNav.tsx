@@ -524,7 +524,8 @@ export function CodeErrorNav(props: Props) {
 						occurrenceIdToUse!,
 						stack!,
 						derivedState.currentCodeErrorId!,
-						derivedState.currentCodeErrorData.stackSourceMap
+						derivedState.currentCodeErrorData.stackSourceMap,
+						derivedState.currentCodeErrorData?.domain
 					)) as ResolveStackTraceResponse;
 				}
 			}
