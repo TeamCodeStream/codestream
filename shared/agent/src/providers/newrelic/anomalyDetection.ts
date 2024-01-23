@@ -80,7 +80,7 @@ export class AnomalyDetector {
 		const sinceDaysAgo = parseInt(this._request.sinceDaysAgo as any);
 		this._totalDays = sinceDaysAgo + parseInt(this._request.baselineDays as any);
 		this._sinceText = sinceDaysAgo === 1 ? `1 day ago` : `${sinceDaysAgo} days ago`;
-		let detectionMethod: DetectionMethod = "Time Based";
+		let detectionMethod: DetectionMethod = "time_based";
 		if (this._request.sinceLastRelease) {
 			const deployments = (
 				await this.deploymentsProvider.getDeployments({
@@ -90,7 +90,7 @@ export class AnomalyDetector {
 			).deployments;
 			const deployment = deployments[deployments.length - 1];
 			if (deployment) {
-				detectionMethod = "Release Based";
+				detectionMethod = "release_based";
 				const deploymentDate = new Date(deployment.seconds * 1000);
 				const now = new Date();
 				const timeSinceDeployment = now.getTime() - deploymentDate.getTime();

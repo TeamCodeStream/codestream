@@ -364,7 +364,7 @@ const anomalyDetectionMockResponseTemplate: GetObservabilityAnomaliesResponse = 
 			children: [],
 		},
 	],
-	detectionMethod: "Release Based",
+	detectionMethod: "release_based",
 	didNotifyNewAnomalies: false,
 	isSupported: true,
 };

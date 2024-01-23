@@ -28,6 +28,7 @@ interface Props {
 	detectionMethod?: DetectionMethod;
 	entityGuid?: string;
 	entityName?: string;
+	accountId?: string;
 	title?: string;
 	collapseDefault?: boolean;
 	noAnomaly?: boolean;
@@ -68,13 +69,17 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 
 	const handleClickTelemetry = () => {
 		const event = {
-			"Detection Method": props.detectionMethod ?? "<unknown>",
-			Language: props.observabilityAnomalies[0]?.language ?? "<unknown>",
+			entity_guid: props.entityGuid ? props.entityGuid : "",
+			account_id: props.accountId ? props.accountId : "",
+			meta_data_3: `detection_method: ${props.detectionMethod ?? "<unknown>"}`,
+			meta_data_2: `language: ${props.observabilityAnomalies[0]?.language ?? "<unknown>"}`,
+			meta_data: `anomaly_type: ${props.observabilityAnomalies[0].type}`,
+			event_type: "click",
 		};
 
-		console.debug("CLM Anomaly Clicked", event);
+		console.debug("codestream/anomaly clicked", event);
 
-		HostApi.instance.track("CLM Anomaly Clicked", event);
+		HostApi.instance.track("codestream/anomaly clicked", event);
 	};
 
 	const handleClick = (anomaly: ObservabilityAnomaly) => {

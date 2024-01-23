@@ -1429,7 +1429,7 @@ export interface ObservabilityAnomaly {
 	entityName: string;
 }
 
-export type DetectionMethod = "Release Based" | "Time Based";
+export type DetectionMethod = "release_based" | "time_based";
 
 export interface Named {
 	name: string;

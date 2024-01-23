@@ -219,7 +219,7 @@ describe("Observability", () => {
 						},
 					],
 					errorRate: [],
-					detectionMethod: "Release Based",
+					detectionMethod: "release_based",
 					didNotifyNewAnomalies: false,
 				};
 			}

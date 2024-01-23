@@ -33,6 +33,7 @@ interface Props {
 	observabilityRepo: any;
 	entityGuid: string;
 	entityName?: string;
+	accountId?: number;
 	noAccess?: string;
 	calculatingAnomalies?: boolean;
 	distributedTracingEnabled?: boolean;
@@ -327,6 +328,7 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 										observabilityRepo={props.observabilityRepo}
 										entityGuid={props.entityGuid}
 										entityName={props.entityName}
+										accountId={derivedState.currentMethodLevelTelemetry.newRelicAccountId + ""}
 										title="Anomalies"
 										detectionMethod={props.observabilityAnomalies.detectionMethod}
 									/>
