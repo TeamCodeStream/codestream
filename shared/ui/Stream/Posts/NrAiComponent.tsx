@@ -66,7 +66,7 @@ export function NrAiComponent(props: NrAiComponentProps) {
 	);
 	const showGrokLoader = useMemo(() => !hasIntro && isGrokLoading, [isGrokLoading, hasIntro]);
 	const showApplyFix = useMemo(
-		() => !!props.post.parts?.codeFix && isGrokLoading === false,
+		() => !!props.post.parts?.codeFix && !isGrokLoading,
 		[props.post.parts?.codeFix, isGrokLoading]
 	);
 
@@ -109,7 +109,8 @@ export function NrAiComponent(props: NrAiComponentProps) {
 				replaceSymbol(
 					textEditorUri,
 					functionToEdit.symbol,
-					normalizedCodeFixWithoutTrailingLinefeed
+					normalizedCodeFixWithoutTrailingLinefeed,
+					functionToEdit.namespace
 				)
 			);
 		} catch (e) {

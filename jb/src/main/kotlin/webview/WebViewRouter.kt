@@ -17,6 +17,8 @@ import com.codestream.protocols.webview.EditorRangeRevealRequest
 import com.codestream.protocols.webview.EditorRangeRevealResponse
 import com.codestream.protocols.webview.EditorRangeSelectRequest
 import com.codestream.protocols.webview.EditorRangeSelectResponse
+import com.codestream.protocols.webview.EditorReplaceSymbolRequest
+import com.codestream.protocols.webview.EditorReplaceSymbolResponse
 import com.codestream.protocols.webview.EditorScrollToRequest
 import com.codestream.protocols.webview.EditorSymbolRevealRequest
 import com.codestream.protocols.webview.EditorSymbolRevealResponse
@@ -131,6 +133,7 @@ class WebViewRouter(val project: Project) {
             "host/editor/scrollTo" -> editorScrollTo(message)
             "host/editor/symbol/reveal" -> editorSymbolReveal(message)
             "host/editor/symbol/copy" -> editorSymbolCopy(message)
+            "host/editor/symbol/replace" -> editorSymbolReplace(message)
             "host/editors/codelens/refresh" -> editorsCodelensRefresh(message)
             "host/shell/prompt/folder" -> shellPromptFolder(message)
             "host/review/showDiff" -> reviewShowDiff(message)
@@ -228,6 +231,12 @@ class WebViewRouter(val project: Project) {
         val request = gson.fromJson<EditorCopySymbolRequest>(message.params!!)
         val response = project.clmService?.copySymbol(request.uri, request.namespace, request.symbolName, request.ref)
         return EditorCopySymbolResponse(response != null, response?.functionText, response?.range)
+    }
+
+    private suspend fun editorSymbolReplace(message: WebViewMessage): EditorReplaceSymbolResponse {
+        val request = gson.fromJson<EditorReplaceSymbolRequest>(message.params!!)
+        val response = project.clmService?.replaceSymbol(request.uri, request.symbolName, request.codeBlock, request.namespace)
+        return EditorReplaceSymbolResponse(response ?: false)
     }
 
     private suspend fun editorRangeSelect(message: WebViewMessage): EditorRangeSelectResponse {

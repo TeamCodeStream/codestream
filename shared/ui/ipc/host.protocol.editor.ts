@@ -51,6 +51,7 @@ export interface EditorReplaceSymbolRequest {
 	uri: string;
 	symbolName: string;
 	codeBlock: string;
+	namespace?: string;
 }
 
 export interface EditorReplaceSymbolResponse {

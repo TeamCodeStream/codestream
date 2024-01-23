@@ -12,6 +12,7 @@ import com.codestream.review.ReviewDiffVirtualFile
 import com.codestream.sessionService
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
@@ -27,6 +28,7 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
+import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.util.concurrency.annotations.RequiresEdt
 import kotlinx.coroutines.future.await
 import org.eclipse.lsp4j.Range
@@ -140,6 +142,21 @@ abstract class CLMLanguageComponent<T : CLMEditorManager>(
         return future.await()
     }
 
+    open suspend fun replaceSymbolInFile(uri: String, symbolName: String, codeBlock: String, namespace: String?): Boolean {
+        val virtFile = VfsUtil.findFileByURL(URL(uri))
+
+        if (virtFile == null) {
+            logger.warn("Could not find file for uri $uri")
+            return false
+        }
+
+        val future = CompletableFuture<Boolean>()
+        ApplicationManager.getApplication().invokeLaterOnWriteThread {
+            future.complete(replaceSymbolEdtOperations(virtFile, symbolName, codeBlock, namespace))
+        }
+        return future.await()
+    }
+
     @RequiresEdt
     private fun copySymbolEdtOperations(virtFile: VirtualFile, namespace: String?, functionName: String): FindSymbolInFileResponse? {
         val psiFile = virtFile.let { PsiManager.getInstance(project).findFile(it) } ?: return null
@@ -158,5 +175,31 @@ abstract class CLMLanguageComponent<T : CLMEditorManager>(
         val end = document.lspPosition(element.textRange.endOffset)
         val range = Range(start, end)
         return FindSymbolInFileResponse(element.text, range)
+    }
+
+    @RequiresEdt
+    private fun replaceSymbolEdtOperations(virtFile: VirtualFile,
+                                           functionName: String,
+                                           codeBlock: String,
+                                           namespace: String?,): Boolean {
+        val psiFile = virtFile.let { PsiManager.getInstance(project).findFile(it) } ?: return false
+        if (!isPsiFileSupported(psiFile)) return false
+        val editorManager = FileEditorManager.getInstance(project)
+        val editor = editorManager.openTextEditor(OpenFileDescriptor(project, virtFile), false)
+            ?: return false
+        // val editor = psiFile.findExistingEditor() ?: return null
+        val element = (if (namespace != null)
+            symbolResolver.findClassFunctionFromFile(psiFile, null, namespace, functionName)
+        else
+            symbolResolver.findTopLevelFunction(psiFile, functionName))
+            ?: return false
+        WriteCommandAction.runWriteCommandAction(project) {
+            editor.document.replaceString(element.textRange.startOffset, element.textRange.endOffset, codeBlock)
+            CodeStyleManager.getInstance(project).reformatText(
+                psiFile,
+                element.textRange.startOffset,
+                element.textRange.startOffset + codeBlock.length)
+        }
+        return true
     }
 }

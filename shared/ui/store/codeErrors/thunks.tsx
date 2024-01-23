@@ -516,12 +516,13 @@ export const api =
 	};
 
 export const replaceSymbol =
-	(uri: string, symbol: string, codeBlock: string) =>
+	(uri: string, symbol: string, codeBlock: string, namespace?: string) =>
 	async (dispatch, getState: () => CodeStreamState) => {
 		await HostApi.instance.send(EditorReplaceSymbolType, {
 			uri,
 			symbolName: symbol,
 			codeBlock,
+			namespace,
 		});
 	};
 
@@ -568,6 +569,7 @@ export const copySymbolFromIde =
 					symbol: stackLine.method,
 					uri: lookupPath,
 					codeBlockStartLine: symbolDetails.range.start.line,
+					namespace: stackLine.namespace,
 				})
 			);
 		} else {

@@ -53,6 +53,18 @@ class CLMService(val project: Project) {
         return future.await()
     }
 
+    suspend fun replaceSymbol(uri: String, symbolName: String, codeBlock: String, namespace: String?): Boolean {
+        val future = CompletableFuture<Boolean>()
+        DumbService.getInstance(project).smartInvokeLater {
+            appDispatcher.launch {
+                val result = replaceSymbolInternal(uri, symbolName, codeBlock, namespace)
+                future.complete(result)
+
+            }
+        }
+        return future.await()
+    }
+
     private suspend fun copySymbolInternal(uri: String, namespace: String?, functionName: String, ref: String?): FindSymbolInFileResponse? {
         for (component in _languageComponents) {
             val response = component.copySymbolInFile(uri, namespace, functionName, ref)
@@ -61,5 +73,15 @@ class CLMService(val project: Project) {
             }
         }
         return null
+    }
+
+    private suspend fun replaceSymbolInternal(uri: String, symbolName: String, codeBlock: String, namespace: String?): Boolean {
+        for (component in _languageComponents) {
+            val response = component.replaceSymbolInFile(uri, symbolName, codeBlock, namespace)
+            if (response) {
+                return true
+            }
+        }
+        return false
     }
 }
