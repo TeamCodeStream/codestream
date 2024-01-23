@@ -472,6 +472,8 @@ export const APMLogSearchPanel = (props: {
 									setSelectedEntityAccount(newValue);
 								}}
 								components={{ Option }}
+								tabIndex={1}
+								autoFocus
 							/>
 						</div>
 
@@ -484,6 +486,7 @@ export const APMLogSearchPanel = (props: {
 								placeholder="Since"
 								options={selectSinceOptions}
 								onChange={value => setSelectedSinceOption(value)}
+								tabIndex={2}
 							/>
 						</div>
 					</div>
@@ -500,7 +503,8 @@ export const APMLogSearchPanel = (props: {
 									setQuery(e.target.value);
 								}}
 								onKeyDown={checkKeyPress}
-								placeholder="Query logs in the selected entity"
+								placeholder="Query logs in the selected service"
+								tabIndex={3}
 							/>
 						</div>
 
@@ -509,6 +513,7 @@ export const APMLogSearchPanel = (props: {
 								className="query"
 								onClick={() => fetchLogs(selectedEntityAccount?.value)}
 								loading={isLoading}
+								tabIndex={4}
 							>
 								Query Logs
 							</Button>
@@ -529,7 +534,7 @@ export const APMLogSearchPanel = (props: {
 							{totalItems.toLocaleString()} Logs
 						</span>{" "}
 						<a
-							style={{ float: "right", cursor: "pointer" }}
+							style={{ display: "none", float: "right", cursor: "pointer" }}
 							href="#"
 							onClick={e => {
 								e.preventDefault();
