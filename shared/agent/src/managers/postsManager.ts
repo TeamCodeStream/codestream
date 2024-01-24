@@ -535,16 +535,13 @@ function trackPostCreation(
 						const codemarkProperties: {
 							[key: string]: any;
 						} = {
-							"Codemark ID": codemarkId,
-							"Codemark Type": request.codemark.type,
-							"Linked Service": request.codemark.externalProvider,
-							"Entry Point": request.entryPoint,
-							Tags: (request.codemark.tags || []).length,
-							Markers: markers.length,
-							"Invitee Mentions": request.addedUsers ? request.addedUsers.length : 0,
+							meta_data_2: `linked_service: ${request.codemark.externalProvider}`,
+							meta_data: `entry_point: ${request.entryPoint}`,
+							meta_data_3: "",
+							event_type: "response",
 						};
 						if (request.codemark.codeErrorId) {
-							codemarkProperties["Code Error"] = true;
+							codemarkProperties["meta_data_3"] = `error_group: true`;
 						}
 						if (textDocuments && textDocuments.length) {
 							for (const textDocument of textDocuments) {
@@ -557,7 +554,7 @@ function trackPostCreation(
 							}
 						}
 						telemetry.track({
-							eventName: "Codemark Created",
+							eventName: "codestream/codemarks/codemark created",
 							properties: codemarkProperties,
 						});
 					} else if (request.parentPostId) {
