@@ -170,6 +170,7 @@ export class EntityProvider implements Disposable {
 								type
 								account {
 								  name
+								  id
 								}
 							  }
 							}
@@ -182,6 +183,7 @@ export class EntityProvider implements Disposable {
 								  type
 								  account {
 									name
+									id
 								  }
 								}
 							  }
@@ -206,6 +208,7 @@ export class EntityProvider implements Disposable {
 						type: _.type,
 						domain: _entity.domain,
 						accountName: _entity?.account?.name,
+						id: _entity.account?.id,
 					};
 				});
 				return results;

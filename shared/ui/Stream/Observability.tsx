@@ -1264,9 +1264,16 @@ export const Observability = React.memo((props: Props) => {
 																					onClick={e => {
 																						e.preventDefault();
 																						e.stopPropagation();
-																						HostApi.instance.track("Open Service Summary on NR", {
-																							Section: "Golden Metrics",
-																						});
+																						HostApi.instance.track(
+																							"codestream/link_to_newrelic clicked",
+																							{
+																								entity_guid: `${derivedState.currentMethodLevelTelemetry.newRelicEntityGuid}`,
+																								account_id: `${derivedState.currentMethodLevelTelemetry.newRelicAccountId}`,
+																								meta_data: "destination: apm_service_summary",
+																								meta_data_2: "codestream_section: golden_metrics",
+																								event_type: "click",
+																							}
+																						);
 																						HostApi.instance.send(OpenUrlRequestType, {
 																							url: ea.url!,
 																						});

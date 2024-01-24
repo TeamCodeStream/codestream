@@ -2055,6 +2055,7 @@ export interface RelatedEntityByType {
 	type: string;
 	domain: string;
 	accountName?: string;
+	id: number;
 }
 
 export interface RelatedEntitiesByType extends Array<RelatedEntityByType> {}

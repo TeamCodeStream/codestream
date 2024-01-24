@@ -132,8 +132,12 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 						onClick={e => {
 							e.preventDefault();
 							e.stopPropagation();
-							HostApi.instance.track("Open Service Summary on NR", {
-								Section: "Related Services",
+							HostApi.instance.track("codestream/link_to_newrelic clicked", {
+								entity_guid: `${props.relatedEntity.guid ? props.relatedEntity.guid : ""}`,
+								account_id: `${props.relatedEntity.id ? props.relatedEntity.id : ""}`,
+								meta_data: "destination: apm_service_summary",
+								meta_data_2: "codestream_section: related_services",
+								event_type: "click",
 							});
 							HostApi.instance.send(OpenUrlRequestType, {
 								url: newRelicUrl,
