@@ -299,6 +299,9 @@ export class NewRelicGraphqlClient implements Disposable {
 						// We tried refresh but didn't work, throw the original exception
 						throw ex;
 					}
+				} else {
+					// We tried refresh once or we're not usingServiceGatewayAuth
+					throw ex;
 				}
 			}
 		}
