@@ -261,21 +261,16 @@ export class NewRelicGraphqlClient implements Disposable {
 	private async clientRequestWrap<T>(
 		query: string,
 		variables: Record<string, string>,
-		useOtherRegion?: boolean,
-		retryLimit: number = 3
+		useOtherRegion?: boolean
 	) {
 		let resp;
-		let exception: Error | undefined;
-
 		const client = await this.client(useOtherRegion);
 		let triedRefresh = false;
-
-		for (let tries = 1; tries <= retryLimit; ++tries) {
+		while (!resp) {
 			try {
 				resp = await client.request<T>(query, variables);
+				// fetchCore will have retried 3 times by now
 			} catch (ex) {
-				exception = ex;
-
 				if (
 					this.session.api.usingServiceGatewayAuth &&
 					!triedRefresh &&
@@ -301,18 +296,12 @@ export class NewRelicGraphqlClient implements Disposable {
 						resp = undefined;
 					} catch (refreshEx) {
 						Logger.warn("Exception thrown refreshing New Relic access token", refreshEx);
-						exception = refreshEx; // just in case the LAST iteration through tries to refresh
+						// We tried refresh but didn't work, throw the original exception
+						throw ex;
 					}
 				}
 			}
 		}
-
-		// if we tried and tried, and failed somewhere along the path without a valid response
-		// throw it
-		if (!resp && exception) {
-			throw exception;
-		}
-
 		return resp;
 	}
 
@@ -384,8 +373,8 @@ export class NewRelicGraphqlClient implements Disposable {
 	async query<T = any>(
 		query: string,
 		variables: any = undefined,
-		tryCount: number = 3,
-		isMultiRegion: boolean = false
+		tryCount = 3,
+		isMultiRegion = false
 	): Promise<T> {
 		if (this.providerInfo && this.providerInfo.tokenError) {
 			delete this._client;
@@ -399,24 +388,14 @@ export class NewRelicGraphqlClient implements Disposable {
 			try {
 				let potentialResponse, potentialOtherResponse;
 				if (isMultiRegion) {
-					const currentRegionPromise = await this.clientRequestWrap<T>(
-						query,
-						variables,
-						false,
-						tryCount
-					);
-					const otherRegionPromise = await this.clientRequestWrap<T>(
-						query,
-						variables,
-						true,
-						tryCount
-					);
+					const currentRegionPromise = await this.clientRequestWrap<T>(query, variables, false);
+					const otherRegionPromise = await this.clientRequestWrap<T>(query, variables, true);
 					[potentialResponse, potentialOtherResponse] = await Promise.all([
 						currentRegionPromise,
 						otherRegionPromise,
 					]);
 				} else {
-					potentialResponse = await this.clientRequestWrap<T>(query, variables, false, tryCount); // await (await this.client(false)).request<T>(query, variables);
+					potentialResponse = await this.clientRequestWrap<T>(query, variables, false);
 				}
 				// GraphQL returns happy HTTP 200 response for api level errors
 				if (potentialOtherResponse) {
