@@ -301,7 +301,10 @@ export class NrNRQLProvider {
 		if (!results || !results.length) return "table";
 
 		if (results.length === 1) {
-			if (Object.keys(results[0]).length === 1) {
+			const value = results[0];
+			if (typeof value === "object" && value != null && !Array.isArray(value)) {
+				return "json";
+			} else {
 				return "billboard";
 			}
 		}
