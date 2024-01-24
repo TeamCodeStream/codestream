@@ -29,6 +29,7 @@ import { nrItemsToDocSelector, nrqlFunctions, nrqlKeywords, nrqlOperators } from
 interface NrCollectionsByAccount {
 	[accountId: string]: string[];
 }
+
 interface NrCollectionsByAccountAsObject {
 	[accountId: string]: string[];
 }
@@ -38,6 +39,7 @@ interface NrColumnsByAccountByCollectionName {
 		[collectionName: string]: string[];
 	};
 }
+
 let nrConstantsCache: GetNRQLConstantsResponse;
 
 let nrCollectionsByAccount: NrCollectionsByAccount = {};
@@ -71,14 +73,14 @@ export class NrNRQLProvider {
 			return {
 				results,
 				accountId,
-				resultsType: this.getResultsType(query, results),
+				resultsTypeGuess: this.getResultsType(query, results),
 			};
 		} catch (ex) {
 			ContextLogger.warn("executeNRQL failure", {
 				request,
 				error: ex,
 			});
-			return { error: mapNRErrorResponse(ex), accountId, resultsType: "table" };
+			return { error: mapNRErrorResponse(ex), accountId, resultsTypeGuess: "table" };
 		}
 	}
 

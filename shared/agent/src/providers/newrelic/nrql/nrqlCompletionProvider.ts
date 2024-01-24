@@ -68,8 +68,11 @@ export class NrqlCompletionProvider {
 	): Promise<GetNRQLCompletionItemsResponse> {
 		const completionItems: CompletionItem[] = [];
 		try {
+			// to use on matching against builtins
 			const currentWordAsUpperCase = request.currentWord?.toUpperCase();
-			const text = request.text?.toLowerCase().trimEnd();
+			// the entire line of a query (might be the entire query or a partial)
+			const text = request.text?.trim();
+			const textLowered = text?.toLowerCase();
 			const builtIns = await this.nrNRQLProvider.getConstants({});
 			if (currentWordAsUpperCase) {
 				// Filter and generate completion items based on the current word
@@ -83,11 +86,34 @@ export class NrqlCompletionProvider {
 					}
 				}
 			}
-			if (text) {
+			if (textLowered) {
 				const collectionsResponse = await this.nrNRQLProvider.fetchCollections();
 
-				if (collectionsResponse.list.length) {
-					if (text.endsWith("from")) {
+				const textSplitLowered = textLowered.split(" ");
+				const lastWordLowered = textSplitLowered[textSplitLowered.length - 1];
+
+				switch (lastWordLowered) {
+					case "select": {
+						if (textSplitLowered[0] === "select") {
+							return { items: [builtIns.operators.find(_ => _.label === "*")!] };
+						} else {
+							const response = await this.nrNRQLProvider.fetchColumns({ query: request.text });
+							if (response.columns) {
+								for (const candidate of response.columns) {
+									completionItems.push({
+										label: candidate,
+										kind: CompletionItemKind.Property,
+										insertText: candidate,
+									});
+								}
+							}
+						}
+						return { items: completionItems };
+					}
+					case "*": {
+						return { items: [builtIns.keywords.find(_ => _.label === "FROM")!] };
+					}
+					case "from": {
 						for (const candidate of collectionsResponse.list) {
 							completionItems.push({
 								label: candidate,
@@ -96,7 +122,8 @@ export class NrqlCompletionProvider {
 							});
 						}
 						return { items: completionItems };
-					} else if (text.endsWith("where")) {
+					}
+					case "where": {
 						const response = await this.nrNRQLProvider.fetchColumns({ query: request.text });
 						if (response.columns) {
 							for (const candidate of response.columns) {
@@ -106,23 +133,39 @@ export class NrqlCompletionProvider {
 									insertText: candidate,
 								});
 							}
-							return { items: completionItems };
 						}
-					} else if (request.text) {
-						// find the last collectionName
-						const split = request.text.trim().split(" ");
-						for (let i = split.length; i > -1; i--) {
-							const current = split[i];
-							const found = collectionsResponse.obj[current];
-							if (found) {
-								const select = builtIns?.keywords?.find(_ => _.label === "SELECT");
-								if (select) {
-									return { items: [select] };
+						return { items: completionItems };
+					}
+					default: {
+						// see if the last term was a column
+						const textSplit = text!.split(" ");
+						if (builtIns.operators.find(_ => _.label === textSplit[textSplit.length - 1])) {
+							// TODO get potential column _values_?
+							return { items: [] };
+						}
+						if (textSplitLowered.indexOf("where") > -1) {
+							return { items: builtIns.operators };
+						} else {
+							// see if the last term was a collection
+							// From Foo <Select>
+							// Select * From Foo <Where>
+							const label = textSplitLowered.indexOf("select") > -1 ? "WHERE" : "SELECT";
+							for (let i = textSplit.length; i > -1; i--) {
+								const current = textSplit[i];
+								const found = collectionsResponse.obj[current];
+								if (found) {
+									return { items: [builtIns?.keywords?.find(_ => _.label === label)!] };
 								}
 							}
 						}
 					}
 				}
+			}
+
+			if (!text) {
+				return {
+					items: builtIns.keywords.filter(_ => _.label === "SELECT" || _.label === "FROM")!,
+				};
 			}
 		} catch (ex) {
 			Logger.warn("provideCompletionItems", { error: ex });

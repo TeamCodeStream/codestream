@@ -166,8 +166,8 @@ export async function activate(context: ExtensionContext) {
 		): ProviderResult<CodeLens[]> {
 			let lenses = [];
 			for (let line = 0; line < document.lineCount; line++) {
-				let text = document.lineAt(line).text.trim();
-				if (text.startsWith("SELECT") || text.startsWith("FROM") || text.startsWith("SHOW")) {
+				let text = document.lineAt(line).text.trim().toLowerCase();
+				if (text.startsWith("select") || text.startsWith("from") || text.startsWith("show")) {
 					let range = new Range(line, 0, line, 0);
 					let command = {
 						title: "Execute ▶️",

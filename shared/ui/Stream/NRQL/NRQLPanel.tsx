@@ -69,7 +69,7 @@ export const NRQLPanel = (props: {
 }) => {
 	const [query, setQuery] = useState<string>("");
 	const [results, setResults] = useState<NRQLResult[]>([]);
-	const [resultsType, setResultsType] = useState<string>("table");
+	const [resultsTypeGuess, setResultsTypeGuess] = useState<string>("table");
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [totalItems, setTotalItems] = useState<number>(0);
 	const [nrqlError, setNRQLError] = useState<string | undefined>("");
@@ -128,7 +128,7 @@ export const NRQLPanel = (props: {
 			if (response.results && response.results.length > 0) {
 				setResults(response.results);
 				setTotalItems(response.results.length);
-				setResultsType(response.resultsType);
+				setResultsTypeGuess(response.resultsTypeGuess);
 			}
 		} catch (ex) {
 			handleError(ex);
@@ -179,19 +179,23 @@ export const NRQLPanel = (props: {
 			</ActionRow>
 			<ResultsRow>
 				<div>
-					{!nrqlError && !isLoading && results && totalItems > 0 && resultsType === "table" && (
-						<NRQLResultsTable results={results} />
-					)}
-					{!nrqlError && !isLoading && results && totalItems > 0 && resultsType === "billboard" && (
-						<NRQLResultsBillboard results={results} />
-					)}
-					{!nrqlError && !isLoading && results && totalItems > 0 && resultsType === "line" && (
+					{!nrqlError &&
+						!isLoading &&
+						results &&
+						totalItems > 0 &&
+						resultsTypeGuess === "table" && <NRQLResultsTable results={results} />}
+					{!nrqlError &&
+						!isLoading &&
+						results &&
+						totalItems > 0 &&
+						resultsTypeGuess === "billboard" && <NRQLResultsBillboard results={results} />}
+					{!nrqlError && !isLoading && results && totalItems > 0 && resultsTypeGuess === "line" && (
 						<NRQLResultsLine results={results} />
 					)}
-					{!nrqlError && !isLoading && results && totalItems > 0 && resultsType === "json" && (
+					{!nrqlError && !isLoading && results && totalItems > 0 && resultsTypeGuess === "json" && (
 						<NRQLResultsJSON results={results} />
 					)}
-					{!nrqlError && !isLoading && results && totalItems > 0 && resultsType === "bar" && (
+					{!nrqlError && !isLoading && results && totalItems > 0 && resultsTypeGuess === "bar" && (
 						<NRQLResultsBar results={results} />
 					)}
 
