@@ -82,16 +82,20 @@ export function NRQLEditor(props: {
 		monaco.languages.setMonarchTokensProvider("nrql", {
 			tokenizer: {
 				root: [
-					[new RegExp(response.keywords.map(_ => _.label).join("|")), "keyword.nrql"],
+					[new RegExp(response.keywords.map(_ => _.label).join("|"), "i"), "keyword.nrql"],
 					[
 						new RegExp(
 							response.operators
 								.map(_ => _.label.replace(/[.*+\-?^${}()|[\]\\]/g, "\\$&"))
-								.join("|")
+								.join("|"),
+							"i"
 						),
 						"keyword.operator.nrql",
 					],
-					[new RegExp(response.functions.map(_ => _.label).join("|")), "support.function.nrql"],
+					[
+						new RegExp(response.functions.map(_ => _.label).join("|"), "i"),
+						"support.function.nrql",
+					],
 				],
 			},
 		});
