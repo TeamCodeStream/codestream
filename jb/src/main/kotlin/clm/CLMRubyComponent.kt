@@ -11,7 +11,6 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiPolyVariantReference
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.findParentOfType
-import org.jetbrains.kotlin.idea.core.util.range
 import org.jetbrains.kotlin.psi.psiUtil.findDescendantOfType
 import org.jetbrains.plugins.ruby.ruby.lang.psi.controlStructures.classes.RClass
 import org.jetbrains.plugins.ruby.ruby.lang.psi.controlStructures.methods.RMethod
@@ -125,7 +124,7 @@ class RubySymbolResolver : SymbolResolver {
 
         val clmElements: List<ClmElements> = infoBySymbol.map {
             ClmElements(
-                it.key.range,
+                it.key.textRange,
                 it.value.joinToString("\n"),
                 false,
                 "type"
