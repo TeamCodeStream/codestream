@@ -60,11 +60,17 @@ export class ClmManagerNew {
 		try {
 			const telemetry = Container.instance().telemetry;
 			const event = {
-				// "Total Methods": symbolStrs.size,
-				"Entity GUID": this._request.entityGuid,
+				entity_guid: this._request.entityGuid,
+				account_id: this._accountId,
+				meta_data: `language: ${languageSupport.language}`,
+				meta_data_2: `anomalous_duration_transactions: `,
+				meta_data_3: `anomalous_error_transactions: `,
+				meta_data_4: `anomalous_duration_metrics: `,
+				meta_data_5: `anomalous_error_metrics: `,
+				event_type: "state_load",
 			};
 			telemetry?.track({
-				eventName: "CLM Anomalies Calculated",
+				eventName: "codestream/anomalies calculated",
 				properties: event,
 			});
 		} catch (e) {

@@ -146,15 +146,17 @@ export class AnomalyDetectorDrillDown {
 			const errorRateMetrics = children.filter(_ => _.type === "duration");
 
 			const event = {
-				"Entity GUID": this._request.entityGuid,
-				Language: languageSupport.language,
-				"Anomalous Duration Transactions": durationAnomalies.length,
-				"Anomalous Error Transactions": errorRateAnomalies.length,
-				"Anomalous Duration Metrics": durationMetrics.length,
-				"Anomalous Error Metrics": errorRateMetrics.length,
+				entity_guid: this._request.entityGuid,
+				account_id: this._accountId,
+				meta_data: `language: ${languageSupport.language}`,
+				meta_data_2: `anomalous_duration_transactions: ${durationAnomalies.length}`,
+				meta_data_3: `anomalous_error_transactions: ${errorRateAnomalies.length}`,
+				meta_data_4: `anomalous_duration_metrics: ${durationMetrics.length}`,
+				meta_data_5: `anomalous_error_metrics: ${errorRateMetrics.length}`,
+				event_type: "state_load",
 			};
 			telemetry?.track({
-				eventName: "CLM Anomalies Calculated",
+				eventName: "codestream/anomalies calculated",
 				properties: event,
 			});
 		} catch (e) {
