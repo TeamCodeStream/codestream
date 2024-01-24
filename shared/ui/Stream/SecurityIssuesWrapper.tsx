@@ -133,9 +133,19 @@ function Additional(props: { onClick: () => void; additional?: number }) {
 	) : null;
 }
 
-function VulnView(props: { vuln: Vuln; onClose: () => void }) {
+function VulnView(props: {
+	vuln: Vuln;
+	onClose: () => void;
+	accountId: number | undefined;
+	entityGuid: string | undefined;
+}) {
 	const { vuln } = props;
-	HostApi.instance.track("Vulnerability Clicked");
+	HostApi.instance.track("codestream/vulnerability clicked", {
+		entity_guid: props.entityGuid ? props.entityGuid : "",
+		account_id: props.accountId ? props.accountId : null,
+		target: "vulnerability",
+		event_type: "click",
+	});
 	return (
 		<div className="codemark-form-container">
 			<div className="codemark-form standard-form vscroll">
@@ -189,7 +199,11 @@ function VulnView(props: { vuln: Vuln; onClose: () => void }) {
 	);
 }
 
-function VulnRow(props: { vuln: Vuln }) {
+function VulnRow(props: {
+	vuln: Vuln;
+	accountId: number | undefined;
+	entityGuid: string | undefined;
+}) {
 	const [expanded, setExpanded] = useState<boolean>(false);
 
 	return (
@@ -214,7 +228,12 @@ function VulnRow(props: { vuln: Vuln }) {
 						setExpanded(false);
 					}}
 				>
-					<VulnView vuln={props.vuln} onClose={() => setExpanded(false)} />
+					<VulnView
+						vuln={props.vuln}
+						onClose={() => setExpanded(false)}
+						accountId={props.accountId}
+						entityGuid={props.entityGuid}
+					/>
 				</Modal>
 			)}
 		</>
@@ -252,7 +271,10 @@ function LibraryRow(props: { library: LibraryDetails }) {
 				</div>
 				<Severity severity={criticalityToRiskSeverity(library.highestCriticality)} />
 			</Row>
-			{expanded && library.vulns.map(vuln => <VulnRow vuln={vuln} />)}
+			{expanded &&
+				library.vulns.map(vuln => (
+					<VulnRow vuln={vuln} accountId={vuln.accountId} entityGuid={vuln.entityGuid} />
+				))}
 		</>
 	);
 }

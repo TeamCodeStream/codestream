@@ -2457,6 +2457,8 @@ export type Vuln = {
 	description: string;
 	score: number;
 	criticality: CriticalityType;
+	entityGuid?: string;
+	accountId?: number;
 };
 
 export type LibraryDetails = {
