@@ -306,6 +306,7 @@ export interface OpenEditorViewNotification {
 	title: string;
 
 	entityAccounts: EntityAccount[];
+	entryPoint: "global_nav" | "context_menu" | "tree_view" | "codelens";
 
 	panelLocation?: ViewColumn;
 	entityGuid?: string;

@@ -19,6 +19,7 @@ export function App() {
 						entityAccounts={codestreamProps.entityAccounts}
 						entityGuid={codestreamProps.entityGuid}
 						suppliedQuery={codestreamProps.query}
+						entryPoint={codestreamProps.entryPoint}
 					></APMLogSearchPanel>
 				)}
 				{codestreamProps.panel === "nrql" && (
@@ -26,6 +27,7 @@ export function App() {
 						entityAccounts={codestreamProps.entityAccounts}
 						entityGuid={codestreamProps.entityGuid}
 						suppliedQuery={codestreamProps.query}
+						entryPoint={codestreamProps.entryPoint}
 					></NRQLPanel>
 				)}
 			</div>

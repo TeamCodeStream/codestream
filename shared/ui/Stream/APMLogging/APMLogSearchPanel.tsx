@@ -20,6 +20,7 @@ import {
 	isNRErrorResponse,
 } from "@codestream/protocols/agent";
 import { AsyncPaginate } from "react-select-async-paginate";
+import { parseId } from "@codestream/webview/utilities/newRelic";
 
 interface SelectedOption {
 	value: string;
@@ -128,6 +129,7 @@ const Option = (props: OptionProps) => {
 
 export const APMLogSearchPanel = (props: {
 	entityAccounts: EntityAccount[];
+	entryPoint: string;
 	entityGuid?: string;
 	suppliedQuery?: string;
 }) => {
@@ -160,6 +162,18 @@ export const APMLogSearchPanel = (props: {
 	const [logError, setLogError] = useState<string | undefined>("");
 
 	useDidMount(() => {
+		if (props.entityGuid) {
+			const parsedId = parseId(props.entityGuid);
+
+			if (parsedId) {
+				trackOpenTelemetry(props.entryPoint, props.entityGuid, parsedId.accountId);
+			} else {
+				trackOpenTelemetry(props.entryPoint);
+			}
+		} else {
+			trackOpenTelemetry(props.entryPoint);
+		}
+
 		const defaultOption: SelectedOption = {
 			value: "30 MINUTES AGO",
 			label: "30 Minutes Ago",
@@ -332,7 +346,7 @@ export const APMLogSearchPanel = (props: {
 				setDisplayColumns(["timestamp", response.severityAttribute!, response.messageAttribute!]);
 			}
 
-			trackTelemetry(entityGuid, response.accountId, (response?.logs?.length ?? 0) > 0);
+			trackSearchTelemetry(entityGuid, response.accountId, (response?.logs?.length ?? 0) > 0);
 		} catch (ex) {
 			handleError(ex);
 		} finally {
@@ -340,11 +354,25 @@ export const APMLogSearchPanel = (props: {
 		}
 	};
 
-	const trackTelemetry = (entityGuid: string, accountId: number, resultsReturned: boolean) => {
+	const trackSearchTelemetry = (
+		entityGuid: string,
+		accountId: number,
+		resultsReturned: boolean
+	) => {
 		HostApi.instance.track("codestream/logs searched", {
 			entity_guid: `${entityGuid}`,
 			account_id: `${accountId}`,
+			event_type: "response",
 			meta_data: `results_returned: ${resultsReturned}`,
+		});
+	};
+
+	const trackOpenTelemetry = (entryPoint: string, entityGuid?: string, accountId?: number) => {
+		HostApi.instance.track("codestream/webview opened", {
+			entity_guid: `${entityGuid}`,
+			account_id: `${accountId}`,
+			event_type: "click",
+			meta_data: `entry_point: ${entryPoint}`,
 		});
 	};
 

@@ -102,6 +102,7 @@ export function GlobalNav() {
 		HostApi.instance.notify(OpenEditorViewNotificationType, {
 			panel: "nrql",
 			title: "NRQL",
+			entryPoint: "global_nav",
 			entityGuid: derivedState.currentEntityGuid!,
 			entityAccounts: derivedState.entityAccounts,
 		});
@@ -111,6 +112,7 @@ export function GlobalNav() {
 		HostApi.instance.notify(OpenEditorViewNotificationType, {
 			panel: "logs",
 			title: "Logs",
+			entryPoint: "global_nav",
 			entityAccounts: derivedState.entityAccounts,
 		});
 	};

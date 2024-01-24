@@ -1001,6 +1001,7 @@ function listenForEvents(store) {
 			panel: "logs",
 			title: "Logs",
 			query: params.query,
+			entryPoint: params.entryPoint,
 		};
 
 		HostApi.instance.notify(OpenEditorViewNotificationType, props);
@@ -1023,6 +1024,7 @@ function listenForEvents(store) {
 			title: "NRQL",
 			query: params.query,
 			hash: params.hash,
+			entryPoint: params.entryPoint,
 		};
 
 		HostApi.instance.notify(OpenEditorViewNotificationType, props);

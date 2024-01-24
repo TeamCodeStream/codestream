@@ -643,7 +643,10 @@ export class Commands implements Disposable {
 			// notification of some sort that we couldn't find anything to search on?
 			await window.showErrorMessage("Please select a NRQL query to execute", "Dismiss");
 		} else {
-			await Container.sidebar.executeNrql({ query: nrqlQuery /* hash: md5(fileUri.toString())*/ });
+			await Container.sidebar.executeNrql({
+				query: nrqlQuery,
+				entryPoint: "codelens" /* hash: md5(fileUri.toString())*/
+			});
 		}
 	}
 
@@ -672,7 +675,7 @@ export class Commands implements Disposable {
 				"Dismiss"
 			);
 		} else {
-			await Container.sidebar.logSearch({ query: searchTerm });
+			await Container.sidebar.logSearch({ query: searchTerm, entryPoint: "context_menu" });
 		}
 	}
 

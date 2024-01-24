@@ -207,6 +207,7 @@ export const HandlePullRequestDirectivesNotificationType = new NotificationType<
 
 export interface InitiateLogSearchNotification {
 	query?: string;
+	entryPoint: "global_nav" | "context_menu" | "tree_view" | "codelens";
 }
 
 export const InitiateLogSearchNotificationType = new NotificationType<
@@ -218,6 +219,8 @@ export interface InitiateNrqlExecutionNotification {
 	query: string;
 	/** Used for internally keying mechanisms */
 	hash?: string;
+
+	entryPoint: "global_nav" | "context_menu" | "tree_view" | "codelens";
 }
 
 export const InitiateNrqlExecutionNotificationType = new NotificationType<

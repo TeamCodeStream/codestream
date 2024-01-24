@@ -64,6 +64,7 @@ const ResultsRow = styled.div`
 
 export const NRQLPanel = (props: {
 	entityAccounts: EntityAccount[];
+	entryPoint: string;
 	entityGuid?: string;
 	suppliedQuery?: string;
 }) => {

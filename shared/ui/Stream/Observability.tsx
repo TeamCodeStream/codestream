@@ -1366,6 +1366,7 @@ export const Observability = React.memo((props: Props) => {
 																												title: "Logs",
 																												entityGuid: ea.entityGuid,
 																												entityAccounts: allEntityAccounts,
+																												entryPoint: "tree_view",
 																											}
 																										);
 																									}}
