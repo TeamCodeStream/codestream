@@ -114,6 +114,7 @@ export function GlobalNav() {
 			title: "Logs",
 			entryPoint: "global_nav",
 			entityAccounts: derivedState.entityAccounts,
+			entityGuid: derivedState.currentEntityGuid,
 		});
 	};
 

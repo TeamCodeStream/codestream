@@ -368,12 +368,20 @@ export const APMLogSearchPanel = (props: {
 	};
 
 	const trackOpenTelemetry = (entryPoint: string, entityGuid?: string, accountId?: number) => {
-		HostApi.instance.track("codestream/webview opened", {
-			entity_guid: `${entityGuid}`,
-			account_id: `${accountId}`,
+		const payload = {
 			event_type: "click",
 			meta_data: `entry_point: ${entryPoint}`,
-		});
+		};
+
+		if (entityGuid) {
+			payload["entity_guid"] = entityGuid;
+		}
+
+		if (accountId) {
+			payload["account_id"] = accountId;
+		}
+
+		HostApi.instance.track("codestream/logs/webview opened", payload);
 	};
 
 	const renderHeaderRow = () => {
