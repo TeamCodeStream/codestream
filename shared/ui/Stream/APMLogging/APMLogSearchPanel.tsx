@@ -332,7 +332,13 @@ export const APMLogSearchPanel = (props: {
 			}
 
 			if (isNRErrorResponse(response?.error)) {
-				handleError(response.error?.error?.message ?? response.error?.error?.type);
+				if (response?.error?.error?.message?.startsWith("NRQL Syntax Error")) {
+					handleError(
+						"Please check your syntax and try again. Note that you do not have to escape special characters. We'll do that for you!"
+					);
+				} else {
+					handleError(response.error?.error?.message ?? response.error?.error?.type);
+				}
 				return;
 			}
 

@@ -21,6 +21,19 @@ import { mapNRErrorResponse, parseId } from "../utils";
 export class NrLogsProvider {
 	constructor(private graphqlClient: NewRelicGraphqlClient) {}
 
+	/**
+	 * Escapes slashes and single quotes (in that order)
+	 *
+	 * Escape one slash (which needs escaped in this chain) for multiple (GraphQL and NRDB)
+	 * Then escape single quotes
+	 *
+	 * @param searchTerm string
+	 * @returns an escaped version of the searchTerm for use in allColumnSearch('<here>')
+	 */
+	private escapeSearchTerm(searchTerm: string): string {
+		return searchTerm.replace("\\", "\\\\\\\\").replace("'", "\\'");
+	}
+
 	@lspHandler(GetLogsRequestType)
 	@log()
 	public async getLogs(request: GetLogsRequest): Promise<GetLogsResponse> {
@@ -38,7 +51,9 @@ export class NrLogsProvider {
 			const queryLimit = `LIMIT ${limit}`;
 
 			if (filterText) {
-				queryWhere += ` AND allColumnSearch('${filterText}', insensitive: true)`;
+				queryWhere += ` AND allColumnSearch('${this.escapeSearchTerm(
+					filterText
+				)}', insensitive: true)`;
 			}
 
 			const query = `SELECT * FROM Log ${queryWhere} ${querySince} ${queryOrder} ${queryLimit}`;
