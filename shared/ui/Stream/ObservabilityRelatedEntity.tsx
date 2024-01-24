@@ -41,7 +41,12 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 
 	useEffect(() => {
 		if (expanded) {
-			HostApi.instance.track("Related Service Clicked", {});
+			HostApi.instance.track("codestream/related_service clicked", {
+				entity_guid: relatedEntity.guid ? relatedEntity.guid : "",
+				account_id: relatedEntity.id ? relatedEntity.id : "",
+				target: "related_service",
+				event_type: "click",
+			});
 			setLoadingGoldenMetrics(true);
 			fetchGoldenMetrics(relatedEntity.guid);
 		}
