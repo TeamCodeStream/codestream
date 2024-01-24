@@ -462,7 +462,50 @@ export const ObservabilityAnomalyPanel = () => {
 											</div>
 										</div>
 									)}
-
+                  {(telemetryResponse?.criticalPath?.length || 0) > 0 && (
+                    <div style={{ marginBottom: "30px" }}>
+                      <table style={{ borderCollapse: "collapse", width: "100%" }}>
+                        <tr style={{ borderBottom: "1px solid #888" }}>
+                          <td
+                            style={{
+                              width: "100%",
+                              padding: "3px 1px",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            <DataValue>
+                              <b>Critical Path</b>
+                            </DataValue>
+                          </td>
+                        </tr>
+                        {telemetryResponse?.criticalPath?.map(span => {
+                          return (
+                            <tr style={{ borderBottom: "1px solid #888" }}>
+                              <td
+                                style={{
+                                  width: "75%",
+                                  padding: "3px 1px",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                <DataValue>{span.name}</DataValue>
+                              </td>
+                              <td
+                                style={{
+                                  width: "25%",
+                                  padding: "3px 1px",
+                                  whiteSpace: "nowrap",
+                                  textAlign: "right",
+                                }}
+                              >
+                                <DataValue>{span.duration.toFixed(3)}</DataValue>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </table>
+                    </div>
+                  )}
 									<div>
 										<br />
 										{telemetryResponse &&

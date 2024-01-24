@@ -1878,6 +1878,7 @@ export interface GetMethodLevelTelemetryResponse {
 	newRelicUrl?: string;
 	goldenMetrics?: MethodGoldenMetrics[];
 	deployments?: Deployment[];
+	criticalPath?: CriticalPathSpan[];
 	errors?: ObservabilityError[];
 	newRelicAlertSeverity?: string;
 	newRelicEntityAccounts: EntityAccount[];
@@ -1960,6 +1961,11 @@ export const GetSpanChartDataRequestType = new RequestType<
 	void,
 	void
 >("codestream/newrelic/spanChartData");
+
+export interface CriticalPathSpan {
+	name: string;
+	duration: number;
+}
 
 export interface Deployment {
 	seconds: number;

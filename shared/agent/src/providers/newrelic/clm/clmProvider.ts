@@ -36,6 +36,7 @@ import { ObservabilityErrorsProvider } from "../errors/observabilityErrorsProvid
 import { mapNRErrorResponse, parseId } from "../utils";
 import { ContextLogger } from "../../contextLogger";
 import { Disposable } from "../../../system/disposable";
+import { CriticalPathCalculator } from "../criticalPath";
 
 @lsp
 export class ClmProvider implements Disposable {
@@ -149,7 +150,7 @@ export class ClmProvider implements Disposable {
 				request.metricTimesliceNameMapping,
 				request.since,
 				request.timeseriesGroup,
-				request.scope,
+				request.scope
 			);
 
 			let deployments;
@@ -174,9 +175,18 @@ export class ClmProvider implements Disposable {
 					: [];
 
 			const entityGuid = entity?.entityGuid || request.newRelicEntityGuid;
+			const criticalPathCalculator = new CriticalPathCalculator(this.graphqlClient);
+			const criticalPath = request.metricTimesliceNameMapping
+				? await criticalPathCalculator.getCriticalPath(
+						entityGuid,
+						request.metricTimesliceNameMapping
+				  )
+				: undefined;
+
 			return {
 				goldenMetrics: goldenMetrics,
 				deployments,
+				criticalPath,
 				errors,
 				newRelicEntityAccounts: entityAccounts,
 				newRelicAlertSeverity: entity?.alertSeverity,
