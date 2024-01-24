@@ -302,7 +302,7 @@ export enum ViewColumn {
 }
 
 export interface OpenEditorViewNotification {
-	panel: string;
+	panel: "logs" | "nrql";
 	title: string;
 
 	entityAccounts: EntityAccount[];
@@ -310,6 +310,7 @@ export interface OpenEditorViewNotification {
 	panelLocation?: ViewColumn;
 	entityGuid?: string;
 	query?: string;
+	hash?: string;
 }
 
 export const OpenEditorViewNotificationType = new NotificationType<

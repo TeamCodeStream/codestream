@@ -216,6 +216,8 @@ export const InitiateLogSearchNotificationType = new NotificationType<
 
 export interface InitiateNrqlExecutionNotification {
 	query: string;
+	/** Used for internally keying mechanisms */
+	hash?: string;
 }
 
 export const InitiateNrqlExecutionNotificationType = new NotificationType<

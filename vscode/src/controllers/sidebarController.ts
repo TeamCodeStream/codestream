@@ -884,6 +884,19 @@ export class SidebarController implements Disposable {
 			// hack until I can figure out how to funnel a search term into an already open logs window.
 			editorKey = `${editorKey}-${randomUUID()}`;
 		}
+		// TODO need to get comm working to update a query in an already existing
+		// webview panel -- using a hash of the fileUri here.
+		// let editorKey = "";
+		// if (e.panel === "nrql") {
+		// 	editorKey = e.hash! || e.entityGuid!;
+		// } else {
+		// 	editorKey = `${e.panel}-${e.entityGuid}`;
+
+		// 	if (e.query) {
+		// 		// hack until I can figure out how to funnel a search term into an already open logs window.
+		// 		editorKey = `${editorKey}-${randomUUID()}`;
+		// 	}
+		// }
 
 		if (!this._logPanelInitializations[editorKey]) {
 			const panel = new CodeStreamWebviewPanel(this.session, this.context, e, () => {});

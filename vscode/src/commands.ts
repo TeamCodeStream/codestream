@@ -30,6 +30,7 @@ import { Container } from "./container";
 import { Logger } from "./logger";
 import { Command, createCommandDecorator, Strings } from "./system";
 import * as csUri from "./system/uri";
+// import { md5 } from "@codestream/utils/system/string";
 
 const commandRegistry: Command[] = [];
 const command = createCommandDecorator(commandRegistry);
@@ -624,9 +625,8 @@ export class Commands implements Disposable {
 	}
 
 	@command("executeNrql")
-	async executeNrql(fileUri?: Uri, lineNumber?: number): Promise<void> {
+	async executeNrql(fileUri: Uri, lineNumber?: number): Promise<void> {
 		// fileUri is passed in by both CodeLens provider and the command provider
-		// but we actually don't need it.
 		// lineNumber is only passed by the CodeLens provider, which we do need.
 
 		let nrqlQuery: string;
@@ -643,7 +643,7 @@ export class Commands implements Disposable {
 			// notification of some sort that we couldn't find anything to search on?
 			await window.showErrorMessage("Please select a NRQL query to execute", "Dismiss");
 		} else {
-			await Container.sidebar.executeNrql({ query: nrqlQuery });
+			await Container.sidebar.executeNrql({ query: nrqlQuery /* hash: md5(fileUri.toString())*/ });
 		}
 	}
 

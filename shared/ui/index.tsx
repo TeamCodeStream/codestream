@@ -1022,6 +1022,7 @@ function listenForEvents(store) {
 			panel: "nrql",
 			title: "NRQL",
 			query: params.query,
+			hash: params.hash,
 		};
 
 		HostApi.instance.notify(OpenEditorViewNotificationType, props);
