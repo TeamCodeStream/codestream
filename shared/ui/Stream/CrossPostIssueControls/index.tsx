@@ -318,7 +318,10 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 	async onChangeProvider(providerInfo: ProviderInfo) {
 		if (!this.providerIsConnected(providerInfo.provider.id)) {
 			this.setState({ isLoading: true, loadingProvider: providerInfo });
-			this.props.configureAndConnectProvider(providerInfo.provider.id, "Compose Modal");
+			this.props.configureAndConnectProvider(
+				providerInfo.provider.id,
+				"connection_location: compose_modal"
+			);
 		} else {
 			this.props.setIssueProvider(providerInfo.provider.id);
 		}

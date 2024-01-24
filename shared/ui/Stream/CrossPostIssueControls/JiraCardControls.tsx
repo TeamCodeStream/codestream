@@ -161,7 +161,7 @@ export function JiraCardControls(
 			// TODO: Don't disconnect on any error - only in case auth tokens have expired
 			// Hard to reproduce might be "Unauthorized" for expired auth token
 			// TODO: needs to be communicated to the user
-			dispatch(disconnectProvider(props.provider.id, "Compose Modal"));
+			dispatch(disconnectProvider(props.provider.id, "connection_location: compose_modal"));
 			return [];
 		}
 	};

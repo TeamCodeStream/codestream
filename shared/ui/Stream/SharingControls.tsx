@@ -538,7 +538,7 @@ export const SharingControls = React.memo(
 
 		const authenticateWithSlack = () => {
 			setAuthenticationState({ isAuthenticating: true, label: "Slack" });
-			dispatch(connectProvider(derivedState.slackConfig!.id, "Compose Modal"));
+			dispatch(connectProvider(derivedState.slackConfig!.id, "connection_location: compose_modal"));
 		};
 
 		const authenticateWithMSTeams = () => {

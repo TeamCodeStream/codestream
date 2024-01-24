@@ -271,7 +271,9 @@ export default function IssuesPane(props: Props) {
 	};
 
 	const onChangeProvider = async (providerInfo: ProviderInfo) => {
-		await dispatch(configureAndConnectProvider(providerInfo.provider.id, "Compose Modal"));
+		await dispatch(
+			configureAndConnectProvider(providerInfo.provider.id, "connection_location: compose_modal")
+		);
 
 		/*
 		// Per https://newrelic.atlassian.net/browse/CDSTRM-1591, the need for the "pre-PR" modal

@@ -38,7 +38,7 @@ export const configureAndConnectProvider =
 		} = provider;
 		const onprem = configs.isOnPrem;
 		//const isVSCGitHub = ide.name === "VSC" && name === "github" && capabilities.vsCodeGithubSignin;
-		connectionLocation = connectionLocation || "Integrations Panel";
+		connectionLocation = connectionLocation || "connection_location: integrations_page";
 		if (name !== "jiraserver" && (needsConfigure || (onprem && needsConfigureForOnPrem))) {
 			dispatch(
 				openPanel(`configure-provider-${provider.name}-${provider.id}-${connectionLocation}`)
@@ -108,15 +108,15 @@ export const connectProvider =
 
 export type ViewLocation =
 	| "Global Nav"
-	| "Compose Modal"
+	| "connection_location: compose_modal"
 	| "PR Toggle"
-	| "Integrations Panel"
+	| "connection_location: integrations_page"
 	| "Status"
 	| "Sidebar"
 	| "Create Pull Request Panel"
 	| "Issues Section"
-	| "Provider Error Banner"
-	| "Onboard"
+	| "connection_location: provider_error_banner"
+	| "connection_location: onboard"
 	| "PRs Section"
 	| "Open in IDE Flow"
 	| "Open in IDE Pixie"
@@ -126,7 +126,10 @@ export type ViewLocation =
 	| "Code Analyzers Section";
 
 export const sendIssueProviderConnected =
-	(providerId: string, connectionLocation: ViewLocation | string = "Compose Modal") =>
+	(
+		providerId: string,
+		connectionLocation: ViewLocation | string = "connection_location: compose_modal"
+	) =>
 	async (dispatch, getState) => {
 		const { providers } = getState();
 		const provider = providers[providerId];
@@ -134,17 +137,20 @@ export const sendIssueProviderConnected =
 		const { name, host, isEnterprise } = provider;
 		const api = HostApi.instance;
 		api.send(TelemetryRequestType, {
-			eventName: "Service Connected",
+			eventName: "codestream/integration connected",
 			properties: {
-				Service: name,
-				Host: isEnterprise ? host : null,
-				"Connection Location": connectionLocation,
+				meta_data: `service: ${name}`,
+				meta_data_2: `connection_location: ${connectionLocation}`,
+				event_type: "response",
 			},
 		});
 	};
 
 export const sendBuildProviderConnected =
-	(providerId: string, connectionLocation: ViewLocation | string = "Compose Modal") =>
+	(
+		providerId: string,
+		connectionLocation: ViewLocation | string = "connection_location: compose_modal"
+	) =>
 	async (dispatch, getState) => {
 		const { providers } = getState();
 		const provider = providers[providerId];
@@ -152,27 +158,31 @@ export const sendBuildProviderConnected =
 		const { name, host, isEnterprise } = provider;
 		const api = HostApi.instance;
 		api.send(TelemetryRequestType, {
-			eventName: "Service Connected",
+			eventName: "codestream/integration connected",
 			properties: {
-				Service: name,
-				Host: isEnterprise ? host : null,
-				"Connection Location": connectionLocation,
+				meta_data: `service: ${name}`,
+				meta_data_2: `connection_location: ${connectionLocation}`,
+				event_type: "response",
 			},
 		});
 	};
 
 export const sendMessagingServiceConnected =
-	(providerId: string, connectionLocation: string | ViewLocation = "Onboard") =>
+	(
+		providerId: string,
+		connectionLocation: string | ViewLocation = "connection_location: onboard"
+	) =>
 	async (dispatch, getState) => {
 		const { providers } = getState();
 		const provider = providers[providerId];
 		if (!provider) return;
 
 		HostApi.instance.send(TelemetryRequestType, {
-			eventName: "Service Connected",
+			eventName: "codestream/integration connected",
 			properties: {
-				Service: provider.name,
-				"Connection Location": connectionLocation,
+				meta_data: `service: ${provider.name}`,
+				meta_data_2: `connection_location: ${connectionLocation}`,
+				event_type: "response",
 			},
 		});
 	};

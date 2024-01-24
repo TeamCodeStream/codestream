@@ -88,9 +88,18 @@ export const PRProviderErrorBanner = () => {
 		try {
 			setIsLoading(true);
 			event.preventDefault();
-			await dispatch(disconnectProvider(derivedState.failedProvider!.id, "Provider Error Banner"));
+			await dispatch(
+				disconnectProvider(
+					derivedState.failedProvider!.id,
+					"connection_location: provider_error_banner"
+				)
+			);
 			dispatch(
-				configureAndConnectProvider(derivedState.failedProvider!.id, "Provider Error Banner", true)
+				configureAndConnectProvider(
+					derivedState.failedProvider!.id,
+					"connection_location: provider_error_banner",
+					true
+				)
 			);
 		} catch (ex) {
 			console.error(ex);
@@ -101,7 +110,12 @@ export const PRProviderErrorBanner = () => {
 
 	const onClickIgnore = event => {
 		event.preventDefault();
-		dispatch(disconnectProvider(derivedState.failedProvider!.id, "Provider Error Banner"));
+		dispatch(
+			disconnectProvider(
+				derivedState.failedProvider!.id,
+				"connection_location: provider_error_banner"
+			)
+		);
 	};
 
 	if (derivedState.supportsReauth && !derivedState.offline && derivedState.errorMessage) {
@@ -152,8 +166,7 @@ export const PRProviderErrorBanner = () => {
 							</Button>
 							<p>
 								If you continue to experience problems with your {derivedState.failedProviderName}{" "}
-								integration, please{" "}
-								<a href="https://one.newrelic.com/help-xp">contact support</a>.
+								integration, please <a href="https://one.newrelic.com/help-xp">contact support</a>.
 							</p>
 						</div>
 					</div>

@@ -1425,16 +1425,17 @@ const ProviderButtons = (props: { providerIds: string[]; setShowNextMessagingSte
 										url: "https://docs.newrelic.com/docs/codestream/code-discussion/msteams-integration/",
 									});
 									HostApi.instance.send(TelemetryRequestType, {
-										eventName: "Service Connected",
+										eventName: "codestream/integration connected",
 										properties: {
-											Service: provider.name,
-											"Connection Location": "Onboard",
+											meta_data: `service: ${provider.name}`,
+											meta_data_2: `connection_location: Onboard`,
+											event_type: "response",
 										},
 									});
 									if (props.setShowNextMessagingStep) props.setShowNextMessagingStep(true);
 									return;
 								}
-								dispatch(configureAndConnectProvider(provider.id, "Onboard"));
+								dispatch(configureAndConnectProvider(provider.id, "connection_location: onboard"));
 							}}
 						>
 							<Icon name={providerDisplay.icon} />

@@ -155,7 +155,13 @@ export const IntegrationsPanel = () => {
 						{
 							label: "Disconnect",
 							action: () =>
-								dispatch(disconnectProvider(providerId, "Integrations Panel", shareTarget.teamId)),
+								dispatch(
+									disconnectProvider(
+										providerId,
+										"connection_location: integrations_page",
+										shareTarget.teamId
+									)
+								),
 						},
 					];
 					return (
@@ -174,7 +180,8 @@ export const IntegrationsPanel = () => {
 			const items = [
 				{
 					label: "Disconnect",
-					action: () => dispatch(disconnectProvider(providerId, "Integrations Panel")),
+					action: () =>
+						dispatch(disconnectProvider(providerId, "connection_location: integrations_page")),
 				},
 			];
 			if (isEnterprise && derivedState.currentUserIsAdmin) {
@@ -206,7 +213,8 @@ export const IntegrationsPanel = () => {
 				: display.displayName;
 			displayName = display.hideDisplayName ? "" : display.displayName;
 
-			const action = () => dispatch(configureAndConnectProvider(providerId, "Integrations Panel"));
+			const action = () =>
+				dispatch(configureAndConnectProvider(providerId, "connection_location: integrations_page"));
 			/*
 
 			// Per https://newrelic.atlassian.net/browse/CDSTRM-1591, the need for the "pre-PR" modal
@@ -278,7 +286,11 @@ export const IntegrationsPanel = () => {
 				elements.push(
 					<Provider
 						key={providerId}
-						onClick={() => dispatch(configureAndConnectProvider(providerId, "Integrations Panel"))}
+						onClick={() =>
+							dispatch(
+								configureAndConnectProvider(providerId, "connection_location: integrations_page")
+							)
+						}
 					>
 						{display.icon && <Icon name={display.icon} />}
 						{`Add ${display.displayName} ${display.groupName}`}
@@ -288,7 +300,11 @@ export const IntegrationsPanel = () => {
 				elements.push(
 					<Provider
 						key={providerId}
-						onClick={() => dispatch(configureAndConnectProvider(providerId, "Integrations Panel"))}
+						onClick={() =>
+							dispatch(
+								configureAndConnectProvider(providerId, "connection_location: integrations_page")
+							)
+						}
 					>
 						{display.icon && <Icon name={display.icon} />}
 						{display.displayName}
