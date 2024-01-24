@@ -2,6 +2,6 @@
 {
 	public static class TelemetryEventNames
 	{
-		public static string CodemarkClicked = "Codemark Clicked";
+		public static string CodemarkClicked = "codestream/codemarks/codemark displayed";
 	}
 }

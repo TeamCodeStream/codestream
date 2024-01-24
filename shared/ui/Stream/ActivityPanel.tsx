@@ -531,12 +531,13 @@ export const ActivityPanel = () => {
 											(target.closest(".emoji-mart") || target.closest(".reactions"))
 										)
 											return;
-										HostApi.instance.track("Codemark Clicked", {
-											"Codemark ID": codemark.id,
-											"Codemark Location": "Activity Feed",
-											Following: (codemark.followerIds || []).includes(
+										HostApi.instance.track("codestream/codemarks/codemark displayed", {
+											meta_data: `codemark_location: activity_feed`,
+											meta_data_3: `following: ${(codemark.followerIds || []).includes(
 												derivedState.currentUserId || ""
-											),
+											)}`,
+											meta_data_2: `codemark_type: ${codemark.id}`,
+											event_type: "modal_display",
 										});
 										dispatch(setCurrentCodemark(codemark.id));
 									}}
