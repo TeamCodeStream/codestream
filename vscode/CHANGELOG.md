@@ -1,5 +1,11 @@
 # Change Log
 
+## [15.1.1] - 2023-1-25
+
+### Added
+
+- Fixes an issue with an infinite loop on non-refresh token errors
+
 ## [15.1.0] - 2023-1-23
 
 ### Added
