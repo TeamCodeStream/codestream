@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { PanelHeader } from "../../src/components/PanelHeader";
 import styled from "styled-components";
 import Button from "../Button";
 import { HostApi } from "../../webview-api";
@@ -16,27 +15,51 @@ import { NRQLResultsJSON } from "./NRQLResultsJSON";
 import { NRQLResultsLine } from "./NRQLResultsLine";
 import { NRQLResultsBar } from "./NRQLResultsBar";
 import { NRQLEditor } from "./NRQLEditor";
+import Icon from "../Icon";
 
-const SearchBar = styled.div`
+const LayoutWrapper = styled.div`
 	display: flex;
-	flex-direction: row;
-	button {
-		z-index: 2;
-		float: right;
-	}
-	.search-input {
-		position: relative;
-		flex-grow: 10;
-		width: 100%;
-		textarea.control {
-			padding: 5px;
-			height: 100%;
-			width: 100%;
-			border: 1px solid var(--base-border-color);
-			border-left: none;
-			margin-left: -1px;
-		}
-	}
+	flex-direction: column;
+	height: 100vh;
+`;
+
+const HeaderRow = styled.div`
+	width: 100%;
+	height: 40px;
+	background-color: #3a444b;
+	display: flex;
+	align-items: center;
+	padding: 10px;
+`;
+
+const QueryWrapper = styled.div`
+	width: 100%;
+	max-height: 200px;
+	padding: 0px;
+	border: 1px solid #3a444c;
+`;
+
+const ActionRow = styled.div`
+	width: 100%;
+	height: 48px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	border-bottom: 1px solid #3a444c;
+	padding: 10px 0;
+`;
+
+const DropdownContainer = styled.div`
+	display: flex;
+`;
+
+const ButtonContainer = styled.div`
+	display: flex;
+`;
+
+const ResultsRow = styled.div`
+	flex: 1;
+	width: 100%;
 `;
 
 export const NRQLPanel = (props: {
@@ -115,63 +138,46 @@ export const NRQLPanel = (props: {
 	};
 
 	return (
-		<>
-			<PanelHeader title="NRQL Query">
-				<SearchBar className="search-bar">
-					<div className="search-input" style={{ width: "100%" }}>
-						{/* <textarea
-							name="q"
-							value={query}
-							className="input-text control"
-							onKeyDown={checkKeyPress}
-							onChange={e => {
-								setQuery(e.target.value);
-							}}
-							autoFocus
-						/> */}
-						<NRQLEditor
-							className="input-text control"
-							defaultQuery={props.suppliedQuery}
-							onChange={e => {
-								setQuery(e.value || "");
-							}}
-						/>
-					</div>
-				</SearchBar>
-				<div style={{ float: "right", width: "100%", paddingRight: "10px" }}>
-					{/* <Link
-						href="#"
-						style={{ float: "right" }}
-						onClick={e => {
-							e.preventDefault();
-							setQuery("");
+		<LayoutWrapper>
+			<HeaderRow>
+				<Icon
+					name="terminal"
+					title="Query your data"
+					placement="bottom"
+					delay={1}
+					trigger={["hover"]}
+					style={{ "margin-right": "5px" }}
+				/>
+				Query your data
+			</HeaderRow>
+			<QueryWrapper>
+				<div className="search-input" style={{ width: "100%" }}>
+					<NRQLEditor
+						className="input-text control"
+						defaultQuery={props.suppliedQuery}
+						onChange={e => {
+							setQuery(e.value || "");
 						}}
-					>
-						Clear
-					</Link> */}
+					/>
+				</div>
+			</QueryWrapper>
+			<ActionRow>
+				<DropdownContainer>
+					{/* <Dropdown></Dropdown>
+					<Dropdown></Dropdown> */}
+				</DropdownContainer>
+				<ButtonContainer>
+					{/* <Button>Clear</Button> */}
 					<Button
-						style={{ float: "right" }}
+						style={{ padding: "0 10px" }}
 						onClick={() => executeNRQL(props.entityGuid!)}
 						loading={isLoading}
 					>
 						Run
 					</Button>
-				</div>
-			</PanelHeader>
-			<div
-				style={{
-					padding: "0px 20px 0px 20px",
-					marginBottom: "20px",
-				}}
-			>
-				{!isLoading && totalItems > 0 && (
-					<div>
-						<span style={{ fontSize: "14px", fontWeight: "bold", paddingBottom: "10px" }}>
-							{totalItems.toLocaleString()} {totalItems === 1 ? "Record" : "Records"}
-						</span>{" "}
-					</div>
-				)}
-
+				</ButtonContainer>
+			</ActionRow>
+			<ResultsRow>
 				<div>
 					{!nrqlError && !isLoading && results && totalItems > 0 && resultsType === "table" && (
 						<NRQLResultsTable results={results} />
@@ -191,11 +197,11 @@ export const NRQLPanel = (props: {
 
 					{nrqlError && (
 						<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
-							<h4>{nrqlError}</h4>
+							{nrqlError}
 						</div>
 					)}
 				</div>
-			</div>
-		</>
+			</ResultsRow>
+		</LayoutWrapper>
 	);
 };
