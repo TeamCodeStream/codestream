@@ -95,7 +95,9 @@ export class NrqlCompletionProvider {
 				switch (lastWordLowered) {
 					case "select": {
 						if (textSplitLowered[0] === "select") {
-							return { items: [builtIns.operators.find(_ => _.label === "*")!] };
+							return {
+								items: [builtIns.operators.find(_ => _.label === "*")!, ...builtIns.functions],
+							};
 						} else {
 							const response = await this.nrNRQLProvider.fetchColumns({ query: request.text });
 							if (response.columns) {
@@ -136,7 +138,30 @@ export class NrqlCompletionProvider {
 						}
 						return { items: completionItems };
 					}
+					case "ago": {
+						return {
+							items: builtIns.keywords.filter(
+								_ =>
+									_.label === "COMPARE WITH" ||
+									_.label === "EXTRAPOLATE" ||
+									_.label === "FACET" ||
+									_.label === "LIMIT" ||
+									_.label === "SINCE" ||
+									_.label === "SLIDE BY" ||
+									_.label === "TIMESERIES" ||
+									_.label === "UNTIL" ||
+									_.label === "WHERE" ||
+									_.label === "WITH TIMEZONE"
+							)!,
+						};
+					}
 					default: {
+						// SELECT foo, <fn>
+						if (lastWordLowered.endsWith(",")) {
+							return {
+								items: [...builtIns.functions],
+							};
+						}
 						// see if the last term was a column
 						const textSplit = text!.split(" ");
 						if (builtIns.operators.find(_ => _.label === textSplit[textSplit.length - 1])) {

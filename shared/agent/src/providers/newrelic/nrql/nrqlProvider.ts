@@ -308,8 +308,21 @@ export class NrNRQLProvider {
 				return "billboard";
 			}
 		}
+
 		query = query.toUpperCase();
 		if (query.indexOf("TIMESERIES") > -1) {
+			const dataKeys = Object.keys(results[0] || {}).filter(
+				_ => _ !== "beginTimeSeconds" && _ !== "endTimeSeconds"
+			);
+
+			if (dataKeys.length > 1) {
+				return "json";
+			}
+			// complex timeseries data
+			if (Array.isArray(results[0][dataKeys[0]])) {
+				return "json";
+			}
+			// easy timeseries data like a TIMESERIES of a count
 			return "line";
 		}
 		if (query.indexOf("FACET") > -1) {

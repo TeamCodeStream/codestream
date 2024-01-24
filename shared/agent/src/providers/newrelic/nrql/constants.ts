@@ -83,6 +83,7 @@ export const nrqlKeywords = [
 	"SHOW TAG KEYS",
 	"SHOW TAG VALUES",
 	"SINCE",
+	"SLIDE BY",
 	"TIMESERIES",
 	"TIMESTAMP",
 	"UNTIL",

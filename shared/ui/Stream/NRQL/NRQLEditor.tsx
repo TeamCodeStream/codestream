@@ -14,30 +14,10 @@ export function NRQLEditor(props: {
 	defaultQuery?: string;
 }) {
 	const themeContext = useContext(ThemeContext);
+	const theme = isDarkTheme(themeContext) ? "vs-dark" : "light";
 	const monacoRef = useRef<any>(null);
 
 	const handleEditorDidMount = async (editor: any, monaco: any) => {
-		editor.updateOptions({
-			find: {
-				seedSearchStringFromSelection: false,
-				decorationsIgnoredDuringNavigation: [],
-				autoFindInSelection: false,
-				addExtraSpaceOnTop: false,
-				jumpToNextFindMatch: false,
-				jumpToPrevFindMatch: false,
-			},
-			folding: false,
-			glyphMargin: false,
-			lineDecorationsWidth: 0,
-			lineNumbers: "off",
-			minimap: {
-				enabled: false,
-				renderOverviewRuler: false,
-			},
-			overviewRulerLanes: 0,
-			scrollBeyondLastLine: false,
-			wordwrap: "on",
-		});
 		monacoRef.current = monaco;
 		monaco.languages.register({ id: "nrql" });
 
@@ -70,6 +50,14 @@ export function NRQLEditor(props: {
 				}
 			},
 		});
+
+		// const customTheme = {
+		// 	base: theme,
+		// 	inherit: true,
+		// 	rules: [{ token: "support.function.nrql", foreground: "#52a7f7" }],
+		// };
+
+		// monaco.editor.setTheme("nrql-theme", customTheme);
 
 		monaco.languages.setLanguageConfiguration("nrql", {
 			autoClosingPairs: [
@@ -110,7 +98,7 @@ export function NRQLEditor(props: {
 				className={props.className}
 				defaultLanguage="nrql"
 				defaultValue={props.defaultQuery || "FROM"}
-				theme={isDarkTheme(themeContext) ? "vs-dark" : "light"}
+				theme={theme}
 				onMount={handleEditorDidMount}
 				onChange={e => {
 					props.onChange(e);
