@@ -1179,7 +1179,7 @@ const ProviderButtons = (props: { providerIds: string[]; setShowNextMessagingSte
 									if (props.setShowNextMessagingStep) props.setShowNextMessagingStep(true);
 									return;
 								}
-								dispatch(configureAndConnectProvider(provider.id, "connection_location: onboard"));
+								dispatch(configureAndConnectProvider(provider.id, "Onboard"));
 							}}
 						>
 							<Icon name={providerDisplay.icon} />

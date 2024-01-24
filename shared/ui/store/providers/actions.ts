@@ -116,7 +116,7 @@ export type ViewLocation =
 	| "Create Pull Request Panel"
 	| "Issues Section"
 	| "connection_location: provider_error_banner"
-	| "connection_location: onboard"
+	| "Onboard"
 	| "PRs Section"
 	| "Open in IDE Flow"
 	| "Open in IDE Pixie"
@@ -140,7 +140,7 @@ export const sendIssueProviderConnected =
 			eventName: "codestream/integration connected",
 			properties: {
 				meta_data: `service: ${name}`,
-				meta_data_2: `connection_location: ${connectionLocation}`,
+				meta_data_2: `${connectionLocation}`,
 				event_type: "response",
 			},
 		});
@@ -161,17 +161,14 @@ export const sendBuildProviderConnected =
 			eventName: "codestream/integration connected",
 			properties: {
 				meta_data: `service: ${name}`,
-				meta_data_2: `connection_location: ${connectionLocation}`,
+				meta_data_2: `${connectionLocation}`,
 				event_type: "response",
 			},
 		});
 	};
 
 export const sendMessagingServiceConnected =
-	(
-		providerId: string,
-		connectionLocation: string | ViewLocation = "connection_location: onboard"
-	) =>
+	(providerId: string, connectionLocation: string | ViewLocation = "Onboard") =>
 	async (dispatch, getState) => {
 		const { providers } = getState();
 		const provider = providers[providerId];
@@ -181,7 +178,7 @@ export const sendMessagingServiceConnected =
 			eventName: "codestream/integration connected",
 			properties: {
 				meta_data: `service: ${provider.name}`,
-				meta_data_2: `connection_location: ${connectionLocation}`,
+				meta_data_2: `${connectionLocation}`,
 				event_type: "response",
 			},
 		});

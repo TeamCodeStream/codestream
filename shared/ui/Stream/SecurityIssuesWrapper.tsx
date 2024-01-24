@@ -133,16 +133,11 @@ function Additional(props: { onClick: () => void; additional?: number }) {
 	) : null;
 }
 
-function VulnView(props: {
-	vuln: Vuln;
-	onClose: () => void;
-	accountId: number | undefined;
-	entityGuid: string | undefined;
-}) {
+function VulnView(props: { vuln: Vuln; onClose: () => void }) {
 	const { vuln } = props;
 	HostApi.instance.track("codestream/vulnerability clicked", {
-		entity_guid: props.entityGuid ? props.entityGuid : "",
-		account_id: props.accountId ? props.accountId : null,
+		entity_guid: "",
+		account_id: "",
 		target: "vulnerability",
 		event_type: "click",
 	});
@@ -199,11 +194,7 @@ function VulnView(props: {
 	);
 }
 
-function VulnRow(props: {
-	vuln: Vuln;
-	accountId: number | undefined;
-	entityGuid: string | undefined;
-}) {
+function VulnRow(props: { vuln: Vuln }) {
 	const [expanded, setExpanded] = useState<boolean>(false);
 
 	return (
@@ -228,12 +219,7 @@ function VulnRow(props: {
 						setExpanded(false);
 					}}
 				>
-					<VulnView
-						vuln={props.vuln}
-						onClose={() => setExpanded(false)}
-						accountId={props.accountId}
-						entityGuid={props.entityGuid}
-					/>
+					<VulnView vuln={props.vuln} onClose={() => setExpanded(false)} />
 				</Modal>
 			)}
 		</>
@@ -271,10 +257,7 @@ function LibraryRow(props: { library: LibraryDetails }) {
 				</div>
 				<Severity severity={criticalityToRiskSeverity(library.highestCriticality)} />
 			</Row>
-			{expanded &&
-				library.vulns.map(vuln => (
-					<VulnRow vuln={vuln} accountId={vuln.accountId} entityGuid={vuln.entityGuid} />
-				))}
+			{expanded && library.vulns.map(vuln => <VulnRow vuln={vuln} />)}
 		</>
 	);
 }

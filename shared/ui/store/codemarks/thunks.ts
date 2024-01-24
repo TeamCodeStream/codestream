@@ -124,14 +124,17 @@ export const createCodemark =
 									],
 								});
 							}
-							HostApi.instance.track("Shared Codemark", {
-								Destination: capitalize(
+							HostApi.instance.track("codestream/codemarks/codemark shared", {
+								meta_data: `destination: ${capitalize(
 									getConnectedProviders(getState()).find(
 										config => config.id === attributes.sharingAttributes!.providerId
 									)!.name
-								),
-								"Codemark Status": "New",
-								"Conversation Type": sharingAttributes.type === "channel" ? "Channel" : "Group DM",
+								)}`,
+								meta_data_2: `codemark_status: new`,
+								meta_data_3: `conversation_type: ${
+									sharingAttributes.type === "channel" ? "channel" : "group_dm"
+								}`,
+								event_type: "response",
 							});
 						} catch (error) {
 							logError("Error sharing a codemark", { message: error.toString() });
@@ -335,13 +338,15 @@ export const editCodemark =
 								],
 							});
 						}
-						HostApi.instance.track("Shared Codemark", {
-							Destination: capitalize(
+						HostApi.instance.track("codestream/codemarks/codemark shared", {
+							meta_data: `destination: ${capitalize(
 								getConnectedProviders(getState()).find(
 									config => config.id === shareTarget.providerId
 								)!.name
-							),
-							"Codemark Status": "Edited",
+							)}`,
+							meta_data_2: `codemark_status: existing`,
+							meta_data_3: `conversation_type: channel`,
+							event_type: "response",
 						});
 					} catch (error) {
 						logError("Error sharing a codemark", { message: error.toString() });
