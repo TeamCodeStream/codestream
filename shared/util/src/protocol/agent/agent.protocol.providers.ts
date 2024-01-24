@@ -2680,6 +2680,9 @@ export interface GetNRQLColumnsRequest {
 	 * The user-entered query (unmodified)
 	 */
 	query?: string;
+	/**
+	 * The name of a specific collection
+	 */
 	collectionName?: string;
 }
 export interface GetNRQLColumnsResponse {
@@ -2693,7 +2696,13 @@ export const GetNRQLColumnsRequestType = new RequestType<
 >("codestream/newrelic/nrql/columns");
 
 export interface GetNRQLCompletionItemsRequest {
+	/**
+	 * This may refer to an entire query or a single line in a multi-line or multi-queries in a file
+	 */
 	text?: string;
+	/**
+	 * The last word, or part thereof. It may also be an empty space or punctuation mark
+	 */
 	currentWord?: string;
 }
 export interface GetNRQLCompletionItemsResponse {
@@ -2705,3 +2714,23 @@ export const GetNRQLCompletionItemsType = new RequestType<
 	void,
 	void
 >("codestream/newrelic/nrql/completions");
+
+export interface NRQLRecentQueries {
+	/**
+	 * Recent, runnable, query from the current user
+	 */
+	query: string;
+	accountIds: Number[];
+	createdAt: string;
+}
+
+export interface GetNRQLRecentQueriesRequest {}
+export interface GetNRQLRecentQueriesResponse {
+	items: NRQLRecentQueries[];
+}
+export const GetNRQLRecentQueriesType = new RequestType<
+	GetNRQLRecentQueriesRequest,
+	GetNRQLRecentQueriesResponse,
+	void,
+	void
+>("codestream/newrelic/nrql/queries/recent");

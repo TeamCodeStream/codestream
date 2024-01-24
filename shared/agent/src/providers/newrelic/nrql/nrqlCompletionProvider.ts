@@ -1,18 +1,18 @@
-import { CodeStreamSession } from "session";
-import {
-	CompletionItem,
-	CompletionItemKind,
-	TextDocumentPositionParams,
-} from "vscode-languageserver";
-import { Logger } from "logger";
-import { NrNRQLProvider } from "./nrqlProvider";
-import { Range } from "vscode-languageserver";
-import { lsp, lspHandler } from "../../../system/decorators/lsp";
 import {
 	GetNRQLCompletionItemsRequest,
 	GetNRQLCompletionItemsResponse,
 	GetNRQLCompletionItemsType,
 } from "@codestream/protocols/agent";
+import {
+	CompletionItem,
+	CompletionItemKind,
+	Range,
+	TextDocumentPositionParams,
+} from "vscode-languageserver";
+import { Logger } from "../../../logger";
+import { CodeStreamSession } from "../../../session";
+import { lsp, lspHandler } from "../../../system/decorators/lsp";
+import { NrNRQLProvider } from "./nrqlProvider";
 
 @lsp
 export class NrqlCompletionProvider {
@@ -66,43 +66,12 @@ export class NrqlCompletionProvider {
 	async provideCompletionItems(
 		request: GetNRQLCompletionItemsRequest
 	): Promise<GetNRQLCompletionItemsResponse> {
-		const completionItems: CompletionItem[] = []; // Array to store completion items
+		const completionItems: CompletionItem[] = [];
 		try {
 			const currentWordAsUpperCase = request.currentWord?.toUpperCase();
-			// fire this off, but don't block
-			const collectionsResponse = await this.nrNRQLProvider.fetchCollections();
-
-			const lastText = request.text?.toLowerCase().trimEnd();
-			if (lastText && collectionsResponse.list.length) {
-				if (lastText.endsWith("from")) {
-					for (const candidate of collectionsResponse.list) {
-						completionItems.push({
-							label: candidate,
-							kind: CompletionItemKind.Module,
-							insertText: candidate,
-						});
-					}
-					return { items: completionItems };
-				} else if (lastText.endsWith("where")) {
-					return new Promise(resolve => {
-						this.nrNRQLProvider.fetchColumns({ query: request.text }).then(_ => {
-							if (_.columns) {
-								for (const candidate of _.columns) {
-									completionItems.push({
-										label: candidate,
-										kind: CompletionItemKind.Property,
-										insertText: candidate,
-									});
-								}
-								resolve({ items: completionItems });
-							}
-						});
-					});
-				}
-			}
-
+			const text = request.text?.toLowerCase().trimEnd();
+			const builtIns = await this.nrNRQLProvider.getConstants({});
 			if (currentWordAsUpperCase) {
-				const builtIns = await this.nrNRQLProvider.getConstants({});
 				// Filter and generate completion items based on the current word
 				for (const candidate of [
 					...builtIns.functions,
@@ -111,6 +80,47 @@ export class NrqlCompletionProvider {
 				]) {
 					if (candidate.label.startsWith(currentWordAsUpperCase)) {
 						completionItems.push(candidate);
+					}
+				}
+			}
+			if (text) {
+				const collectionsResponse = await this.nrNRQLProvider.fetchCollections();
+
+				if (collectionsResponse.list.length) {
+					if (text.endsWith("from")) {
+						for (const candidate of collectionsResponse.list) {
+							completionItems.push({
+								label: candidate,
+								kind: CompletionItemKind.Module,
+								insertText: candidate,
+							});
+						}
+						return { items: completionItems };
+					} else if (text.endsWith("where")) {
+						const response = await this.nrNRQLProvider.fetchColumns({ query: request.text });
+						if (response.columns) {
+							for (const candidate of response.columns) {
+								completionItems.push({
+									label: candidate,
+									kind: CompletionItemKind.Property,
+									insertText: candidate,
+								});
+							}
+							return { items: completionItems };
+						}
+					} else if (request.text) {
+						// find the last collectionName
+						const split = request.text.trim().split(" ");
+						for (let i = split.length; i > -1; i--) {
+							const current = split[i];
+							const found = collectionsResponse.obj[current];
+							if (found) {
+								const select = builtIns?.keywords?.find(_ => _.label === "SELECT");
+								if (select) {
+									return { items: [select] };
+								}
+							}
+						}
 					}
 				}
 			}

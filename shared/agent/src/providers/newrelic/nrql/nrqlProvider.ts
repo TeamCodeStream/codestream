@@ -8,6 +8,9 @@ import {
 	GetNRQLConstantsRequest,
 	GetNRQLConstantsRequestType,
 	GetNRQLConstantsResponse,
+	GetNRQLRecentQueriesRequest,
+	GetNRQLRecentQueriesResponse,
+	GetNRQLRecentQueriesType,
 	GetNRQLRequest,
 	GetNRQLRequestType,
 	GetNRQLResponse,
@@ -234,6 +237,42 @@ export class NrNRQLProvider {
 			nrColumnsByAccountByCollectionName[accountId] = {};
 		}
 		return { columns: [] };
+	}
+
+	@lspHandler(GetNRQLRecentQueriesType)
+	async fetchRecentQueries(
+		request: GetNRQLRecentQueriesRequest
+	): Promise<GetNRQLRecentQueriesResponse> {
+		try {
+			const response = await this.graphqlClient.query<{
+				actor: {
+					queryHistory: {
+						nrql: {
+							query: string;
+							accountIds: Number[];
+							createdAt: string;
+						}[];
+					};
+				};
+			}>(`{
+  actor {
+    queryHistory {
+      nrql(options: {limit: 10}) {
+        query
+		accountIds
+        createdAt
+      }
+    }
+  }
+}`);
+
+			if (response) {
+				return { items: response.actor.queryHistory.nrql };
+			}
+		} catch (ex) {
+			Logger.warn(`Failed to fetchRecentQueries for user`, { error: ex });
+		}
+		return { items: [] };
 	}
 
 	private async getCurrentAccountId() {

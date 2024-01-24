@@ -34,6 +34,7 @@ export function NRQLEditor(props: {
 				enabled: false,
 				renderOverviewRuler: false,
 			},
+			overviewRulerLanes: 0,
 			scrollBeyondLastLine: false,
 			wordwrap: "on",
 		});
@@ -104,7 +105,7 @@ export function NRQLEditor(props: {
 				height="10vh"
 				className={props.className}
 				defaultLanguage="nrql"
-				defaultValue={props.defaultQuery || "SELECT * FROM"}
+				defaultValue={props.defaultQuery || "FROM"}
 				theme={isDarkTheme(themeContext) ? "vs-dark" : "light"}
 				onMount={handleEditorDidMount}
 				onChange={e => {
