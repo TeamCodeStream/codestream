@@ -9,7 +9,7 @@ import {
 } from "@codestream/protocols/agent";
 import { Functions } from "../system";
 
-type ToastType = "anomaly" | "codemark";
+type ToastType = "content: anomaly" | "content: codemark" | "";
 
 export class NotificationsController implements Disposable {
 	private _disposable: Disposable;
@@ -95,7 +95,11 @@ export class NotificationsController implements Disposable {
 		const result = await window.showInformationMessage(message, ...actions);
 
 		if (result === actions[0]) {
-			Container.agent.telemetry.track("Toast Clicked", { Content: "CLM Anomaly" });
+			Container.agent.telemetry.track("codestream/toast clicked", {
+				target: "toast",
+				meta_data: `content: anomaly`,
+				event_type: "click"
+			});
 			Container.sidebar.viewAnomaly({
 				anomaly: firstAnomaly,
 				entityGuid: notification.entityGuid
@@ -122,7 +126,7 @@ export class NotificationsController implements Disposable {
 		// TODO: Need to better deal with formatted text for notifications
 		const actions: MessageItem[] = [{ title: "Open" }];
 
-		const toastContentType: ToastType = codemark ? "codemark" : "anomaly";
+		const toastContentType: ToastType = codemark ? "content: codemark" : "";
 
 		Container.agent.telemetry.track("codestream/toast displayed", {
 			meta_data: `content: ${toastContentType}`,
@@ -140,7 +144,11 @@ export class NotificationsController implements Disposable {
 			} else if (review) {
 				Container.sidebar.openReview(review.id);
 			}
-			Container.agent.telemetry.track("Toast Clicked", { Content: toastContentType });
+			Container.agent.telemetry.track("codestream/toast clicked", {
+				target: "toast",
+				meta_data: `${toastContentType}`,
+				event_type: "click"
+			});
 		}
 	}
 }

@@ -135,10 +135,10 @@ class NotificationComponent(val project: Project) {
                 }
                 project.clmService?.revealSymbol(firstAnomaly.codeFilepath, firstAnomaly.codeNamespace, firstAnomaly.codeFunction)
             }
-            telemetry(TelemetryEvent.TOAST_CLICKED, "CLM Anomaly")
+            telemetry(TelemetryEvent.TOAST_CLICKED, "content: anomaly")
         })
 
-        telemetry(TelemetryEvent.TOAST_NOTIFICATION, "CLM Anomaly")
+        telemetry(TelemetryEvent.TOAST_NOTIFICATION, "content: anomaly")
         notification.notify(project)
     }
 
@@ -161,7 +161,7 @@ class NotificationComponent(val project: Project) {
         }
 
         val telemetryContent = when {
-            codemark != null -> "Codemark"
+            codemark != null -> "content: codemark"
             review != null -> "Review"
             else -> "Unknown"
         }
@@ -187,8 +187,8 @@ class NotificationComponent(val project: Project) {
     }
 
     private enum class TelemetryEvent(val value: String) {
-        TOAST_NOTIFICATION("Toast Notification"),
-        TOAST_CLICKED("Toast Clicked")
+        TOAST_NOTIFICATION("codestream/toast displayed"),
+        TOAST_CLICKED("codestream/toast clicked")
     }
 
     private fun telemetry(event: TelemetryEvent, content: String) {
