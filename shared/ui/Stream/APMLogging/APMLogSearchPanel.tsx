@@ -21,6 +21,8 @@ import {
 } from "@codestream/protocols/agent";
 import { AsyncPaginate } from "react-select-async-paginate";
 import { parseId } from "@codestream/webview/utilities/newRelic";
+import { FixedSizeList as List } from "react-window";
+import { useResizeDetector } from "react-resize-detector";
 
 interface SelectedOption {
 	value: string;
@@ -115,6 +117,14 @@ const OptionAccount = styled.div`
 	font-size: smaller;
 `;
 
+const TimestampData = styled.div``;
+
+const MessageData = styled.div``;
+
+const RowContainer = styled.div`
+	display: flex;
+`;
+
 const Option = (props: OptionProps) => {
 	const children = (
 		<>
@@ -136,30 +146,26 @@ export const APMLogSearchPanel = (props: {
 	const [hasEntityGuid, setHasEntityGuid] = useState<boolean>();
 	const [fieldDefinitions, setFieldDefinitions] = useState<LogFieldDefinition[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
-
 	const [query, setQuery] = useState<string>("");
 	const [hasSearched, setHasSearched] = useState<boolean>(false);
-
 	const [selectedSinceOption, setSelectedSinceOption] = useState<SelectedOption | undefined>(
 		undefined
 	);
 	const [selectSinceOptions, setSelectSinceOptions] = useState<SelectedOption[]>([]);
-
 	const [selectedEntityAccount, setSelectedEntityAccount] = useState<OptionProps | undefined>(
 		undefined
 	);
-
 	const [results, setResults] = useState<LogResult[]>([]);
 	const [severityAttribute, setSeverityAttribute] = useState<string>();
 	const [messageAttribute, setMessageAttribute] = useState<string>();
 	const [displayColumns, setDisplayColumns] = useState<string[]>([]);
-
 	const [beforeLogs, setBeforeLogs] = useState<LogResult[]>([]);
 	const [afterLogs, setAfterLogs] = useState<LogResult[]>([]);
 	const [surroundingLogsLoading, setSurroundingLogsLoading] = useState<boolean>();
-
 	const [totalItems, setTotalItems] = useState<number>(0);
 	const [logError, setLogError] = useState<string | undefined>("");
+	const { width, height, ref } = useResizeDetector();
+	console.warn(`width: ${width}`, `height: ${height}`);
 
 	useDidMount(() => {
 		if (props.entityGuid) {
@@ -214,6 +220,28 @@ export const APMLogSearchPanel = (props: {
 			fetchLogs(props.entityGuid, props.suppliedQuery);
 		}
 	});
+
+	const TableRow = ({ index, style }) => {
+		const logSummary = results[index]?.log_summary;
+		const timestamp = results[index]?.timestamp;
+		return (
+			<>
+				<RowContainer style={style}>
+					<TimestampData>{timestamp}</TimestampData>
+					<MessageData>{logSummary}</MessageData>
+				</RowContainer>
+			</>
+		);
+	};
+
+	const TableHeader = () => {
+		return (
+			<RowContainer>
+				<TimestampData>timestamp</TimestampData>
+				<MessageData>message</MessageData>
+			</RowContainer>
+		);
+	};
 
 	const handleError = (message: string) => {
 		setLogError(message);
@@ -564,9 +592,12 @@ export const APMLogSearchPanel = (props: {
 			</PanelHeader>
 
 			<div
+				ref={ref}
 				style={{
 					padding: "0px 20px 0px 20px",
 					marginBottom: "20px",
+					width: "100%",
+					height: "100%",
 				}}
 			>
 				{/* {!isLoading && totalItems > 0 && (
@@ -603,7 +634,7 @@ export const APMLogSearchPanel = (props: {
 							TODO: Skeleton loader? Couldn't get it to work when I tried
 						)} */}
 
-					{!logError && !isLoading && results && totalItems > 0 && fieldDefinitions && (
+					{/* {!logError && !isLoading && results && totalItems > 0 && fieldDefinitions && (
 						// TODO: Using a table is pretty terrible here...
 						<table style={{ width: "100%", borderCollapse: "collapse" }}>
 							<thead>{renderHeaderRow()}</thead>
@@ -613,6 +644,15 @@ export const APMLogSearchPanel = (props: {
 								))}
 							</tbody>
 						</table>
+					)} */}
+
+					{!logError && !isLoading && results && totalItems > 0 && fieldDefinitions && (
+						<>
+							{TableHeader()}
+							<List height={height} width={width} itemCount={results.length} itemSize={150}>
+								{TableRow}
+							</List>
+						</>
 					)}
 
 					{!logError && !totalItems && !isLoading && !hasSearched && (
