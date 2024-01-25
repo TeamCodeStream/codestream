@@ -110,6 +110,7 @@ export class NrqlCompletionProvider {
 					}
 					return { items: completionItems };
 				}
+				case "facet":
 				case "where": {
 					const response = await this.nrNRQLProvider.fetchColumns({ query: request.query });
 					if (response.columns) {

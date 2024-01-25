@@ -1,6 +1,14 @@
 import React from "react";
 import { NRQLResult } from "@codestream/protocols/agent";
-import { Line, LineChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import {
+	Line,
+	LineChart,
+	CartesianGrid,
+	ResponsiveContainer,
+	XAxis,
+	YAxis,
+	Legend,
+} from "recharts";
 
 const colorHash = {
 	0: "#e6b223",
@@ -39,20 +47,21 @@ export const NRQLResultsLine = (props: { results: NRQLResult[] }) => {
 							bottom: 5,
 						}}
 					>
-						<CartesianGrid strokeDasharray="3 3" />
+						<CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
 
 						<XAxis
-							tick={{ fontSize: 12 }}
+							tick={{ fontSize: 11 }}
 							dataKey="endTimeSeconds"
 							tickFormatter={formatXAxisTime}
 						/>
 
-						<YAxis tick={{ fontSize: 12 }} />
+						<YAxis tick={{ fontSize: 11 }} />
 
 						{dataKeys.map((_, index) => {
 							const color = colorHash[index % 10];
-							return <Line dataKey={_} stroke={color} fill={color} />;
+							return <Line dataKey={_} stroke={color} fill={color} dot={false} />;
 						})}
+						<Legend align="center" fontSize={10} />
 					</LineChart>
 				</ResponsiveContainer>
 			</div>
