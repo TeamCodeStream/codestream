@@ -159,6 +159,10 @@ export const NRQLPanel = (props: {
 						onChange={e => {
 							setQuery(e.value || "");
 						}}
+						onSubmit={e => {
+							setQuery(e.value!);
+							executeNRQL(props.entityGuid!, e.value!);
+						}}
 					/>
 				</div>
 			</QueryWrapper>

@@ -13,18 +13,36 @@ import { MonacoEditor } from "./MonacoEditor";
 
 export function NRQLEditor(props: {
 	onChange: (e: { value: string | undefined }) => void;
+	onSubmit?: (e: { value: string | undefined }) => void;
 	className?: string;
 	defaultQuery?: string;
 }) {
 	const themeContext = useContext(ThemeContext);
 	const theme = isDarkTheme(themeContext) ? "vs-dark" : "light";
-	const monacoRef = useRef<any>(null);
+	let monacoRef = useRef<any>(null);
+	let editorRef = useRef<any>(null);
 
 	const handleEditorDidMount = async (
 		editor: monaco.editor.IStandaloneCodeEditor,
 		monaco: Monaco
 	) => {
 		monacoRef.current = monaco;
+		editorRef.current = editor;
+
+		if (props.onSubmit) {
+			const handleKeySubmit = e => {
+				try {
+					if (props.onSubmit) {
+						const val = editorRef.current.getValue();
+						props.onSubmit({ value: val });
+					}
+				} catch (ex) {}
+			};
+
+			editor.addCommand(monaco.KeyMod.WinCtrl | monaco.KeyCode.Enter, handleKeySubmit);
+			editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, handleKeySubmit);
+		}
+
 		monaco.languages.register({ id: "nrql" });
 
 		const response = await HostApi.instance.send(GetNRQLConstantsRequestType, {});
