@@ -1,8 +1,7 @@
 import React from "react";
 import ScrollBox from "./ScrollBox";
 import { CodeStreamState } from "../store";
-import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
-import { HostApi } from "../webview-api";
+import { useAppDispatch, useAppSelector } from "../utilities/hooks";
 
 import { PanelHeader } from "../src/components/PanelHeader";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
@@ -19,11 +18,6 @@ export const ExportPanel = () => {
 		return { webviewFocused: state.context.hasFocus, repos: state.repos };
 	});
 	const data = generateCsv();
-
-	useDidMount(() => {
-		if (derivedState.webviewFocused)
-			HostApi.instance.track("Page Viewed", { "Page Name": "Export" });
-	});
 
 	return (
 		<div className="panel full-height activity-panel">

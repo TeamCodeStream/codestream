@@ -150,11 +150,13 @@ export class NRManager {
 				const parsed = parseId(errorGroupGuid || "");
 
 				telemetry.track({
-					eventName: "Error Parsing Trace",
+					eventName: "codestream/errors/error_group error_parsing_stack_trace",
 					properties: {
-						"Error Group ID": errorGroupGuid!,
-						"NR Account ID": parsed?.accountId || 0,
-						Language: lang || "Not Detected",
+						entity_guid: "",
+						account_id: "",
+						meta_data: `error_group_id: ${errorGroupGuid!}`,
+						meta_data_2: `trace_id: ${parsed?.accountId || 0}`,
+						event_type: "response",
 					},
 				});
 			} catch (ex) {
@@ -183,7 +185,6 @@ export class NRManager {
 			return response;
 		}
 	}
-
 	// parses the passed stack, tries to determine if any of the user's open repos match it, and if so,
 	// given the commit hash of the code for which the stack trace was generated, tries to match each line
 	// of the stack trace with a line in the user's repo, given that the user may be on a different commit

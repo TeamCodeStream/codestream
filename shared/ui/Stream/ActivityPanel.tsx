@@ -452,9 +452,6 @@ export const ActivityPanel = () => {
 	}, [derivedState.activityFilter]);
 
 	useDidMount(() => {
-		if (derivedState.webviewFocused)
-			HostApi.instance.track("Page Viewed", { "Page Name": "Activity Feed" });
-
 		renderFilter().then(() => {
 			if (activity.length === 0) fetchActivity();
 		});

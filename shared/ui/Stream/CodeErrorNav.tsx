@@ -443,7 +443,7 @@ export function CodeErrorNav(props: Props) {
 							title: "Which Repository?",
 							description: `Select the repository that this error is associated with so that we can take you to the code. If the repository doesn't appear in the list, open it in your IDE.`,
 						});
-						HostApi.instance.track("Page Viewed", { "Page Name": "NR Repo Association" });
+
 						return;
 					}
 				}
@@ -493,7 +493,7 @@ export function CodeErrorNav(props: Props) {
 							targetRemote,
 							timestamp: derivedState.currentCodeErrorData?.timestamp,
 						});
-						HostApi.instance.track("Page Viewed", { "Page Name": "NR Repo Not Open" });
+
 						return;
 					}
 					repoId = reposResponse.repos[0].id!;
@@ -610,19 +610,31 @@ export function CodeErrorNav(props: Props) {
 			setIsResolved(true);
 
 			let trackingData = {
-				"Error Group ID": errorGroupResult?.errorGroup?.guid || codeError?.objectInfo?.entityId,
-				"NR Account ID": errorGroupResult?.accountId || codeError?.objectInfo?.accountId || "0",
-				"Entry Point": derivedState.currentCodeErrorData?.openType || "Open in IDE Flow",
-				"Stack Trace": !!(stackInfo && !stackInfo.error),
+				entity_guid: entityIdToUse || "",
+				account_id: errorGroupResult?.accountId || codeError?.objectInfo?.accountId || "0",
+				meta_data: `error_group_id: ${
+					errorGroupResult?.errorGroup?.guid || codeError?.objectInfo?.entityId
+				}`,
+
+				meta_data_2: `entry_point: ${
+					derivedState.currentCodeErrorData?.openType === "Observability Section"
+						? "observability_section"
+						: derivedState.currentCodeErrorData?.openType === "Activity Feed"
+						? "activity_feed"
+						: "open_in_ide"
+				}`,
+				meta_data_3: `stack_trace: ${!!(stackInfo && !stackInfo.error)}`,
+				meta_data_4: `build_sha: missing`,
+				event_type: "modal_display",
 			};
-			if (trackingData["Stack Trace"]) {
-				trackingData["Build ref"] = !refToUse
-					? "Missing"
+			if (trackingData["meta_data_3"]) {
+				trackingData["meta_data_4"] = !refToUse
+					? "build_sha: missing"
 					: stackInfo?.warning
-					? "Warning"
-					: "Populated";
+					? "build_sha: warning"
+					: "build_sha: populated";
 			}
-			HostApi.instance.track("Error Opened", trackingData);
+			HostApi.instance.track("codestream/errors/error_group displayed", trackingData);
 		} catch (ex) {
 			console.warn(ex);
 			const title = "Unexpected Error";

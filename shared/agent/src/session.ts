@@ -1140,10 +1140,10 @@ export class CodeStreamSession {
 					let error = loginApiErrorMappings[ex.info.code] || LoginResult.Unknown;
 					if (error === LoginResult.ProviderConnectFailed) {
 						Container.instance().telemetry.track({
-							eventName: "Provider Connect Failed",
+							eventName: "codestream/user login_failed",
 							properties: {
-								Error: ex.info && ex.info.error,
-								Provider: ex.info && ex.info.provider,
+								meta_data: `error: ${ex.info && ex.info.error}`,
+								event_type: "response",
 							},
 						});
 						// map the reason for provider auth failure

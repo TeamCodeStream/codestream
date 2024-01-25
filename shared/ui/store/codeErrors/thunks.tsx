@@ -276,9 +276,9 @@ export const openErrorGroup =
 		}
 
 		if (message) {
-			HostApi.instance.track("Error Roadblocked", {
-				"Error Group ID": errorGroupGuid,
-				"NR Account ID": response && response.accountId,
+			HostApi.instance.track("codestream/errors/error_group roadblocked", {
+				meta_data: `error_group_id: ${errorGroupGuid}`,
+				event_type: "response",
 			});
 			confirmPopup({
 				title: "Error Can't Be Opened",
@@ -509,12 +509,6 @@ export const api =
 			// );
 			logError(error, { providerId, pullRequestId, method, message: errorString });
 
-			HostApi.instance.track("ErrorGroup Error", {
-				Host: providerId,
-				Operation: method,
-				Error: errorString,
-				IsOAuthError: errorString && errorString.indexOf("OAuth App access restrictions") > -1,
-			});
 			return {
 				error: errorString,
 			};

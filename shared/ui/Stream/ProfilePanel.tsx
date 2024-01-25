@@ -3,7 +3,7 @@ import React from "react";
 import ScrollBox from "./ScrollBox";
 import styled from "styled-components";
 import { CodeStreamState } from "../store";
-import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
+import { useAppDispatch, useAppSelector } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { PanelHeader } from "../src/components/PanelHeader";
 import { openModal, closeModal, setUserPreference } from "./actions";
@@ -114,11 +114,6 @@ export const ProfilePanel = () => {
 	});
 
 	const { person, isMe } = derivedState;
-
-	useDidMount(() => {
-		if (derivedState.webviewFocused)
-			HostApi.instance.track("Page Viewed", { "Page Name": "Profile" });
-	});
 
 	if (!derivedState.person) {
 		return (

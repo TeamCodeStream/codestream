@@ -625,10 +625,12 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 		const doc = this.documentManager[cacheKey];
 		if (doc && !doc.tracked) {
 			try {
-				this.telemetryService.track("MLT Codelenses Rendered", {
-					"NR Account ID": accountId,
-					Language: languageId,
-					"Codelense Count": codeLensCount
+				this.telemetryService.track("codestream/codelenses displayed", {
+					account_id: accountId,
+					entity_guid: "",
+					meta_data: `language: ${languageId}`,
+					meta_data_2: `codelense_count: ${codeLensCount}`,
+					event_type: "state_load"
 				});
 				doc.tracked = true;
 			} catch {}
