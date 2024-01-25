@@ -236,6 +236,14 @@ export class SidebarController implements Disposable {
 		let teamState;
 		switch (status) {
 			case SessionStatus.SignedOut:
+				if (this._logPanelInitializations) {
+					Object.keys(this._logPanelInitializations).forEach(lpi => {
+						const { panel } = this._logPanelInitializations[lpi];
+
+						panel.dispose();
+					});
+				}
+
 				if (e.reason === SessionSignedOutReason.SignInFailure) {
 					if (!this.visible) {
 						this.show();
@@ -904,13 +912,12 @@ export class SidebarController implements Disposable {
 			const controller = new EditorController(this.session, panel);
 			const onDidClose = () => {
 				const initialization = this._logPanelInitializations[editorKey];
-				initialization.controller?.dispose();
-				initialization.panel?.dispose();
 				delete this._logPanelInitializations[editorKey];
 			};
 			panel.onDidClose(() => {
 				onDidClose();
 			});
+
 			this._logPanelInitializations[editorKey] = {
 				panel: panel,
 				controller: controller
