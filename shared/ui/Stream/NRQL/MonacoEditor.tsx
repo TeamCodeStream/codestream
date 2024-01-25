@@ -1,5 +1,7 @@
 import React from "react";
-import { Editor } from "@monaco-editor/react";
+import { Editor, Monaco } from "@monaco-editor/react";
+// transient dependency
+import type monaco from "monaco-editor";
 
 export function MonacoEditor(props: {
 	onChange?: (e: { value: string | undefined }) => void;
@@ -13,7 +15,10 @@ export function MonacoEditor(props: {
 	theme?: "vs-dark" | "light";
 	options?: any;
 }) {
-	const handleEditorDidMount = async (editor: any, monaco: any) => {
+	const handleEditorDidMount = async (
+		editor: monaco.editor.IStandaloneCodeEditor,
+		monaco: Monaco
+	) => {
 		editor.updateOptions({
 			find: {
 				seedSearchStringFromSelection: false,
@@ -47,7 +52,7 @@ export function MonacoEditor(props: {
 				defaultLanguage={props.defaultLanguage}
 				defaultValue={props.defaultValue}
 				theme={props.theme || "vs-dark"}
-				onMount={(editor: any, monaco: any) => {
+				onMount={(editor: monaco.editor.IStandaloneCodeEditor, monaco: Monaco) => {
 					handleEditorDidMount(editor, monaco);
 
 					if (props.onMount) {

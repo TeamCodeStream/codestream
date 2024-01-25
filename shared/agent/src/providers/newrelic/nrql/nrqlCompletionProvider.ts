@@ -27,28 +27,12 @@ export class NrqlCompletionProvider {
 			if (!textDocument.uri.endsWith(".nrql")) {
 				return [];
 			}
-			const { line, character } = position;
 			const document = this.session.agent.documents.get(textDocument.uri)!;
-			// Retrieve the document's text at the position
+			// Retrieve the document's selected text at the position
+			// TODO this only works for single lines
 			const text = document.getText(Range.create(position.line, 0, position.line + 1, 0));
-			// Determine the range of the current word
-			const wordRange = {
-				start: { line: line, character: character },
-				end: { line: line, character: character },
-			};
-
-			while (
-				wordRange.start.character > 0 &&
-				/\w/.test(text.charAt(wordRange.start.character - 1))
-			) {
-				wordRange.start.character--;
-			}
-			// Extract the current word
-			const currentWordAsUpperCase = text.slice(wordRange.start.character, wordRange.end.character);
-
 			const response = await this.provideCompletionItems({
-				text: text,
-				currentWord: currentWordAsUpperCase,
+				query: text,
 			});
 			return response?.items;
 		} catch (ex) {
@@ -68,24 +52,20 @@ export class NrqlCompletionProvider {
 	): Promise<GetNRQLCompletionItemsResponse> {
 		const completionItems: CompletionItem[] = [];
 		try {
-			// to use on matching against builtins
-			const currentWordAsUpperCase = request.currentWord?.toUpperCase();
-			// the entire line of a query (might be the entire query or a partial)
-			const text = request.text?.trim();
-			const textLowered = text?.toLowerCase();
 			const builtIns = await this.nrNRQLProvider.getConstants({});
-			if (currentWordAsUpperCase) {
-				// Filter and generate completion items based on the current word
-				for (const candidate of [
-					...builtIns.functions,
-					...builtIns.keywords,
-					...builtIns.operators,
-				]) {
-					if (candidate.label.startsWith(currentWordAsUpperCase)) {
-						completionItems.push(candidate);
-					}
-				}
+			// the entire line of a query (might be the entire query or a partial)
+			const text = request.query?.trim();
+			if (!text) {
+				return {
+					items: builtIns.keywords.filter(_ => _.label === "SELECT" || _.label === "FROM")!,
+				};
 			}
+
+			const textLowered = text?.toLowerCase();
+			const split = text.split(" ");
+			const currentWord = split[split.length - 1];
+			const currentWordAsUpperCase = currentWord.toUpperCase();
+
 			if (textLowered) {
 				const collectionsResponse = await this.nrNRQLProvider.fetchCollections();
 
@@ -99,7 +79,7 @@ export class NrqlCompletionProvider {
 								items: [builtIns.operators.find(_ => _.label === "*")!, ...builtIns.functions],
 							};
 						} else {
-							const response = await this.nrNRQLProvider.fetchColumns({ query: request.text });
+							const response = await this.nrNRQLProvider.fetchColumns({ query: request.query });
 							if (response.columns) {
 								for (const candidate of response.columns) {
 									completionItems.push({
@@ -126,7 +106,7 @@ export class NrqlCompletionProvider {
 						return { items: completionItems };
 					}
 					case "where": {
-						const response = await this.nrNRQLProvider.fetchColumns({ query: request.text });
+						const response = await this.nrNRQLProvider.fetchColumns({ query: request.query });
 						if (response.columns) {
 							for (const candidate of response.columns) {
 								completionItems.push({
@@ -187,10 +167,17 @@ export class NrqlCompletionProvider {
 				}
 			}
 
-			if (!text) {
-				return {
-					items: builtIns.keywords.filter(_ => _.label === "SELECT" || _.label === "FROM")!,
-				};
+			if (currentWordAsUpperCase) {
+				// Filter and generate completion items based on the current word
+				for (const candidate of [
+					...builtIns.functions,
+					...builtIns.keywords,
+					...builtIns.operators,
+				]) {
+					if (candidate.label.startsWith(currentWordAsUpperCase)) {
+						completionItems.push(candidate);
+					}
+				}
 			}
 		} catch (ex) {
 			Logger.warn("provideCompletionItems", { error: ex });

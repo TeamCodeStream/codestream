@@ -1,12 +1,15 @@
-import React, { useContext, useRef } from "react";
 import { HostApi } from "@codestream/webview/webview-api";
+import { Monaco } from "@monaco-editor/react";
+import React, { useContext, useRef } from "react";
 import {
 	GetNRQLCompletionItemsType,
 	GetNRQLConstantsRequestType,
 } from "../../../util/src/protocol/agent/agent.protocol.providers";
-import { MonacoEditor } from "./MonacoEditor";
 import { isDarkTheme } from "@codestream/webview/src/themes";
+import type monaco from "monaco-editor";
 import { ThemeContext } from "styled-components";
+// transient dependency
+import { MonacoEditor } from "./MonacoEditor";
 
 export function NRQLEditor(props: {
 	onChange: (e: { value: string | undefined }) => void;
@@ -17,7 +20,10 @@ export function NRQLEditor(props: {
 	const theme = isDarkTheme(themeContext) ? "vs-dark" : "light";
 	const monacoRef = useRef<any>(null);
 
-	const handleEditorDidMount = async (editor: any, monaco: any) => {
+	const handleEditorDidMount = async (
+		editor: monaco.editor.IStandaloneCodeEditor,
+		monaco: Monaco
+	) => {
 		monacoRef.current = monaco;
 		monaco.languages.register({ id: "nrql" });
 
@@ -28,16 +34,15 @@ export function NRQLEditor(props: {
 			triggerCharacters: [" "],
 			provideCompletionItems: async (model, position) => {
 				const currentLine = model.getLineContent(position.lineNumber);
-				const currentWord = model.getWordUntilPosition(position).word;
 				try {
 					const response = await HostApi.instance.send(GetNRQLCompletionItemsType, {
-						text: currentLine,
-						currentWord: currentWord,
+						query: currentLine,
 					});
 					return {
 						suggestions: response?.items?.length
 							? response.items.map(_ => {
-									// these won't render correctly without a <Link /> component
+									// TODO these won't render correctly without a <Link /> component
+									// hide them for now
 									return {
 										..._,
 										documentation: null,
@@ -46,7 +51,7 @@ export function NRQLEditor(props: {
 							: [],
 					};
 				} catch (ex) {
-					return { suggestions: [] };
+					return { suggestions: [] as any };
 				}
 			},
 		});

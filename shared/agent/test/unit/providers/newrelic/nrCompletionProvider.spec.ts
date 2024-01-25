@@ -27,28 +27,32 @@ const provider = new NrqlCompletionProvider({} as any, nrNrqlProvider as any);
 
 describe("NrqlCompletionProvider", () => {
 	it("provideCompletionItems starting with FROM", async () => {
-		const response = await provider.provideCompletionItems({ text: "FR", currentWord: "FR" });
+		const response = await provider.provideCompletionItems({ query: "FR" });
 		expect(response.items[0].label).toEqual("FROM");
 	});
 
 	it("provideCompletionItems starting with SELECT", async () => {
-		const response = await provider.provideCompletionItems({ text: "SEL", currentWord: "SEL" });
+		const response = await provider.provideCompletionItems({ query: "SEL" });
 		expect(response.items[0].label).toEqual("SELECT");
 	});
 
 	it("provideCompletionItems starting with SELECT * FROM", async () => {
 		const response = await provider.provideCompletionItems({
-			text: "SELECT * FROM ",
-			currentWord: " ",
+			query: "SELECT * FROM ",
 		});
 		expect(response.items[0].label).toEqual("Log");
 	});
 
 	it("provideCompletionItems starting with SELECT * FROM Log WHERE", async () => {
 		const response = await provider.provideCompletionItems({
-			text: "SELECT * FROM Log WHERE ",
-			currentWord: " ",
+			query: "SELECT * FROM Log WHERE ",
 		});
 		expect(response.items[0].label).toEqual("appName");
+	});
+	it("provideCompletionItems starting with SELECT count(*), ", async () => {
+		const response = await provider.provideCompletionItems({
+			query: "SELECT count(*), ",
+		});
+		expect(response.items.length).toBeGreaterThan(0);
 	});
 });

@@ -2699,12 +2699,9 @@ export interface GetNRQLCompletionItemsRequest {
 	/**
 	 * This may refer to an entire query or a single line in a multi-line or multi-queries in a file
 	 */
-	text?: string;
-	/**
-	 * The last word, or part thereof. It may also be an empty space or punctuation mark
-	 */
-	currentWord?: string;
+	query?: string;
 }
+
 export interface GetNRQLCompletionItemsResponse {
 	items: CompletionItem[];
 }
