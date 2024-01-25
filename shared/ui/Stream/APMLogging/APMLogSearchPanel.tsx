@@ -21,8 +21,8 @@ import {
 } from "@codestream/protocols/agent";
 import { AsyncPaginate } from "react-select-async-paginate";
 import { parseId } from "@codestream/webview/utilities/newRelic";
-import { VariableSizeList as List } from "react-window";
 import { useResizeDetector } from "react-resize-detector";
+import { TableWindow } from "../TableWindow";
 
 interface SelectedOption {
 	value: string;
@@ -488,7 +488,6 @@ export const APMLogSearchPanel = (props: {
 		if (results) {
 			return results.map(r => {
 				const timestamp = r?.timestamp;
-
 				const message = messageAttribute ? r[messageAttribute] : "";
 				const severity = severityAttribute ? r[severityAttribute] : "";
 
@@ -634,8 +633,14 @@ export const APMLogSearchPanel = (props: {
 
 					{!logError && !isLoading && results && totalItems > 0 && fieldDefinitions && (
 						<>
-							{/* {ListHeader()} */}
-							<List
+							<TableWindow
+								itemData={formatRowResults()}
+								itemCount={results.length}
+								height={height}
+								width={"100%"}
+							/>
+
+							{/* <List
 								ref={listRef}
 								height={height}
 								width="100%"
@@ -648,7 +653,7 @@ export const APMLogSearchPanel = (props: {
 										<Row data={data} index={index} setSize={setSize} windowWidth={width} />
 									</div>
 								)}
-							</List>
+							</List> */}
 						</>
 					)}
 
@@ -709,7 +714,6 @@ const styles = {
 		borderLeft: "1px solid var(--base-border-color)",
 		borderRight: "1px solid var(--base-border-color)",
 		borderBottom: "1px solid var(--base-border-color)",
-		// borderBottom: "1px solid #222",
 		wordWrap: "break-word",
 		whiteSpace: "normal",
 	},
