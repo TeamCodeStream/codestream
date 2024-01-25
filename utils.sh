@@ -48,9 +48,9 @@ function show_version () {
   for dir in "${dirs[@]}"; do
       pushd "$dir" || continue
       echo "$dir:"
-      devDep=$(cat package.json | jq ".devDependencies.${2}")
+      devDep=$(cat package.json | jq ".devDependencies.\"${2}\"")
       if [ "$devDep" = "null" ]; then
-        dep=$(cat package.json | jq ".dependencies.${2}")
+        dep=$(cat package.json | jq ".dependencies.\"${2}\"")
         echo $dep
       else
         echo $devDep
