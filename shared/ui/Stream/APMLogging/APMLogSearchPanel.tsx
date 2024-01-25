@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import Icon from "../Icon";
 import { PanelHeader } from "../../src/components/PanelHeader";
 import styled from "styled-components";
@@ -21,7 +21,7 @@ import {
 } from "@codestream/protocols/agent";
 import { AsyncPaginate } from "react-select-async-paginate";
 import { parseId } from "@codestream/webview/utilities/newRelic";
-import { FixedSizeList as List } from "react-window";
+import { VariableSizeList as List } from "react-window";
 import { useResizeDetector } from "react-resize-detector";
 
 interface SelectedOption {
@@ -83,7 +83,7 @@ const LogSeverity = styled.span`
 	position: relative;
 	width: 8px;
 	overflow: hidden;
-	margin: 3.5px auto;
+	margin-top: 5px;
 `;
 
 const logSeverityToColor = {
@@ -117,9 +117,43 @@ const OptionAccount = styled.div`
 	font-size: smaller;
 `;
 
-const TimestampData = styled.div``;
+const HeaderContainer = styled.div`
+	display: flex;
+	overflow: hidden;
+	padding: 0px 20px 10px 20px;
+`;
 
-const MessageData = styled.div``;
+const TimestampHeader = styled.div`
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 40px;
+	background: var(--base-background-color);
+	width: 20%;
+	border-left: 1px solid var(--base-border-color);
+	border-top: 1px solid var(--base-border-color);
+	border-bottom: 1px solid var(--base-border-color);
+`;
+
+const MessageHeader = styled.div`
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 40px;
+	background: var(--base-background-color);
+	width: 78.8%;
+	border: 1px solid var(--base-border-color);
+`;
+
+const TimestampData = styled.div`
+	width: 20%;
+	display: flex;
+`;
+
+const MessageData = styled.div`
+	width: 79%;
+	font-family: "Menlo", "Consolas", monospace;
+`;
 
 const RowContainer = styled.div`
 	display: flex;
@@ -164,8 +198,17 @@ export const APMLogSearchPanel = (props: {
 	const [surroundingLogsLoading, setSurroundingLogsLoading] = useState<boolean>();
 	const [totalItems, setTotalItems] = useState<number>(0);
 	const [logError, setLogError] = useState<string | undefined>("");
+
+	// Dynamic list logic setup
 	const { width, height, ref } = useResizeDetector();
-	console.warn(`width: ${width}`, `height: ${height}`);
+	const listRef = useRef();
+	const sizeMap = useRef({});
+	const setSize = useCallback((index, size) => {
+		sizeMap.current = { ...sizeMap.current, [index]: size };
+		//@ts-ignore
+		listRef.current.resetAfterIndex(index);
+	}, []);
+	const getSize = index => sizeMap.current[index] || 50;
 
 	useDidMount(() => {
 		if (props.entityGuid) {
@@ -220,28 +263,6 @@ export const APMLogSearchPanel = (props: {
 			fetchLogs(props.entityGuid, props.suppliedQuery);
 		}
 	});
-
-	const TableRow = ({ index, style }) => {
-		const logSummary = results[index]?.log_summary;
-		const timestamp = results[index]?.timestamp;
-		return (
-			<>
-				<RowContainer style={style}>
-					<TimestampData>{timestamp}</TimestampData>
-					<MessageData>{logSummary}</MessageData>
-				</RowContainer>
-			</>
-		);
-	};
-
-	const TableHeader = () => {
-		return (
-			<RowContainer>
-				<TimestampData>timestamp</TimestampData>
-				<MessageData>message</MessageData>
-			</RowContainer>
-		);
-	};
 
 	const handleError = (message: string) => {
 		setLogError(message);
@@ -418,85 +439,12 @@ export const APMLogSearchPanel = (props: {
 		HostApi.instance.track("codestream/logs/webview opened", payload);
 	};
 
-	const renderHeaderRow = () => {
-		return (
-			<tr>
-				{
-					// TODO: Instead of using the full list of field definitions for display,
-					//       Use a preference that includes which columns to show.fieldDefinitions &&
-					displayColumns.length > 0 &&
-						displayColumns.map(fd => {
-							return (
-								<th
-									colSpan={columnSpanMapping[fd] || 1}
-									style={{
-										border: "1px solid darkgray",
-										padding: "3px 8px 3px 8px",
-									}}
-								>
-									{fd}
-								</th>
-							);
-						})
-				}
-			</tr>
-		);
-	};
-
-	const formatRowValue = (fieldName: string, fieldValue: string) => {
-		if (fieldName === "timestamp") {
-			return (
-				<td>
-					<Timestamp time={fieldValue} expandedTime={true}></Timestamp>
-				</td>
-			);
-		}
-
-		if (fieldName === severityAttribute) {
-			return (
-				<>
-					<td>
-						<LogSeverity style={{ backgroundColor: logSeverityToColor[fieldValue] }} />
-					</td>
-					<td>{fieldValue}</td>
-				</>
-			);
-		}
-
-		return <td>{fieldValue}</td>;
-	};
-
 	const expandDetailsView = (messageId: string) => {
 		const details = results.find(lr => {
 			return lr["messageId"] === messageId;
 		});
 
 		// TODO: Design drop-down / split view to display detail data inline
-	};
-
-	const LogRow = (props: { logResult: LogResult }) => {
-		return (
-			<tr
-				style={{
-					color: "lightgray",
-					borderBottom: "1px solid lightgray",
-				}}
-				onClick={e => {
-					// TODO: Move to icon in right of row with hover indicators
-					//       Outside of scrollable region, though?
-					e.preventDefault();
-					e.stopPropagation();
-
-					expandDetailsView(props.logResult["messageId"]);
-				}}
-			>
-				{props.logResult &&
-					displayColumns &&
-					displayColumns.map(fd => {
-						return formatRowValue(fd, props.logResult[fd]);
-					})}
-			</tr>
-		);
 	};
 
 	async function loadEntities(search: string, _loadedOptions, additional?: AdditionalType) {
@@ -522,6 +470,44 @@ export const APMLogSearchPanel = (props: {
 			},
 		};
 	}
+
+	const ListHeader = () => {
+		return (
+			<HeaderContainer>
+				<TimestampHeader>
+					<p>timestamp</p>
+				</TimestampHeader>
+				<MessageHeader>
+					<p>message</p>
+				</MessageHeader>
+			</HeaderContainer>
+		);
+	};
+
+	const formatRowResults = () => {
+		if (results) {
+			return results.map(r => {
+				const timestamp = r?.timestamp;
+
+				const message = messageAttribute ? r[messageAttribute] : "";
+				const severity = severityAttribute ? r[severityAttribute] : "";
+
+				return (
+					<>
+						<RowContainer>
+							<TimestampData>
+								<LogSeverity style={{ backgroundColor: logSeverityToColor[severity] }} />
+								<Timestamp time={timestamp} expandedTime={true} />
+							</TimestampData>
+							<MessageData>{message}</MessageData>
+						</RowContainer>
+					</>
+				);
+			});
+		} else return;
+	};
+
+	const displayList = !logError && !isLoading && results && totalItems > 0 && fieldDefinitions;
 
 	return (
 		<>
@@ -590,7 +576,7 @@ export const APMLogSearchPanel = (props: {
 					</div>
 				</LogFilterBarContainer>
 			</PanelHeader>
-
+			{ListHeader()}
 			<div
 				ref={ref}
 				style={{
@@ -648,9 +634,20 @@ export const APMLogSearchPanel = (props: {
 
 					{!logError && !isLoading && results && totalItems > 0 && fieldDefinitions && (
 						<>
-							{TableHeader()}
-							<List height={height} width={width} itemCount={results.length} itemSize={150}>
-								{TableRow}
+							{/* {ListHeader()} */}
+							<List
+								ref={listRef}
+								height={height}
+								width="100%"
+								itemCount={results.length}
+								itemSize={getSize}
+								itemData={formatRowResults()}
+							>
+								{({ data, index, style }) => (
+									<div style={style}>
+										<Row data={data} index={index} setSize={setSize} windowWidth={width} />
+									</div>
+								)}
 							</List>
 						</>
 					)}
@@ -683,4 +680,37 @@ export const APMLogSearchPanel = (props: {
 			</div>
 		</>
 	);
+};
+
+const Row = ({ data, index, setSize, windowWidth }) => {
+	const rowRef = useRef<HTMLDivElement>(null);
+	React.useEffect(() => {
+		//@ts-ignore
+		setSize(index, rowRef.current.getBoundingClientRect().height);
+	}, [setSize, index, windowWidth]);
+
+	return (
+		<div
+			ref={rowRef}
+			//@ts-ignore
+			style={{
+				...styles.row,
+			}}
+		>
+			{data[index]}
+		</div>
+	);
+};
+
+const styles = {
+	row: {
+		padding: "1em",
+		boxSizing: "border-box",
+		borderLeft: "1px solid var(--base-border-color)",
+		borderRight: "1px solid var(--base-border-color)",
+		borderBottom: "1px solid var(--base-border-color)",
+		// borderBottom: "1px solid #222",
+		wordWrap: "break-word",
+		whiteSpace: "normal",
+	},
 };
