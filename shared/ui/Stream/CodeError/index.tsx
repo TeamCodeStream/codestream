@@ -1160,6 +1160,8 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const codeError: CSCodeError = state.codeErrors[props.codeError.id] || props.codeError;
 		const codeAuthorId = (props.codeError.codeAuthorIds || [])[0];
+		const currentCodeErrorData = state.context.currentCodeErrorData;
+		const showGrok = currentCodeErrorData?.showAI || isFeatureEnabled(state, "showGrok");
 
 		return {
 			providers: state.providers,
@@ -1171,12 +1173,12 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			errorGroupIsLoading: codeError.objectId
 				? state.codeErrors.errorGroups[codeError.objectId]?.isLoading
 				: false,
-			currentCodeErrorData: state.context.currentCodeErrorData,
+			currentCodeErrorData,
 			hideCodeErrorInstructions: state.preferences.hideCodeErrorInstructions,
 			replies: props.collapsed
 				? emptyArray
 				: getThreadPosts(state, codeError.streamId, codeError.postId),
-			showGrok: isFeatureEnabled(state, "showGrok"),
+			showGrok,
 		};
 	}, shallowEqual);
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
@@ -1699,7 +1701,10 @@ const ReplyInput = (props: { codeError: CSCodeError; setGrokRequested: () => voi
 	const [attachments, setAttachments] = useState<AttachmentField[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const teamMates = useAppSelector((state: CodeStreamState) => getTeamMates(state));
-	const showGrok = useAppSelector(state => isFeatureEnabled(state, "showGrok"));
+	const showGrok = useAppSelector(
+		(state: CodeStreamState) =>
+			state.context.currentCodeErrorData?.showAI || isFeatureEnabled(state, "showGrok")
+	);
 
 	const submit = async () => {
 		// don't create empty replies
