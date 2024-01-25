@@ -55,4 +55,10 @@ describe("NrqlCompletionProvider", () => {
 		});
 		expect(response.items.length).toBeGreaterThan(0);
 	});
+	it("provideCompletionItems starting with FROM Log SELECT * ", async () => {
+		const response = await provider.provideCompletionItems({
+			query: "FROM Log SELECT * ",
+		});
+		expect(response.items[0].label).toEqual("WHERE");
+	});
 });
