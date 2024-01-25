@@ -1,5 +1,4 @@
 import React, { useMemo } from "react";
-import { GrokLoading } from "@codestream/webview/Stream/CodeError/GrokLoading";
 import { CSUser } from "@codestream/protocols/api";
 import { PostPlus } from "@codestream/protocols/agent";
 import { MarkdownText } from "@codestream/webview/Stream/MarkdownText";
@@ -13,6 +12,8 @@ import { isGrokStreamLoading } from "@codestream/webview/store/posts/reducer";
 import { isPending } from "@codestream/webview/store/posts/types";
 import { NrAiFeedback } from "./NrAiFeedback";
 import { replaceSymbol } from "@codestream/webview/store/codeErrors/thunks";
+import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
+import { NrAiCodeBlockLoading, NrAiLoading } from "./NrAiLoading";
 
 /* TODOS
 - [X] don't call copySymbol if there is already a nrai response (actually needed currently)
@@ -39,8 +40,7 @@ export type NrAiComponentProps = {
 	author: Partial<CSUser>;
 	postText: string;
 	codeErrorId?: string;
-	codeBlock?: string;
-	codeBlockStartLine?: number;
+	functionToEdit?: FunctionToEdit;
 	file?: string;
 };
 
@@ -59,20 +59,29 @@ export function NrAiComponent(props: NrAiComponentProps) {
 	const dispatch = useAppDispatch();
 	const textEditorUri = useAppSelector(state => state.editorContext.textEditorUri);
 	const isGrokLoading = useAppSelector(isGrokStreamLoading);
-	const functionToEdit = useAppSelector(state => state.codeErrors.functionToEdit);
 	const hasIntro = useMemo(
 		() => props.post.parts?.intro && props.post.parts.intro.length > 0,
 		[props.post.parts?.intro]
 	);
 	const showGrokLoader = useMemo(() => !hasIntro && isGrokLoading, [isGrokLoading, hasIntro]);
+	const showCodeBlockLoader = useMemo(
+		() => !props.post.parts?.description && isGrokLoading,
+		[isGrokLoading, props.post.parts?.description]
+	);
 	const showApplyFix = useMemo(
 		() => !!props.post.parts?.codeFix && !isGrokLoading,
 		[props.post.parts?.codeFix, isGrokLoading]
 	);
 
 	const showFeedback = useMemo(() => {
-		return !isGrokLoading && !isPending(props.post) && props.codeErrorId && props.post.forGrok;
-	}, [props.post, isGrokLoading, props.codeErrorId]);
+		return (
+			!isGrokLoading &&
+			!isPending(props.post) &&
+			props.codeErrorId &&
+			props.post.forGrok &&
+			props.post.parts?.description
+		);
+	}, [props.post.forGrok, isGrokLoading, props.codeErrorId, props.post.parts?.description]);
 
 	const parts = props.post.parts;
 
@@ -88,17 +97,16 @@ export function NrAiComponent(props: NrAiComponentProps) {
 	}, [props.post.parts?.codeFix]);
 
 	const patch = useMemo(() => {
-		if (!normalizedCodeFix || !functionToEdit?.codeBlock) return undefined;
+		if (!normalizedCodeFix || !props.functionToEdit?.codeBlock) return undefined;
 		// Make sure codeFix is fully streamed - we know this if description is present
 		if (!props.post.parts?.description) return undefined;
-		// Strip out leading markdown ```
-		const patch = createDiffFromSnippets(functionToEdit.codeBlock, normalizedCodeFix);
+		const patch = createDiffFromSnippets(props.functionToEdit.codeBlock, normalizedCodeFix);
 		// console.log("===--- Patch", patch);
 		return patch;
-	}, [normalizedCodeFix, functionToEdit, props.post.parts?.description]);
+	}, [normalizedCodeFix, props.functionToEdit?.codeBlock, props.post.parts?.description]);
 
 	const applyFix = async () => {
-		if (!textEditorUri || !functionToEdit?.symbol || !normalizedCodeFix) {
+		if (!textEditorUri || !props.functionToEdit?.symbol || !normalizedCodeFix) {
 			console.error("No textEditorUri symbol or codeBlock");
 			return;
 		}
@@ -108,9 +116,9 @@ export function NrAiComponent(props: NrAiComponentProps) {
 			await dispatch(
 				replaceSymbol(
 					textEditorUri,
-					functionToEdit.symbol,
+					props.functionToEdit.symbol,
 					normalizedCodeFixWithoutTrailingLinefeed,
-					functionToEdit.namespace
+					props.functionToEdit.namespace
 				)
 			);
 		} catch (e) {
@@ -120,8 +128,9 @@ export function NrAiComponent(props: NrAiComponentProps) {
 
 	return (
 		<>
-			{showGrokLoader && <GrokLoading />}
+			{showGrokLoader && <NrAiLoading />}
 			{hasIntro && <Markdown text={parts?.intro ?? ""} />}
+			{showCodeBlockLoader && <NrAiCodeBlockLoading />}
 			{props.file && patch && (
 				<DiffSection>
 					<PullRequestPatch

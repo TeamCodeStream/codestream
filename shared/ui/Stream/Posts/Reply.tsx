@@ -33,6 +33,7 @@ import Tag from "../Tag";
 import Timestamp from "../Timestamp";
 import { RepliesToPostContext } from "./RepliesToPost";
 import { NrAiComponent } from "@codestream/webview/Stream/Posts/NrAiComponent";
+import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
 
 const AuthorInfo = styled.div`
 	display: flex;
@@ -209,8 +210,7 @@ export interface ReplyProps {
 	author: Partial<CSUser>;
 	post: Post;
 	file?: string;
-	codeBlock?: string;
-	codeBlockStartLine?: number;
+	functionToEdit?: FunctionToEdit;
 	codeErrorId?: string;
 	nestedReplies?: PostPlus[];
 	renderMenu?: (target: any, onClose: () => void) => React.ReactNode;
@@ -448,8 +448,7 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) =>
 						author={props.author}
 						postText={postText}
 						file={props.file!}
-						codeBlockStartLine={props.codeBlockStartLine}
-						codeBlock={props.codeBlock}
+						functionToEdit={props.functionToEdit}
 					/>
 				)}
 				{emote || isEditing || isForGrok ? null : (
@@ -484,8 +483,7 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) =>
 						editingPostId={props.editingPostId}
 						key={r.id}
 						post={r}
-						codeBlock={props.codeBlock}
-						codeBlockStartLine={props.codeBlockStartLine}
+						functionToEdit={props.functionToEdit}
 						threadId={props.post.id}
 						lastNestedReply={index === numNestedReplies - 1}
 					/>
@@ -497,8 +495,7 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) =>
 const NestedReply = (props: {
 	post: Post;
 	threadId: string;
-	codeBlock?: string;
-	codeBlockStartLine?: number;
+	functionToEdit?: FunctionToEdit;
 	editingPostId?: string;
 	lastNestedReply?: boolean;
 }) => {
@@ -558,8 +555,7 @@ const NestedReply = (props: {
 			editingPostId={props.editingPostId}
 			threadId={props.threadId}
 			lastNestedReply={props.lastNestedReply}
-			codeBlock={props.codeBlock}
-			codeBlockStartLine={props.codeBlockStartLine}
+			functionToEdit={props.functionToEdit}
 			renderMenu={(target, close) => <Menu target={target} action={close} items={menuItems} />}
 		/>
 	);

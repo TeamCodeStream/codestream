@@ -19,6 +19,7 @@ import Menu from "../Menu";
 import { MessageInput, AttachmentField } from "../MessageInput";
 import { Reply } from "./Reply";
 import { MenuItem } from "@codestream/webview/src/components/controls/InlineMenu";
+import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
 
 const ComposeWrapper = styled.div.attrs(() => ({
 	className: "compose codemark-compose",
@@ -43,11 +44,10 @@ export const RepliesToPost = (props: {
 	parentPostId: string;
 	itemId: string;
 	numReplies: number;
-	codeBlock?: string;
 	codeErrorId?: string;
 	noReply?: boolean;
 	file?: string;
-	codeBlockStartLine?: number;
+	functionToEdit?: FunctionToEdit;
 	scrollNewTargetCallback?: (target: RefObject<HTMLElement>) => void;
 }) => {
 	const dispatch = useAppDispatch();
@@ -162,7 +162,7 @@ export const RepliesToPost = (props: {
 							ref={idx === replies.length ? lastCommentRef : null}
 							author={allUsers[reply.creatorId]}
 							file={props.file}
-							codeBlockStartLine={props.codeBlockStartLine}
+							functionToEdit={props.functionToEdit}
 							post={reply}
 							editingPostId={editingPostId}
 							nestedReplies={nestedRepliesByParent[reply.id]}

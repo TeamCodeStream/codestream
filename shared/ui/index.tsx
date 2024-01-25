@@ -30,7 +30,13 @@ import {
 	MatchReposRequestType,
 	GetRepoFileFromAbsolutePathRequestType,
 } from "@codestream/protocols/agent";
-import { CodemarkType, CSCodeError, CSMe, CSRepository } from "@codestream/protocols/api";
+import {
+	CodemarkType,
+	CSCodeError,
+	CSMe,
+	CSRepository,
+	WebviewPanels,
+} from "@codestream/protocols/api";
 import React from "react";
 import * as path from "path-browserify";
 import { render } from "react-dom";
@@ -81,7 +87,6 @@ import {
 	InitiateNrqlExecutionNotificationType,
 	ViewColumn,
 } from "./ipc/webview.protocol";
-import { WebviewPanels } from "@codestream/protocols/api";
 import { store } from "./store";
 import { bootstrap, reset } from "./store/actions";
 import {
@@ -531,6 +536,7 @@ function listenForEvents(store) {
 
 				if (reposResponse) {
 					HostApi.instance.send(EditorRevealRangeRequestType, {
+						// eslint-disable-next-line import/namespace
 						uri: path.join(reposResponse.repositories![0].path, "main.js"),
 						range: Range.create(0, 0, 0, 0),
 						atTop: true,
@@ -831,6 +837,7 @@ function listenForEvents(store) {
 								}
 							});
 							if (repo) {
+								// eslint-disable-next-line import/namespace
 								const filePath = path.join(repo.path, file);
 								HostApi.instance.send(EditorRevealRangeRequestType, {
 									uri: filePath,
