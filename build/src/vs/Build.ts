@@ -1,34 +1,36 @@
-import { execFileSync } from "child_process";
+import { execFileSync, execSync } from "child_process";
 import fs from "fs";
 
 export default function (vsRootPath: string) {
   // validation only allows 17.0 and is defaulted to 17.0, so it can't be anything else anyway
   const msbuild =
-    "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/MSBuild/Current/Bin/MSBuild.exe";
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\MSBuild\\Current\\Bin\\MSBuild.exe";
   const xunit =
-    "C:/.nuget/xunit.runner.console/2.4.2/tools/net472/xunit.console.x86.exe";
+    "C:\\.nuget\\xunit.runner.console\\2.4.2\\tools\\net472\\xunit.console.x86.exe";
 
-  execFileSync(
-    `"${msbuild}"`,
-    [
-      `${vsRootPath}/src/CodeStream.VisualStudio.sln`,
-      "/t:restore,rebuild",
-      "/p:Configuration=Debug",
-      "/p:AllowUnsafeBlocks=true",
-      "/verbosity:quiet",
-      "/p:Platform='x86'",
-      "/p:DeployExtension:False",
-    ],
-    { stdio: "inherit" },
-  );
+    execSync(`"${msbuild}" "${vsRootPath}\\src\\CodeStream.VisualStudio.sln"`);
+
+  // execFileSync(
+  //   `${msbuild}`,
+  //   [
+  //     `${vsRootPath}\\src\\CodeStream.VisualStudio.sln`,
+  //     "/t:restore,rebuild",
+  //     "/p:Configuration=Debug",
+  //     "/p:AllowUnsafeBlocks=true",
+  //     "/verbosity:quiet",
+  //     "/p:Platform='x86'",
+  //     "/p:DeployExtension:False",
+  //   ],
+  //   { stdio: "inherit" },
+  // );
 
   if (
     fs.existsSync(
-      `${vsRootPath}/src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/.codestream-out`,
+      `${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\.codestream-out`,
     )
   ) {
     fs.rmdirSync(
-      `${vsRootPath}/src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/.codestream-out`,
+      `${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\.codestream-out`,
       {
         recursive: true,
       },
@@ -37,11 +39,11 @@ export default function (vsRootPath: string) {
 
   if (
     fs.existsSync(
-      `${vsRootPath}/src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/codestream-vs.zip`,
+      `${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\codestream-vs.zip`,
     )
   ) {
     fs.rmSync(
-      `${vsRootPath}/src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/codestream-vs.zip`,
+      `${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\codestream-vs.zip`,
       {
         force: true,
       },
