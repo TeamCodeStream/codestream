@@ -303,7 +303,9 @@ export class NrNRQLProvider {
 		if (results.length === 1) {
 			const value = results[0];
 			if (typeof value === "object" && value != null && !Array.isArray(value)) {
-				return "json";
+				return Object.keys(value).length === 1 && !Array.isArray(Object.keys(value)[0])
+					? "billboard"
+					: "json";
 			} else {
 				return "billboard";
 			}
