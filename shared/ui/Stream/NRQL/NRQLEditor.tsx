@@ -120,7 +120,7 @@ export function NRQLEditor(props: {
 				height="10vh"
 				className={props.className}
 				defaultLanguage="nrql"
-				defaultValue={props.defaultQuery || "FROM"}
+				defaultValue={props.defaultQuery || "FROM "}
 				theme={theme}
 				onMount={handleEditorDidMount}
 				onChange={e => {

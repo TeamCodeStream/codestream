@@ -42,6 +42,9 @@ export function MonacoEditor(props: {
 			...(props.options || {}),
 		});
 
+		const lineCount = editor.getModel()!.getLineCount();
+		const lastLineColumn = editor.getModel()!.getLineLastNonWhitespaceColumn(lineCount);
+		editor.setPosition({ lineNumber: lineCount, column: lastLineColumn + 1 });
 		editor.focus();
 	};
 	return (
