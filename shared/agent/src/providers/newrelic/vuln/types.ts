@@ -1,4 +1,4 @@
-import { CriticalityType } from "../../../protocol/agent.protocol.providers";
+import { CriticalityType } from "@codestream/protocols/agent";
 
 export type VersionDetails = {
 	version?: string;
