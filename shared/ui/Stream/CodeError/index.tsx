@@ -620,8 +620,12 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 	const handleEntityLinkClick = (e, url) => {
 		e.preventDefault();
 		e.stopPropagation();
-		HostApi.instance.track("Open Service Summary on NR", {
-			Section: "Error",
+		HostApi.instance.track("codestream/link_to_newrelic clicked", {
+			entity_guid: props.errorGroup?.entityGuid,
+			account_id: props.errorGroup?.accountId,
+			meta_data: "destination: apm_service_summary",
+			meta_data_2: `codestream_section: error`,
+			event_type: "click",
 		});
 		HostApi.instance.send(OpenUrlRequestType, {
 			url,

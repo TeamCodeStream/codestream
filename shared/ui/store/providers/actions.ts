@@ -134,11 +134,19 @@ export const sendIssueProviderConnected =
 		const { name, host, isEnterprise } = provider;
 		const api = HostApi.instance;
 		api.send(TelemetryRequestType, {
-			eventName: "Service Connected",
+			eventName: "codestream/integration connected",
 			properties: {
-				Service: name,
-				Host: isEnterprise ? host : null,
-				"Connection Location": connectionLocation,
+				meta_data: `service: ${name}`,
+				meta_data_2: `connection_location: ${
+					connectionLocation === "Integrations Panel"
+						? "integrations_page"
+						: connectionLocation === "Compose Modal"
+						? "compose_modal"
+						: connectionLocation === "Provider Error Banner"
+						? "provider_error_banner"
+						: ""
+				}`,
+				event_type: "response",
 			},
 		});
 	};
@@ -152,11 +160,19 @@ export const sendBuildProviderConnected =
 		const { name, host, isEnterprise } = provider;
 		const api = HostApi.instance;
 		api.send(TelemetryRequestType, {
-			eventName: "Service Connected",
+			eventName: "codestream/integration connected",
 			properties: {
-				Service: name,
-				Host: isEnterprise ? host : null,
-				"Connection Location": connectionLocation,
+				meta_data: `service: ${name}`,
+				meta_data_2: `connection_location: ${
+					connectionLocation === "Integrations Panel"
+						? "integrations_page"
+						: connectionLocation === "Compose Modal"
+						? "compose_modal"
+						: connectionLocation === "Provider Error Banner"
+						? "provider_error_banner"
+						: ""
+				}`,
+				event_type: "response",
 			},
 		});
 	};
@@ -169,10 +185,19 @@ export const sendMessagingServiceConnected =
 		if (!provider) return;
 
 		HostApi.instance.send(TelemetryRequestType, {
-			eventName: "Service Connected",
+			eventName: "codestream/integration connected",
 			properties: {
-				Service: provider.name,
-				"Connection Location": connectionLocation,
+				meta_data: `service: ${provider.name}`,
+				meta_data_2: `connection_location: ${
+					connectionLocation === "Integrations Panel"
+						? "integrations_page"
+						: connectionLocation === "Compose Modal"
+						? "compose_modal"
+						: connectionLocation === "Provider Error Banner"
+						? "provider_error_banner"
+						: ""
+				}`,
+				event_type: "response",
 			},
 		});
 	};

@@ -532,16 +532,29 @@ function trackPostCreation(
 						const codemarkProperties: {
 							[key: string]: any;
 						} = {
-							"Codemark ID": codemarkId,
-							"Codemark Type": request.codemark.type,
-							"Linked Service": request.codemark.externalProvider,
-							"Entry Point": request.entryPoint,
-							Tags: (request.codemark.tags || []).length,
-							Markers: markers.length,
-							"Invitee Mentions": request.addedUsers ? request.addedUsers.length : 0,
+							meta_data: `entry_point: ${
+								request.entryPoint === "Gutter"
+									? "gutter"
+									: "Global Nav"
+									? "global_nav"
+									: "Shortcut"
+									? "shortcut"
+									: "Lightbulb Menu"
+									? "lightbulb_menu"
+									: "Action List"
+									? "action_list"
+									: "Hover Icons"
+									? "hover_icons"
+									: "Advanced Link"
+									? "advanced_link"
+									: ""
+							}`,
+							meta_data_2: `linked_service: ${request.codemark.externalProvider}`,
+							meta_data_3: `false`,
+							event_type: "response",
 						};
 						if (request.codemark.codeErrorId) {
-							codemarkProperties["Code Error"] = true;
+							codemarkProperties["meta_data_3"] = `error_group: true`;
 						}
 						if (textDocuments && textDocuments.length) {
 							for (const textDocument of textDocuments) {
@@ -553,7 +566,10 @@ function trackPostCreation(
 								}
 							}
 						}
-						telemetry.track({ eventName: "Codemark Created", properties: codemarkProperties });
+						telemetry.track({
+							eventName: "codestream/codemarks/codemark created",
+							properties: codemarkProperties,
+						});
 					} else if (request.parentPostId) {
 						const parentPost = await SessionContainer.instance().posts.getById(
 							request.parentPostId

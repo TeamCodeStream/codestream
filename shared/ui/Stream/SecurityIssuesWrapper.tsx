@@ -135,7 +135,12 @@ function Additional(props: { onClick: () => void; additional?: number }) {
 
 function VulnView(props: { vuln: Vuln; onClose: () => void }) {
 	const { vuln } = props;
-	HostApi.instance.track("Vulnerability Clicked");
+	HostApi.instance.track("codestream/vulnerability clicked", {
+		entity_guid: "",
+		account_id: "",
+		target: "vulnerability",
+		event_type: "click",
+	});
 	return (
 		<div className="codemark-form-container">
 			<div className="codemark-form standard-form vscroll">
