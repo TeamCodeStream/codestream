@@ -1,5 +1,20 @@
 import { describe, it, expect } from "@jest/globals";
-import { createDiffFromSnippets } from "@codestream/webview/Stream/Posts/patchHelper";
+import {
+	createDiffFromSnippets,
+	normalizeCodeMarkdown,
+} from "@codestream/webview/Stream/Posts/patchHelper";
+
+describe("patchHelper normalizeCodeMarkdown", () => {
+	it("should trim out the markdown crap", () => {
+		const codeFix =
+			"```\nfunction countUsersByState() {\n  return userData.reduce((map, user) => {\n    const count = map.get(user.address.state) ?? 0;\n    map.set(user.address.state, count + 1);\n    return map;\n  }, new Map());\n}\n```\n\n";
+		const normalized = normalizeCodeMarkdown(codeFix);
+		console.log(normalized);
+		const expected =
+			"    function countUsersByState() {\n      return userData.reduce((map, user) => {\n        const count = map.get(user.address.state) ?? 0;\n        map.set(user.address.state, count + 1);\n        return map;\n      }, new Map());\n    }\n";
+		expect(normalized).toBe(expected);
+	});
+});
 
 describe("patchHelper createDiffFromSnippets", () => {
 	it("should return a diff when currentCode has tabs and codeFix has spaces", () => {

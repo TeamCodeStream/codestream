@@ -6,7 +6,10 @@ import { MarkdownContent } from "@codestream/webview/Stream/Posts/Reply";
 import { PullRequestPatch } from "@codestream/webview/Stream/PullRequestPatch";
 import styled from "styled-components";
 import { Button } from "@codestream/webview/src/components/Button";
-import { createDiffFromSnippets } from "@codestream/webview/Stream/Posts/patchHelper";
+import {
+	createDiffFromSnippets,
+	normalizeCodeMarkdown,
+} from "@codestream/webview/Stream/Posts/patchHelper";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { isGrokStreamLoading } from "@codestream/webview/store/posts/reducer";
 import { isPending } from "@codestream/webview/store/posts/types";
@@ -86,14 +89,7 @@ export function NrAiComponent(props: NrAiComponentProps) {
 	const parts = props.post.parts;
 
 	const normalizedCodeFix = useMemo(() => {
-		if (!props.post.parts?.codeFix) return undefined;
-		// Strip out leading markdown ```
-		let codeFix = props.post.parts.codeFix.replace('```\n"', "");
-		// Strip out end markdown
-		codeFix = codeFix.replace(/"\n*```\n+/, "\n");
-		// add 4 spaces to beginning of each line in codeFix since chatgpt strips out first indent
-		codeFix = codeFix.replace(/^(?!\s*$)/gm, "    ");
-		return codeFix;
+		return normalizeCodeMarkdown(props.post.parts?.codeFix);
 	}, [props.post.parts?.codeFix]);
 
 	const patch = useMemo(() => {
