@@ -64,7 +64,7 @@ export default function (vsRootPath: string) {
   })(); 
 
   fs.rmdirSync(`${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\.codestream-out`, { recursive: true });
-  fs.rmdirSync(`${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\codestream-vs.zip`);
+  fs.rmSync(`${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\codestream-vs.zip`);
 
   execSync(`dotnet tool restore --ignore-failed-sources`, { cwd: vsRootPath });
   execSync(`dotnet coverlet "CodeStream.VisualStudio.UnitTests.dll" --target "${xunit}" --targetargs "CodeStream.VisualStudio.UnitTests.dll" --exclude-by-file "**/Annotations/Annotations.cs" --format cobertura`, { cwd: vsRootPath });
