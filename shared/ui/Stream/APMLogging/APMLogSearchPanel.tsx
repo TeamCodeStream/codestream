@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState } from "react";
 import Icon from "../Icon";
 import { PanelHeader } from "../../src/components/PanelHeader";
 import styled from "styled-components";
@@ -120,7 +120,7 @@ const OptionAccount = styled.div`
 const HeaderContainer = styled.div`
 	display: flex;
 	overflow: hidden;
-	padding: 0px 20px 10px 20px;
+	overflow-y: scroll;
 `;
 
 const TimestampHeader = styled.div`
@@ -141,7 +141,7 @@ const MessageHeader = styled.div`
 	justify-content: center;
 	height: 40px;
 	background: var(--base-background-color);
-	width: 78.8%;
+	width: 80%;
 	border: 1px solid var(--base-border-color);
 `;
 
@@ -198,17 +198,8 @@ export const APMLogSearchPanel = (props: {
 	const [surroundingLogsLoading, setSurroundingLogsLoading] = useState<boolean>();
 	const [totalItems, setTotalItems] = useState<number>(0);
 	const [logError, setLogError] = useState<string | undefined>("");
-
-	// Dynamic list logic setup
-	const { width, height, ref } = useResizeDetector();
-	const listRef = useRef();
-	const sizeMap = useRef({});
-	const setSize = useCallback((index, size) => {
-		sizeMap.current = { ...sizeMap.current, [index]: size };
-		//@ts-ignore
-		listRef.current.resetAfterIndex(index);
-	}, []);
-	const getSize = index => sizeMap.current[index] || 50;
+	const { height, ref } = useResizeDetector();
+	let trimmedListHeight: number = (height ?? 0) - (height ?? 0) * 0.08;
 
 	useDidMount(() => {
 		if (props.entityGuid) {
@@ -506,8 +497,6 @@ export const APMLogSearchPanel = (props: {
 		} else return;
 	};
 
-	const displayList = !logError && !isLoading && results && totalItems > 0 && fieldDefinitions;
-
 	return (
 		<>
 			<PanelHeader title="Logs">
@@ -575,7 +564,6 @@ export const APMLogSearchPanel = (props: {
 					</div>
 				</LogFilterBarContainer>
 			</PanelHeader>
-			{ListHeader()}
 			<div
 				ref={ref}
 				style={{
@@ -619,41 +607,16 @@ export const APMLogSearchPanel = (props: {
 							TODO: Skeleton loader? Couldn't get it to work when I tried
 						)} */}
 
-					{/* {!logError && !isLoading && results && totalItems > 0 && fieldDefinitions && (
-						// TODO: Using a table is pretty terrible here...
-						<table style={{ width: "100%", borderCollapse: "collapse" }}>
-							<thead>{renderHeaderRow()}</thead>
-							<tbody>
-								{results.map(r => (
-									<LogRow logResult={r} />
-								))}
-							</tbody>
-						</table>
-					)} */}
-
 					{!logError && !isLoading && results && totalItems > 0 && fieldDefinitions && (
 						<>
+							<>{ListHeader()}</>
+
 							<TableWindow
 								itemData={formatRowResults()}
 								itemCount={results.length}
-								height={height}
+								height={trimmedListHeight}
 								width={"100%"}
 							/>
-
-							{/* <List
-								ref={listRef}
-								height={height}
-								width="100%"
-								itemCount={results.length}
-								itemSize={getSize}
-								itemData={formatRowResults()}
-							>
-								{({ data, index, style }) => (
-									<div style={style}>
-										<Row data={data} index={index} setSize={setSize} windowWidth={width} />
-									</div>
-								)}
-							</List> */}
 						</>
 					)}
 
@@ -685,36 +648,4 @@ export const APMLogSearchPanel = (props: {
 			</div>
 		</>
 	);
-};
-
-const Row = ({ data, index, setSize, windowWidth }) => {
-	const rowRef = useRef<HTMLDivElement>(null);
-	React.useEffect(() => {
-		//@ts-ignore
-		setSize(index, rowRef.current.getBoundingClientRect().height);
-	}, [setSize, index, windowWidth]);
-
-	return (
-		<div
-			ref={rowRef}
-			//@ts-ignore
-			style={{
-				...styles.row,
-			}}
-		>
-			{data[index]}
-		</div>
-	);
-};
-
-const styles = {
-	row: {
-		padding: "1em",
-		boxSizing: "border-box",
-		borderLeft: "1px solid var(--base-border-color)",
-		borderRight: "1px solid var(--base-border-color)",
-		borderBottom: "1px solid var(--base-border-color)",
-		wordWrap: "break-word",
-		whiteSpace: "normal",
-	},
 };
