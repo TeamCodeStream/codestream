@@ -24,10 +24,13 @@ export function RelatedCodemark(props: { id: string; className?: string }) {
 		event => {
 			event.preventDefault();
 			event.stopPropagation();
-			HostApi.instance.track("Codemark Clicked", {
-				"Codemark ID": props.id,
-				"Codemark Location": "Related List",
-				Following: (codemark?.followerIds || []).includes(currentUserId),
+			HostApi.instance.track("codestream/codemarks/codemark displayed", {
+				meta_data: `codemark_location: related_list`,
+				meta_data_2: `codemark_type: ${
+					codemark?.type === "issue" ? "issue" : codemark?.type === "comment" ? "comment" : ""
+				}`,
+				meta_data_3: `following: ${(codemark?.followerIds || []).includes(currentUserId)}`,
+				event_type: "modal_display",
 			});
 
 			dispatch(setCurrentCodemark(codemark!.id));
