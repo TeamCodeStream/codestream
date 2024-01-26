@@ -119,11 +119,11 @@ function _updateAssemblyInfo(filename: string, version: string): void {
 
     let newFileContents = fileContents.replace(
       versionRegEx,
-      `[assembly: AssemblyVersion("${version}")`,
+      `[assembly: AssemblyVersion("${version}")]`,
     );
     newFileContents = newFileContents.replace(
       fileVersionRegEx,
-      `[assembly: AssemblyFileVersion("${version}")`,
+      `[assembly: AssemblyFileVersion("${version}")]`,
     );
 
     fs.writeFileSync(filename, newFileContents);

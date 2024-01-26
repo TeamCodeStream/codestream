@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "adm-zip": "^0.5.10",
     "tsx": "^4.7.0"
   },
   "devDependencies": {

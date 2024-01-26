@@ -28,7 +28,7 @@ if (process.env.IS_CI === "1") {
   process.exit(1);
 }
 
-const checkoutPath = path.resolve(`${process.cwd()}`, '..');
+const checkoutPath = path.resolve(`${process.cwd()}`, "..");
 
 try {
   validateVersion(version);
