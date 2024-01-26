@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "adm-zip": "^0.5.10",
+    "cpy": "^11.0.0",
     "tsx": "^4.7.0"
   },
   "devDependencies": {

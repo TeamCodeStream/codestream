@@ -1,6 +1,7 @@
 import { execFileSync, execSync } from "child_process";
 import fs from "fs";
 import AdmZip from "adm-zip";
+import cpy from "cpy";
 
 export default function (vsRootPath: string) {
   // validation only allows 17.0 and is defaulted to 17.0, so it can't be anything else anyway
@@ -58,7 +59,9 @@ export default function (vsRootPath: string) {
   var zip = new AdmZip(`${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\codestream-vs.zip`);
   zip.extractAllTo(`${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\.codestream-out\\`, true);
  
-  fs.copyFileSync(`${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\.codestream-out\\CodeStream.VisualStudio.*.pdb`, `${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\`);
+  (async () => {
+    await cpy(`${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\.codestream-out\\CodeStream.VisualStudio.*.pdb`, `${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\`);
+  })(); 
 
   fs.rmdirSync(`${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\.codestream-out`, { recursive: true });
   fs.rmdirSync(`${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\codestream-vs.zip`);
