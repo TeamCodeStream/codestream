@@ -6,7 +6,6 @@ import { components, OptionProps } from "react-select";
 import { useDidMount } from "../../utilities/hooks";
 import Button from "../Button";
 import Select from "react-select";
-import Timestamp from "../Timestamp";
 import { HostApi } from "../../webview-api";
 import { Link } from "../Link";
 import {
@@ -23,7 +22,7 @@ import { AsyncPaginate } from "react-select-async-paginate";
 import { parseId } from "@codestream/webview/utilities/newRelic";
 import { useResizeDetector } from "react-resize-detector";
 import { TableWindow } from "../TableWindow";
-
+import { APMLogRow } from "./APMLogRow";
 interface SelectedOption {
 	value: string;
 	label: string;
@@ -75,30 +74,6 @@ const LogFilterBarContainer = styled.div`
 	}
 `;
 
-const LogSeverity = styled.span`
-	border-radius: 1px;
-	box-sizing: border-box;
-	display: flex;
-	height: 8px;
-	position: relative;
-	width: 8px;
-	overflow: hidden;
-	margin-top: 5px;
-`;
-
-const logSeverityToColor = {
-	fatal: "#df2d24",
-	error: "#df2d24",
-	warn: "#ffd23d",
-	info: "#0c74df",
-	trace: "",
-	debug: "",
-};
-
-const columnSpanMapping = {
-	level: 2,
-};
-
 type AdditionalType = { nextCursor?: string };
 
 const OptionName = styled.div`
@@ -145,20 +120,6 @@ const MessageHeader = styled.div`
 	border: 1px solid var(--base-border-color);
 `;
 
-const TimestampData = styled.div`
-	width: 20%;
-	display: flex;
-`;
-
-const MessageData = styled.div`
-	width: 79%;
-	font-family: "Menlo", "Consolas", monospace;
-`;
-
-const RowContainer = styled.div`
-	display: flex;
-`;
-
 const Option = (props: OptionProps) => {
 	const children = (
 		<>
@@ -199,7 +160,7 @@ export const APMLogSearchPanel = (props: {
 	const [totalItems, setTotalItems] = useState<number>(0);
 	const [logError, setLogError] = useState<string | undefined>("");
 	const { height, ref } = useResizeDetector();
-	let trimmedListHeight: number = (height ?? 0) - (height ?? 0) * 0.08;
+	const trimmedListHeight: number = (height ?? 0) - (height ?? 0) * 0.08;
 
 	useDidMount(() => {
 		if (props.entityGuid) {
@@ -477,21 +438,22 @@ export const APMLogSearchPanel = (props: {
 
 	const formatRowResults = () => {
 		if (results) {
-			return results.map(r => {
+			let _results: LogResult[] = results;
+			if (_results[_results.length - 1]?.showMore !== "true") {
+				_results.push({ showMore: "true" });
+			}
+			return _results.map(r => {
 				const timestamp = r?.timestamp;
 				const message = messageAttribute ? r[messageAttribute] : "";
 				const severity = severityAttribute ? r[severityAttribute] : "";
-
+				const showMore = r?.showMore ? true : false;
 				return (
-					<>
-						<RowContainer>
-							<TimestampData>
-								<LogSeverity style={{ backgroundColor: logSeverityToColor[severity] }} />
-								<Timestamp time={timestamp} expandedTime={true} />
-							</TimestampData>
-							<MessageData>{message}</MessageData>
-						</RowContainer>
-					</>
+					<APMLogRow
+						timestamp={timestamp}
+						message={message}
+						severity={severity}
+						showMore={showMore}
+					/>
 				);
 			});
 		} else return;
@@ -609,8 +571,7 @@ export const APMLogSearchPanel = (props: {
 
 					{!logError && !isLoading && results && totalItems > 0 && fieldDefinitions && (
 						<>
-							<>{ListHeader()}</>
-
+							{ListHeader()}
 							<TableWindow
 								itemData={formatRowResults()}
 								itemCount={results.length}
