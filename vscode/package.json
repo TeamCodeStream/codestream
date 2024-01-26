@@ -263,6 +263,15 @@
 				"key": "ctrl+shift+/ ctrl+shift+i",
 				"mac": "ctrl+/ ctrl+i",
 				"when": "codestream:status == signedIn"
+			},
+			{
+				"command": "codestream.executeNrql",
+				"args": {
+					"source": "Shortcut"
+				},
+				"key": "ctrl+enter",
+				"mac": "cmd+enter",
+				"when": "codestream:status == signedIn && resourceExtname == .nrql"
 			}
 		],
 		"menus": {
