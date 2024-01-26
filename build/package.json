@@ -1,5 +1,6 @@
 {
   "name": "codestream-ci-builds",
+  "type": "module",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -14,6 +15,7 @@
   "dependencies": {
     "adm-zip": "^0.5.10",
     "cpy": "^11.0.0",
+    "node-scp": "^0.0.23",
     "tsx": "^4.7.0"
   },
   "devDependencies": {

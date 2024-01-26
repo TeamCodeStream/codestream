@@ -3,7 +3,7 @@ import * as versioning from "../lib/Versioning.ts";
 import * as teamCity from "../lib/TeamCity.ts";
 import fs from "fs";
 
-export default function (vsRootPath: string) {
+export default async function (vsRootPath: string) {
   const remoteLicenseFile =
     "/home/web/.codestream/licenses/teamdev.DotNetBrowser.licenses.txt";
   const localReleaseLicenseFile = `${vsRootPath}/licenses/Release/teamdev.licenses`;

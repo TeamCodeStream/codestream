@@ -54,31 +54,55 @@ export default function (vsRootPath: string) {
     );
   }
 
-  fs.copyFileSync(`${vsRootPath}\\src\\CodeStream.VisualStudio.Vsix.x86\\bin\\x86\\Debug\\codestream-vs.vsix`, `${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\codestream-vs.zip`);
+  fs.copyFileSync(
+    `${vsRootPath}\\src\\CodeStream.VisualStudio.Vsix.x86\\bin\\x86\\Debug\\codestream-vs.vsix`,
+    `${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\codestream-vs.zip`,
+  );
 
-  var zip = new AdmZip(`${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\codestream-vs.zip`);
-  zip.extractAllTo(`${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\.codestream-out\\`, true);
- 
+  var zip = new AdmZip(
+    `${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\codestream-vs.zip`,
+  );
+  zip.extractAllTo(
+    `${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\.codestream-out\\`,
+    true,
+  );
+
   (async () => {
-    await cpy(`${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\.codestream-out\\CodeStream.VisualStudio.*.pdb`, `${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\`);
-  })(); 
+    await cpy(
+      `${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\.codestream-out\\CodeStream.VisualStudio.*.pdb`,
+      `${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\`,
+    );
+  })();
 
-  fs.rmdirSync(`${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\.codestream-out`, { recursive: true });
-  fs.rmSync(`${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\codestream-vs.zip`);
+  fs.rmdirSync(
+    `${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\.codestream-out`,
+    { recursive: true },
+  );
+  fs.rmSync(
+    `${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\codestream-vs.zip`,
+  );
 
-  execSync(`dotnet tool restore --ignore-failed-sources`, { cwd: `${vsRootPath}\\src` });
-  execSync(`dotnet coverlet "CodeStream.VisualStudio.UnitTests.dll" --target "${xunit}" --targetargs "CodeStream.VisualStudio.UnitTests.dll" --exclude-by-file "**/Annotations/Annotations.cs" --format cobertura`, { cwd: `${vsRootPath}\\src` });
-  execSync(`dotnet reportgenerator "-reports:coverage.cobertura.xml" "-targetdir:coveragereport" "-reporttypes:Html;TeamCitySummary"`, { cwd: `${vsRootPath}\\src` });
+  execSync(`dotnet tool restore --ignore-failed-sources`, {
+    cwd: `${vsRootPath}\\src`,
+  });
+  execSync(
+    `dotnet coverlet "CodeStream.VisualStudio.UnitTests.dll" --target "${xunit}" --targetargs "CodeStream.VisualStudio.UnitTests.dll" --exclude-by-file "**/Annotations/Annotations.cs" --format cobertura`,
+    { cwd: `${vsRootPath}\\src` },
+  );
+  execSync(
+    `dotnet reportgenerator "-reports:coverage.cobertura.xml" "-targetdir:coveragereport" "-reporttypes:Html;TeamCitySummary"`,
+    { cwd: `${vsRootPath}\\src` },
+  );
 
   const x86OutputPath = `${vsRootPath}\\artifacts\\x86`;
   const x64OutputPath = `${vsRootPath}\\artifacts\\x64`;
 
-  if(!fs.existsSync(x86OutputPath)){
-  	fs.mkdirSync(x86OutputPath, { recursive: true});
+  if (!fs.existsSync(x86OutputPath)) {
+    fs.mkdirSync(x86OutputPath, { recursive: true });
   }
 
-  if(!fs.existsSync(x64OutputPath)){
-  	fs.mkdirSync(x64OutputPath, { recursive: true});
+  if (!fs.existsSync(x64OutputPath)) {
+    fs.mkdirSync(x64OutputPath, { recursive: true });
   }
 
   try {
@@ -92,7 +116,7 @@ export default function (vsRootPath: string) {
         "/verbosity:quiet",
         "/p:Platform=x86",
         "/p:DeployExtension=False",
-        `/p:OutputPath=${x86OutputPath}`
+        `/p:OutputPath=${x86OutputPath}`,
       ],
       { stdio: "inherit" },
     );
@@ -111,7 +135,7 @@ export default function (vsRootPath: string) {
         "/verbosity:quiet",
         "/p:Platform=x64",
         "/p:DeployExtension=False",
-        `/p:OutputPath=${x64OutputPath}`
+        `/p:OutputPath=${x64OutputPath}`,
       ],
       { stdio: "inherit" },
     );
