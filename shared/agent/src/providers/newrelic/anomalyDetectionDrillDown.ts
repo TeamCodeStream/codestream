@@ -27,7 +27,7 @@ export class AnomalyDetectorDrillDown {
 		private _request: GetObservabilityAnomaliesRequest,
 		private deploymentsProvider: DeploymentsProvider,
 		private graphqlClient: NewRelicGraphqlClient,
-		private reposProvider: ReposProvider,
+		private reposProvider: ReposProvider
 	) {
 		const sinceDaysAgo = parseInt(_request.sinceDaysAgo as any);
 		const baselineDays = parseInt(_request.baselineDays as any);
@@ -146,15 +146,19 @@ export class AnomalyDetectorDrillDown {
 			const errorRateMetrics = children.filter(_ => _.type === "duration");
 
 			const event = {
-				"Entity GUID": this._request.entityGuid,
-				Language: languageSupport.language,
-				"Anomalous Duration Transactions": durationAnomalies.length,
-				"Anomalous Error Transactions": errorRateAnomalies.length,
-				"Anomalous Duration Metrics": durationMetrics.length,
-				"Anomalous Error Metrics": errorRateMetrics.length,
+				entity_guid: this._request.entityGuid || "",
+				account_id: this._accountId || "",
+				target: "anomaly",
+				meta_data: `language: ${languageSupport.language ?? "<unknown>"}`,
+
+				meta_data_2: `anomalous_duration_transactions: ${durationAnomalies.length || 0}`,
+				meta_data_3: `anomalous_error_transactions: ${errorRateAnomalies.length || 0}`,
+				meta_data_4: `anomalous_duration_metrics: ${durationMetrics.length || 0}`,
+				meta_data_5: `anomalous_error_metrics: ${errorRateMetrics.length || 0}`,
+				event_type: "state_load",
 			};
 			telemetry?.track({
-				eventName: "CLM Anomalies Calculated",
+				eventName: "codestream/anomalies calculated",
 				properties: event,
 			});
 		} catch (e) {
