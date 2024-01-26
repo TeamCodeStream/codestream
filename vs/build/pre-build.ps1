@@ -22,9 +22,11 @@ Write-Host ""
 
 $cred = new-object -typename System.Management.Automation.PSCredential $username, (new-object System.Security.SecureString)
 
+Get-SSHTrustedHost | Remove-SSHTrustedHost
+
 # Get the teamdev license
-Get-SCPFile -ComputerName $computer -LocalFile $localReleaseLicenseFile -RemoteFile $remoteLicenseFile -KeyFile $keyfile -Credential $cred -AcceptKey
-Get-SCPFile -ComputerName $computer -LocalFile $localDebugLicenseFile -RemoteFile $remoteLicenseFile -KeyFile $keyfile -Credential $cred -AcceptKey
+Get-SCPFile -ComputerName $computer -LocalFile $localReleaseLicenseFile -RemoteFile $remoteLicenseFile -KeyFile $keyfile -Credential $cred -AcceptKey -force
+Get-SCPFile -ComputerName $computer -LocalFile $localDebugLicenseFile -RemoteFile $remoteLicenseFile -KeyFile $keyfile -Credential $cred -AcceptKey -force
 
 if (!(Test-Path -Path $localReleaseLicenseFile)) {
     Write-Host "localReleaseLicenseFile not found ($localReleaseLicenseFile)"
