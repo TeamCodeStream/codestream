@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import Timestamp from "../Timestamp";
+import Icon from "@codestream/webview/Stream/Icon";
+import { isEmpty as _isEmpty } from "lodash-es";
 
 const LogSeverity = styled.span`
 	border-radius: 1px;
@@ -28,7 +30,7 @@ const TimestampData = styled.div`
 `;
 
 const MessageData = styled.div`
-	width: 79%;
+	width: 80%;
 	font-family: "Menlo", "Consolas", monospace;
 `;
 
@@ -47,7 +49,12 @@ export const APMLogRow = (props: {
 	severity: string;
 	message: string;
 	showMore?: boolean;
+	updateData: Function;
+	index: number;
+	expandedContent: any;
 }) => {
+	const [isExpanded, setIsExpanded] = useState(false);
+
 	if (props.showMore) {
 		return (
 			<ShowMoreContainer>
@@ -62,14 +69,46 @@ export const APMLogRow = (props: {
 		);
 	}
 
+	const handleClickExpand = () => {
+		let updatedJsx;
+		if (_isEmpty(props.expandedContent)) {
+			updatedJsx = (
+				<div>
+					hello world expanded <br />
+					hello world expanded <br />
+					hello world expanded <br />
+					hello world expanded <br />
+					hello world expanded <br />
+					hello world expanded <br />
+					hello world expanded <br />
+					hello world expanded <br />
+					hello world expanded <br />
+					hello world expanded <br />
+					hello world expanded <br />
+					hello world expanded <br />
+				</div>
+			);
+		} else {
+			updatedJsx = undefined;
+		}
+
+		props.updateData(props.index, updatedJsx);
+	};
+
 	return (
 		<>
 			<RowContainer>
 				<TimestampData>
+					<Icon
+						onClick={handleClickExpand}
+						name={props.expandedContent ? "chevron-down-thin" : "chevron-right-thin"}
+						style={{ cursor: "pointer", marginRight: "2px" }}
+					/>
 					<LogSeverity style={{ backgroundColor: logSeverityToColor[props.severity] }} />
 					<Timestamp time={props.timestamp} expandedTime={true} />
 				</TimestampData>
-				<MessageData>{props.message}</MessageData>
+				{!props.expandedContent && <MessageData>{props.message}</MessageData>}
+				{props.expandedContent && <MessageData>{props.expandedContent}</MessageData>}
 			</RowContainer>
 		</>
 	);

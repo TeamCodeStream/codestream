@@ -436,23 +436,34 @@ export const APMLogSearchPanel = (props: {
 		);
 	};
 
+	const updateResults = (index, updatedJsx) => {
+		const newResults = [...results];
+		newResults[index] = { ...newResults[index], expandedContent: updatedJsx };
+		setResults(newResults);
+	};
+
 	const formatRowResults = () => {
 		if (results) {
 			let _results: LogResult[] = results;
 			if (_results[_results.length - 1]?.showMore !== "true") {
 				_results.push({ showMore: "true" });
 			}
-			return _results.map(r => {
+			return _results.map((r, index) => {
 				const timestamp = r?.timestamp;
 				const message = messageAttribute ? r[messageAttribute] : "";
 				const severity = severityAttribute ? r[severityAttribute] : "";
 				const showMore = r?.showMore ? true : false;
+				const expandedContent = r?.expandedContent ?? undefined;
+
 				return (
 					<APMLogRow
+						index={index}
 						timestamp={timestamp}
 						message={message}
 						severity={severity}
 						showMore={showMore}
+						updateData={updateResults}
+						expandedContent={expandedContent}
 					/>
 				);
 			});
