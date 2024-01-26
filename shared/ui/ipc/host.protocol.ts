@@ -304,9 +304,18 @@ export enum ViewColumn {
 export interface OpenEditorViewNotification {
 	panel: "logs" | "nrql";
 	title: string;
+	accountId?: number;
 
 	entityAccounts: EntityAccount[];
-	entryPoint: "global_nav" | "context_menu" | "tree_view" | "codelens";
+	entryPoint:
+		| "global_nav"
+		| "context_menu"
+		| "tree_view"
+		| "codelens"
+		// nrql
+		| "query_builder"
+		| "recent_queries"
+		| "nrql_file";
 
 	panelLocation?: ViewColumn;
 	entityGuid?: string;

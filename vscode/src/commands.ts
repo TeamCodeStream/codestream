@@ -648,7 +648,7 @@ export class Commands implements Disposable {
 		} else {
 			await Container.sidebar.executeNrql({
 				query: nrqlQuery,
-				entryPoint: "codelens" /* hash: md5(fileUri.toString())*/
+				entryPoint: "nrql_file" /* hash: md5(fileUri.toString())*/
 			});
 		}
 	}

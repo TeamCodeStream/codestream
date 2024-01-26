@@ -22,14 +22,7 @@ export function App() {
 						entryPoint={codestreamProps.entryPoint}
 					></APMLogSearchPanel>
 				)}
-				{codestreamProps.panel === "nrql" && (
-					<NRQLPanel
-						entityAccounts={codestreamProps.entityAccounts}
-						entityGuid={codestreamProps.entityGuid}
-						suppliedQuery={codestreamProps.query}
-						entryPoint={codestreamProps.entryPoint}
-					></NRQLPanel>
-				)}
+				{codestreamProps.panel === "nrql" && <NRQLPanel {...codestreamProps}></NRQLPanel>}
 			</div>
 		</ThemeProvider>
 	);

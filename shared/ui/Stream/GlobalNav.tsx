@@ -22,6 +22,7 @@ import Icon from "./Icon";
 import { Link } from "./Link";
 import { PlusMenu } from "./PlusMenu";
 import Tooltip, { placeArrowTopRight, TipTitle } from "./Tooltip";
+import { parseId } from "../utilities/newRelic";
 
 const sum = (total, num) => total + Math.round(num);
 
@@ -104,6 +105,7 @@ export function GlobalNav() {
 			panel: "nrql",
 			title: "NRQL",
 			entryPoint: "global_nav",
+			accountId: parseId(derivedState.currentEntityGuid || "")?.accountId,
 			entityGuid: derivedState.currentEntityGuid!,
 			entityAccounts: derivedState.entityAccounts,
 		});

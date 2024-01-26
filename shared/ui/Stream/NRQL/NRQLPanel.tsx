@@ -1,21 +1,25 @@
 import React, { useState } from "react";
-import styled from "styled-components";
-import Button from "../Button";
-import { HostApi } from "../../webview-api";
+import { components, OptionProps } from "react-select";
+
 import {
 	EntityAccount,
+	GetAllAccountsRequestType,
 	GetNRQLRequestType,
-	NRQLResult,
 	isNRErrorResponse,
+	NRQLResult,
 } from "@codestream/protocols/agent";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
-import { NRQLResultsTable } from "./NRQLResultsTable";
+import { AsyncPaginate } from "react-select-async-paginate";
+import styled from "styled-components";
+import { HostApi } from "../../webview-api";
+import Button from "../Button";
+import Icon from "../Icon";
+import { NRQLEditor } from "./NRQLEditor";
+import { NRQLResultsBar } from "./NRQLResultsBar";
 import { NRQLResultsBillboard } from "./NRQLResultsBillboard";
 import { NRQLResultsJSON } from "./NRQLResultsJSON";
 import { NRQLResultsLine } from "./NRQLResultsLine";
-import { NRQLResultsBar } from "./NRQLResultsBar";
-import { NRQLEditor } from "./NRQLEditor";
-import Icon from "../Icon";
+import { NRQLResultsTable } from "./NRQLResultsTable";
 
 const LayoutWrapper = styled.div`
 	display: flex;
@@ -62,14 +66,34 @@ const ResultsRow = styled.div`
 	width: 100%;
 `;
 
+const OptionName = styled.div`
+	color: var(--text-color);
+	white-space: nowrap;
+	overflow: hidden;
+`;
+
+const Option = (props: OptionProps) => {
+	const children = (
+		<>
+			<OptionName>{props.data?.label}</OptionName>
+		</>
+	);
+	return <components.Option {...props} children={children} />;
+};
+
 export const NRQLPanel = (props: {
+	accountId?: number;
 	entityAccounts: EntityAccount[];
 	entryPoint: string;
 	entityGuid?: string;
-	suppliedQuery?: string;
+	query?: string;
 }) => {
-	const [query, setQuery] = useState<string>("");
+	const [userQuery, setUserQuery] = useState<string>("");
 	const [results, setResults] = useState<NRQLResult[]>([]);
+	const [selectedAccount, setSelectedAccount] = useState<
+		{ label: string; value: number } | undefined
+	>(undefined);
+	const [accounts, setAccounts] = useState<{ name: string; id: number }[] | undefined>(undefined);
 	const [resultsTypeGuess, setResultsTypeGuess] = useState<string>("table");
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [totalItems, setTotalItems] = useState<number>(0);
@@ -80,24 +104,39 @@ export const NRQLPanel = (props: {
 		console.error(message);
 	};
 
+	let accountsPromise;
 	useDidMount(() => {
-		if (props.suppliedQuery) {
-			setQuery(props.suppliedQuery);
-			executeNRQL(props.entityGuid!, props.suppliedQuery);
-		}
+		HostApi.instance.track("codestream/nrql/webview opened", {
+			event_type: "click",
+			meta_data: `entry_point: ${props.entryPoint}`,
+		});
+
+		accountsPromise = HostApi.instance.send(GetAllAccountsRequestType, {}).then(result => {
+			setAccounts(result.accounts);
+			if (props.accountId) {
+				const foundAccount = result.accounts.find(_ => _.id === props.accountId);
+				if (foundAccount) {
+					setSelectedAccount({
+						value: foundAccount.id,
+						label: foundAccount.name,
+					});
+				}
+			}
+
+			if (props.query) {
+				setUserQuery(props.query);
+				executeNRQL(props.accountId, props.entityGuid!, props.query);
+			}
+		});
 	});
 
-	const checkKeyPress = e => {
-		if (e.key === "Enter" || e.which === 13 || e.keyCode === 13) {
-			if (e.metaKey || e.ctrlKey) {
-				executeNRQL(props.entityGuid!);
-			}
-		}
-	};
-
-	const executeNRQL = async (entityGuid: string, suppliedQuery?: string) => {
+	const executeNRQL = async (
+		accountId: number | undefined,
+		entityGuid: string,
+		suppliedQuery?: string
+	) => {
 		try {
-			const nrqlQuery = suppliedQuery || query;
+			const nrqlQuery = suppliedQuery || userQuery;
 
 			if (!nrqlQuery) {
 				handleError("Please provide a query to execute");
@@ -110,6 +149,7 @@ export const NRQLPanel = (props: {
 			setTotalItems(0);
 
 			const response = await HostApi.instance.send(GetNRQLRequestType, {
+				accountId,
 				query: nrqlQuery.replace(/[\n\r]/g, " "),
 				entityGuid,
 			});
@@ -127,6 +167,13 @@ export const NRQLPanel = (props: {
 			}
 
 			if (response.results && response.results.length > 0) {
+				HostApi.instance.track("codestream/nrql/query submitted", {
+					account_id: response.accountId,
+					event_type: "response",
+					meta_data: `default_visualization: ${response.resultsTypeGuess}`,
+					meta_data_2: `query_source: ${props.entryPoint}`,
+				});
+
 				setResults(response.results);
 				setTotalItems(response.results.length);
 				setResultsTypeGuess(response.resultsTypeGuess);
@@ -153,15 +200,50 @@ export const NRQLPanel = (props: {
 			</HeaderRow>
 			<QueryWrapper>
 				<div className="search-input" style={{ width: "100%" }}>
+					<AsyncPaginate
+						id="input-account-autocomplete"
+						name="account-autocomplete"
+						classNamePrefix="react-select"
+						loadOptions={async (
+							search: string,
+							_loadedOptions,
+							additional?: { nextCursor?: string }
+						) => {
+							await accountsPromise;
+
+							return {
+								options: accounts!
+									.filter(_ =>
+										search ? _.name.toLowerCase().indexOf(search.toLowerCase()) > -1 : true
+									)
+									.map(e => {
+										return {
+											label: `Account: ${e.id} - ${e.name}`,
+											value: e.id,
+										};
+									}),
+								hasMore: false,
+							};
+						}}
+						value={selectedAccount}
+						debounceTimeout={750}
+						placeholder={`Type to search for accounts...`}
+						onChange={newValue => {
+							setSelectedAccount(newValue);
+						}}
+						components={{ Option }}
+						tabIndex={1}
+						autoFocus
+					/>
 					<NRQLEditor
 						className="input-text control"
-						defaultQuery={props.suppliedQuery}
+						defaultQuery={props.query}
 						onChange={e => {
-							setQuery(e.value || "");
+							setUserQuery(e.value || "");
 						}}
 						onSubmit={e => {
-							setQuery(e.value!);
-							executeNRQL(props.entityGuid!, e.value!);
+							setUserQuery(e.value!);
+							executeNRQL(selectedAccount?.value, props.entityGuid!, e.value!);
 						}}
 					/>
 				</div>
@@ -175,7 +257,7 @@ export const NRQLPanel = (props: {
 					{/* <Button>Clear</Button> */}
 					<Button
 						style={{ padding: "0 10px" }}
-						onClick={() => executeNRQL(props.entityGuid!)}
+						onClick={() => executeNRQL(selectedAccount?.value, props.entityGuid!)}
 						loading={isLoading}
 					>
 						Run

@@ -134,6 +134,7 @@ import { confirmPopup } from "./Stream/Confirm";
 import translations from "./translations/en";
 import { parseProtocol } from "./utilities/urls";
 import { HostApi } from "./webview-api";
+import { parseId } from "./utilities/newRelic";
 
 // import translationsEs from "./translations/es";
 
@@ -1018,6 +1019,7 @@ function listenForEvents(store) {
 
 		const props: OpenEditorViewNotification = {
 			panelLocation: ViewColumn.Beside,
+			accountId: parseId(currentEntityGuid || "")?.accountId,
 			entityGuid: currentEntityGuid!,
 			entityAccounts: context.entityAccounts,
 			panel: "nrql",

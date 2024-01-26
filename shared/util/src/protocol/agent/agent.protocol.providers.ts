@@ -1596,6 +1596,25 @@ export const GetAllEntitiesRequestType = new RequestType<
 	void
 >("codestream/newrelic/entities/all");
 
+export interface Account {
+	id: number;
+	name: string;
+}
+
+export interface GetAllAccountsRequest {
+	force?: boolean;
+}
+export interface GetAllAccountsResponse {
+	accounts: Account[];
+}
+
+export const GetAllAccountsRequestType = new RequestType<
+	GetAllAccountsRequest,
+	GetAllAccountsResponse,
+	void,
+	void
+>("codestream/newrelic/accounts/all");
+
 export interface GetObservabilityErrorAssignmentsRequest {}
 
 export interface GetObservabilityErrorAssignmentsResponse {

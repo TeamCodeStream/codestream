@@ -220,7 +220,7 @@ export interface InitiateNrqlExecutionNotification {
 	/** Used for internally keying mechanisms */
 	hash?: string;
 
-	entryPoint: "global_nav" | "context_menu" | "tree_view" | "codelens";
+	entryPoint: "global_nav" | "context_menu" | "tree_view" | "nrql_file";
 }
 
 export const InitiateNrqlExecutionNotificationType = new NotificationType<

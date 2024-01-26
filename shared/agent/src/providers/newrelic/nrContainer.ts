@@ -29,6 +29,7 @@ import { NrLogsProvider } from "./logs/nrLogsProvider";
 import { NrNRQLProvider } from "./nrql/nrqlProvider";
 import { NewRelicVulnerabilitiesProvider } from "./vuln/nrVulnerability";
 import { NrqlCompletionProvider } from "./nrql/nrqlCompletionProvider";
+import { AccountProvider } from "./account/accountProvider";
 
 let nrDirectives: NrDirectives | undefined;
 let disposables: Disposable[] = [];
@@ -122,6 +123,8 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 	const entityProvider = new EntityProvider(newRelicGraphqlClient);
 
 	disposables.push(entityProvider);
+
+	disposables.push(new AccountProvider(newRelicGraphqlClient));
 
 	const goldenSignalsProvider = new GoldenSignalsProvider(
 		newRelicGraphqlClient,
