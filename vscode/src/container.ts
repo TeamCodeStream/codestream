@@ -22,6 +22,7 @@ import { CodemarkDecorationProvider } from "./providers/markerDecorationProvider
 import { CodemarkPatchContentProvider } from "./providers/patchContentProvider";
 import { SetServerUrlRequestType } from "@codestream/protocols/agent";
 import { EditorController } from "controllers/editorController";
+import { NrqlCodeLensController } from "controllers/nrqlCodeLensController";
 // import { WebviewSidebarActivator } from "./views/webviewSidebarActivator";
 
 export class Container {
@@ -59,6 +60,8 @@ export class Container {
 		context.subscriptions.push(
 			(this._instrumentableCodeLensController = new InstrumentableCodeLensController())
 		);
+		context.subscriptions.push((this._nrqlCodeLensController = new NrqlCodeLensController()));
+		this._nrqlCodeLensController.create();
 		context.subscriptions.push(new CodemarkPatchContentProvider());
 		context.subscriptions.push((this._statusBar = new StatusBarController()));
 
@@ -176,6 +179,10 @@ export class Container {
 	private static _instrumentableCodeLensController: InstrumentableCodeLensController;
 	static get instrumentableCodeLensController() {
 		return this._instrumentableCodeLensController;
+	}
+	private static _nrqlCodeLensController: NrqlCodeLensController;
+	static get nrqlCodeLensController() {
+		return this._nrqlCodeLensController;
 	}
 
 	private static _notifications: NotificationsController;

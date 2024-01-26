@@ -625,7 +625,7 @@ export class Commands implements Disposable {
 	}
 
 	@command("executeNrql")
-	async executeNrql(fileUri: Uri, lineNumber?: number): Promise<void> {
+	async executeNrql(fileUri: Uri, text: string, lineNumber?: number): Promise<void> {
 		// fileUri is passed in by both CodeLens provider and the command provider
 		// lineNumber is only passed by the CodeLens provider, which we do need.
 
@@ -633,12 +633,15 @@ export class Commands implements Disposable {
 		const editor = window.activeTextEditor;
 		if (editor === undefined) return;
 
-		if (!lineNumber) {
-			nrqlQuery = editor.document.getText(editor.selection);
+		if (text) {
+			nrqlQuery = text;
 		} else {
-			nrqlQuery = editor.document.lineAt(lineNumber).text;
+			if (!lineNumber) {
+				nrqlQuery = editor.document.getText(editor.selection);
+			} else {
+				nrqlQuery = editor.document.lineAt(lineNumber).text;
+			}
 		}
-
 		if (!nrqlQuery) {
 			// notification of some sort that we couldn't find anything to search on?
 			await window.showErrorMessage("Please select a NRQL query to execute", "Dismiss");

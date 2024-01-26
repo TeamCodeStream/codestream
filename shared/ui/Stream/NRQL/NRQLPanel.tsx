@@ -110,7 +110,7 @@ export const NRQLPanel = (props: {
 			setTotalItems(0);
 
 			const response = await HostApi.instance.send(GetNRQLRequestType, {
-				query: nrqlQuery,
+				query: nrqlQuery.replace(/[\n\r]/g, " "),
 				entityGuid,
 			});
 
