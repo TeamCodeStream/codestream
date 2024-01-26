@@ -11,7 +11,7 @@ export function createDiffFromSnippets(currentCode: string, codeFix: string): st
 	if (!codeFix.endsWith("\n")) codeFix += "\n";
 
 	const sp = createPatch("filename.java", currentCode, codeFix, undefined, undefined, {
-		ignoreWhitespace: false,
+		ignoreWhitespace: true,
 	});
 	// Detect if patch uses windows or linux line endings
 	const lineEnding = sp.split("\n")[1].includes("\\r\\n") ? "\r\n" : "\n";

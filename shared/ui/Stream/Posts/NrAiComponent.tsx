@@ -19,10 +19,10 @@ import { NrAiCodeBlockLoading, NrAiLoading } from "./NrAiLoading";
 - [X] don't call copySymbol if there is already a nrai response (actually needed currently)
 - [X] move feedback component to this file
 - [ ] move everything to this file?
-- [ ] choose between codeBlock and functionToEdit selector
+- [X] choose between codeBlock and functionToEdit selector
 - [ ] store when fix is applied
-- [ ] progress indicator when diff is loading (even on non-streaming posts)
-- [ ] restore and expand tests
+- [X] progress indicator when diff is loading (even on non-streaming posts)
+- [-] restore and expand tests
 */
 
 export const DiffSection = styled.div`

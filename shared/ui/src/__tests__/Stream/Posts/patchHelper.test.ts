@@ -1,63 +1,37 @@
-// import { describe, it, expect } from "@jest/globals";
-// import { createDiffFromSnippets } from "@codestream/webview/Stream/Posts/patchHelper";
+import { describe, it, expect } from "@jest/globals";
+import { createDiffFromSnippets } from "@codestream/webview/Stream/Posts/patchHelper";
 
-// describe("patchHelper reconstitutePatch", () => {
-// 	it("should replace start line in unified diff header and strip out markdown", () => {
-// 		const codeFix = `\`\`\`diff
-// @@ -1,9 +1,11 @@
-//  @GetMapping({"/vets"})
-//  public @ResponseBody Vets showResourcesVetList() {
-//      Vets vets = new Vets();
-//      Collection<Vet> vetList = this.vetRepository.findAll();
-//      for (Vet vet : vetList) {
-// -        String speciality = vet.getSpecialties().get(0).getName();
-// -        logger.info("Vet {} has speciality {}", vet.getFirstName(), speciality);
-// +        if (!vet.getSpecialties().isEmpty()) {
-// +            String speciality = vet.getSpecialties().get(0).getName();
-// +            logger.info("Vet {} has speciality {}", vet.getFirstName(), speciality);
-// +        }
-//      }
-//      vets.getVetList().addAll(vetList);
-//      return vets;
-//  }
-// \`\`\`
-// `;
-// 		const startLineNo = 5;
-// 		const result = reconstitutePatch(codeFix, startLineNo);
-// 		const header = result?.split("\n")[0];
-// 		expect(header).toEqual("@@ -5,9 +5,11 @@");
-// 		expect(result).not.toContain("```");
-// 		expect(result).not.toContain("diff");
-// 		expect(result?.endsWith("}\n")).toBe(true);
-// 	});
+describe("patchHelper createDiffFromSnippets", () => {
+	it("should return a diff when currentCode has tabs and codeFix has spaces", () => {
+		const currentCode =
+			'public static void main(String[] args) {\n\tSystem.out.println("Hello World!");\n\tif (isCar == true) {\n\t\tSystem.out.println("Is Car!");\n\t}\n}';
+		const codeFix =
+			'public static void main(String[] args) {\n    System.out.println("Goodbye World!");\n    if (isCar == true) {\n        System.out.println("Is Car!");\n    }\n}';
+		const diff = createDiffFromSnippets(currentCode, codeFix);
+		const expected =
+			'@@ -1,6 +1,6 @@\n public static void main(String[] args) {\n-    System.out.println("Hello World!");\n+    System.out.println("Goodbye World!");\n     if (isCar == true) {\n         System.out.println("Is Car!");\n     }\n }\n';
+		expect(diff).toBe(expected);
+	});
 
-// 	it("should strip out markdown with extra whitespace", () => {
-// 		const codeFix = `\`\`\`diff
-// @@ -1,9 +1,11 @@
-//  @GetMapping({"/vets"})
-//  public @ResponseBody Vets showResourcesVetList() {
-//      Vets vets = new Vets();
-//      Collection<Vet> vetList = this.vetRepository.findAll();
-//      for (Vet vet : vetList) {
-// -        String speciality = vet.getSpecialties().get(0).getName();
-// -        logger.info("Vet {} has speciality {}", vet.getFirstName(), speciality);
-// +        if (!vet.getSpecialties().isEmpty()) {
-// +            String speciality = vet.getSpecialties().get(0).getName();
-// +            logger.info("Vet {} has speciality {}", vet.getFirstName(), speciality);
-// +        }
-//      }
-//      vets.getVetList().addAll(vetList);
-//      return vets;
-//  }
-// \`\`\`
+	it("should return a diff when currentCode has 4 spaces and codeFix has 4 spaces", () => {
+		const currentCode =
+			'public static void main(String[] args) {\n    System.out.println("Hello World!");\n}';
+		const codeFix =
+			'public static void main(String[] args) {\n    System.out.println("Goodbye World!");\n}';
+		const diff = createDiffFromSnippets(currentCode, codeFix);
+		const expected =
+			'@@ -1,3 +1,3 @@\n public static void main(String[] args) {\n-    System.out.println("Hello World!");\n+    System.out.println("Goodbye World!");\n }\n';
+		expect(diff).toBe(expected);
+	});
 
-// `;
-// 		const startLineNo = 5;
-// 		const result = reconstitutePatch(codeFix, startLineNo);
-// 		const header = result?.split("\n")[0];
-// 		expect(header).toEqual("@@ -5,9 +5,11 @@");
-// 		expect(result).not.toContain("```");
-// 		expect(result).not.toContain("diff");
-// 		expect(result?.endsWith("}\n")).toBe(true);
-// 	});
-// });
+	it("should return a diff when currentCode has 2 spaces and codeFix has 4 spaces", () => {
+		const currentCode =
+			'public static void main(String[] args) {\n  System.out.println("Hello World!");\n}';
+		const codeFix =
+			'public static void main(String[] args) {\n    System.out.println("Goodbye World!");\n}';
+		const diff = createDiffFromSnippets(currentCode, codeFix);
+		const expected =
+			'@@ -1,3 +1,3 @@\n public static void main(String[] args) {\n-  System.out.println("Hello World!");\n+    System.out.println("Goodbye World!");\n }\n';
+		expect(diff).toBe(expected);
+	});
+});
