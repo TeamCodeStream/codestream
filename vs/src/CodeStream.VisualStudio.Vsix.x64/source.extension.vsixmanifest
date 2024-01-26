@@ -1,38 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
-  <Metadata>
-    <Identity Id="codestream-vs-22" Version="15.1.2.0" Language="en-US" Publisher="New Relic" />
-    <!-- DisplayName maxLength=50 -->
-    <DisplayName>New Relic CodeStream 2022</DisplayName>
-    <Description xml:space="preserve">Bring production telemetry into your IDE to quickly identify and resolve performance issues.</Description>
-    <MoreInfo>https://newrelic.com/codestream</MoreInfo>
-    <ReleaseNotes>https://github.com/TeamCodeStream/codestream/blob/master/vs/CHANGELOG.md</ReleaseNotes>
-    <Icon>resources\assets\new-relic-logo.png</Icon>
-    <PreviewImage>resources\CodeStreamPackage.ico</PreviewImage>
-    <Tags>gitlab;collaboration;github;review;slack</Tags>
-  </Metadata>
-  <Installation Experimental="false" AllUsers="true">
-    <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.2.32505.173, 18.0)">
-      <ProductArchitecture>amd64</ProductArchitecture>
-    </InstallationTarget>
-    <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[17.2.32505.173, 18.0)">
-      <ProductArchitecture>amd64</ProductArchitecture>
-    </InstallationTarget>
-    <InstallationTarget Id="Microsoft.VisualStudio.Enterprise" Version="[17.2.32505.173, 18.0)">
-      <ProductArchitecture>amd64</ProductArchitecture>
-    </InstallationTarget>
-  </Installation>
-  <Dependencies>
-    <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.5,)" />
-    <Dependency Id="Microsoft.VisualStudio.MPF.15.0" DisplayName="Visual Studio MPF 15.0" d:Source="Installed" Version="[15.0]" />
-  </Dependencies>
-  <Prerequisites>
-    <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[17.0,18.0)" DisplayName="Visual Studio core editor" />
-  </Prerequisites>
-  <Assets>
-    <Asset Type="Microsoft.VisualStudio.MefComponent" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%|" />
-    <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="File" Path="CodeStream.VisualStudio.pkgdef" />
-    <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
-    <Asset Type="Microsoft.VisualStudio.CodeLensComponent" d:Source="Project" d:ProjectName="%CurrentProject%.CodeLens" Path="|CodeStream.VisualStudio.CodeLens|" />
-  </Assets>
+    <Metadata>
+        <Identity Id="codestream-vs-22" Version="15.1.2.0" Language="en-US" Publisher="New Relic" />
+        <!-- DisplayName maxLength=50 -->
+        <DisplayName>New Relic CodeStream 2022</DisplayName>
+        <Description xml:space="preserve">Bring production telemetry into your IDE to quickly identify and resolve performance issues.</Description>
+        <MoreInfo>https://newrelic.com/codestream</MoreInfo>
+        <ReleaseNotes>https://github.com/TeamCodeStream/codestream/blob/master/vs/CHANGELOG.md</ReleaseNotes>
+        <Icon>resources\assets\new-relic-logo.png</Icon>
+        <PreviewImage>resources\CodeStreamPackage.ico</PreviewImage>
+        <Tags>gitlab;collaboration;github;review;slack</Tags>
+    </Metadata>
+    <Installation Experimental="false" AllUsers="true">
+        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.2.32505.173, 18.0)">
+            <ProductArchitecture>amd64</ProductArchitecture>
+        </InstallationTarget>
+        <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[17.2.32505.173, 18.0)">
+            <ProductArchitecture>amd64</ProductArchitecture>
+        </InstallationTarget>
+        <InstallationTarget Id="Microsoft.VisualStudio.Enterprise" Version="[17.2.32505.173, 18.0)">
+            <ProductArchitecture>amd64</ProductArchitecture>
+        </InstallationTarget>
+    </Installation>
+    <Dependencies>
+        <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.5,)" />
+        <Dependency Id="Microsoft.VisualStudio.MPF.15.0" DisplayName="Visual Studio MPF 15.0" d:Source="Installed" Version="[15.0]" />
+    </Dependencies>
+    <Prerequisites>
+        <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[17.0,18.0)" DisplayName="Visual Studio core editor" />
+    </Prerequisites>
+    <Assets>
+        <Asset Type="Microsoft.VisualStudio.MefComponent" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%|" />
+        <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="File" Path="CodeStream.VisualStudio.pkgdef" />
+        <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
+    </Assets>
 </PackageManifest>
