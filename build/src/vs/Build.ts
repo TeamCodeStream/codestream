@@ -66,9 +66,9 @@ export default function (vsRootPath: string) {
   fs.rmdirSync(`${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\.codestream-out`, { recursive: true });
   fs.rmSync(`${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\codestream-vs.zip`);
 
-  execSync(`dotnet tool restore --ignore-failed-sources`, { cwd: vsRootPath });
-  execSync(`dotnet coverlet "CodeStream.VisualStudio.UnitTests.dll" --target "${xunit}" --targetargs "CodeStream.VisualStudio.UnitTests.dll" --exclude-by-file "**/Annotations/Annotations.cs" --format cobertura`, { cwd: vsRootPath });
-  execSync(`dotnet reportgenerator "-reports:coverage.cobertura.xml" "-targetdir:coveragereport" "-reporttypes:Html;TeamCitySummary"`, { cwd: vsRootPath });
+  execSync(`dotnet tool restore --ignore-failed-sources`, { cwd: `${vsRootPath}\\src` });
+  execSync(`dotnet coverlet "CodeStream.VisualStudio.UnitTests.dll" --target "${xunit}" --targetargs "CodeStream.VisualStudio.UnitTests.dll" --exclude-by-file "**/Annotations/Annotations.cs" --format cobertura`, { cwd: `${vsRootPath}\\src` });
+  execSync(`dotnet reportgenerator "-reports:coverage.cobertura.xml" "-targetdir:coveragereport" "-reporttypes:Html;TeamCitySummary"`, { cwd: `${vsRootPath}\\src` });
 
   const x86OutputPath = `${vsRootPath}\\artifacts\\x86`;
   const x64OutputPath = `${vsRootPath}\\artifacts\\x64`;
