@@ -29,6 +29,6 @@ const rootProductDirectory = path.resolve(
 
 switch (product) {
   case "vs":
-    await vs.default(rootProductDirectory);
+    vs.default(rootProductDirectory);
     break;
 }

@@ -33,7 +33,7 @@ export default function (vsRootPath: string) {
       `${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\.codestream-out`,
     )
   ) {
-    fs.rmdirSync(
+    fs.rmSync(
       `${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\.codestream-out`,
       {
         recursive: true,
@@ -74,7 +74,7 @@ export default function (vsRootPath: string) {
     );
   })();
 
-  fs.rmdirSync(
+  fs.rmSync(
     `${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x86\\Debug\\.codestream-out`,
     { recursive: true },
   );
