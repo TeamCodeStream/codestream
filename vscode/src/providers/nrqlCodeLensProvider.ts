@@ -34,8 +34,8 @@ export class NrqlCodeLensProvider implements CodeLensProvider {
 		let startIndex = 0;
 
 		function checkString(text: string) {
-			const startsWithRegex = /^(SELECT|FROM|SHOW)\b/gi;
-			const containsRegex = /^(?=.*(?:SELECT.*FROM|FROM.*SELECT|SHOW))/gis;
+			const startsWithRegex = /^(SELECT|FROM|SHOW|WITH)\b/gi;
+			const containsRegex = /^(?=.*(?:SELECT.*FROM|FROM.*SELECT|WITH.*SELECT|SHOW))/gis;
 
 			const startsWithMatch = startsWithRegex.test(text);
 			const containsMatch = containsRegex.test(text);
