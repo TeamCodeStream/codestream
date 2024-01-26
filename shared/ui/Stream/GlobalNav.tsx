@@ -59,6 +59,7 @@ export function GlobalNav() {
 			entityAccounts: state.context.entityAccounts || [],
 			eligibleJoinCompanies,
 			inviteCount,
+			isVsCode: state.ide.name === "VSC",
 			showNrqlBuilder: true, // TODO: NRQL BUILDER - isFeatureEnabled(state, "showNrqlBuilder"),
 			showLogSearch: true, // TODO: LOG SEARCH - isFeatureEnabled(state, "showLogSearch"),
 		};
@@ -209,7 +210,7 @@ export function GlobalNav() {
 						)}
 					</label>
 
-					{derivedState.showNrqlBuilder && (
+					{derivedState.showNrqlBuilder && derivedState.isVsCode && (
 						<label onClick={launchNrqlEditor} id="global-nav-query-label">
 							<span>
 								<Icon
@@ -223,7 +224,7 @@ export function GlobalNav() {
 						</label>
 					)}
 
-					{derivedState.showLogSearch && (
+					{derivedState.showLogSearch && derivedState.isVsCode && (
 						<label onClick={launchLogSearch} id="global-nav-logs-label">
 							<span>
 								<Icon
