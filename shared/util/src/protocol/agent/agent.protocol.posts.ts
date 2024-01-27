@@ -97,6 +97,7 @@ export interface CreatePostRequest {
 	reviewCheckpoint?: number;
 	files?: Attachment[];
 	codeBlock?: string;
+	language?: string;
 	analyze?: boolean;
 	reinitialize?: boolean;
 }

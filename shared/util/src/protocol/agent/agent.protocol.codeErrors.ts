@@ -48,6 +48,7 @@ export interface CreateShareableCodeErrorRequest {
 	addedUsers?: string[];
 	replyPost?: { text: string; mentionedUserIds?: string[] };
 	codeBlock?: string;
+	language?: string;
 	analyze: boolean;
 	reinitialize: boolean;
 	parentPostId?: string;

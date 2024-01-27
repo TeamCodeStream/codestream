@@ -65,6 +65,7 @@ export interface NewCodeErrorAttributes {
 	};
 	providerUrl?: string;
 	codeBlock?: string;
+	language?: string;
 	analyze: boolean;
 	reinitialize: boolean;
 	parentPostId?: string;

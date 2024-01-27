@@ -80,7 +80,7 @@ export function reduceCodeErrors(
 		}
 		case CodeErrorsActionsTypes.SetFunctionToEdit: {
 			if (action.payload) {
-				console.debug(`grokFunctionToEdit: ${JSON.stringify(action.payload).substring(0, 100)}`);
+				console.debug("nraiFunctionToEdit", action.payload);
 			}
 			return { ...state, functionToEdit: action.payload };
 		}

@@ -55,6 +55,7 @@ export async function copySymbol(
 		return {
 			success: true,
 			text: theText,
+			language: editor.document.languageId,
 			// just assigning the range direcly results in an array of Positions instead of a start / end Position - not sure why?????
 			range: {
 				start: {

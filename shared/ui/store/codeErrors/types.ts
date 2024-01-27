@@ -26,6 +26,7 @@ export type FunctionToEdit = {
 	uri: string;
 	codeBlockStartLine: number;
 	namespace?: string;
+	language?: string;
 };
 
 export type CodeErrorsState = {

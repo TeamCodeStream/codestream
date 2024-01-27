@@ -103,7 +103,7 @@ export interface CreateCodeErrorError {
 
 export const createCodeError =
 	(attributes: NewCodeErrorAttributes) => async (dispatch, getState: () => CodeStreamState) => {
-		// console.debug("===--- createCodeError ---===", attributes);
+		// console.debug("createCodeError", attributes);
 		try {
 			const response = await HostApi.instance.send(CreateShareableCodeErrorRequestType, {
 				attributes,
@@ -111,6 +111,7 @@ export const createCodeError =
 				addedUsers: attributes.addedUsers,
 				replyPost: attributes.replyPost,
 				codeBlock: attributes.codeBlock,
+				language: attributes.language,
 				analyze: attributes.analyze,
 				reinitialize: attributes.reinitialize,
 				parentPostId: attributes.parentPostId,
@@ -340,10 +341,11 @@ export const upgradePendingCodeError =
 		codeErrorId: string,
 		source: "Comment" | "Status Change" | "Assignee Change",
 		codeBlock?: string,
+		language?: string,
 		analyze = false
 	) =>
 	async (dispatch, getState: () => CodeStreamState) => {
-		// console.debug("===--- upgradePendingCodeError ===---", { codeErrorId: codeErrorId, source });
+		console.debug("upgradePendingCodeError", { codeErrorId, source, codeBlock, language });
 		try {
 			const state = getState();
 			const existingCodeError = getCodeError(state.codeErrors, codeErrorId);
@@ -365,6 +367,7 @@ export const upgradePendingCodeError =
 					stackTraces,
 					objectInfo,
 					codeBlock,
+					language,
 					analyze,
 					reinitialize: !isPending && analyze,
 					parentPostId: postId,
@@ -570,6 +573,7 @@ export const copySymbolFromIde =
 					uri: lookupPath,
 					codeBlockStartLine: symbolDetails.range.start.line,
 					namespace: stackLine.namespace,
+					language: symbolDetails.language,
 				})
 			);
 		} else {

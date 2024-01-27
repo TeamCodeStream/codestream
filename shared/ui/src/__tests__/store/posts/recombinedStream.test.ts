@@ -2,7 +2,7 @@ import { describe, expect, it } from "@jest/globals";
 import {
 	advanceRecombinedStream,
 	extractParts,
-	GROK_TIMEOUT,
+	NRAI_TIMEOUT,
 	isGrokStreamDone,
 	RecombinedStream,
 } from "@codestream/webview/store/posts/recombinedStream";
@@ -463,7 +463,7 @@ describe("RecombinedStream", () => {
 			],
 			content: "",
 			receivedDoneEvent: false,
-			lastMessageReceivedAt: Date.now() - (GROK_TIMEOUT + 1000),
+			lastMessageReceivedAt: Date.now() - (NRAI_TIMEOUT + 1000),
 		};
 
 		expect(isGrokStreamDone(recombinedStream)).toBe(true);

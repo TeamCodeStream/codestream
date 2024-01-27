@@ -80,6 +80,7 @@ import Timestamp from "../Timestamp";
 import Tooltip from "../Tooltip";
 import { ConditionalNewRelic } from "./ConditionalComponent";
 import { isFeatureEnabled } from "../../store/apiVersioning/reducer";
+import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
 
 interface SimpleError {
 	/**
@@ -1213,13 +1214,19 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 
 	useEffect(() => {
 		if (derivedState.showGrok && !props.readOnly) {
-			const submitGrok = async (codeBlock?: string) => {
+			const submitGrok = async (functinoToEdit?: FunctionToEdit) => {
 				// console.debug("===--- useEffect startGrokLoading");
 				props.setGrokRequested();
 				setGrokRequested(true);
 				dispatch(startGrokLoading(props.codeError));
 				const actualCodeError = await dispatch(
-					upgradePendingCodeError(props.codeError.id, "Comment", codeBlock, true)
+					upgradePendingCodeError(
+						props.codeError.id,
+						"Comment",
+						functinoToEdit?.codeBlock,
+						functinoToEdit?.language,
+						true
+					)
 				);
 
 				if (!actualCodeError || !actualCodeError.codeError) {
@@ -1235,7 +1242,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 				!grokRequested &&
 				(functionToEdit || functionToEditFailed)
 			) {
-				submitGrok(functionToEdit?.codeBlock).catch(e => {
+				submitGrok(functionToEdit).catch(e => {
 					console.error("submitGrok failed", e);
 				});
 				return;
@@ -1249,7 +1256,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 				derivedState.replies.length === 0 && // Has loaded replies and they are empty
 				(functionToEdit || functionToEditFailed)
 			) {
-				submitGrok(functionToEdit?.codeBlock).catch(e => {
+				submitGrok(functionToEdit).catch(e => {
 					console.error("submitGrok failed", e);
 				});
 			}
@@ -1341,7 +1348,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	}, [codeError, jumpLocation, didJumpToFirstAvailableLine]);
 
 	// We keep getting events for resolved stack trace lines, so we have to wait for this to settle down
-	// When there are no more events for 2 seconds, we assume we're done and we can now handle the
+	// When there are no more events for 3 seconds, we assume we're done and we can now handle the
 	// edge case when there are no user code lines in the stack trace
 	useEffect(() => {
 		if (functionToEdit || functionToEditFailed || currentGrokRepliesLength > 0) {

@@ -1,7 +1,7 @@
 import { GrokStreamEvent } from "@codestream/webview/store/posts/types";
 import { PostParts } from "@codestream/protocols/api";
 
-export const GROK_TIMEOUT = 2 * 60 * 1000; // 2 minutes
+export const NRAI_TIMEOUT = 2 * 60 * 1000; // 2 minutes
 
 export type RecombinedStream = {
 	items: GrokStreamEvent[];
@@ -12,8 +12,12 @@ export type RecombinedStream = {
 	lastMessageReceivedAt?: number;
 };
 
-const sections = ["INTRO:", "CODE_FIX:", "DESCRIPTION:"];
-const partsMap = { "INTRO:": "intro", "CODE_FIX:": "codeFix", "DESCRIPTION:": "description" };
+const sections = ["**INTRO**", "**CODE_FIX**", "**DESCRIPTION**"];
+const partsMap = {
+	"**INTRO**": "intro",
+	"**CODE_FIX**": "codeFix",
+	"**DESCRIPTION**": "description",
+};
 
 export function extractParts(content: string): PostParts {
 	const parts = {
@@ -21,7 +25,7 @@ export function extractParts(content: string): PostParts {
 		codeFix: "",
 		description: "",
 	};
-	// Parse 'INTRO:', 'CODE_FIX:', 'DESCRIPTION:' out of recombinedStream.content and put them in parts
+	// Parse '**INTRO**', '**CODE_FIX**', '**DESCRIPTION**' out of recombinedStream.content and put them in parts
 	for (const section of sections) {
 		const start = content.indexOf(section);
 		if (start !== -1) {
@@ -31,7 +35,7 @@ export function extractParts(content: string): PostParts {
 				if (end !== -1) {
 					parts[partsMap[section]] = content
 						.substring(start, end)
-						.replace(/^(INTRO:|CODE_FIX:|DESCRIPTION:)\s+/, "");
+						.replace(/^(\*\*INTRO\*\*|\*\*CODE_FIX\*\*|\*\*DESCRIPTION\*\*)\s+/, "");
 					break;
 				}
 			}
@@ -65,7 +69,7 @@ export function advanceRecombinedStream(
 
 // A stream is done if it has a done event and there are no gaps in the sequence and it is not timed out
 export function isGrokStreamDone(stream: RecombinedStream) {
-	if (stream.lastMessageReceivedAt && Date.now() - stream.lastMessageReceivedAt > GROK_TIMEOUT) {
+	if (stream.lastMessageReceivedAt && Date.now() - stream.lastMessageReceivedAt > NRAI_TIMEOUT) {
 		console.warn("Grok stream timed out");
 		return true;
 	}

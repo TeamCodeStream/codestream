@@ -84,6 +84,7 @@ export type CSRange = {
 
 export interface EditorCopySymbolResponse {
 	success: boolean;
+	language?: string;
 	text?: string;
 	range?: CSRange;
 }
