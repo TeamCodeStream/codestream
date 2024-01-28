@@ -3,13 +3,9 @@ import { CSUser } from "@codestream/protocols/api";
 import { PostPlus } from "@codestream/protocols/agent";
 import { MarkdownText } from "@codestream/webview/Stream/MarkdownText";
 import { MarkdownContent } from "@codestream/webview/Stream/Posts/Reply";
-import { PullRequestPatch } from "@codestream/webview/Stream/PullRequestPatch";
 import styled from "styled-components";
 import { Button } from "@codestream/webview/src/components/Button";
-import {
-	createDiffFromSnippets,
-	normalizeCodeMarkdown,
-} from "@codestream/webview/Stream/Posts/patchHelper";
+import { normalizeCodeMarkdown } from "@codestream/webview/Stream/Posts/patchHelper";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { isGrokStreamLoading } from "@codestream/webview/store/posts/reducer";
 import { isPending } from "@codestream/webview/store/posts/types";
@@ -17,6 +13,7 @@ import { NrAiFeedback } from "./NrAiFeedback";
 import { replaceSymbol } from "@codestream/webview/store/codeErrors/thunks";
 import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
 import { NrAiCodeBlockLoading, NrAiLoading } from "./NrAiLoading";
+import { DiffEditor } from "@monaco-editor/react";
 
 /* TODOS
 - [X] don't call copySymbol if there is already a nrai response (actually needed currently)
@@ -92,15 +89,6 @@ export function NrAiComponent(props: NrAiComponentProps) {
 		return normalizeCodeMarkdown(props.post.parts?.codeFix);
 	}, [props.post.parts?.codeFix]);
 
-	const patch = useMemo(() => {
-		if (!normalizedCodeFix || !props.functionToEdit?.codeBlock) return undefined;
-		// Make sure codeFix is fully streamed - we know this if description is present
-		if (!props.post.parts?.description) return undefined;
-		const patch = createDiffFromSnippets(props.functionToEdit.codeBlock, normalizedCodeFix);
-		// console.log("===--- Patch", patch);
-		return patch;
-	}, [normalizedCodeFix, props.functionToEdit?.codeBlock, props.post.parts?.description]);
-
 	const applyFix = async () => {
 		if (!textEditorUri || !props.functionToEdit?.symbol || !normalizedCodeFix) {
 			console.error("No textEditorUri symbol or codeBlock");
@@ -127,13 +115,19 @@ export function NrAiComponent(props: NrAiComponentProps) {
 			{showGrokLoader && <NrAiLoading />}
 			{hasIntro && <Markdown text={parts?.intro ?? ""} />}
 			{showCodeBlockLoader && <NrAiCodeBlockLoading />}
-			{props.file && patch && (
+			{props.file && props.functionToEdit?.codeBlock && normalizedCodeFix && (
 				<DiffSection>
-					<PullRequestPatch
-						patch={patch}
-						filename={props.file}
-						noHeader={true}
-						canComment={false}
+					<DiffEditor
+						original={props.functionToEdit?.codeBlock}
+						modified={normalizedCodeFix}
+						height={325}
+						options={{
+							renderSideBySide: false,
+							renderOverviewRuler: false,
+							folding: false,
+							lineNumbers: "off",
+						}}
+						theme="vs-dark"
 					/>
 					<ButtonRow>
 						{showApplyFix && <Button onClick={() => applyFix()}>Apply Fix</Button>}
