@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { components, OptionProps } from "react-select";
-
+import { PanelHeader } from "../../src/components/PanelHeader";
 import {
 	Account,
 	EntityAccount,
@@ -15,7 +15,6 @@ import { AsyncPaginate } from "react-select-async-paginate";
 import styled from "styled-components";
 import { HostApi } from "../../webview-api";
 import Button from "../Button";
-import Icon from "../Icon";
 import { NRQLEditor } from "./NRQLEditor";
 import { NRQLResultsBar } from "./NRQLResultsBar";
 import { NRQLResultsBillboard } from "./NRQLResultsBillboard";
@@ -41,7 +40,6 @@ const QueryWrapper = styled.div`
 	width: 100%;
 	max-height: 200px;
 	padding: 0px;
-	border: 1px solid #3a444c;
 `;
 
 const ActionRow = styled.div`
@@ -50,7 +48,6 @@ const ActionRow = styled.div`
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	border-bottom: 1px solid #3a444c;
 	padding: 10px 0;
 `;
 
@@ -232,126 +229,138 @@ export const NRQLPanel = (props: {
 	};
 
 	return (
-		<LayoutWrapper>
-			<HeaderRow>
-				<Icon
-					name="terminal"
-					title="Query your data"
-					placement="bottom"
-					delay={1}
-					trigger={["hover"]}
-					style={{ "margin-right": "5px" }}
-				/>
-				Query your data
-			</HeaderRow>
-			<QueryWrapper>
-				<div className="search-input">
-					<AsyncPaginate
-						id="input-account-autocomplete"
-						name="account-autocomplete"
-						classNamePrefix="react-select"
-						loadOptions={async (
-							search: string,
-							_loadedOptions,
-							additional?: { nextCursor?: string }
-						) => {
-							await accountsPromise;
+		<>
+			{/* @ts-ignore  @TODO typescript fix this*/}
+			<PanelHeader title="Query your data" icon="terminal">
+				<QueryWrapper>
+					<div className="search-input">
+						<div style={{ marginBottom: "10px" }}>
+							<AsyncPaginate
+								id="input-account-autocomplete"
+								name="account-autocomplete"
+								classNamePrefix="react-select"
+								loadOptions={async (
+									search: string,
+									_loadedOptions,
+									additional?: { nextCursor?: string }
+								) => {
+									await accountsPromise;
 
-							return {
-								options: accounts!
-									.filter(_ =>
-										search ? _.name.toLowerCase().indexOf(search.toLowerCase()) > -1 : true
-									)
-									.map(account => {
-										return formatSelectedAccount(account);
-									}),
-								hasMore: false,
-							};
-						}}
-						value={selectedAccount}
-						debounceTimeout={750}
-						placeholder={`Type to search for accounts...`}
-						onChange={newValue => {
-							setSelectedAccount(newValue);
-						}}
-						components={{ Option }}
-						tabIndex={1}
-						autoFocus
-					/>
-					<NRQLEditor
-						className="input-text control"
-						defaultQuery={props.query || DEFAULT_QUERY}
-						onChange={e => {
-							setUserQuery(e.value || "");
-						}}
-						onSubmit={e => {
-							setUserQuery(e.value!);
-							executeNRQL(selectedAccount?.value, props.entityGuid!, e.value!);
-						}}
-						ref={nrqlEditorRef}
-					/>
-				</div>
-			</QueryWrapper>
-			<ActionRow>
-				<DropdownContainer>
-					{/* <Dropdown></Dropdown>
-					<Dropdown></Dropdown> */}
-				</DropdownContainer>
-				<ButtonContainer>
-					<Button
-						style={{ padding: "0 10px", marginRight: "5px" }}
-						isSecondary={true}
-						onClick={() => {
-							resetQuery();
-						}}
-					>
-						Clear
-					</Button>
-					<Button
-						style={{ padding: "0 10px" }}
-						onClick={() => executeNRQL(selectedAccount?.value, props.entityGuid!)}
-						loading={isLoading}
-					>
-						Run
-					</Button>
-				</ButtonContainer>
-			</ActionRow>
-			<ResultsRow>
-				{since && (
-					<div>
-						<small>Since {since}</small>
+									return {
+										options: accounts!
+											.filter(_ =>
+												search ? _.name.toLowerCase().indexOf(search.toLowerCase()) > -1 : true
+											)
+											.map(account => {
+												return formatSelectedAccount(account);
+											}),
+										hasMore: false,
+									};
+								}}
+								value={selectedAccount}
+								debounceTimeout={750}
+								placeholder={`Type to search for accounts...`}
+								onChange={newValue => {
+									setSelectedAccount(newValue);
+								}}
+								components={{ Option }}
+								tabIndex={1}
+								autoFocus
+							/>
+						</div>
+
+						<div style={{ border: "var(--base-border-color) solid 1px", padding: "8px" }}>
+							<NRQLEditor
+								className="input-text control"
+								defaultQuery={props.query || DEFAULT_QUERY}
+								onChange={e => {
+									setUserQuery(e.value || "");
+								}}
+								onSubmit={e => {
+									setUserQuery(e.value!);
+									executeNRQL(selectedAccount?.value, props.entityGuid!, e.value!);
+								}}
+								ref={nrqlEditorRef}
+							/>
+						</div>
 					</div>
-				)}
-				<div>
-					{!nrqlError &&
-						!isLoading &&
-						results &&
-						totalItems > 0 &&
-						resultsTypeGuess === "table" && <NRQLResultsTable results={results} />}
-					{!nrqlError &&
-						!isLoading &&
-						results &&
-						totalItems > 0 &&
-						resultsTypeGuess === "billboard" && (
-							<NRQLResultsBillboard results={results} eventType={eventType} />
-						)}
-					{!nrqlError && !isLoading && results && totalItems > 0 && resultsTypeGuess === "line" && (
-						<NRQLResultsLine results={results} />
-					)}
-					{!nrqlError && !isLoading && results && totalItems > 0 && resultsTypeGuess === "json" && (
-						<NRQLResultsJSON results={results} />
-					)}
-					{!nrqlError && !isLoading && results && totalItems > 0 && resultsTypeGuess === "bar" && (
-						<NRQLResultsBar results={results} />
-					)}
-
-					{nrqlError && (
-						<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
-							{nrqlError}
+				</QueryWrapper>
+				<ActionRow>
+					<DropdownContainer>
+						{/* <Dropdown></Dropdown>
+					<Dropdown></Dropdown> */}
+					</DropdownContainer>
+					<ButtonContainer>
+						<Button
+							style={{ padding: "0 10px", marginRight: "5px" }}
+							isSecondary={true}
+							onClick={() => {
+								resetQuery();
+							}}
+						>
+							Clear
+						</Button>
+						<Button
+							style={{ padding: "0 10px" }}
+							onClick={() => executeNRQL(selectedAccount?.value, props.entityGuid!)}
+							loading={isLoading}
+						>
+							Run
+						</Button>
+					</ButtonContainer>
+				</ActionRow>
+			</PanelHeader>
+			<div
+				style={{
+					padding: "0px 20px 0px 20px",
+					marginBottom: "20px",
+					width: "100%",
+					height: "100%",
+				}}
+			>
+				<ResultsRow>
+					{since && (
+						<div>
+							<small>Since {since}</small>
 						</div>
 					)}
-				</div>
-			</ResultsRow>
-		</LayoutWrapper>
+					<div>
+						{!nrqlError &&
+							!isLoading &&
+							results &&
+							totalItems > 0 &&
+							resultsTypeGuess === "table" && <NRQLResultsTable results={results} />}
+						{!nrqlError &&
+							!isLoading &&
+							results &&
+							totalItems > 0 &&
+							resultsTypeGuess === "billboard" && (
+								<NRQLResultsBillboard results={results} eventType={eventType} />
+							)}
+						{!nrqlError &&
+							!isLoading &&
+							results &&
+							totalItems > 0 &&
+							resultsTypeGuess === "line" && <NRQLResultsLine results={results} />}
+						{!nrqlError &&
+							!isLoading &&
+							results &&
+							totalItems > 0 &&
+							resultsTypeGuess === "json" && <NRQLResultsJSON results={results} />}
+						{!nrqlError &&
+							!isLoading &&
+							results &&
+							totalItems > 0 &&
+							resultsTypeGuess === "bar" && <NRQLResultsBar results={results} />}
+
+						{nrqlError && (
+							<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
+								{nrqlError}
+							</div>
+						)}
+					</div>
+				</ResultsRow>
+			</div>
+		</>
 	);
 };
