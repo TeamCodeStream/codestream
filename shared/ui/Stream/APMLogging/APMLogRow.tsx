@@ -91,6 +91,8 @@ const DetailViewTable = styled.div`
 	}
 `;
 
+const hiddenColumns = ["log_summary", "expandedContent"];
+
 export const APMLogRow = (props: {
 	timestamp: string;
 	severity: string;
@@ -135,8 +137,7 @@ export const APMLogRow = (props: {
 			updatedJsx = (
 				<DetailViewTable>
 					{keys.map(k => {
-						if (k === "log_summary") {
-							// still not sure if this column will actually be useful, but its not needed here
+						if (hiddenColumns.includes(k)) {
 							return;
 						}
 
