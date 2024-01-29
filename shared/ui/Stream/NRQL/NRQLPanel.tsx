@@ -230,8 +230,7 @@ export const NRQLPanel = (props: {
 
 	return (
 		<>
-			{/* @ts-ignore  @TODO typescript fix this*/}
-			<PanelHeader title="Query your data" icon="terminal">
+			<PanelHeader title="Query your data">
 				<QueryWrapper>
 					<div className="search-input">
 						<div style={{ marginBottom: "10px" }}>
