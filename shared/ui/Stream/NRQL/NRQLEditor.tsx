@@ -126,6 +126,7 @@ export const NRQLEditor = React.forwardRef(
 							new RegExp(response.functions.map(_ => _.label).join("|"), "i"),
 							"support.function.nrql",
 						],
+						[/'.*?'/, "string"],
 					],
 				},
 			});
