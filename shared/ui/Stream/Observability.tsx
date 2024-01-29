@@ -623,12 +623,12 @@ export const Observability = React.memo((props: Props) => {
 				event_type: "state_load",
 			};
 			if (telemetryStateValue === "no_services") {
-				properties.meta_data_2 = {
-					meta: hasEntities,
-					hasRepoForEntityAssociator: !_isEmpty(repoForEntityAssociator),
-					currentEntityAccounts: currentEntityAccounts?.length ?? -1,
-					observabilityRepoCount: observabilityRepos?.length ?? -1,
-				};
+				properties.meta_data_2 = `meta: {
+					hasEntities: ${hasEntities},
+					hasRepoForEntityAssociator: ${!_isEmpty(repoForEntityAssociator)},
+					currentEntityAccounts: ${currentEntityAccounts?.length ?? -1},
+					observabilityRepoCount: ${observabilityRepos?.length ?? -1},
+				}`;
 			}
 			HostApi.instance.track("codestream/o11y rendered", properties);
 		}
