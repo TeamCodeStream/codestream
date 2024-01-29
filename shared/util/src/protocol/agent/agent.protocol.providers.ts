@@ -1596,16 +1596,16 @@ export const GetAllEntitiesRequestType = new RequestType<
 	void
 >("codestream/newrelic/entities/all");
 
-export interface Account {}
-
 export interface GetAllAccountsRequest {
 	force?: boolean;
 }
+export interface Account {
+	id: number;
+	name: string;
+}
+
 export interface GetAllAccountsResponse {
-	accounts: {
-		id: number;
-		name: string;
-	}[];
+	accounts: Account[];
 }
 
 export const GetAllAccountsRequestType = new RequestType<

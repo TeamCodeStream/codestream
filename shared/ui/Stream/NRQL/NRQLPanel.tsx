@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { components, OptionProps } from "react-select";
 
 import {
+	Account,
 	EntityAccount,
 	GetAllAccountsRequestType,
 	GetNRQLRequestType,
@@ -81,6 +82,7 @@ const Option = (props: OptionProps) => {
 	return <components.Option {...props} children={children} />;
 };
 
+const DEFAULT_QUERY = "FROM ";
 export const NRQLPanel = (props: {
 	accountId?: number;
 	entityAccounts: EntityAccount[];
@@ -125,10 +127,7 @@ export const NRQLPanel = (props: {
 			if (props.accountId) {
 				const foundAccount = result.accounts.find(_ => _.id === props.accountId);
 				if (foundAccount) {
-					setSelectedAccount({
-						value: foundAccount.id,
-						label: foundAccount.name,
-					});
+					setSelectedAccount(formatSelectedAccount(foundAccount));
 				}
 			}
 
@@ -163,6 +162,7 @@ export const NRQLPanel = (props: {
 			setIsLoading(true);
 			setNRQLError(undefined);
 			setResults([]);
+			setResultsTypeGuess("");
 			setTotalItems(0);
 			setEventType("");
 			setSince("");
@@ -208,6 +208,25 @@ export const NRQLPanel = (props: {
 		}
 	};
 
+	const resetQuery = () => {
+		nrqlEditorRef.current!.setValue(DEFAULT_QUERY);
+		setUserQuery(DEFAULT_QUERY);
+
+		setNRQLError(undefined);
+		setResults([]);
+		setResultsTypeGuess("");
+		setTotalItems(0);
+		setEventType("");
+		setSince("");
+	};
+
+	const formatSelectedAccount = (account: Account) => {
+		return {
+			label: `Account: ${account.id} - ${account.name}`,
+			value: account.id,
+		};
+	};
+
 	return (
 		<LayoutWrapper>
 			<HeaderRow>
@@ -239,11 +258,8 @@ export const NRQLPanel = (props: {
 									.filter(_ =>
 										search ? _.name.toLowerCase().indexOf(search.toLowerCase()) > -1 : true
 									)
-									.map(e => {
-										return {
-											label: `Account: ${e.id} - ${e.name}`,
-											value: e.id,
-										};
+									.map(account => {
+										return formatSelectedAccount(account);
 									}),
 								hasMore: false,
 							};
@@ -260,7 +276,7 @@ export const NRQLPanel = (props: {
 					/>
 					<NRQLEditor
 						className="input-text control"
-						defaultQuery={props.query}
+						defaultQuery={props.query || DEFAULT_QUERY}
 						onChange={e => {
 							setUserQuery(e.value || "");
 						}}
@@ -278,7 +294,15 @@ export const NRQLPanel = (props: {
 					<Dropdown></Dropdown> */}
 				</DropdownContainer>
 				<ButtonContainer>
-					{/* <Button>Clear</Button> */}
+					<Button
+						style={{ padding: "0 10px", marginRight: "5px" }}
+						isSecondary={true}
+						onClick={() => {
+							resetQuery();
+						}}
+					>
+						Clear
+					</Button>
 					<Button
 						style={{ padding: "0 10px" }}
 						onClick={() => executeNRQL(selectedAccount?.value, props.entityGuid!)}

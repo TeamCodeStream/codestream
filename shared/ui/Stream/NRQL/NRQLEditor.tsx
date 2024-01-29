@@ -132,7 +132,7 @@ export const NRQLEditor = React.forwardRef(
 					height="10vh"
 					className={props.className}
 					defaultLanguage="nrql"
-					defaultValue={props.defaultQuery || "FROM "}
+					defaultValue={props.defaultQuery}
 					theme={theme}
 					onMount={handleEditorDidMount}
 					onChange={e => {
