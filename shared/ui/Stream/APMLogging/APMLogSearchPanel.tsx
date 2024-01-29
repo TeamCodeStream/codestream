@@ -331,8 +331,7 @@ export const APMLogSearchPanel = (props: {
 			const response = await HostApi.instance.send(GetLogsRequestType, {
 				entityGuid,
 				filterText,
-				// TODO. MAX kills ui performance here
-				limit: 100,
+				limit: "MAX",
 				since: selectedSinceOption?.value || "30 MINUTES AGO",
 				order: {
 					field: "timestamp",
