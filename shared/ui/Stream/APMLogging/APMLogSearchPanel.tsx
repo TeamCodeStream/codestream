@@ -391,14 +391,6 @@ export const APMLogSearchPanel = (props: {
 		HostApi.instance.track("codestream/logs/webview opened", payload);
 	};
 
-	const expandDetailsView = (messageId: string) => {
-		const details = results.find(lr => {
-			return lr["messageId"] === messageId;
-		});
-
-		// TODO: Design drop-down / split view to display detail data inline
-	};
-
 	async function loadEntities(search: string, _loadedOptions, additional?: AdditionalType) {
 		const result = await HostApi.instance.send(GetAllEntitiesRequestType, {
 			searchCharacters: search,
@@ -454,6 +446,8 @@ export const APMLogSearchPanel = (props: {
 				const severity = severityAttribute ? r[severityAttribute] : "";
 				const showMore = r?.showMore ? true : false;
 				const expandedContent = r?.expandedContent ?? undefined;
+				const entityGuid = selectedEntityAccount?.value;
+				const accountId = parseId(entityGuid);
 
 				return (
 					<APMLogRow
@@ -461,6 +455,8 @@ export const APMLogSearchPanel = (props: {
 						timestamp={timestamp}
 						message={message}
 						severity={severity}
+						accountId={accountId?.accountId}
+						entityGuid={entityGuid}
 						showMore={showMore}
 						updateData={updateResults}
 						expandedContent={expandedContent}

@@ -3,6 +3,7 @@ import styled from "styled-components";
 import Timestamp from "../Timestamp";
 import Icon from "@codestream/webview/Stream/Icon";
 import { isEmpty as _isEmpty } from "lodash-es";
+import { HostApi } from "@codestream/webview/webview-api";
 
 const LogSeverity = styled.span`
 	border-radius: 1px;
@@ -48,6 +49,8 @@ export const APMLogRow = (props: {
 	timestamp: string;
 	severity: string;
 	message: string;
+	entityGuid?: string;
+	accountId?: number;
 	showMore?: boolean;
 	updateData: Function;
 	index: number;
@@ -69,7 +72,16 @@ export const APMLogRow = (props: {
 		);
 	}
 
+	const trackTelemetry = () => {
+		HostApi.instance.track("codestream/expand_button clicked", {
+			entity_guid: `${props.entityGuid}`,
+			account_id: `${props.accountId}`,
+			event_type: "click",
+		});
+	};
+
 	const handleClickExpand = () => {
+		trackTelemetry();
 		let updatedJsx;
 		if (_isEmpty(props.expandedContent)) {
 			updatedJsx = (
