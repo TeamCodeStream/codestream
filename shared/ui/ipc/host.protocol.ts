@@ -169,6 +169,21 @@ export const SaveFileRequestType = new RequestType<SaveFileRequest, SaveFileResp
 	`${IpcRoutes.Host}/file/save`
 );
 
+export interface OpenInBufferRequest {
+	contentType: "json" | "plaintext";
+	data: any;
+}
+export interface OpenInBufferResponse {
+	success: boolean;
+}
+
+export const OpenInBufferRequestType = new RequestType<
+	OpenInBufferRequest,
+	OpenInBufferResponse,
+	void,
+	void
+>(`${IpcRoutes.Host}/buffer/open`);
+
 export interface ShellPromptFolderRequest {
 	message: string;
 }

@@ -1,10 +1,20 @@
 "use strict";
 import fs from "fs";
-import { Disposable, Uri, commands, window } from "vscode";
+import {
+	Disposable,
+	Position,
+	Uri,
+	WorkspaceEdit,
+	commands,
+	languages,
+	window,
+	workspace
+} from "vscode";
 import { CodeStreamSession } from "../api/session";
 
 import {
 	IpcRoutes,
+	OpenInBufferRequestType,
 	SaveFileRequestType,
 	ShellPromptFolderRequestType,
 	WebviewDidInitializeNotificationType,
@@ -135,6 +145,28 @@ export class EditorController implements Disposable {
 					fs.writeFileSync(path, JSON.stringify(_params.data, null, 4));
 					let uri = Uri.file(path);
 					await commands.executeCommand("vscode.open", uri);
+					return {
+						success: true
+					};
+				});
+				break;
+			}
+			case OpenInBufferRequestType.method: {
+				webview.onIpcRequest(OpenInBufferRequestType, e, async (_type, _params) => {
+					const document = await workspace.openTextDocument();
+					const editor = await window.showTextDocument(document);
+
+					if (_params.data) {
+						const edit = new WorkspaceEdit();
+						const newText =
+							_params.contentType === "json" ? JSON.stringify(_params.data, null, 4) : _params.data;
+						edit.insert(document.uri, new Position(0, 0), newText);
+						await workspace.applyEdit(edit);
+					}
+
+					if (_params.contentType) {
+						languages.setTextDocumentLanguage(editor.document, _params.contentType);
+					}
 					return {
 						success: true
 					};
