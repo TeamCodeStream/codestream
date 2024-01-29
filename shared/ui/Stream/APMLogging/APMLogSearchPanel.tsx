@@ -18,11 +18,11 @@ import {
 	LogResult,
 	isNRErrorResponse,
 } from "@codestream/protocols/agent";
-import { AsyncPaginate } from "react-select-async-paginate";
 import { parseId } from "@codestream/webview/utilities/newRelic";
 import { useResizeDetector } from "react-resize-detector";
 import { TableWindow } from "../TableWindow";
 import { APMLogRow } from "./APMLogRow";
+import { AsyncPaginateCustomStyles } from "../AsyncPaginateCustomStyles";
 interface SelectedOption {
 	value: string;
 	label: string;
@@ -489,10 +489,9 @@ export const APMLogSearchPanel = (props: {
 				<LogFilterBarContainer>
 					<div className="log-filter-bar-row">
 						<div className="log-filter-bar-service">
-							<AsyncPaginate
+							<AsyncPaginateCustomStyles
 								id="input-entity-autocomplete"
 								name="entity-autocomplete"
-								classNamePrefix="react-select"
 								loadOptions={loadEntities}
 								value={selectedEntityAccount}
 								debounceTimeout={750}
