@@ -197,7 +197,7 @@ export const APMLogSearchPanel = (props: {
 		if (props.entityGuid) {
 			const entityAccount = props.entityAccounts.find(ea => ea.entityGuid === props.entityGuid)!;
 
-			setSelectedEntityAccount({
+			handleSelectDropdownOption({
 				value: entityAccount.entityGuid,
 				label: entityAccount.entityName,
 				accountName: entityAccount.accountName,
@@ -215,6 +215,22 @@ export const APMLogSearchPanel = (props: {
 			fetchLogs(props.entityGuid, props.suppliedQuery);
 		}
 	});
+
+	const handleSelectDropdownOption = entityAccount => {
+		const customLabel = (
+			<>
+				<span>Service: {entityAccount.label}</span>
+				<span className="subtle"> ({entityAccount.entityType})</span>
+			</>
+		);
+
+		setSelectedEntityAccount({
+			value: entityAccount.value,
+			label: customLabel,
+			accountName: entityAccount.accountName,
+			entityType: entityAccount.entityTypeDescription,
+		});
+	};
 
 	const handleError = (message: string) => {
 		setLogError(message);
@@ -482,7 +498,7 @@ export const APMLogSearchPanel = (props: {
 								debounceTimeout={750}
 								placeholder={`Type to search for services...`}
 								onChange={newValue => {
-									setSelectedEntityAccount(newValue);
+									handleSelectDropdownOption(newValue);
 								}}
 								components={{ Option }}
 								tabIndex={1}
