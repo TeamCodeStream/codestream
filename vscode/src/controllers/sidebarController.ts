@@ -886,25 +886,17 @@ export class SidebarController implements Disposable {
 	}
 
 	private initializeOrShowEditor(e: OpenEditorViewNotification) {
-		let editorKey = `${e.panel}-${e.entityGuid}`;
+		let editorKey = "";
+		if (e.panel === "nrql") {
+			editorKey = e.hash! || `${e.panel}-${e.entityGuid}`;
+		} else {
+			editorKey = `${e.panel}-${e.entityGuid}`;
 
-		if (e.query) {
-			// hack until I can figure out how to funnel a search term into an already open logs window.
-			editorKey = `${editorKey}-${randomUUID()}`;
+			if (e.query) {
+				// hack until I can figure out how to funnel a search term into an already open logs window.
+				editorKey = `${editorKey}-${randomUUID()}`;
+			}
 		}
-		// TODO need to get comm working to update a query in an already existing
-		// webview panel -- using a hash of the fileUri here.
-		// let editorKey = "";
-		// if (e.panel === "nrql") {
-		// 	editorKey = e.hash! || e.entityGuid!;
-		// } else {
-		// 	editorKey = `${e.panel}-${e.entityGuid}`;
-
-		// 	if (e.query) {
-		// 		// hack until I can figure out how to funnel a search term into an already open logs window.
-		// 		editorKey = `${editorKey}-${randomUUID()}`;
-		// 	}
-		// }
 
 		if (!this._logPanelInitializations[editorKey]) {
 			const panel = new CodeStreamWebviewPanel(this.session, this.context, e, () => {});
@@ -924,7 +916,16 @@ export class SidebarController implements Disposable {
 			};
 		} else {
 			const { panel } = this._logPanelInitializations[editorKey];
-			panel.show();
+			if (panel) {
+				Logger.debug(
+					`sidebarController: Found existing panel for key ${editorKey} (${panel.name})`
+				);
+				panel.show().then(_ => {
+					panel.notify(OpenEditorViewNotificationType, e);
+				});
+			} else {
+				Logger.warn(`sidebarController: Could not find existing panel for key ${editorKey}`);
+			}
 		}
 	}
 	private onWebviewNotification(webview: WebviewLike, e: WebviewIpcNotificationMessage) {

@@ -6,10 +6,14 @@ import { APMLogSearchPanel } from "../../ui/Stream/APMLogging/APMLogSearchPanel"
 import { NRQLPanel } from "../../ui/Stream/NRQL/NRQLPanel";
 import { OpenEditorViewNotification } from "../../ui/ipc/host.protocol";
 import { createTheme } from "../../ui/src/themes";
+import { HostApi } from "../../ui/webview-api";
+import { WebviewDidInitializeNotificationType } from "../../ui/ipc/webview.protocol.notifications";
 
 export function App() {
 	// TODO: hack typings for now
 	const codestreamProps = (window as any)._cs as OpenEditorViewNotification;
+
+	HostApi.instance.notify(WebviewDidInitializeNotificationType, {});
 
 	return (
 		<ThemeProvider theme={createTheme()}>

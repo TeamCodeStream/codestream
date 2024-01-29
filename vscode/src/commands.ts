@@ -30,6 +30,7 @@ import { Container } from "./container";
 import { Logger } from "./logger";
 import { Command, createCommandDecorator, Strings } from "./system";
 import * as csUri from "./system/uri";
+import { md5 } from "@codestream/utils/system/string";
 // import { md5 } from "@codestream/utils/system/string";
 
 const commandRegistry: Command[] = [];
@@ -648,7 +649,8 @@ export class Commands implements Disposable {
 		} else {
 			await Container.sidebar.executeNrql({
 				query: nrqlQuery,
-				entryPoint: "nrql_file" /* hash: md5(fileUri.toString())*/
+				entryPoint: "nrql_file",
+				hash: md5(fileUri.toString())
 			});
 		}
 	}

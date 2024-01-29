@@ -7,6 +7,7 @@ import {
 	IpcRoutes,
 	SaveFileRequestType,
 	ShellPromptFolderRequestType,
+	WebviewDidInitializeNotificationType,
 	WebviewIpcMessage,
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage,
@@ -73,39 +74,39 @@ export class EditorController implements Disposable {
 	}
 
 	private onWebviewNotification(webview: WebviewLike, e: WebviewIpcNotificationMessage) {
-		// switch (e.method) {
-		// 	case WebviewDidInitializeNotificationType.method: {
-		// 		// view is rendered and ready to receive messages
-		// 		webview.onIpcReady();
-		// 		break;
-		// 	}
-		// 	case WebviewDidChangeContextNotificationType.method: {
-		// 		webview.onIpcNotification(WebviewDidChangeContextNotificationType, e, (_type, params) => {
-		// 			this._context = params.context;
-		// 			this.updateState();
-		// 		});
-		// 		break;
-		// 	}
-		// 	case EditorScrollToNotificationType.method: {
-		// 		webview.onIpcNotification(
-		// 			EditorScrollToNotificationType,
-		// 			e,
-		// 			(_type, { uri, position, ...options }) => {
-		// 				Editor.scrollTo(
-		// 					Uri.parse(uri),
-		// 					Editor.fromSerializablePosition(position),
-		// 					this._lastEditor,
-		// 					options
-		// 				);
-		// 			}
-		// 		);
-		// 		break;
-		// 	}
-		// 	default: {
-		// 		debugger;
-		// 		throw new Error(`Unhandled webview notification: ${e.method}`);
-		// 	}
-		// }
+		switch (e.method) {
+			case WebviewDidInitializeNotificationType.method: {
+				// view is rendered and ready to receive messages
+				webview.onIpcReady();
+				break;
+			}
+			// 	case WebviewDidChangeContextNotificationType.method: {
+			// 		webview.onIpcNotification(WebviewDidChangeContextNotificationType, e, (_type, params) => {
+			// 			this._context = params.context;
+			// 			this.updateState();
+			// 		});
+			// 		break;
+			// 	}
+			// 	case EditorScrollToNotificationType.method: {
+			// 		webview.onIpcNotification(
+			// 			EditorScrollToNotificationType,
+			// 			e,
+			// 			(_type, { uri, position, ...options }) => {
+			// 				Editor.scrollTo(
+			// 					Uri.parse(uri),
+			// 					Editor.fromSerializablePosition(position),
+			// 					this._lastEditor,
+			// 					options
+			// 				);
+			// 			}
+			// 		);
+			// 		break;
+			// 	}
+			default: {
+				debugger;
+				// throw new Error(`Unhandled webview notification: ${e.method}`);
+			}
+		}
 	}
 	private async onWebviewRequest(webview: WebviewLike, e: WebviewIpcRequestMessage) {
 		switch (e.method) {

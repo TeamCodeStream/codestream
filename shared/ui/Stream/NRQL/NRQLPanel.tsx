@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { components, OptionProps } from "react-select";
 
 import {
@@ -8,7 +8,8 @@ import {
 	isNRErrorResponse,
 	NRQLResult,
 } from "@codestream/protocols/agent";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
+import { OpenEditorViewNotificationType } from "@codestream/protocols/webview";
+import { Disposable } from "@codestream/webview/utils";
 import { AsyncPaginate } from "react-select-async-paginate";
 import styled from "styled-components";
 import { HostApi } from "../../webview-api";
@@ -98,18 +99,25 @@ export const NRQLPanel = (props: {
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [totalItems, setTotalItems] = useState<number>(0);
 	const [nrqlError, setNRQLError] = useState<string | undefined>("");
+	const nrqlEditorRef = useRef<any>(null);
 
-	const handleError = (message: string) => {
-		setNRQLError(message);
-		console.error(message);
-	};
-
+	const disposables: Disposable[] = [];
 	let accountsPromise;
-	useDidMount(() => {
+
+	useEffect(() => {
 		HostApi.instance.track("codestream/nrql/webview opened", {
 			event_type: "click",
 			meta_data: `entry_point: ${props.entryPoint}`,
 		});
+		disposables.push(
+			HostApi.instance.on(OpenEditorViewNotificationType, e => {
+				if (nrqlEditorRef?.current) {
+					nrqlEditorRef.current!.setValue(e.query);
+					setUserQuery(e.query!);
+					executeNRQL(props.accountId, props.entityGuid!, e.query);
+				}
+			})
+		);
 
 		accountsPromise = HostApi.instance.send(GetAllAccountsRequestType, {}).then(result => {
 			setAccounts(result.accounts);
@@ -128,7 +136,15 @@ export const NRQLPanel = (props: {
 				executeNRQL(props.accountId, props.entityGuid!, props.query);
 			}
 		});
-	});
+		return () => {
+			disposables && disposables.forEach(_ => _.dispose());
+		};
+	}, []);
+
+	const handleError = (message: string) => {
+		setNRQLError(message);
+		console.error(message);
+	};
 
 	const executeNRQL = async (
 		accountId: number | undefined,
@@ -245,6 +261,7 @@ export const NRQLPanel = (props: {
 							setUserQuery(e.value!);
 							executeNRQL(selectedAccount?.value, props.entityGuid!, e.value!);
 						}}
+						ref={nrqlEditorRef}
 					/>
 				</div>
 			</QueryWrapper>
