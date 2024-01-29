@@ -5,7 +5,6 @@ import styled from "styled-components";
 import { components, OptionProps } from "react-select";
 import { useDidMount } from "../../utilities/hooks";
 import Button from "../Button";
-import Select from "react-select";
 import { HostApi } from "../../webview-api";
 import { Link } from "../Link";
 import {
@@ -22,7 +21,7 @@ import { parseId } from "@codestream/webview/utilities/newRelic";
 import { useResizeDetector } from "react-resize-detector";
 import { TableWindow } from "../TableWindow";
 import { APMLogRow } from "./APMLogRow";
-import { AsyncPaginateCustomStyles } from "../AsyncPaginateCustomStyles";
+import { AsyncPaginateCustomStyles, SelectCustomStyles } from "../AsyncPaginateCustomStyles";
 interface SelectedOption {
 	value: string;
 	label: string;
@@ -505,7 +504,7 @@ export const APMLogSearchPanel = (props: {
 						</div>
 
 						<div className="log-filter-bar-since">
-							<Select
+							<SelectCustomStyles
 								id="input-since"
 								name="since"
 								classNamePrefix="react-select"

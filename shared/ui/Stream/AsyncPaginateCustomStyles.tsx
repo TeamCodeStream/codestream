@@ -1,25 +1,26 @@
 import React from "react";
 import { AsyncPaginate } from "react-select-async-paginate";
+import Select from "react-select";
 
-const customAsyncPaginateStyles = {
+const selectStyles = {
 	control: (provided, state) => ({
 		...provided,
 		boxShadow: "none",
 		border: `1px solid ${
 			state.isFocused ? "var(--text-focus-border-color)" : "var(--base-border-color)"
 		} !important`,
-		background: "var(--base-background-color)",
+		background: "var(--base-background-color) !important",
 		margin: 0,
 		fontFamily: "inherit",
 		fontSize: "13px",
-		minHeight: "29px",
+		minHeight: "29px !important",
 		borderRadius: 0,
 	}),
 	input: provided => ({
 		...provided,
 		fontFamily: "inherit",
 		fontSize: "13px",
-		color: "var(--text-color)",
+		color: "var(--text-color) !important",
 		input: {
 			padding: "0 !important",
 			outline: "none !important",
@@ -27,11 +28,12 @@ const customAsyncPaginateStyles = {
 	}),
 	singleValue: provided => ({
 		...provided,
-		color: "var(--text-color)",
+		color: "var(--text-color) !important",
 		fontSize: "13px",
-		background: "var(--app-background-color-hover)",
+		background: "var(--app-background-color-hover) !important",
 		marginTop: "0",
 		marginBottom: "0",
+		paddingTop: "2px",
 	}),
 	multiValue: provided => ({
 		...provided,
@@ -42,7 +44,8 @@ const customAsyncPaginateStyles = {
 	}),
 	valueContainer: provided => ({
 		...provided,
-		padding: "0 5px",
+		padding: "0 5px !important",
+		height: "29px !important",
 	}),
 	multiValueLabel: provided => ({
 		...provided,
@@ -63,7 +66,7 @@ const customAsyncPaginateStyles = {
 	}),
 	menuList: provided => ({
 		...provided,
-		background: "var(--base-background-color)",
+		background: "var(--base-background-color) !important",
 		borderRadius: "3px",
 	}),
 	option: (provided, state) => ({
@@ -76,8 +79,7 @@ const customAsyncPaginateStyles = {
 		},
 		background:
 			state.isSelected || state.isFocused ? "var(--text-focus-border-color) !important" : "unset",
-		color:
-			state.isSelected || state.isFocused ? "var(--text-focus-border-color) !important" : "inherit",
+		color: state.isSelected || state.isFocused ? "white !important" : "inherit",
 	}),
 	placeholder: provided => ({
 		...provided,
@@ -100,6 +102,10 @@ const customAsyncPaginateStyles = {
 	}),
 };
 
+export const SelectCustomStyles = props => {
+	return <Select {...props} styles={selectStyles} />;
+};
+
 export const AsyncPaginateCustomStyles = props => {
-	return <AsyncPaginate {...props} styles={customAsyncPaginateStyles} />;
+	return <AsyncPaginate {...props} styles={selectStyles} />;
 };
