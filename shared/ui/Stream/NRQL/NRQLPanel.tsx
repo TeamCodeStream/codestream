@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { components, OptionProps } from "react-select";
 
 import {
+	Account,
 	EntityAccount,
 	GetAllAccountsRequestType,
 	GetNRQLRequestType,
@@ -31,7 +32,6 @@ const LayoutWrapper = styled.div`
 const HeaderRow = styled.div`
 	width: 100%;
 	height: 40px;
-	background-color: #3a444b;
 	display: flex;
 	align-items: center;
 	padding: 10px;
@@ -82,6 +82,7 @@ const Option = (props: OptionProps) => {
 	return <components.Option {...props} children={children} />;
 };
 
+const DEFAULT_QUERY = "FROM ";
 export const NRQLPanel = (props: {
 	accountId?: number;
 	entityAccounts: EntityAccount[];
@@ -91,6 +92,8 @@ export const NRQLPanel = (props: {
 }) => {
 	const [userQuery, setUserQuery] = useState<string>("");
 	const [results, setResults] = useState<NRQLResult[]>([]);
+	const [eventType, setEventType] = useState<string>();
+	const [since, setSince] = useState<string>();
 	const [selectedAccount, setSelectedAccount] = useState<
 		{ label: string; value: number } | undefined
 	>(undefined);
@@ -121,13 +124,14 @@ export const NRQLPanel = (props: {
 
 		accountsPromise = HostApi.instance.send(GetAllAccountsRequestType, {}).then(result => {
 			setAccounts(result.accounts);
-			if (props.accountId) {
-				const foundAccount = result.accounts.find(_ => _.id === props.accountId);
-				if (foundAccount) {
-					setSelectedAccount({
-						value: foundAccount.id,
-						label: foundAccount.name,
-					});
+			if (result?.accounts?.length) {
+				if (props.accountId) {
+					const foundAccount = result.accounts.find(_ => _.id === props.accountId);
+					if (foundAccount) {
+						setSelectedAccount(formatSelectedAccount(foundAccount));
+					}
+				} else if (result.accounts.length === 1) {
+					setSelectedAccount(formatSelectedAccount(result.accounts[0]));
 				}
 			}
 
@@ -162,7 +166,10 @@ export const NRQLPanel = (props: {
 			setIsLoading(true);
 			setNRQLError(undefined);
 			setResults([]);
+			setResultsTypeGuess("");
 			setTotalItems(0);
+			setEventType("");
+			setSince("");
 
 			const response = await HostApi.instance.send(GetNRQLRequestType, {
 				accountId,
@@ -193,12 +200,35 @@ export const NRQLPanel = (props: {
 				setResults(response.results);
 				setTotalItems(response.results.length);
 				setResultsTypeGuess(response.resultsTypeGuess);
+				setEventType(response.eventType);
+				if (response.since) {
+					setSince(response.since.toLowerCase());
+				}
 			}
 		} catch (ex) {
 			handleError(ex);
 		} finally {
 			setIsLoading(false);
 		}
+	};
+
+	const resetQuery = () => {
+		nrqlEditorRef.current!.setValue(DEFAULT_QUERY);
+		setUserQuery(DEFAULT_QUERY);
+
+		setNRQLError(undefined);
+		setResults([]);
+		setResultsTypeGuess("");
+		setTotalItems(0);
+		setEventType("");
+		setSince("");
+	};
+
+	const formatSelectedAccount = (account: Account) => {
+		return {
+			label: `Account: ${account.id} - ${account.name}`,
+			value: account.id,
+		};
 	};
 
 	return (
@@ -215,7 +245,7 @@ export const NRQLPanel = (props: {
 				Query your data
 			</HeaderRow>
 			<QueryWrapper>
-				<div className="search-input" style={{ width: "100%" }}>
+				<div className="search-input">
 					<AsyncPaginate
 						id="input-account-autocomplete"
 						name="account-autocomplete"
@@ -232,11 +262,8 @@ export const NRQLPanel = (props: {
 									.filter(_ =>
 										search ? _.name.toLowerCase().indexOf(search.toLowerCase()) > -1 : true
 									)
-									.map(e => {
-										return {
-											label: `Account: ${e.id} - ${e.name}`,
-											value: e.id,
-										};
+									.map(account => {
+										return formatSelectedAccount(account);
 									}),
 								hasMore: false,
 							};
@@ -253,7 +280,7 @@ export const NRQLPanel = (props: {
 					/>
 					<NRQLEditor
 						className="input-text control"
-						defaultQuery={props.query}
+						defaultQuery={props.query || DEFAULT_QUERY}
 						onChange={e => {
 							setUserQuery(e.value || "");
 						}}
@@ -271,7 +298,15 @@ export const NRQLPanel = (props: {
 					<Dropdown></Dropdown> */}
 				</DropdownContainer>
 				<ButtonContainer>
-					{/* <Button>Clear</Button> */}
+					<Button
+						style={{ padding: "0 10px", marginRight: "5px" }}
+						isSecondary={true}
+						onClick={() => {
+							resetQuery();
+						}}
+					>
+						Clear
+					</Button>
 					<Button
 						style={{ padding: "0 10px" }}
 						onClick={() => executeNRQL(selectedAccount?.value, props.entityGuid!)}
@@ -282,6 +317,11 @@ export const NRQLPanel = (props: {
 				</ButtonContainer>
 			</ActionRow>
 			<ResultsRow>
+				{since && (
+					<div>
+						<small>Since {since}</small>
+					</div>
+				)}
 				<div>
 					{!nrqlError &&
 						!isLoading &&
@@ -292,7 +332,9 @@ export const NRQLPanel = (props: {
 						!isLoading &&
 						results &&
 						totalItems > 0 &&
-						resultsTypeGuess === "billboard" && <NRQLResultsBillboard results={results} />}
+						resultsTypeGuess === "billboard" && (
+							<NRQLResultsBillboard results={results} eventType={eventType} />
+						)}
 					{!nrqlError && !isLoading && results && totalItems > 0 && resultsTypeGuess === "line" && (
 						<NRQLResultsLine results={results} />
 					)}

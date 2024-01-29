@@ -68,12 +68,14 @@ export class NrNRQLProvider {
 
 		try {
 			const query = escapeNrql(request.query).trim();
-			const results = await this.graphqlClient.runNrql<any>(accountId, query, 400);
+			const response = await this.graphqlClient.runNrqlWithMetadata<any>(accountId, query, 400);
 
 			return {
-				results,
 				accountId,
-				resultsTypeGuess: this.getResultsType(query, results),
+				results: response.results,
+				eventType: response?.rawResponse?.metadata?.eventType,
+				since: response?.rawResponse?.metadata?.rawSince,
+				resultsTypeGuess: this.getResultsType(query, response.results),
 			};
 		} catch (ex) {
 			ContextLogger.warn("executeNRQL failure", {
