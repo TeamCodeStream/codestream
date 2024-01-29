@@ -483,7 +483,7 @@ export const APMLogSearchPanel = (props: {
 
 	return (
 		<>
-			<PanelHeader title="Logs" icon="logs">
+			<PanelHeader title="Logs">
 				<LogFilterBarContainer>
 					<div className="log-filter-bar-row">
 						<div className="log-filter-bar-service">

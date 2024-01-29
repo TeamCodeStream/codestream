@@ -1,4 +1,3 @@
-import Icon from "@codestream/webview/Stream/Icon";
 import { PropsWithChildren } from "react";
 import React from "react";
 import styled from "styled-components";
@@ -47,7 +46,6 @@ interface Props {
 	position?: "static" | "fixed";
 	title?: string | JSX.Element;
 	className?: string;
-	icon?: string;
 }
 
 export function PanelHeader(props: PropsWithChildren<Props>) {
@@ -56,7 +54,7 @@ export function PanelHeader(props: PropsWithChildren<Props>) {
 		<Header style={{ position }} className={className}>
 			{props.title && (
 				<Title>
-					{props.icon && <Icon name={props.icon} style={{ paddingRight: "5px" }} />} {props.title}
+					{props.title}
 					<div style={{ height: "5px" }} />
 				</Title>
 			)}
