@@ -86,13 +86,19 @@ export const NRQLEditor = React.forwardRef(
 				},
 			});
 
-			// const customTheme = {
-			// 	base: theme,
+			// sample...
+			// monaco.editor.defineTheme("nrql", {
+			// 	base: "vs-dark",
 			// 	inherit: true,
-			// 	rules: [{ token: "support.function.nrql", foreground: "#52a7f7" }],
-			// };
-
-			// monaco.editor.setTheme("nrql-theme", customTheme);
+			// 	rules: [
+			// 		{
+			// 			token: "keyword.nrql",
+			// 			foreground: "ff0000",
+			// 		},
+			// 	],
+			// 	colors: {},
+			// });
+			// monaco.editor.setTheme("nrql");
 
 			monaco.languages.setLanguageConfiguration("nrql", {
 				autoClosingPairs: [
@@ -103,6 +109,7 @@ export const NRQLEditor = React.forwardRef(
 			});
 
 			monaco.languages.setMonarchTokensProvider("nrql", {
+				ignoreCase: true,
 				tokenizer: {
 					root: [
 						[new RegExp(response.keywords.map(_ => _.label).join("|"), "i"), "keyword.nrql"],
