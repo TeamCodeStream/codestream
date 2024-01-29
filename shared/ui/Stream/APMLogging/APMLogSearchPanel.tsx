@@ -21,7 +21,9 @@ import { parseId } from "@codestream/webview/utilities/newRelic";
 import { useResizeDetector } from "react-resize-detector";
 import { TableWindow } from "../TableWindow";
 import { APMLogRow } from "./APMLogRow";
-import { AsyncPaginateCustomStyles, SelectCustomStyles } from "../AsyncPaginateCustomStyles";
+import { AsyncPaginate } from "react-select-async-paginate";
+import Select from "react-select";
+
 interface SelectedOption {
 	value: string;
 	label: string;
@@ -216,6 +218,10 @@ export const APMLogSearchPanel = (props: {
 	});
 
 	const handleSelectDropdownOption = entityAccount => {
+		if (!entityAccount) {
+			setSelectedEntityAccount(null);
+		}
+
 		const customLabel = (
 			<>
 				<span>Service: {entityAccount.label}</span>
@@ -487,11 +493,13 @@ export const APMLogSearchPanel = (props: {
 				<LogFilterBarContainer>
 					<div className="log-filter-bar-row">
 						<div className="log-filter-bar-service">
-							<AsyncPaginateCustomStyles
-								id="input-entity-autocomplete"
-								name="entity-autocomplete"
+							<AsyncPaginate
+								id="input-entity-log-autocomplete"
+								name="entity-log-autocomplete"
+								classNamePrefix="react-select"
 								loadOptions={loadEntities}
 								value={selectedEntityAccount}
+								isClearable
 								debounceTimeout={750}
 								placeholder={`Type to search for services...`}
 								onChange={newValue => {
@@ -503,7 +511,7 @@ export const APMLogSearchPanel = (props: {
 						</div>
 
 						<div className="log-filter-bar-since">
-							<SelectCustomStyles
+							<Select
 								id="input-since"
 								name="since"
 								classNamePrefix="react-select"
