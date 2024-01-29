@@ -515,9 +515,10 @@ export class SlackSharingApiProvider {
 		} catch (ex) {
 			const telemetry = Container.instance().telemetry;
 			telemetry.track({
-				eventName: "Slack Sharing Error",
+				eventName: "codestream/codemarks/slack_sharing failed",
 				properties: {
-					Error: ex.message,
+					meta_data: `error: ex.message`,
+					event_type: "response",
 				},
 			});
 			throw ex;

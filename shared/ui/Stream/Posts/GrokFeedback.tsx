@@ -5,7 +5,6 @@ import { ButtonRow, Dialog } from "@codestream/webview/src/components/Dialog";
 import { Button } from "@codestream/webview/src/components/Button";
 import Tooltip from "@codestream/webview/Stream/Tooltip";
 import { Checkbox } from "@codestream/webview/src/components/Checkbox";
-import { HostApi } from "@codestream/webview/webview-api";
 import { Modal } from "../Modal";
 
 const Container = styled.div`
@@ -119,7 +118,7 @@ export function GrokFeedbackForm(props: GrokFeedbackFormProps) {
 		}
 
 		console.debug(`AI feedback ${JSON.stringify(telemetryPayload)}`);
-		await HostApi.instance.track("Grok Feedback Submitted", telemetryPayload);
+
 		setIsLoading(false);
 		props.onSuccess();
 	};

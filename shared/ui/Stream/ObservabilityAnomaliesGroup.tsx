@@ -68,13 +68,32 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 
 	const handleClickTelemetry = () => {
 		const event = {
-			"Detection Method": props.detectionMethod ?? "<unknown>",
-			Language: props.observabilityAnomalies[0]?.language ?? "<unknown>",
+			entity_guid: props.entityGuid || "",
+			account_id: "",
+			meta_data: `anomaly_category: ${
+				props.observabilityAnomalies[0].scope ? "metric" : "transaction"
+			}`,
+			meta_data_2: `anomaly_type: ${
+				props.observabilityAnomalies[0].type === "duration"
+					? "avg_duration"
+					: props.observabilityAnomalies[0].type === "errorRate"
+					? "error_rate"
+					: ""
+			}`,
+			meta_data_4: `detection_method: ${
+				props.detectionMethod === "Release Based"
+					? "release_based"
+					: props.detectionMethod === "Time Based"
+					? "time_based"
+					: "<unknown>"
+			}`,
+			meta_data_3: `language: ${props.observabilityAnomalies[0]?.language ?? "<unknown>"}`,
+			event_type: "click",
 		};
 
 		console.debug("CLM Anomaly Clicked", event);
 
-		HostApi.instance.track("CLM Anomaly Clicked", event);
+		HostApi.instance.track("codestream/anomaly clicked", event);
 	};
 
 	const handleClick = (anomaly: ObservabilityAnomaly) => {

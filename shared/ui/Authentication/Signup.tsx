@@ -225,7 +225,7 @@ export const Signup = (props: Props) => {
 	useDidMount(() => {
 		getUserInfo();
 		if (derivedState.webviewFocused) {
-			HostApi.instance.track("Page Viewed", { "Page Name": "Sign In" });
+			HostApi.instance.track("codestream/sign_in page_viewed", { event_type: "page_view" });
 		}
 		if (props.teamId) getTeamAuthInfo(props.teamId);
 	});

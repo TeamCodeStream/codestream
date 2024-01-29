@@ -319,11 +319,11 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 		if (!props.errorGroup) return;
 
 		const _setAssignee = async (type: AssigneeType) => {
-			HostApi.instance.track("Error Assigned", {
-				"Error Group ID": props.errorGroup?.guid,
-				"NR Account ID": props.errorGroup?.accountId,
-				Assignment: props.errorGroup?.assignee ? "Change" : "New",
-				"Assignee Type": type,
+			HostApi.instance.track("codestream/errors/error_group assigned", {
+				meta_data: `error_group_id: ${props.errorGroup?.guid}`,
+				account_id: props.errorGroup?.accountId,
+				entity_guid: props.errorGroup?.entityGuid,
+				event_type: "response",
 			});
 
 			setIsAssigneeChanging(true);
@@ -436,10 +436,12 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 								notify();
 								setIsStateChanging(false);
 
-								HostApi.instance.track("Error Status Changed", {
-									"Error Group ID": props.errorGroup?.guid,
-									"NR Account ID": props.errorGroup?.accountId,
-									"Error Status": STATES_TO_ACTION_STRINGS[_],
+								HostApi.instance.track("codestream/errors/error_group status_changed", {
+									meta_data: `error_group_id: ${props.errorGroup?.guid}`,
+									account_id: props.errorGroup?.accountId,
+									entity_guid: props.errorGroup?.entityGuid,
+									meta_data_2: `error_status: ${STATES_TO_ACTION_STRINGS[_]}`,
+									event_type: "response",
 								});
 							},
 						};
@@ -618,8 +620,12 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 	const handleEntityLinkClick = (e, url) => {
 		e.preventDefault();
 		e.stopPropagation();
-		HostApi.instance.track("Open Service Summary on NR", {
-			Section: "Error",
+		HostApi.instance.track("codestream/link_to_newrelic clicked", {
+			entity_guid: props.errorGroup?.entityGuid,
+			account_id: props.errorGroup?.accountId,
+			meta_data: "destination: apm_service_summary",
+			meta_data_2: `codestream_section: error`,
+			event_type: "click",
 		});
 		HostApi.instance.send(OpenUrlRequestType, {
 			url,

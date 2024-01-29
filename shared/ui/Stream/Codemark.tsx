@@ -625,10 +625,19 @@ export class Codemark extends React.Component<Props, State> {
 		}
 
 		if (!this.props.selected) {
-			HostApi.instance.track("Codemark Clicked", {
-				"Codemark ID": this.props.codemark!.id,
-				"Codemark Location": this.props.contextName ? this.props.contextName : undefined,
-				Following: (this.props.codemark!.followerIds || []).includes(this.props.currentUser.id),
+			HostApi.instance.track("codestream/codemarks/codemark displayed", {
+				meta_data: `codemark_location: search`,
+				meta_data_2: `codemark_type: ${
+					this.props.codemark?.type === "issue"
+						? "issue"
+						: this.props.codemark?.type === "comment"
+						? "comment"
+						: ""
+				}`,
+				meta_data_3: `following: ${(this.props.codemark!.followerIds || []).includes(
+					this.props.currentUser.id
+				)}`,
+				event_type: "modal_display",
 			});
 		}
 

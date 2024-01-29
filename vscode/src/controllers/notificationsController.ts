@@ -80,7 +80,10 @@ export class NotificationsController implements Disposable {
 		];
 		const { duration, errorRate } = notification;
 
-		Container.agent.telemetry.track("Toast Notification", { Content: "CLM Anomaly" });
+		Container.agent.telemetry.track("codestream/toast displayed", {
+			meta_data: `content: anomaly`,
+			event_type: "state_load"
+		});
 		const count = duration.length + errorRate.length;
 		const title = count === 1 ? "Performance issue found" : `${count} performance issues found`;
 		const allAnomalies = [...duration, ...errorRate].sort((a, b) => b.ratio - a.ratio);
@@ -92,7 +95,11 @@ export class NotificationsController implements Disposable {
 		const result = await window.showInformationMessage(message, ...actions);
 
 		if (result === actions[0]) {
-			Container.agent.telemetry.track("Toast Clicked", { Content: "CLM Anomaly" });
+			Container.agent.telemetry.track("codestream/toast clicked", {
+				meta_data: `content: anomaly`,
+				target: "toast",
+				event_type: "click"
+			});
 			Container.sidebar.viewAnomaly({
 				anomaly: firstAnomaly,
 				entityGuid: notification.entityGuid
@@ -121,7 +128,10 @@ export class NotificationsController implements Disposable {
 
 		const toastContentType: ToastType = codemark ? "Codemark" : "Review";
 
-		Container.agent.telemetry.track("Toast Notification", { Content: toastContentType });
+		Container.agent.telemetry.track("codestream/toast displayed", {
+			meta_data: `content: ${toastContentType === "Codemark" ? "codemark" : ""}`,
+			event_type: "state_load"
+		});
 
 		const result = await window.showInformationMessage(
 			`${sender !== undefined ? sender.name : "Someone"}${colon} ${text}`,
@@ -134,7 +144,11 @@ export class NotificationsController implements Disposable {
 			} else if (review) {
 				Container.sidebar.openReview(review.id);
 			}
-			Container.agent.telemetry.track("Toast Clicked", { Content: toastContentType });
+			Container.agent.telemetry.track("codestream/toast clicked", {
+				meta_data: `content: ${toastContentType === "Codemark" ? "codemark" : ""}`,
+				target: "toast",
+				event_type: "click"
+			});
 		}
 	}
 }

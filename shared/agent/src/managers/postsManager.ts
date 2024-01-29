@@ -519,29 +519,35 @@ function trackPostCreation(
 						}
 					}
 
-					if (request.codemark && request.codemark.reviewId && request.isPseudoCodemark) {
-						// this is a pseudo codemark, aka a reply to a review marked as "Change Request"
-						const properties = {
-							"Parent ID": request.codemark.reviewId,
-							"Parent Type": "Review",
-						};
-						telemetry.track({ eventName: "Reply Created", properties: properties });
-					} else if (request.codemark) {
+					if (request.codemark) {
 						// this is a standard codemark -- note its event name includes "created" rather than "reply"
 						const { markers = [] } = request.codemark;
 						const codemarkProperties: {
 							[key: string]: any;
 						} = {
-							"Codemark ID": codemarkId,
-							"Codemark Type": request.codemark.type,
-							"Linked Service": request.codemark.externalProvider,
-							"Entry Point": request.entryPoint,
-							Tags: (request.codemark.tags || []).length,
-							Markers: markers.length,
-							"Invitee Mentions": request.addedUsers ? request.addedUsers.length : 0,
+							meta_data: `entry_point: ${
+								request.entryPoint === "Gutter"
+									? "gutter"
+									: "Global Nav"
+									? "global_nav"
+									: "Shortcut"
+									? "shortcut"
+									: "Lightbulb Menu"
+									? "lightbulb_menu"
+									: "Action List"
+									? "action_list"
+									: "Hover Icons"
+									? "hover_icons"
+									: "Advanced Link"
+									? "advanced_link"
+									: ""
+							}`,
+							meta_data_2: `linked_service: ${request.codemark.externalProvider}`,
+							meta_data_3: `false`,
+							event_type: "response",
 						};
 						if (request.codemark.codeErrorId) {
-							codemarkProperties["Code Error"] = true;
+							codemarkProperties["meta_data_3"] = `error_group: true`;
 						}
 						if (textDocuments && textDocuments.length) {
 							for (const textDocument of textDocuments) {
@@ -553,7 +559,10 @@ function trackPostCreation(
 								}
 							}
 						}
-						telemetry.track({ eventName: "Codemark Created", properties: codemarkProperties });
+						telemetry.track({
+							eventName: "codestream/codemarks/codemark created",
+							properties: codemarkProperties,
+						});
 					} else if (request.parentPostId) {
 						const parentPost = await SessionContainer.instance().posts.getById(
 							request.parentPostId
@@ -563,61 +572,51 @@ function trackPostCreation(
 								const grandParentPost = await SessionContainer.instance().posts.getById(
 									parentPost.parentPostId
 								);
-								if (parentPost.codemarkId && grandParentPost && grandParentPost.reviewId) {
-									// reply to a codemark in a review
-									const postProperties = {
-										"Parent ID": parentPost.codemarkId,
-										"Parent Type": "Review.Codemark",
-									};
-									telemetry.track({ eventName: "Reply Created", properties: postProperties });
-								}
+
 								if (parentPost.codemarkId && grandParentPost && grandParentPost.codeErrorId) {
 									// reply to a codemark in a code error
 									const postProperties = {
-										"Parent ID": parentPost.codemarkId,
-										"Parent Type": "Error.Codemark",
+										meta_data: "parent_type: error",
+										event_type: "response",
 									};
-									telemetry.track({ eventName: "Reply Created", properties: postProperties });
-								} else if (grandParentPost && grandParentPost.reviewId) {
-									// reply to a reply in a review
-									const postProperties = {
-										"Parent ID": grandParentPost.reviewId,
-										"Parent Type": "Review.Reply",
-									};
-									telemetry.track({ eventName: "Reply Created", properties: postProperties });
+									telemetry.track({
+										eventName: "codestream/codemarks/reply created",
+										properties: postProperties,
+									});
 								} else if (grandParentPost && grandParentPost.codeErrorId) {
 									// reply to a reply in a code error
 									const postProperties = {
-										"Parent ID": grandParentPost.codeErrorId,
-										"Parent Type": "Error.Reply",
+										meta_data: "parent_type: error",
+										event_type: "response",
 									};
-									telemetry.track({ eventName: "Reply Created", properties: postProperties });
+									telemetry.track({
+										eventName: "codestream/codemarks/reply created",
+										properties: postProperties,
+									});
 								}
-							} else if (parentPost.reviewId) {
-								// reply to a review
-								const postProperties = {
-									"Parent ID": parentPost.reviewId,
-									"Parent Type": "Review",
-								};
-								telemetry.track({ eventName: "Reply Created", properties: postProperties });
 							} else if (parentPost.codeErrorId) {
 								// reply to a code error
 								const postProperties = {
-									"Parent ID": parentPost.codeErrorId,
-									"Parent Type": "Error",
+									meta_data: "parent_type: error",
+									event_type: "response",
 								};
-								telemetry.track({ eventName: "Reply Created", properties: postProperties });
+								telemetry.track({
+									eventName: "codestream/codemarks/reply created",
+									properties: postProperties,
+								});
 							} else if (parentPost.codemarkId) {
 								// reply to a standard codemark
 								const codemark = await SessionContainer.instance().codemarks.getById(
 									parentPost.codemarkId
 								);
 								const postProperties = {
-									"Parent ID": parentPost.codemarkId,
-									"Parent Type": "Codemark",
-									Following: (codemark.followerIds || []).includes(session.userId),
+									meta_data: "parent_type: codemark",
+									event_type: "response",
 								};
-								telemetry.track({ eventName: "Reply Created", properties: postProperties });
+								telemetry.track({
+									eventName: "codestream/codemarks/reply created",
+									properties: postProperties,
+								});
 							}
 						}
 					}

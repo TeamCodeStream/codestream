@@ -194,9 +194,12 @@ export const ObservabilityAnomalyPanel = () => {
 	};
 
 	useDidMount(() => {
-		// HostApi.instance.track("MLT Codelens Clicked", {
-		// 	"NR Account ID": derivedState.currentObservabilityAnomaly?.newRelicAccountId + "",
-		// 	Language: derivedState.currentObservabilityAnomaly.languageId,
+		// HostApi.instance.track(odestream/codelense clicked", {
+		// account_id: derivedState.currentMethodLevelTelemetry?.newRelicAccountId + "",
+		// entity_guid: derivedState.currentMethodLevelTelemetry?.newRelicEntityGuid,
+		// target: "codelens",
+		// meta_data: `language: ${derivedState.currentMethodLevelTelemetry.languageId}`,
+		// event_type: "click",
 		// });
 		// if (!derivedState.currentMethodLevelTelemetry.error) {
 		loadData(derivedState.currentObservabilityAnomalyEntityGuid);

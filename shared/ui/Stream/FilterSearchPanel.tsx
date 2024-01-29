@@ -219,9 +219,6 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 	}
 
 	componentDidMount() {
-		if (this.props.webviewFocused)
-			HostApi.instance.track("Page Viewed", { "Page Name": "Search Tab" });
-
 		this.applyQuery(this.props.query);
 		// if (false && this.props.reviews.length === 0)
 		// this.props.fetchReviews().then(() => {

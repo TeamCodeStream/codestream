@@ -7,7 +7,6 @@ import * as codemarkSelectors from "../store/codemarks/reducer";
 import { setCurrentCodemark, setCurrentStream } from "../store/context/actions";
 import * as reviewSelectors from "../store/reviews/reducer";
 import * as userSelectors from "../store/users/reducer";
-import { HostApi } from "../webview-api";
 import * as actions from "./actions";
 import Codemark from "./Codemark";
 import Filter from "./Filter";
@@ -98,8 +97,6 @@ export class SimpleKnowledgePanel extends Component {
 	}
 
 	componentDidMount() {
-		if (this.props.webviewFocused)
-			HostApi.instance.track("Page Viewed", { "Page Name": "Search Tab" });
 		if (this.props.codemarks.length === 0)
 			this.props.fetchCodemarks().then(() => {
 				this.setState({ isLoading: false });

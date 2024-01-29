@@ -145,9 +145,12 @@ export const MethodLevelTelemetryPanel = () => {
 	};
 
 	useDidMount(() => {
-		HostApi.instance.track("MLT Codelens Clicked", {
-			"NR Account ID": derivedState.currentMethodLevelTelemetry?.newRelicAccountId + "",
-			Language: derivedState.currentMethodLevelTelemetry.languageId,
+		HostApi.instance.track("codestream/codelense clicked", {
+			account_id: derivedState.currentMethodLevelTelemetry?.newRelicAccountId + "",
+			entity_guid: derivedState.currentMethodLevelTelemetry?.newRelicEntityGuid,
+			target: "codelens",
+			meta_data: `language: ${derivedState.currentMethodLevelTelemetry.languageId}`,
+			event_type: "click",
 		});
 		if (!derivedState.currentMethodLevelTelemetry.error) {
 			loadData(derivedState.currentMethodLevelTelemetry.newRelicEntityGuid!);
@@ -372,8 +375,14 @@ export const MethodLevelTelemetryPanel = () => {
 														<Link
 															onClick={e => {
 																e.preventDefault();
-																HostApi.instance.track("Open Service Summary on NR", {
-																	Section: "Code-level Metrics",
+																HostApi.instance.track("codestream/link_to_newrelic clicked", {
+																	entity_guid:
+																		derivedState.currentMethodLevelTelemetry.newRelicEntityGuid,
+																	account_id:
+																		derivedState.currentMethodLevelTelemetry.newRelicAccountId,
+																	meta_data: "destination: apm_service_summary",
+																	meta_data_2: `codestream_section: code_level_metrics`,
+																	event_type: "click",
 																});
 																HostApi.instance.send(OpenUrlRequestType, {
 																	url: telemetryResponse.newRelicUrl!,

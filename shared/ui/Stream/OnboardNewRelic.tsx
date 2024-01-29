@@ -222,7 +222,9 @@ export const OnboardNewRelic = React.memo(function OnboardNewRelic() {
 			}
 		})();
 
-		HostApi.instance.track("Wizard Presented", {});
+		HostApi.instance.track("codestream/instrumentation_wizard displayed", {
+			event_type: "modal_display",
+		});
 	});
 
 	// check when you connect to a host provider
@@ -259,15 +261,18 @@ export const OnboardNewRelic = React.memo(function OnboardNewRelic() {
 
 	const setStep = (step: number, options?: { appName?: string }) => {
 		if (step === NUM_STEPS - 1) {
-			HostApi.instance.track("Wizard Ended", {
-				"Language Selected": projectType,
-				"App Name": options?.appName,
+			HostApi.instance.track("codestream/instrumentation_wizard completed", {
+				meta_data: `selected_language: ${projectType}`,
+				event_type: "modal_display",
 			});
 		}
 
 		if (step === 1) {
-			HostApi.instance.track("Wizard Started", {
-				"Language Detected": derivedState.wantNewRelicOptions?.projectType,
+			HostApi.instance.track("codestream/instrumentation_wizard started", {
+				meta_data: `detected_language: ${derivedState.wantNewRelicOptions?.projectType}`,
+				target: "get_started",
+				target_text: "Get Started",
+				event_type: "click",
 			});
 		}
 
@@ -330,8 +335,8 @@ export const OnboardNewRelic = React.memo(function OnboardNewRelic() {
 									Instrument your app
 								</h1>
 								<p className="explainer">
-									New Relic's APM agent helps developers make data-driven decisions. Improve
-									system performance, and your customers' experience.
+									New Relic's APM agent helps developers make data-driven decisions. Improve system
+									performance, and your customers' experience.
 								</p>
 								<CenterRow>
 									<Button variant="new-relic" size="xl" onClick={() => setStep(1)}>
@@ -1164,10 +1169,11 @@ const ProviderButtons = (props: { providerIds: string[]; setShowNextMessagingSte
 										url: "https://docs.newrelic.com/docs/codestream/code-discussion/msteams-integration/",
 									});
 									HostApi.instance.send(TelemetryRequestType, {
-										eventName: "Service Connected",
+										eventName: "codestream/integration connected",
 										properties: {
-											Service: provider.name,
-											"Connection Location": "Onboard",
+											meta_data: `service: ${provider.name}`,
+											meta_data_2: `connection_location: onboard`,
+											event_type: "response",
 										},
 									});
 									if (props.setShowNextMessagingStep) props.setShowNextMessagingStep(true);

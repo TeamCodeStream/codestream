@@ -29,7 +29,6 @@ import {
 import { getConnectedProviders } from "@codestream/webview/store/providers/reducer";
 import { addStreams } from "@codestream/webview/store/streams/actions";
 import { findMentionedUserIds, getTeamMembers } from "@codestream/webview/store/users/reducer";
-import { capitalize } from "@codestream/webview/utils";
 import { HostApi } from "@codestream/webview/webview-api";
 import { handleDirectives } from "../providerPullRequests/slice";
 
@@ -124,14 +123,21 @@ export const createCodemark =
 									],
 								});
 							}
-							HostApi.instance.track("Shared Codemark", {
-								Destination: capitalize(
+							HostApi.instance.track("codestream/codemarks/codemark shared", {
+								meta_data: `destination: ${
 									getConnectedProviders(getState()).find(
 										config => config.id === attributes.sharingAttributes!.providerId
-									)!.name
-								),
-								"Codemark Status": "New",
-								"Conversation Type": sharingAttributes.type === "channel" ? "Channel" : "Group DM",
+									)!.name === "msteams"
+										? "teams"
+										: "slack"
+										? "slack"
+										: ""
+								}`,
+								meta_data_2: `codemark_status: new`,
+								meta_data_3: `conversation_type": ${
+									sharingAttributes.type === "channel" ? "channel" : "group_dm"
+								}`,
+								event_type: "response",
 							});
 						} catch (error) {
 							logError("Error sharing a codemark", { message: error.toString() });
@@ -335,13 +341,21 @@ export const editCodemark =
 								],
 							});
 						}
-						HostApi.instance.track("Shared Codemark", {
-							Destination: capitalize(
+						HostApi.instance.track("codestream/codemarks/codemark shared", {
+							meta_data: `destination: ${
 								getConnectedProviders(getState()).find(
 									config => config.id === shareTarget.providerId
-								)!.name
-							),
-							"Codemark Status": "Edited",
+								)!.name === "msteams"
+									? "teams"
+									: "slack"
+									? "slack"
+									: ""
+							}`,
+							meta_data_2: `codemark_status: existing`,
+							meta_data_3: `conversation_type": ${
+								shareTarget.channelId === "channel" ? "channel" : "group_dm"
+							}`,
+							event_type: "response",
 						});
 					} catch (error) {
 						logError("Error sharing a codemark", { message: error.toString() });

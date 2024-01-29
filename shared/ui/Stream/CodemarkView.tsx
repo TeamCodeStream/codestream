@@ -8,7 +8,6 @@ import { getCodemark } from "../store/codemarks/reducer";
 import { setCurrentCodemark } from "../store/context/actions";
 import { isUnread } from "../store/users/reducer";
 import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
-import { HostApi } from "../webview-api";
 import { markItemRead } from "./actions";
 import Codemark from "./Codemark";
 
@@ -28,9 +27,6 @@ export function CodemarkView() {
 	const store = useStore<CodeStreamState>();
 
 	useDidMount(() => {
-		if (store.getState().context.hasFocus)
-			HostApi.instance.track("Page Viewed", { "Page Name": "Codemark View" });
-
 		if (codemark == undefined) {
 			// TODO: fetch it when we have the api for that
 			dispatch(setCurrentCodemark());
