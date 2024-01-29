@@ -5,6 +5,7 @@ import Icon from "@codestream/webview/Stream/Icon";
 import { isEmpty as _isEmpty } from "lodash-es";
 import { HostApi } from "@codestream/webview/webview-api";
 import { LogResult } from "@codestream/protocols/agent";
+import copy from "copy-to-clipboard";
 
 const LogSeverity = styled.span`
 	border-radius: 1px;
@@ -61,6 +62,7 @@ const DetailViewTable = styled.div`
 
 		.heading {
 			flex: 1;
+			word-break: break-all;
 			background: var(--base-background-color);
 			border-right: 1px solid var(--base-border-color);
 			border-bottom: 1px solid var(--base-border-color);
@@ -70,6 +72,21 @@ const DetailViewTable = styled.div`
 		.data {
 			flex: 3;
 			border-bottom: 1px solid var(--base-border-color);
+			word-break: break-all;
+
+			.copy {
+				display: none;
+
+				&:hover {
+					cursor: pointer;
+				}
+			}
+
+			&:hover {
+				.copy {
+					display: inline-block;
+				}
+			}
 		}
 	}
 `;
@@ -126,7 +143,17 @@ export const APMLogRow = (props: {
 						return (
 							<div className="row">
 								<div className="cell heading">{k}</div>
-								<div className="cell data">{props.logRowData[k]}</div>
+								<div className="cell data">
+									{props.logRowData[k]}{" "}
+									<Icon
+										name="copy"
+										className="copy"
+										title="Copy"
+										onClick={() => {
+											copy(props.logRowData[k]);
+										}}
+									></Icon>
+								</div>
 							</div>
 						);
 					})}
