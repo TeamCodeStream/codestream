@@ -4,6 +4,7 @@ import Timestamp from "../Timestamp";
 import Icon from "@codestream/webview/Stream/Icon";
 import { isEmpty as _isEmpty } from "lodash-es";
 import { HostApi } from "@codestream/webview/webview-api";
+import { LogResult } from "@codestream/protocols/agent";
 
 const LogSeverity = styled.span`
 	border-radius: 1px;
@@ -45,12 +46,41 @@ const ShowMoreContainer = styled.div`
 	justify-content: center;
 `;
 
+const DetailViewTable = styled.div`
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	border: 1px solid var(--base-border-color);
+
+	.row {
+		display: flex;
+
+		.cell {
+			padding: 10px;
+		}
+
+		.heading {
+			flex: 1;
+			background: var(--base-background-color);
+			border-right: 1px solid var(--base-border-color);
+			border-bottom: 1px solid var(--base-border-color);
+			font-weight: bold;
+		}
+
+		.data {
+			flex: 3;
+			border-bottom: 1px solid var(--base-border-color);
+		}
+	}
+`;
+
 export const APMLogRow = (props: {
 	timestamp: string;
 	severity: string;
 	message: string;
-	entityGuid?: string;
 	accountId?: number;
+	entityGuid?: string;
+	logRowData: LogResult;
 	showMore?: boolean;
 	updateData: Function;
 	index: number;
@@ -63,7 +93,7 @@ export const APMLogRow = (props: {
 			<ShowMoreContainer>
 				<span
 					onClick={() => {
-						console.warn("clicked Show More");
+						trackTelemetry();
 					}}
 				>
 					Show More
@@ -81,24 +111,26 @@ export const APMLogRow = (props: {
 	};
 
 	const handleClickExpand = () => {
-		trackTelemetry();
 		let updatedJsx;
 		if (_isEmpty(props.expandedContent)) {
+			const keys = Object.keys(props.logRowData).sort();
+
 			updatedJsx = (
-				<div>
-					hello world expanded <br />
-					hello world expanded <br />
-					hello world expanded <br />
-					hello world expanded <br />
-					hello world expanded <br />
-					hello world expanded <br />
-					hello world expanded <br />
-					hello world expanded <br />
-					hello world expanded <br />
-					hello world expanded <br />
-					hello world expanded <br />
-					hello world expanded <br />
-				</div>
+				<DetailViewTable>
+					{keys.map(k => {
+						if (k === "log_summary") {
+							// still not sure if this column will actually be useful, but its not needed here
+							return;
+						}
+
+						return (
+							<div className="row">
+								<div className="cell heading">{k}</div>
+								<div className="cell data">{props.logRowData[k]}</div>
+							</div>
+						);
+					})}
+				</DetailViewTable>
 			);
 		} else {
 			updatedJsx = undefined;

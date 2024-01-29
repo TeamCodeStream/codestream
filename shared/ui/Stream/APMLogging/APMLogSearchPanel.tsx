@@ -457,6 +457,7 @@ export const APMLogSearchPanel = (props: {
 						severity={severity}
 						accountId={accountId?.accountId}
 						entityGuid={entityGuid}
+						logRowData={r}
 						showMore={showMore}
 						updateData={updateResults}
 						expandedContent={expandedContent}
