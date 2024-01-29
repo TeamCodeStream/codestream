@@ -31,7 +31,6 @@ const LayoutWrapper = styled.div`
 const HeaderRow = styled.div`
 	width: 100%;
 	height: 40px;
-	background-color: #3a444b;
 	display: flex;
 	align-items: center;
 	padding: 10px;
@@ -91,6 +90,8 @@ export const NRQLPanel = (props: {
 }) => {
 	const [userQuery, setUserQuery] = useState<string>("");
 	const [results, setResults] = useState<NRQLResult[]>([]);
+	const [eventType, setEventType] = useState<string>();
+	const [since, setSince] = useState<string>();
 	const [selectedAccount, setSelectedAccount] = useState<
 		{ label: string; value: number } | undefined
 	>(undefined);
@@ -163,6 +164,8 @@ export const NRQLPanel = (props: {
 			setNRQLError(undefined);
 			setResults([]);
 			setTotalItems(0);
+			setEventType("");
+			setSince("");
 
 			const response = await HostApi.instance.send(GetNRQLRequestType, {
 				accountId,
@@ -193,6 +196,10 @@ export const NRQLPanel = (props: {
 				setResults(response.results);
 				setTotalItems(response.results.length);
 				setResultsTypeGuess(response.resultsTypeGuess);
+				setEventType(response.eventType);
+				if (response.since) {
+					setSince(response.since.toLowerCase());
+				}
 			}
 		} catch (ex) {
 			handleError(ex);
@@ -215,7 +222,7 @@ export const NRQLPanel = (props: {
 				Query your data
 			</HeaderRow>
 			<QueryWrapper>
-				<div className="search-input" style={{ width: "100%" }}>
+				<div className="search-input">
 					<AsyncPaginate
 						id="input-account-autocomplete"
 						name="account-autocomplete"
@@ -282,6 +289,11 @@ export const NRQLPanel = (props: {
 				</ButtonContainer>
 			</ActionRow>
 			<ResultsRow>
+				{since && (
+					<div>
+						<small>Since {since}</small>
+					</div>
+				)}
 				<div>
 					{!nrqlError &&
 						!isLoading &&
@@ -292,7 +304,9 @@ export const NRQLPanel = (props: {
 						!isLoading &&
 						results &&
 						totalItems > 0 &&
-						resultsTypeGuess === "billboard" && <NRQLResultsBillboard results={results} />}
+						resultsTypeGuess === "billboard" && (
+							<NRQLResultsBillboard results={results} eventType={eventType} />
+						)}
 					{!nrqlError && !isLoading && results && totalItems > 0 && resultsTypeGuess === "line" && (
 						<NRQLResultsLine results={results} />
 					)}

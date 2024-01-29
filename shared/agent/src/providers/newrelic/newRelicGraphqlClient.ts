@@ -567,6 +567,46 @@ export class NewRelicGraphqlClient implements Disposable {
 		return undefined;
 	}
 
+	async runNrqlWithMetadata<T>(
+		accountId: number,
+		nrql: string,
+		timeout: number = 60
+	): Promise<{
+		results: T[];
+		rawResponse: {
+			metadata: {
+				eventType: string;
+				rawSince: string;
+			};
+		};
+	}> {
+		const query = `query Nrql($accountId:Int!) {
+			actor {
+				account(id: $accountId) {
+					nrql(query: "${nrql}", timeout: ${timeout}) {
+						results
+						rawResponse
+					}
+				}
+			}
+	  	}`;
+		const results = await this.query<{
+			actor: {
+				account: {
+					nrql: {
+						results: T[];
+						rawResponse: {
+							metadata: {
+								eventType: string;
+								rawSince: string;
+							};
+						};
+					};
+				};
+			};
+		}>(query, { accountId });
+		return results.actor.account.nrql;
+	}
 	async runNrql<T>(accountId: number, nrql: string, timeout: number = 60): Promise<T[]> {
 		const query = `query Nrql($accountId:Int!) {
 			actor {
