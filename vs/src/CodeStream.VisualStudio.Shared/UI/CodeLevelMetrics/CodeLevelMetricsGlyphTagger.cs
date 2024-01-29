@@ -134,6 +134,11 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 								)
 						);
 
+						if (string.IsNullOrEmpty(sampleSize?.SampleSize))
+						{
+							continue;
+						}
+
 						var methodStartLine = methodDeclaration.Identifier
 							.GetLocation()
 							.GetLineSpan()

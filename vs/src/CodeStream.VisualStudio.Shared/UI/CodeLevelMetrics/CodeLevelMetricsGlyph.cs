@@ -61,34 +61,24 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 			var errors = ErrorRateResponse?.ErrorRate;
 			var sampleSize = SampleSizeResponse?.SampleSize;
 
-			if (sampleSize is null)
-			{
-				Tooltip = "No metrics found for this method in the last 30 minutes";
-			}
-			else
-			{
-				var formatString = Constants.CodeLevelMetrics.GoldenSignalsFormat;
+			var formatString = Constants.CodeLevelMetrics.GoldenSignalsFormat;
 
-				Tooltip = formatString.Replace(
-					Constants.CodeLevelMetrics.Tokens.AverageDuration,
-					avgDuration is null ? "n/a" : $"{avgDuration.ToFixed(3)}ms"
-				);
+			Tooltip = formatString.Replace(
+				Constants.CodeLevelMetrics.Tokens.AverageDuration,
+				avgDuration is null ? "n/a" : $"{avgDuration.ToFixed(3)}ms"
+			);
 
-				Tooltip = Tooltip.Replace(
-					Constants.CodeLevelMetrics.Tokens.ErrorRate,
-					errors is null ? "n/a" : $"{errors.ToFixed(3)}%"
-				);
+			Tooltip = Tooltip.Replace(
+				Constants.CodeLevelMetrics.Tokens.ErrorRate,
+				errors is null ? "n/a" : $"{errors.ToFixed(3)}%"
+			);
 
-				Tooltip = Tooltip.Replace(
-					Constants.CodeLevelMetrics.Tokens.Since,
-					SinceDateFormatted
-				);
+			Tooltip = Tooltip.Replace(Constants.CodeLevelMetrics.Tokens.Since, SinceDateFormatted);
 
-				Tooltip = Tooltip.Replace(
-					Constants.CodeLevelMetrics.Tokens.SampleSize,
-					$"{sampleSize}"
-				);
-			}
+			Tooltip = Tooltip.Replace(
+				Constants.CodeLevelMetrics.Tokens.SampleSize,
+				$"{sampleSize}"
+			);
 
 			var hasAnomaly = false;
 			if (AvgDurationResponse?.Anomaly != null)
