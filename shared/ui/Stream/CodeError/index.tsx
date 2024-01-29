@@ -1,4 +1,5 @@
 import {
+	CodeBlock,
 	DidChangeObservabilityDataNotificationType,
 	GetNewRelicAssigneesRequestType,
 	NewRelicErrorGroup,
@@ -1214,17 +1215,24 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 
 	useEffect(() => {
 		if (derivedState.showGrok && !props.readOnly) {
-			const submitGrok = async (functinoToEdit?: FunctionToEdit) => {
+			const submitGrok = async (functionToEdit?: FunctionToEdit) => {
 				// console.debug("===--- useEffect startGrokLoading");
 				props.setGrokRequested();
 				setGrokRequested(true);
 				dispatch(startGrokLoading(props.codeError));
+				const codeBlock: CodeBlock | undefined = functionToEdit
+					? {
+							range: functionToEdit.range,
+							code: functionToEdit.codeBlock,
+							uri: functionToEdit.uri,
+					  }
+					: undefined;
 				const actualCodeError = await dispatch(
 					upgradePendingCodeError(
 						props.codeError.id,
 						"Comment",
-						functinoToEdit?.codeBlock,
-						functinoToEdit?.language,
+						codeBlock,
+						functionToEdit?.language,
 						true
 					)
 				);

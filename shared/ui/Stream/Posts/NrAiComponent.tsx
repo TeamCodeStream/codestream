@@ -33,6 +33,7 @@ export const ButtonRow = styled.div`
 	display: flex;
 	justify-content: end;
 	margin: 7px 0 -7px 0;
+	column-gap: 10px;
 `;
 
 export type NrAiComponentProps = {
@@ -115,25 +116,29 @@ export function NrAiComponent(props: NrAiComponentProps) {
 			{showGrokLoader && <NrAiLoading />}
 			{hasIntro && <Markdown text={parts?.intro ?? ""} />}
 			{showCodeBlockLoader && <NrAiCodeBlockLoading />}
-			{props.file && props.functionToEdit?.codeBlock && normalizedCodeFix && (
-				<DiffSection>
-					<DiffEditor
-						original={props.functionToEdit?.codeBlock}
-						modified={normalizedCodeFix}
-						height={325}
-						options={{
-							renderSideBySide: false,
-							renderOverviewRuler: false,
-							folding: false,
-							lineNumbers: "off",
-						}}
-						theme="vs-dark"
-					/>
-					<ButtonRow>
-						{showApplyFix && <Button onClick={() => applyFix()}>Apply Fix</Button>}
-					</ButtonRow>
-				</DiffSection>
-			)}
+			{!showCodeBlockLoader &&
+				props.file &&
+				props.functionToEdit?.codeBlock &&
+				normalizedCodeFix && (
+					<DiffSection>
+						<DiffEditor
+							original={props.functionToEdit?.codeBlock}
+							modified={normalizedCodeFix}
+							height={325}
+							options={{
+								renderSideBySide: false,
+								renderOverviewRuler: false,
+								folding: false,
+								lineNumbers: "off",
+							}}
+							theme="vs-dark"
+						/>
+						<ButtonRow>
+							{showApplyFix && <Button onClick={() => applyFix()}>Preview in IDE</Button>}
+							{showApplyFix && <Button onClick={() => applyFix()}>Apply Fix</Button>}
+						</ButtonRow>
+					</DiffSection>
+				)}
 			<Markdown text={parts?.description ?? ""} />
 			{showFeedback && (
 				<>

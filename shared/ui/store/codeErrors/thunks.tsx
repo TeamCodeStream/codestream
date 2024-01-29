@@ -1,4 +1,5 @@
 import {
+	CodeBlock,
 	CreateShareableCodeErrorRequestType,
 	CSAsyncGrokError,
 	CSGrokStream,
@@ -340,7 +341,7 @@ export const upgradePendingCodeError =
 	(
 		codeErrorId: string,
 		source: "Comment" | "Status Change" | "Assignee Change",
-		codeBlock?: string,
+		codeBlock?: CodeBlock,
 		language?: string,
 		analyze = false
 	) =>
@@ -571,7 +572,7 @@ export const copySymbolFromIde =
 					codeBlock: symbolDetails.text,
 					symbol: stackLine.method,
 					uri: lookupPath,
-					codeBlockStartLine: symbolDetails.range.start.line,
+					range: symbolDetails.range,
 					namespace: stackLine.namespace,
 					language: symbolDetails.language,
 				})

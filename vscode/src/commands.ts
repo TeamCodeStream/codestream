@@ -211,14 +211,9 @@ export class Commands implements Disposable {
 
 		const originalUri = Uri.parse(resp.textDocument.uri);
 
-		const markerId: CSMarkerIdentifier = {
-			id: args.marker.id,
-			file: args.marker.file,
-			repoId: args.marker.repoId
-		};
 		const patchedUri = originalUri.with({
 			scheme: "codestream-patch",
-			query: encodeURIComponent(JSON.stringify(markerId))
+			query: encodeURIComponent(JSON.stringify(args.marker))
 		});
 
 		const fileName = paths.basename(originalUri.fsPath);

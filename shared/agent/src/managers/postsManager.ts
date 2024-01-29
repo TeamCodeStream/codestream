@@ -12,6 +12,7 @@ import {
 	CSCodeError,
 	CSCreateCodemarkResponse,
 	CSDirectStream,
+	CSLocationArray,
 	CSMarker,
 	CSObjectStream,
 	CSPost,
@@ -1481,7 +1482,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			markers: [],
 		};
 
-		let codeError: CSCodeError | undefined;
 		const stream = await SessionContainer.instance().streams.getTeamStream();
 
 		const response = await this.session.api.createPost({
@@ -1491,14 +1491,36 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			dontSendEmail: false,
 			mentionedUserIds: request.mentionedUserIds,
 			addedUsers: request.addedUsers,
-			codeBlock: request.codeBlock,
+			codeBlock: request.codeBlock?.code,
 			language: request.language,
 			analyze: request.analyze,
 			reinitialize: request.reinitialize,
 			parentPostId: request.parentPostId, // For grok reinitialization
 		});
 
-		codeError = response.codeError!;
+		const codeError = response.codeError!;
+
+		if (request.codeBlock) {
+			const csLocation: CSLocationArray = [
+				request.codeBlock.range.start.line,
+				request.codeBlock.range.start.character,
+				request.codeBlock.range.end.line,
+				request.codeBlock.range.end.character,
+				undefined,
+			];
+			const createCodemarkRequest: CreateCodemarkRequest = {
+				codeErrorId: codeError.id,
+				type: CodemarkType.CodeError,
+				markers: [
+					{
+						code: request.codeBlock.code,
+						file: request.codeBlock.uri,
+						location: csLocation,
+					},
+				],
+			};
+			await SessionContainer.instance().codemarks.create(createCodemarkRequest);
+		}
 
 		// trackCodeErrorPostCreation(codeError, request.entryPoint, request.addedUsers);
 		this.cacheResponse(response!);

@@ -1,6 +1,11 @@
 "use strict";
-import { RequestType } from "vscode-languageserver-protocol";
-import { CreateMarkerRequest, NewRelicErrorGroup, PostPlus } from "./agent.protocol";
+import { RequestType, Range } from "vscode-languageserver-protocol";
+import {
+	CodeBlockSource,
+	CreateMarkerRequest,
+	NewRelicErrorGroup,
+	PostPlus,
+} from "./agent.protocol";
 import {
 	CSChannelStream,
 	CSCodeError,
@@ -39,7 +44,14 @@ export const CreateCodeErrorRequestType = new RequestType<
 	void
 >("codestream/codeErrors/create");
 
-export interface ShareableCodeErrorAttributes extends Omit<CreateCodeErrorRequest, "markers"> {}
+export type ShareableCodeErrorAttributes = CreateCodeErrorRequest;
+
+export type CodeBlock = {
+	uri: string;
+	code: string;
+	range: Range;
+	// scm?: CodeBlockSource;
+};
 
 export interface CreateShareableCodeErrorRequest {
 	attributes: ShareableCodeErrorAttributes;
@@ -47,7 +59,7 @@ export interface CreateShareableCodeErrorRequest {
 	mentionedUserIds?: string[];
 	addedUsers?: string[];
 	replyPost?: { text: string; mentionedUserIds?: string[] };
-	codeBlock?: string;
+	codeBlock?: CodeBlock;
 	language?: string;
 	analyze: boolean;
 	reinitialize: boolean;

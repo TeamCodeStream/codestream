@@ -1,5 +1,6 @@
 import {
 	ClaimCodeErrorRequestType,
+	CodeBlock,
 	CSAsyncGrokError,
 	DeleteCodeErrorRequestType,
 	FetchCodeErrorsRequestType,
@@ -64,7 +65,7 @@ export interface NewCodeErrorAttributes {
 		mentionedUserIds?: string[];
 	};
 	providerUrl?: string;
-	codeBlock?: string;
+	codeBlock?: CodeBlock;
 	language?: string;
 	analyze: boolean;
 	reinitialize: boolean;
