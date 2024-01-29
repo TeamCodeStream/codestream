@@ -489,7 +489,6 @@ export const APMLogSearchPanel = (props: {
 								}}
 								components={{ Option }}
 								tabIndex={1}
-								autoFocus
 							/>
 						</div>
 
@@ -521,6 +520,7 @@ export const APMLogSearchPanel = (props: {
 								onKeyDown={checkKeyPress}
 								placeholder="Query logs in the selected service"
 								tabIndex={3}
+								autoFocus
 							/>
 						</div>
 
