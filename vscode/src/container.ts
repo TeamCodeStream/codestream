@@ -21,8 +21,9 @@ import { CodeStreamCodeActionProvider } from "./providers/codeActionProvider";
 import { CodemarkDecorationProvider } from "./providers/markerDecorationProvider";
 import { CodemarkPatchContentProvider } from "./providers/patchContentProvider";
 import { SetServerUrlRequestType } from "@codestream/protocols/agent";
-import { EditorController } from "controllers/editorController";
-import { NrqlCodeLensController } from "controllers/nrqlCodeLensController";
+import { EditorController } from "./controllers/editorController";
+import { NrqlCodeLensController } from "./controllers/nrqlCodeLensController";
+import { PanelController } from "./controllers/panelController";
 // import { WebviewSidebarActivator } from "./views/webviewSidebarActivator";
 
 export class Container {
@@ -68,6 +69,7 @@ export class Container {
 		context.subscriptions.push(
 			(this._sidebar = new SidebarController(context, this._session, sidebar))
 		);
+		context.subscriptions.push((this._panel = new PanelController(context, this._session)));
 		context.subscriptions.push(configuration.onWillChange(this.onConfigurationChanging, this));
 		context.subscriptions.push(configuration.onDidChangeAny(this.onConfigurationChangeAny, this));
 
@@ -218,6 +220,10 @@ export class Container {
 	private static _sidebar: SidebarController;
 	static get sidebar() {
 		return this._sidebar;
+	}
+	private static _panel: PanelController;
+	static get panel() {
+		return this._panel;
 	}
 
 	private static _editor: EditorController;

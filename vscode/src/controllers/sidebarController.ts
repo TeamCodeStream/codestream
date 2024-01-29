@@ -93,10 +93,7 @@ import {
 	WebviewDidInitializeNotificationType,
 	WebviewIpcMessage,
 	WebviewIpcNotificationMessage,
-	WebviewIpcRequestMessage,
-	OpenEditorViewNotification,
-	InitiateNrqlExecutionNotification,
-	InitiateNrqlExecutionNotificationType
+	WebviewIpcRequestMessage
 } from "@codestream/protocols/webview";
 import {
 	authentication,
@@ -141,9 +138,6 @@ import * as csUri from "../system/uri";
 import * as TokenManager from "../api/tokenManager";
 import { SaveTokenReason } from "../api/tokenManager";
 import { copySymbol, replaceSymbol } from "./symbolEditController";
-import { CodeStreamWebviewPanel } from "webviews/webviewPanel";
-import { EditorController } from "./editorController";
-import { randomUUID } from "crypto";
 
 const emptyObj = {};
 
@@ -157,11 +151,6 @@ export interface WebviewState {
 	teamless?: TeamlessContext;
 }
 
-interface PanelInitialization {
-	panel: CodeStreamWebviewPanel;
-	controller: EditorController;
-}
-
 export class SidebarController implements Disposable {
 	private _bootstrapPromise: Promise<BootstrapResponse> | undefined;
 	private _context: WebviewContext | undefined;
@@ -172,8 +161,6 @@ export class SidebarController implements Disposable {
 	private _missingCapabilities: CSApiCapabilities | undefined;
 	private _providerSessionIds: { [key: string]: string } = {};
 	private _hasShownAfterOnVersionChanged: boolean = false;
-
-	private _logPanelInitializations: { [Identifier: string]: PanelInitialization } = {};
 
 	private readonly _notifyActiveEditorChangedDebounced: (e: TextEditor | undefined) => void;
 
@@ -236,14 +223,6 @@ export class SidebarController implements Disposable {
 		let teamState;
 		switch (status) {
 			case SessionStatus.SignedOut:
-				if (this._logPanelInitializations) {
-					Object.keys(this._logPanelInitializations).forEach(lpi => {
-						const { panel } = this._logPanelInitializations[lpi];
-
-						panel.dispose();
-					});
-				}
-
 				if (e.reason === SessionSignedOutReason.SignInFailure) {
 					if (!this.visible) {
 						this.show();
@@ -564,16 +543,6 @@ export class SidebarController implements Disposable {
 	}
 
 	@log()
-	async executeNrql(args: InitiateNrqlExecutionNotification): Promise<void> {
-		if (!this._sidebar) {
-			// it's possible that the webview is closing...
-			return;
-		}
-
-		this._sidebar!.notify(InitiateNrqlExecutionNotificationType, args);
-	}
-
-	@log()
 	async viewAnomaly(args: ViewAnomalyNotification): Promise<void> {
 		if (this.visible) {
 			await this._sidebar!.show();
@@ -885,53 +854,10 @@ export class SidebarController implements Disposable {
 		}
 	}
 
-	private initializeOrShowEditor(e: OpenEditorViewNotification) {
-		let editorKey = "";
-		if (e.panel === "nrql") {
-			editorKey = e.hash! || `${e.panel}-${e.entityGuid}`;
-		} else {
-			editorKey = `${e.panel}-${e.entityGuid}`;
-
-			if (e.query) {
-				// hack until I can figure out how to funnel a search term into an already open logs window.
-				editorKey = `${editorKey}-${randomUUID()}`;
-			}
-		}
-
-		if (!this._logPanelInitializations[editorKey]) {
-			const panel = new CodeStreamWebviewPanel(this.session, this.context, e, () => {});
-
-			const controller = new EditorController(this.session, panel);
-			const onDidClose = () => {
-				const initialization = this._logPanelInitializations[editorKey];
-				delete this._logPanelInitializations[editorKey];
-			};
-			panel.onDidClose(() => {
-				onDidClose();
-			});
-
-			this._logPanelInitializations[editorKey] = {
-				panel: panel,
-				controller: controller
-			};
-		} else {
-			const { panel } = this._logPanelInitializations[editorKey];
-			if (panel) {
-				Logger.debug(
-					`sidebarController: Found existing panel for key ${editorKey} (${panel.name})`
-				);
-				panel.show().then(_ => {
-					panel.notify(OpenEditorViewNotificationType, e);
-				});
-			} else {
-				Logger.warn(`sidebarController: Could not find existing panel for key ${editorKey}`);
-			}
-		}
-	}
 	private onWebviewNotification(webview: WebviewLike, e: WebviewIpcNotificationMessage) {
 		switch (e.method) {
 			case OpenEditorViewNotificationType.method: {
-				this.initializeOrShowEditor(e.params);
+				Container.panel.initializeOrShowEditor(e.params);
 				break;
 			}
 			case WebviewDidInitializeNotificationType.method: {

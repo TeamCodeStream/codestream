@@ -9,7 +9,10 @@ import {
 	isNRErrorResponse,
 	NRQLResult,
 } from "@codestream/protocols/agent";
-import { OpenEditorViewNotificationType } from "@codestream/protocols/webview";
+import {
+	OpenEditorViewNotificationType,
+	OpenInBufferRequestType,
+} from "@codestream/protocols/webview";
 import { Disposable } from "@codestream/webview/utils";
 import { AsyncPaginate } from "react-select-async-paginate";
 import styled from "styled-components";
@@ -21,6 +24,8 @@ import { NRQLResultsBillboard } from "./NRQLResultsBillboard";
 import { NRQLResultsJSON } from "./NRQLResultsJSON";
 import { NRQLResultsLine } from "./NRQLResultsLine";
 import { NRQLResultsTable } from "./NRQLResultsTable";
+import { parseId } from "@codestream/webview/utilities/newRelic";
+import Icon from "../Icon";
 
 const LayoutWrapper = styled.div`
 	display: flex;
@@ -80,6 +85,7 @@ const Option = (props: OptionProps) => {
 };
 
 const DEFAULT_QUERY = "FROM ";
+
 export const NRQLPanel = (props: {
 	accountId?: number;
 	entityAccounts: EntityAccount[];
@@ -87,6 +93,12 @@ export const NRQLPanel = (props: {
 	entityGuid?: string;
 	query?: string;
 }) => {
+	const accountId = props.accountId
+		? props.accountId
+		: props.entityGuid
+		? parseId(props.entityGuid)?.accountId
+		: undefined;
+
 	const [userQuery, setUserQuery] = useState<string>("");
 	const [results, setResults] = useState<NRQLResult[]>([]);
 	const [eventType, setEventType] = useState<string>();
@@ -114,7 +126,7 @@ export const NRQLPanel = (props: {
 				if (nrqlEditorRef?.current) {
 					nrqlEditorRef.current!.setValue(e.query);
 					setUserQuery(e.query!);
-					executeNRQL(props.accountId, props.entityGuid!, e.query);
+					executeNRQL(selectedAccount?.value || accountId, props.entityGuid!, e.query);
 				}
 			})
 		);
@@ -122,8 +134,8 @@ export const NRQLPanel = (props: {
 		accountsPromise = HostApi.instance.send(GetAllAccountsRequestType, {}).then(result => {
 			setAccounts(result.accounts);
 			if (result?.accounts?.length) {
-				if (props.accountId) {
-					const foundAccount = result.accounts.find(_ => _.id === props.accountId);
+				if (accountId) {
+					const foundAccount = result.accounts.find(_ => _.id === accountId);
 					if (foundAccount) {
 						setSelectedAccount(formatSelectedAccount(foundAccount));
 					}
@@ -134,7 +146,7 @@ export const NRQLPanel = (props: {
 
 			if (props.query) {
 				setUserQuery(props.query);
-				executeNRQL(props.accountId, props.entityGuid!, props.query);
+				executeNRQL(selectedAccount?.value || accountId, props.entityGuid!, props.query);
 			}
 		});
 		return () => {
@@ -307,6 +319,30 @@ export const NRQLPanel = (props: {
 						>
 							Run
 						</Button>
+					</ButtonContainer>
+				</ActionRow>
+				<ActionRow>
+					<DropdownContainer></DropdownContainer>
+					<ButtonContainer>
+						<a
+							style={{ cursor: "pointer" }}
+							href="#"
+							onClick={e => {
+								e.preventDefault();
+
+								HostApi.instance.track("codestream/nrql/export downloaded", {
+									event_type: "submit",
+									meta_data: `format: json`,
+								});
+
+								HostApi.instance.send(OpenInBufferRequestType, {
+									contentType: "json",
+									data: results,
+								});
+							}}
+						>
+							<Icon name="download" title="Open Results as JSON" />
+						</a>
 					</ButtonContainer>
 				</ActionRow>
 			</PanelHeader>

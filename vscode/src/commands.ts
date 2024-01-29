@@ -647,7 +647,20 @@ export class Commands implements Disposable {
 			// notification of some sort that we couldn't find anything to search on?
 			await window.showErrorMessage("Please select a NRQL query to execute", "Dismiss");
 		} else {
-			await Container.sidebar.executeNrql({
+			const currentRepoId = Container.session.user?.preferences?.currentO11yRepoId;
+
+			const currentEntityGuid = currentRepoId
+				? (Container.session?.user?.preferences?.activeO11y?.[currentRepoId] as string)
+				: undefined;
+
+			await Container.panel.initializeOrShowEditor({
+				panelLocation: ViewColumn.Beside,
+				// UI can get the accountId based on the entityGuid (parsed)
+				accountId: undefined,
+				entityGuid: currentEntityGuid!,
+				entityAccounts: [],
+				panel: "nrql",
+				title: "NRQL",
 				query: nrqlQuery,
 				entryPoint: "nrql_file",
 				hash: md5(fileUri.toString())
