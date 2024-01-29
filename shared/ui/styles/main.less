@@ -476,7 +476,7 @@ body.preload * {
 		margin: 0;
 		font-family: inherit;
 		font-size: 13px;
-		min-height: 29px;
+		max-height: 29px;
 		border-radius: 0;
 
 		&:hover {
@@ -543,12 +543,12 @@ body.preload * {
 		cursor: pointer;
 	}
 	.react-select__option:hover {
-		background: @background-color-info;
+		background: @text-focus-border-color !important;
 		color: white;
 	}
 	.react-select__option--is-focused {
-		background: inherit;
 		color: inherit;
+		background: @text-focus-border-color !important;
 	}
 	.react-select.input-text {
 		padding: 0;

@@ -15,6 +15,7 @@ const selectStyles = {
 		fontSize: "13px",
 		minHeight: "29px !important",
 		borderRadius: 0,
+		cursor: "text",
 	}),
 	input: provided => ({
 		...provided,
