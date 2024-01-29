@@ -265,6 +265,7 @@ export const NRQLPanel = (props: {
 								components={{ Option }}
 								tabIndex={1}
 								autoFocus
+								isClearable
 							/>
 						</div>
 
