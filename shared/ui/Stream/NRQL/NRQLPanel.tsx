@@ -124,10 +124,14 @@ export const NRQLPanel = (props: {
 
 		accountsPromise = HostApi.instance.send(GetAllAccountsRequestType, {}).then(result => {
 			setAccounts(result.accounts);
-			if (props.accountId) {
-				const foundAccount = result.accounts.find(_ => _.id === props.accountId);
-				if (foundAccount) {
-					setSelectedAccount(formatSelectedAccount(foundAccount));
+			if (result?.accounts?.length) {
+				if (props.accountId) {
+					const foundAccount = result.accounts.find(_ => _.id === props.accountId);
+					if (foundAccount) {
+						setSelectedAccount(formatSelectedAccount(foundAccount));
+					}
+				} else if (result.accounts.length === 1) {
+					setSelectedAccount(formatSelectedAccount(result.accounts[0]));
 				}
 			}
 
