@@ -1215,7 +1215,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 
 	useEffect(() => {
 		if (derivedState.showGrok && !props.readOnly) {
-			const submitGrok = async (functionToEdit?: FunctionToEdit) => {
+			const submitNrAi = async (functionToEdit?: FunctionToEdit) => {
 				// console.debug("===--- useEffect startGrokLoading");
 				props.setGrokRequested();
 				setGrokRequested(true);
@@ -1250,12 +1250,13 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 				!grokRequested &&
 				(functionToEdit || functionToEditFailed)
 			) {
-				submitGrok(functionToEdit).catch(e => {
-					console.error("submitGrok failed", e);
+				console.debug("submitNrAi case 1", functionToEdit, functionToEditFailed);
+				submitNrAi(functionToEdit).catch(e => {
+					console.error("submitNrAi failed", e);
 				});
 				return;
 			}
-			// Case 2 - give a chance for replies to load before deciding to submitGrok
+			// Case 2 - give a chance for replies to load before deciding to submitNrAi
 			if (
 				!isGrokLoading &&
 				isPostThreadsLoading !== undefined && // Hasn't attempted to load yet
@@ -1264,8 +1265,9 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 				derivedState.replies.length === 0 && // Has loaded replies and they are empty
 				(functionToEdit || functionToEditFailed)
 			) {
-				submitGrok(functionToEdit).catch(e => {
-					console.error("submitGrok failed", e);
+				console.debug("submitNrAi case 2", functionToEdit, functionToEditFailed);
+				submitNrAi(functionToEdit).catch(e => {
+					console.error("submitNrAi failed", e);
 				});
 			}
 		}
