@@ -21,7 +21,7 @@ import { log } from "../../../system/decorators/log";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 import { ContextLogger } from "../../contextLogger";
 import { mapNRErrorResponse, parseId } from "../utils";
-import { Strings } from "system";
+import { Strings } from "../../../system";
 import { EntitySearchResult } from "../newrelic.types";
 
 @lsp
