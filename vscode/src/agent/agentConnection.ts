@@ -153,7 +153,8 @@ import {
 	UpdateUserRequest,
 	UpdateUserRequestType,
 	UserDidCommitNotification,
-	UserDidCommitNotificationType
+	UserDidCommitNotificationType,
+	DidEncounterInvalidRefreshTokenNotificationType
 } from "@codestream/protocols/agent";
 import {
 	ChannelServiceType,
@@ -202,6 +203,11 @@ export class CodeStreamAgentConnection implements Disposable {
 	private _onDidFailLogin = new EventEmitter<void>();
 	get onDidFailLogin(): Event<void> {
 		return this._onDidFailLogin.event;
+	}
+
+	private _onDidEncounterInvalidRefreshToken = new EventEmitter<void>();
+	get onDidEncounterInvalidRefreshToken(): Event<void> {
+		return this._onDidEncounterInvalidRefreshToken.event;
 	}
 
 	private _onDidRequireRestart = new EventEmitter<void>();
@@ -1302,6 +1308,9 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._client.onNotification(DidLoginNotificationType, e => this._onDidLogin.fire(e));
 		this._client.onNotification(DidStartLoginNotificationType, () => this._onDidStartLogin.fire());
 		this._client.onNotification(DidFailLoginNotificationType, () => this._onDidFailLogin.fire());
+		this._client.onNotification(DidEncounterInvalidRefreshTokenNotificationType, () =>
+			this._onDidEncounterInvalidRefreshToken.fire()
+		);
 		this._client.onNotification(DidLogoutNotificationType, this.onLogout.bind(this));
 		this._client.onNotification(RestartRequiredNotificationType, () => {
 			this._onDidRequireRestart.fire();

@@ -136,6 +136,13 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
     @JsonNotification("codestream/didFailLogin")
     fun didFailLogin(json: JsonElement?) {}
 
+    @JsonNotification("codestream/didEncounterInvalidRefreshToken")
+    fun didEncounterInvalidRefreshToken(json: JsonElement?) {
+        appDispatcher.launch {
+            project.authenticationService?.onDidEncounterInvalidRefreshToken();
+        }
+    }
+
     @JsonNotification("codestream/didLogin")
     fun didLogin(json: JsonElement) {
         val notification = gson.fromJson<DidLoginNotification>(json)
@@ -151,18 +158,7 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
         val notification = gson.fromJson<DidLogoutNotification>(json)
         logger.info("codeStream/didLogout: ${notification.reason}")
         appDispatcher.launch {
-            if (notification.reason == LogoutReason.UNSUPPORTED_VERSION) {
-                project.authenticationService?.logout(CSLogoutReason.UNSUPPORTED_VERSION)
-            } else {
-                project.authenticationService?.logout(CSLogoutReason.DID_LOGOUT)
-            }
-
-            if (notification.reason === LogoutReason.TOKEN) {
-                logger.info("codeStream/didLogout: LogoutReason.TOKEN -> resetting web context")
-                project.agentService?.onDidStart {
-                    project.webViewService?.load(true)
-                }
-            }
+            project.authenticationService?.onDidLogout(notification)
         }
     }
 
@@ -360,9 +356,10 @@ enum class LogoutReason {
     UNKNOWN,
     @SerializedName("unsupportedVersion")
     UNSUPPORTED_VERSION,
-
     @SerializedName("unsupportedApiVersion")
-    UNSUPPORTED_API_VERSION
+    UNSUPPORTED_API_VERSION,
+    @SerializedName("invalidRefreshToken")
+    INVALID_REFRESH_TOKEN,
 }
 
 class UserDidCommitNotification(val sha: String)

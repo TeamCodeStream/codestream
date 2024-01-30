@@ -92,13 +92,14 @@ export interface StreamThread {
 }
 
 export enum SessionSignedOutReason {
+	InvalidRefreshToken = "invalidRefreshToken",
+	MaintenanceMode = "maintenanceMode",
 	NetworkIssue = "networkIssue",
 	SignInFailure = "signInFailure",
-	UserSignedOutFromWebview = "userSignedOutFromWebview",
+	UnsupportedVersion = "unsupportedVersion",
 	UserSignedOutFromExtension = "userSignedOutFromExtension",
-	UserWentOffline = "userWentOffline",
-	MaintenanceMode = "maintenanceMode",
-	UnsupportedVersion = "unsupportedVersion"
+	UserSignedOutFromWebview = "userSignedOutFromWebview",
+	UserWentOffline = "userWentOffline"
 }
 
 export enum SessionStatus {
@@ -213,6 +214,11 @@ export class CodeStreamSession implements Disposable {
 		this._disposableUnauthenticated = Disposable.from(
 			Container.agent.onDidStartLogin(() => this.setStatus(SessionStatus.SigningIn)),
 			Container.agent.onDidFailLogin(() => this.setStatus(SessionStatus.SignedOut)),
+			Container.agent.onDidEncounterInvalidRefreshToken(() => {
+				Logger.log("Encountered invalid refresh token, logging out...");
+				this.logout(SessionSignedOutReason.InvalidRefreshToken);
+				this.setStatus(SessionStatus.SignedOut);
+			}),
 			Container.agent.onDidLogin(params => {
 				this.completeLogin(
 					SaveTokenReason.LOGIN_SUCCESS,
@@ -644,7 +650,8 @@ export class CodeStreamSession implements Disposable {
 		try {
 			if (
 				reason === SessionSignedOutReason.UserSignedOutFromExtension ||
-				reason === SessionSignedOutReason.UserSignedOutFromWebview
+				reason === SessionSignedOutReason.UserSignedOutFromWebview ||
+				reason === SessionSignedOutReason.InvalidRefreshToken
 			) {
 				// Clear the access token
 				await Container.context.workspaceState.update(WorkspaceState.TeamId, undefined);

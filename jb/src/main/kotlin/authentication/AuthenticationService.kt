@@ -2,7 +2,9 @@ package com.codestream.authentication
 
 import com.codestream.agent.ApiVersionCompatibility
 import com.codestream.agent.DidChangeApiVersionCompatibilityNotification
+import com.codestream.agent.DidLogoutNotification
 import com.codestream.agent.DidRefreshAccessTokenNotification
+import com.codestream.agent.LogoutReason
 import com.codestream.agentService
 import com.codestream.codeStream
 import com.codestream.extensions.merge
@@ -143,6 +145,27 @@ class AuthenticationService(val project: Project) {
             }
             project.sessionService?.login(result.userLoggedIn, result.eligibleJoinCompanies)
         }
+    }
+
+    suspend fun onDidLogout(notification: DidLogoutNotification) {
+        logger.info("codeStream/didLogout: ${notification.reason}")
+        if (notification.reason == LogoutReason.UNSUPPORTED_VERSION) {
+            logout(CSLogoutReason.UNSUPPORTED_VERSION)
+        } else {
+            logout(CSLogoutReason.DID_LOGOUT)
+        }
+
+        if (notification.reason === LogoutReason.TOKEN ||
+            notification.reason === LogoutReason.INVALID_REFRESH_TOKEN) {
+            logger.info("codeStream/didLogout: LogoutReason.TOKEN -> resetting web context")
+            project.agentService?.onDidStart {
+                project.webViewService?.load(true)
+            }
+        }
+    }
+
+    suspend fun onDidEncounterInvalidRefreshToken() {
+        onDidLogout(DidLogoutNotification(LogoutReason.INVALID_REFRESH_TOKEN))
     }
 
     suspend fun logout(reason: CSLogoutReason, newServerUrl: String? = null) {
