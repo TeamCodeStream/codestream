@@ -191,17 +191,19 @@ export class NrqlCompletionProvider {
 					if (secondToLastItem && lastItem) {
 						if (secondToLastItem === "from") {
 							const fetchCollections = await fetchCollectionsPromise;
-							const collections = fetchCollections.list.filter(
-								_ => _.toLowerCase().indexOf(lastItem) > -1
-							);
-							for (const candidate of collections) {
-								completionItems.push({
-									label: candidate,
-									kind: CompletionItemKind.Module,
-									insertText: candidate,
-								});
+							if (!fetchCollections.list.find(_ => _.toLowerCase() === lastItem)) {
+								const collections = fetchCollections.list.filter(
+									_ => _.toLowerCase().indexOf(lastItem) > -1
+								);
+								for (const candidate of collections) {
+									completionItems.push({
+										label: candidate,
+										kind: CompletionItemKind.Module,
+										insertText: candidate,
+									});
+								}
+								return { items: completionItems };
 							}
-							return { items: completionItems };
 						}
 					}
 				}
