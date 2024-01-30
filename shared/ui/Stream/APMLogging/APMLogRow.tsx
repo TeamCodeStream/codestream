@@ -6,6 +6,7 @@ import { isEmpty as _isEmpty } from "lodash-es";
 import { HostApi } from "@codestream/webview/webview-api";
 import { LogResult } from "@codestream/protocols/agent";
 import copy from "copy-to-clipboard";
+import Tooltip from "../Tooltip";
 
 const LogSeverity = styled.span`
 	border-radius: 1px;
@@ -180,9 +181,11 @@ export const APMLogRow = (props: {
 						name={props.expandedContent ? "chevron-down-thin" : "chevron-right-thin"}
 						style={{ cursor: "pointer", marginRight: "2px" }}
 					/>
-					<LogSeverity
-						style={{ backgroundColor: logSeverityToColor[props.severity.toLowerCase()] }}
-					/>
+					<Tooltip content={props.severity.toLowerCase()} delay={0.5}>
+						<LogSeverity
+							style={{ backgroundColor: logSeverityToColor[props.severity.toLowerCase()] }}
+						/>
+					</Tooltip>
 					<Timestamp time={props.timestamp} expandedTime={true} />
 				</TimestampData>
 				{!props.expandedContent && <MessageData>{props.message}</MessageData>}
