@@ -19,12 +19,16 @@ const LogSeverity = styled.span`
 `;
 
 const logSeverityToColor = {
+	severe: "#df2d24",
 	fatal: "#df2d24",
 	error: "#df2d24",
+
 	warn: "#ffd23d",
+	warning: "#ffd23d",
+
 	info: "#0c74df",
-	trace: "",
-	debug: "",
+	trace: "#0c74df",
+	debug: "#0c74df",
 };
 
 const TimestampData = styled.div`
@@ -176,7 +180,9 @@ export const APMLogRow = (props: {
 						name={props.expandedContent ? "chevron-down-thin" : "chevron-right-thin"}
 						style={{ cursor: "pointer", marginRight: "2px" }}
 					/>
-					<LogSeverity style={{ backgroundColor: logSeverityToColor[props.severity] }} />
+					<LogSeverity
+						style={{ backgroundColor: logSeverityToColor[props.severity.toLowerCase()] }}
+					/>
 					<Timestamp time={props.timestamp} expandedTime={true} />
 				</TimestampData>
 				{!props.expandedContent && <MessageData>{props.message}</MessageData>}
