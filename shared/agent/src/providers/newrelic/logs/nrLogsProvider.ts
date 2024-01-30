@@ -1,11 +1,16 @@
 import { lsp, lspHandler } from "../../../system/decorators/lsp";
 import {
+	EntityType,
+	EntityTypeMap,
 	GetLogFieldDefinitionsRequest,
 	GetLogFieldDefinitionsRequestType,
 	GetLogFieldDefinitionsResponse,
+	GetLoggingEntitiesRequestType,
 	GetLogsRequest,
 	GetLogsRequestType,
 	GetLogsResponse,
+	GetObservabilityEntitiesRequest,
+	GetObservabilityEntitiesResponse,
 	GetSurroundingLogsRequest,
 	GetSurroundingLogsRequestType,
 	GetSurroundingLogsResponse,
@@ -16,6 +21,8 @@ import { log } from "../../../system/decorators/log";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 import { ContextLogger } from "../../contextLogger";
 import { mapNRErrorResponse, parseId } from "../utils";
+import { Strings } from "system";
+import { EntitySearchResult } from "../newrelic.types";
 
 @lsp
 export class NrLogsProvider {
@@ -34,6 +41,65 @@ export class NrLogsProvider {
 		return searchTerm.replace("\\", "\\\\\\\\").replace("'", "\\'");
 	}
 
+	@lspHandler(GetLoggingEntitiesRequestType)
+	@log({ timed: true })
+	async getLoggingEntities(
+		request: GetObservabilityEntitiesRequest
+	): Promise<GetObservabilityEntitiesResponse> {
+		const { limit = 50 } = request;
+		try {
+			const query = `query search($cursor:String){
+				actor {
+				  entitySearch(query: "name LIKE '%${Strings.sanitizeGraphqlValue(
+						request.searchCharacters
+					)}%' AND type IN ('APPLICATION', 'SERVICE')",
+				  sortByWithDirection: { attribute: NAME, direction: ASC },
+				  options: { limit: ${limit} }) {
+					count
+					results(cursor:$cursor) {
+					  nextCursor
+					  entities {
+						guid
+						name
+						entityType
+						account {
+							name
+						  }
+						}
+					  }
+					}
+				  }
+			  }`;
+
+			const response: EntitySearchResult = await this.graphqlClient.query<EntitySearchResult>(
+				query,
+				{
+					cursor: request.nextCursor ?? null,
+				}
+			);
+			const entities = response.actor.entitySearch.results.entities.map(
+				(_: { guid: string; name: string; account: { name: string }; entityType: EntityType }) => {
+					return {
+						guid: _.guid,
+						name: _.name,
+						account: _.account.name,
+						entityType: _.entityType,
+						entityTypeDescription: EntityTypeMap[_.entityType],
+					};
+				}
+			);
+
+			return {
+				totalResults: response.actor.entitySearch.count,
+				entities,
+				nextCursor: response.actor.entitySearch.results.nextCursor,
+			};
+		} catch (ex) {
+			ContextLogger.error(ex, "getLoggingEntities");
+			throw ex;
+		}
+	}
+
 	@lspHandler(GetLogsRequestType)
 	@log()
 	public async getLogs(request: GetLogsRequest): Promise<GetLogsResponse> {
@@ -45,7 +111,7 @@ export class NrLogsProvider {
 				...request,
 			};
 
-			let queryWhere = `WHERE entity.guid = '${entityGuid}' AND newrelic.source = 'logs.APM'`;
+			let queryWhere = `WHERE entity.guid = '${entityGuid}'`;
 			const querySince = `SINCE ${since}`;
 			const queryOrder = `ORDER BY ${order.field} ${order.direction}`;
 			const queryLimit = `LIMIT ${limit}`;
@@ -119,7 +185,7 @@ export class NrLogsProvider {
 
 			const parsedId = parseId(entityGuid)!;
 
-			const queryWhere = `WHERE entity.guid = '${entityGuid}' AND newrelic.source = 'logs.APM' AND messageId != '${messageId}`;
+			const queryWhere = `WHERE entity.guid = '${entityGuid}' AND messageId != '${messageId}`;
 			const queryOrder = `ORDER BY timestamp ASC`;
 
 			const beforeQuerySince = `SINCE ${since} - 10 MINUTES`;

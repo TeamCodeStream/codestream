@@ -9,8 +9,8 @@ import { HostApi } from "../../webview-api";
 import { Link } from "../Link";
 import {
 	EntityAccount,
-	GetAllEntitiesRequestType,
 	GetLogFieldDefinitionsRequestType,
+	GetLoggingEntitiesRequestType,
 	GetLogsRequestType,
 	GetSurroundingLogsRequestType,
 	LogFieldDefinition,
@@ -412,7 +412,7 @@ export const APMLogSearchPanel = (props: {
 	};
 
 	async function loadEntities(search: string, _loadedOptions, additional?: AdditionalType) {
-		const result = await HostApi.instance.send(GetAllEntitiesRequestType, {
+		const result = await HostApi.instance.send(GetLoggingEntitiesRequestType, {
 			searchCharacters: search,
 			nextCursor: additional?.nextCursor,
 		});
