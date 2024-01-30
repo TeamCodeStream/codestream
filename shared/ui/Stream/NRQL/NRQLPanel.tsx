@@ -26,20 +26,7 @@ import { NRQLResultsLine } from "./NRQLResultsLine";
 import { NRQLResultsTable } from "./NRQLResultsTable";
 import { parseId } from "@codestream/webview/utilities/newRelic";
 import Icon from "../Icon";
-
-const LayoutWrapper = styled.div`
-	display: flex;
-	flex-direction: column;
-	height: 100vh;
-`;
-
-const HeaderRow = styled.div`
-	width: 100%;
-	height: 40px;
-	display: flex;
-	align-items: center;
-	padding: 10px;
-`;
+import { fuzzyTimeAgoinWords } from "../Timestamp";
 
 const QueryWrapper = styled.div`
 	width: 100%;
@@ -211,7 +198,11 @@ export const NRQLPanel = (props: {
 				setResultsTypeGuess(response.resultsTypeGuess);
 				setEventType(response.eventType);
 				if (response.since) {
-					setSince(response.since.toLowerCase());
+					if (/^[0-9]+$/.test(response.since)) {
+						setSince(fuzzyTimeAgoinWords(Number(response.since)) + " ago");
+					} else {
+						setSince(response.since.toLowerCase());
+					}
 				}
 			}
 		} catch (ex) {

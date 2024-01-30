@@ -114,6 +114,34 @@ export const distanceOfTimeInWords = (
 	}
 };
 
+export const fuzzyTimeAgoinWords = (time: number) => {
+	// Get the current time
+	const now = Date.now();
+
+	// Calculate the time difference in milliseconds
+	const timeDifference = now - time;
+
+	// Display the time difference in a human-readable format
+	const seconds = Math.floor(timeDifference / 1000);
+	const minutes = Math.floor(seconds / 60);
+	const hours = Math.floor(minutes / 60);
+	const days = Math.floor(hours / 24);
+
+	if (days) {
+		return `${days} day${days > 1 ? "s" : ""}`;
+	}
+	if (hours) {
+		return `${hours} hour${hours > 1 ? "s" : ""}`;
+	}
+	if (minutes) {
+		return `${minutes} minute${minutes > 1 ? "s" : ""}`;
+	}
+	if (seconds) {
+		return `${seconds} second${seconds > 1 ? "s" : ""}`;
+	}
+	return "";
+};
+
 const prettyDateDay = function (time, abbreviated?: boolean) {
 	if (time === 0 || time === null || time === undefined) return "";
 	try {
