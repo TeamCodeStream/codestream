@@ -134,7 +134,6 @@ export function NrAiComponent(props: NrAiComponentProps) {
 							theme="vs-dark"
 						/>
 						<ButtonRow>
-							{showApplyFix && <Button onClick={() => applyFix()}>Preview in IDE</Button>}
 							{showApplyFix && <Button onClick={() => applyFix()}>Apply Fix</Button>}
 						</ButtonRow>
 					</DiffSection>
