@@ -87,13 +87,7 @@ export class ObservabilityErrorsProvider {
 
 			if (!filteredRepos || !filteredRepos.length) return response;
 
-			const showAIForAccount: { [accountId: number]: boolean } = {};
-			const showAI = async (accountId: number) => {
-				if (showAIForAccount[accountId] === undefined) {
-					showAIForAccount[accountId] = await this.nraiProvider.getAIEligibility({ accountId });
-				}
-				return !!showAIForAccount[accountId];
-			};
+			const showAI = await this.nraiProvider.getAIEligibility();
 
 			for (const repo of filteredRepos) {
 				if (!repo.remotes || !repo.id) continue;
@@ -181,7 +175,7 @@ export class ObservabilityErrorsProvider {
 											count: errorTrace.count,
 											lastOccurrence: errorTrace.lastOccurrence,
 											errorGroupUrl: response.actor.errorsInbox.errorGroup.url,
-											showAI: await showAI(application.source.entity.account.id),
+											showAI,
 										});
 										if (observabilityErrors.length > 4) {
 											gotoEnd = true;

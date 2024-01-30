@@ -1295,16 +1295,9 @@ export const GetNewRelicAssigneesRequestType = new RequestType<
 	void
 >("codestream/newrelic/assignees");
 
-export interface GetNewRelicAIEligibilityRequest {
-	accountId: number;
-}
-
-export const GetNewRelicAIEligibilityRequestType = new RequestType<
-	GetNewRelicAIEligibilityRequest,
-	boolean,
-	void,
-	void
->("codestream/newrelic/aiEligibility");
+export const GetNewRelicAIEligibilityRequestType = new RequestType<void, boolean, void, void>(
+	"codestream/newrelic/aiEligibility"
+);
 
 export interface NewRelicAccount {
 	id: number;

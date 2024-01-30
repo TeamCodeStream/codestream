@@ -1203,8 +1203,8 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 		getGrokPostLength(state, codeError.streamId, codeError.postId)
 	);
 
-	if (derivedState.showGrok && !props.readOnly) {
-		useEffect(() => {
+	useEffect(() => {
+		if (derivedState.showGrok && !props.readOnly) {
 			const submitGrok = async (codeBlock?: string) => {
 				// console.debug("===--- useEffect startGrokLoading");
 				props.setGrokRequested();
@@ -1253,8 +1253,8 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 					console.error("submitGrok failed", e);
 				});
 			}
-		}, [functionToEdit, functionToEditFailed, isPostThreadsLoading, derivedState.replies]);
-	}
+		}
+	}, [functionToEdit, functionToEditFailed, isPostThreadsLoading, derivedState.replies]);
 
 	const onClickStackLine = async (event, lineIndex) => {
 		event && event.preventDefault();

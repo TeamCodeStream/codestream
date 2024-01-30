@@ -1,10 +1,8 @@
 import { lsp, lspHandler } from "../../../system/decorators/lsp";
 import { log } from "../../../system/decorators/log";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
-import {
-	GetNewRelicAIEligibilityRequest,
-	GetNewRelicAIEligibilityRequestType,
-} from "@codestream/protocols/agent";
+import { GetNewRelicAIEligibilityRequestType } from "@codestream/protocols/agent";
+import { Logger } from "logger";
 
 @lsp
 export class NraiProvider {
@@ -12,23 +10,8 @@ export class NraiProvider {
 
 	@lspHandler(GetNewRelicAIEligibilityRequestType)
 	@log({ timed: true })
-	async getAIEligibility(request: GetNewRelicAIEligibilityRequest): Promise<boolean> {
-		const query = `query getFeatureFlag($accountId: ID!) {
-			actor {
-				capabilities(filter: {names: "grok.ask.any"}, scopeId: $accountId, scopeType: ACCOUNT) {
-					name
-				}
-				${
-					/* this is not available yet
-					preReleaseProgram {
-					program(readableId: "grokPreview") {
-						submission {
-							status
-						}
-					}
-				}*/ ""
-				}
-			}
+	async getAIEligibility(): Promise<boolean> {
+		const ffOverrideQuery = `query getAIFeatureFlag {
 			currentUser {
 				crossAccount {
 					featureFlag(name: "Collaboration/ama") {
@@ -37,32 +20,48 @@ export class NraiProvider {
 				}
 			}
 		}`;
-		const response = await this.graphqlClient.query<{
-			actor?: {
-				capabilities?: {
-					name?: string;
-				}[];
-				preReleaseProgram?: {
-					program?: {
-						submission?: {
-							status?: string;
+		const programQuery = `query getAIPreReleaseOptIn {
+			actor {
+				preReleaseProgram {
+					program(readableId: "nraiPreview") {
+						submission {
+							accepted
+						}
+					}
+				}
+			}
+		}`;
+		try {
+			const ffOverrideResponse = await this.graphqlClient.query<{
+				currentUser?: {
+					crossAccount?: {
+						featureFlag?: {
+							value?: boolean;
 						};
 					};
 				};
-			};
-			currentUser?: {
-				crossAccount?: {
-					featureFlag?: {
-						value?: boolean;
+			}>(ffOverrideQuery);
+			if (ffOverrideResponse.currentUser?.crossAccount?.featureFlag?.value) {
+				return true;
+			}
+		} catch (ex) {
+			Logger.warn(`Error fetching AI feature flag: ${ex.message}`);
+		}
+		try {
+			const programResponse = await this.graphqlClient.query<{
+				actor?: {
+					preReleaseProgram?: {
+						program?: {
+							submission?: {
+								accepted?: boolean;
+							};
+						};
 					};
 				};
-			};
-		}>(query, { accountId: request.accountId });
-		const featureFlagEnabled = response.currentUser?.crossAccount?.featureFlag?.value || false;
-		const preReleaseProgramActive =
-			response.actor?.preReleaseProgram?.program?.submission?.status === "active";
-		const hasCapability = (response.actor?.capabilities || []).length > 0;
-
-		return featureFlagEnabled || preReleaseProgramActive || hasCapability;
+			}>(programQuery);
+			return !!programResponse.actor?.preReleaseProgram?.program?.submission?.accepted;
+		} catch (ex) {
+			return false;
+		}
 	}
 }
