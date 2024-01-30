@@ -2,7 +2,7 @@ import { lsp, lspHandler } from "../../../system/decorators/lsp";
 import { log } from "../../../system/decorators/log";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 import { GetNewRelicAIEligibilityRequestType } from "@codestream/protocols/agent";
-import { Logger } from "logger";
+import { Logger } from "../../../logger";
 
 @lsp
 export class NraiProvider {
