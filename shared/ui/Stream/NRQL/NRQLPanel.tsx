@@ -190,7 +190,8 @@ export const NRQLPanel = (props: {
 					account_id: response.accountId,
 					event_type: "response",
 					meta_data: `default_visualization: ${response.resultsTypeGuess}`,
-					meta_data_2: `query_source: ${props.entryPoint}`,
+					// TODO add recent queries
+					meta_data_2: `recent_query: false`,
 				});
 
 				setResults(response.results);
@@ -322,6 +323,7 @@ export const NRQLPanel = (props: {
 								e.preventDefault();
 
 								HostApi.instance.track("codestream/nrql/export downloaded", {
+									account_id: selectedAccount?.value || accountId,
 									event_type: "submit",
 									meta_data: `format: json`,
 								});
