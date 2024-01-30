@@ -242,7 +242,7 @@ export const NRQLPanel = (props: {
 
 	return (
 		<>
-			<PanelHeader title="Query your data">
+			<PanelHeader title="Query Your Data">
 				<QueryWrapper>
 					<div className="search-input">
 						<div style={{ marginBottom: "10px" }}>
