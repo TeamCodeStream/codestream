@@ -6,9 +6,10 @@ const nrNrqlProvider = {
 	fetchCollections: function () {
 		return new Promise(resolve => {
 			resolve({
-				list: ["Log"],
+				list: ["Log", "Span"],
 				obj: {
 					Log: true,
+					Span: true,
 				},
 			});
 		});
@@ -26,9 +27,14 @@ const nrNrqlProvider = {
 const provider = new NrqlCompletionProvider({} as any, nrNrqlProvider as any);
 
 describe("NrqlCompletionProvider", () => {
-	it("provideCompletionItems starting with FROM", async () => {
+	it("provideCompletionItems starting with FR", async () => {
 		const response = await provider.provideCompletionItems({ query: "FR" });
 		expect(response.items[0].label).toEqual("FROM");
+	});
+
+	it("provideCompletionItems starting with FROM s", async () => {
+		const response = await provider.provideCompletionItems({ query: "FROM s" });
+		expect(response.items[0].label).toEqual("Span");
 	});
 
 	it("provideCompletionItems starting with SELECT", async () => {

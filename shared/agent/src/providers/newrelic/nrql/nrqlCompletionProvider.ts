@@ -46,12 +46,40 @@ export class NrqlCompletionProvider {
 		return item;
 	}
 
+	private getLastAndSecondToLast(arr: string[]): {
+		secondToLastItem?: string;
+		lastItem?: string;
+	} {
+		const length = arr.length;
+
+		if (length === 0)
+			return {
+				secondToLastItem: undefined,
+				lastItem: undefined,
+			};
+
+		const lastItem = arr[length - 1];
+		if (length === 1) {
+			return {
+				secondToLastItem: undefined,
+				lastItem: lastItem,
+			};
+		}
+		return {
+			secondToLastItem: arr[length - 2],
+			lastItem: lastItem,
+		};
+	}
+
 	@lspHandler(GetNRQLCompletionItemsType)
 	async provideCompletionItems(
 		request: GetNRQLCompletionItemsRequest
 	): Promise<GetNRQLCompletionItemsResponse> {
 		const completionItems: CompletionItem[] = [];
 		try {
+			// fire this off since we'll need it later
+			const fetchCollectionsPromise = this.nrNRQLProvider.fetchCollections();
+
 			const builtIns = await this.nrNRQLProvider.getConstants({});
 			// the entire line of a query (might be the entire query or a partial)
 			const text = request.query?.trim();
@@ -66,10 +94,9 @@ export class NrqlCompletionProvider {
 			const currentWord = split[split.length - 1];
 			const currentWordAsUpperCase = currentWord.toUpperCase();
 			const textSplitLowered = textLowered.split(" ");
-			const lastWordLowered = textSplitLowered[textSplitLowered.length - 1];
-			const collectionsResponse = await this.nrNRQLProvider.fetchCollections();
+			const { lastItem, secondToLastItem } = this.getLastAndSecondToLast(textSplitLowered);
 
-			switch (lastWordLowered) {
+			switch (lastItem) {
 				case "select": {
 					if (textSplitLowered[0] === "select") {
 						return {
@@ -101,7 +128,8 @@ export class NrqlCompletionProvider {
 					}
 				}
 				case "from": {
-					for (const candidate of collectionsResponse.list) {
+					const fetchCollections = await fetchCollectionsPromise;
+					for (const candidate of fetchCollections.list) {
 						completionItems.push({
 							label: candidate,
 							kind: CompletionItemKind.Module,
@@ -142,20 +170,39 @@ export class NrqlCompletionProvider {
 					};
 				}
 				default: {
-					// SELECT foo, <fn>
-					if (lastWordLowered.endsWith(",")) {
-						return {
-							items: [...builtIns.functions],
-						};
+					if (lastItem) {
+						if (lastItem.endsWith(",")) {
+							// SELECT foo, <fn>
+							return {
+								items: [...builtIns.functions],
+							};
+						}
 					}
 
 					if (builtIns.operators.find(_ => _.label === split[split.length - 1])) {
 						// TODO get potential column _values_?
 						return { items: [] };
 					}
+
 					if (textSplitLowered.indexOf("where") > -1) {
 						return { items: builtIns.operators };
-					} else {
+					}
+
+					if (secondToLastItem && lastItem) {
+						if (secondToLastItem === "from") {
+							const fetchCollections = await fetchCollectionsPromise;
+							const collections = fetchCollections.list.filter(
+								_ => _.toLowerCase().indexOf(lastItem) > -1
+							);
+							for (const candidate of collections) {
+								completionItems.push({
+									label: candidate,
+									kind: CompletionItemKind.Module,
+									insertText: candidate,
+								});
+							}
+							return { items: completionItems };
+						}
 					}
 				}
 			}
@@ -176,9 +223,10 @@ export class NrqlCompletionProvider {
 			// From Foo <Select>
 			// Select * From Foo <Where>
 			const label = textSplitLowered.indexOf("select") > -1 ? "WHERE" : "SELECT";
+			const fetchCollections = await fetchCollectionsPromise;
 			for (let i = split.length; i > -1; i--) {
 				const current = split[i];
-				const found = collectionsResponse.obj[current];
+				const found = fetchCollections.obj[current];
 				if (found) {
 					completionItems.push(builtIns?.keywords?.find(_ => _.label === label)!);
 				}

@@ -19,6 +19,7 @@ import { escapeNrql } from "@codestream/utils/system/string";
 import { CompletionItemKind } from "vscode-languageserver";
 import { SessionContainer } from "../../../container";
 import { Logger } from "../../../logger";
+import { gate } from "../../../system/decorators/gate";
 import { log } from "../../../system/decorators/log";
 import { lsp, lspHandler } from "../../../system/decorators/lsp";
 import { ContextLogger } from "../../contextLogger";
@@ -139,6 +140,7 @@ export class NrNRQLProvider {
 	}
 
 	@lspHandler(GetNRQLCollectionsRequestType)
+	@gate()
 	async fetchCollections(
 		request: GetNRQLCollectionsRequest = {}
 	): Promise<GetNRQLCollectionsResponse> {
