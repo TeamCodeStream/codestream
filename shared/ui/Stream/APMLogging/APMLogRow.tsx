@@ -183,7 +183,9 @@ export const APMLogRow = (props: {
 					/>
 					<Tooltip content={props.severity.toLowerCase()} delay={0.5}>
 						<LogSeverity
-							style={{ backgroundColor: logSeverityToColor[props.severity.toLowerCase()] }}
+							style={{
+								backgroundColor: logSeverityToColor[props.severity.toLowerCase()] || "#0c74df",
+							}}
 						/>
 					</Tooltip>
 					<Timestamp time={props.timestamp} expandedTime={true} />
