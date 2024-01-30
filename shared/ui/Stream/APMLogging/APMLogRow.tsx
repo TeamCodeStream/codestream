@@ -115,13 +115,7 @@ export const APMLogRow = (props: {
 	if (props.showMore) {
 		return (
 			<ShowMoreContainer>
-				<span
-					onClick={() => {
-						trackTelemetry();
-					}}
-				>
-					Show More
-				</span>
+				<span onClick={() => {}}>Show More</span>
 			</ShowMoreContainer>
 		);
 	}
@@ -136,6 +130,9 @@ export const APMLogRow = (props: {
 
 	const handleClickExpand = () => {
 		let updatedJsx;
+
+		trackTelemetry();
+
 		if (_isEmpty(props.expandedContent)) {
 			const keys = Object.keys(props.logRowData).sort();
 
