@@ -112,18 +112,21 @@ export const NRQLEditor = React.forwardRef(
 				ignoreCase: true,
 				tokenizer: {
 					root: [
-						[new RegExp(response.keywords.map(_ => _.label).join("|"), "i"), "keyword.nrql"],
+						[
+							new RegExp(`\\b(${response.keywords.map(_ => _.label).join("|")})\\b`, "i"),
+							"keyword.nrql",
+						],
 						[
 							new RegExp(
-								response.operators
+								`\\b(${response.operators
 									.map(_ => _.label.replace(/[.*+\-?^${}()|[\]\\]/g, "\\$&"))
-									.join("|"),
+									.join("|")})\\b`,
 								"i"
 							),
 							"keyword.operator.nrql",
 						],
 						[
-							new RegExp(response.functions.map(_ => _.label).join("|"), "i"),
+							new RegExp(`\\b(${response.functions.map(_ => _.label).join("|")})\\b`, "i"),
 							"support.function.nrql",
 						],
 						[/'.*?'/, "string"],
