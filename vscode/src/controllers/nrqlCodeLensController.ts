@@ -1,8 +1,9 @@
 "use strict";
-import { Disposable, languages, workspace } from "vscode";
+import { Disposable, commands, languages, workspace } from "vscode";
 import { Container } from "../container";
 import { SessionStatusChangedEvent } from "../api/session";
 import { NrqlCodeLensProvider } from "providers/nrqlCodeLensProvider";
+import { Logger } from "../logger";
 
 export class NrqlCodeLensController implements Disposable {
 	private _disposable: Disposable | undefined;
@@ -15,7 +16,7 @@ export class NrqlCodeLensController implements Disposable {
 			Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
 			workspace.onDidSaveTextDocument(e => {
 				// this will refresh the codeLenses
-				this.ensureProvider();
+				commands.executeCommand("editor.action.refreshCodeLens");
 			})
 		);
 	}
@@ -27,19 +28,16 @@ export class NrqlCodeLensController implements Disposable {
 
 	private onSessionStatusChanged(e: SessionStatusChangedEvent) {
 		this._status = e.getStatus();
-		this.ensureProvider();
 		this._provider?.update(this._status);
 	}
 
-	refresh() {
-		this.ensureProvider();
-	}
 	create() {
-		this.ensureProvider();
-	}
-
-	private ensureProvider() {
-		this._providerDisposable && this._providerDisposable.dispose();
+		if (this._provider) {
+			// do not attempt to destroy + recreate the provider as it will leave
+			// orphaned codelenses on other editors -- leaving them in a state
+			// where they cannot be clicked
+			Logger.warn("NrqlCodeLensController:NrqlCodeLensProvider already created");
+		}
 		this._provider = new NrqlCodeLensProvider(Container.session);
 		this._providerDisposable = Disposable.from(
 			languages.registerCodeLensProvider([{ scheme: "file", language: "nrql" }], this._provider)

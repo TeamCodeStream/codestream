@@ -630,16 +630,16 @@ export class Commands implements Disposable {
 		// fileUri is passed in by both CodeLens provider and the command provider
 		// lineNumber is only passed by the CodeLens provider, which we do need.
 
-		let nrqlQuery: string;
+		let nrqlQuery: string | undefined = undefined;
 		const editor = window.activeTextEditor;
 		if (editor === undefined) return;
 
-		if (text) {
-			nrqlQuery = text;
+		if (editor.selection && !editor.selection.isEmpty) {
+			nrqlQuery = editor.document.getText(editor.selection);
 		} else {
-			if (!lineNumber) {
-				nrqlQuery = editor.document.getText(editor.selection);
-			} else {
+			if (text) {
+				nrqlQuery = text;
+			} else if (lineNumber) {
 				nrqlQuery = editor.document.lineAt(lineNumber).text;
 			}
 		}

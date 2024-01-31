@@ -1,6 +1,6 @@
 "use strict";
 import { ReviewDiffContentProvider } from "./providers/diffContentProvider";
-import { ExtensionContext, workspace } from "vscode";
+import { ExtensionContext, languages, workspace } from "vscode";
 import { WebviewLike } from "./webviews/webviewLike";
 import { GitContentProvider } from "./providers/gitContentProvider";
 import { InstrumentableCodeLensController } from "./controllers/instrumentableCodeLensController";
@@ -24,7 +24,7 @@ import { SetServerUrlRequestType } from "@codestream/protocols/agent";
 import { EditorController } from "./controllers/editorController";
 import { NrqlCodeLensController } from "./controllers/nrqlCodeLensController";
 import { PanelController } from "./controllers/panelController";
-// import { WebviewSidebarActivator } from "./views/webviewSidebarActivator";
+import { nrqlDocumentSymbolProvider } from "./providers/nrqlDocumentSymbolProvider";
 
 export class Container {
 	static telemetryOptions?: TelemetryOptions;
@@ -72,6 +72,12 @@ export class Container {
 		context.subscriptions.push((this._panel = new PanelController(context, this._session)));
 		context.subscriptions.push(configuration.onWillChange(this.onConfigurationChanging, this));
 		context.subscriptions.push(configuration.onDidChangeAny(this.onConfigurationChangeAny, this));
+		context.subscriptions.push(
+			languages.registerDocumentSymbolProvider(
+				{ scheme: "file", language: "nrql" },
+				new nrqlDocumentSymbolProvider()
+			)
+		);
 
 		await this._agent.start();
 	}

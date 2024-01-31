@@ -43,7 +43,8 @@
 				"id": "nrql",
 				"extensions": [
 					".nrql"
-				]
+				],
+				"configuration": "./nrql.tmGrammar.json"
 			}
 		],
 		"grammars": [

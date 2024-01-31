@@ -9,7 +9,9 @@ export interface RangeLike {
 }
 
 export class NrqlDocumentParser {
+	/** common comment prefixes */
 	prefixes = ["/*", "--", "*", "//", "#"];
+	/** Parses a text block and returns all nrql-like statement strings along with their positions */
 	parse(text: string): NrqlStatement[] {
 		// first we split on the lines
 		// we also want to get the positions of said lines
