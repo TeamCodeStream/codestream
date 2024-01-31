@@ -196,7 +196,6 @@ export class AnomalyDetector {
 				properties: {
 					entity_guid: this._request.entityGuid,
 					account_id: this._accountId,
-					target: "anomaly",
 					meta_data: `language: ${languageSupport.language ?? "<unknown>"}`,
 
 					meta_data_2: `anomalous_duration_transactions: ${
