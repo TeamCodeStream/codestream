@@ -12,7 +12,7 @@ describe("RecombinedStream", () => {
 		const recombinedStream: RecombinedStream = {
 			items: [],
 			content:
-				"INTRO:\nintro\nblah blah\nCODE_FIX:\ncodeFix\nblah blah\nDESCRIPTION:\ndescription\nblahblah\n",
+				"**INTRO**\nintro\nblah blah\n**CODE_FIX**\ncodeFix\nblah blah\n**DESCRIPTION**\ndescription\nblahblah\n",
 			receivedDoneEvent: false,
 		};
 		const parts = extractParts(recombinedStream.content);
@@ -24,7 +24,7 @@ describe("RecombinedStream", () => {
 	it("should updateParts when only DESCRIPTION is present", () => {
 		const recombinedStream: RecombinedStream = {
 			items: [],
-			content: "DESCRIPTION:\ndescription\nblahblah\n",
+			content: "**DESCRIPTION**\ndescription\nblahblah\n",
 			receivedDoneEvent: false,
 		};
 		const parts = extractParts(recombinedStream.content);
@@ -36,7 +36,7 @@ describe("RecombinedStream", () => {
 	it("should updateParts when only INTRO is present", () => {
 		const recombinedStream: RecombinedStream = {
 			items: [],
-			content: "INTRO:\nintro\nblah blah\n",
+			content: "**INTRO**\nintro\nblah blah\n",
 			receivedDoneEvent: false,
 		};
 		const parts = extractParts(recombinedStream.content);
@@ -48,7 +48,7 @@ describe("RecombinedStream", () => {
 	it("should updateParts when only CODE_FIX is present", () => {
 		const recombinedStream: RecombinedStream = {
 			items: [],
-			content: "CODE_FIX:\ncodeFix\nblah blah\n",
+			content: "**CODE_FIX**\ncodeFix\nblah blah\n",
 			receivedDoneEvent: false,
 		};
 		const parts = extractParts(recombinedStream.content);
@@ -60,7 +60,7 @@ describe("RecombinedStream", () => {
 	it("should updateParts when CODE_FIX is missing", () => {
 		const recombinedStream: RecombinedStream = {
 			items: [],
-			content: "INTRO:\nintro\nblah blah\nDESCRIPTION:\ndescription\nblahblah\n",
+			content: "**INTRO**\nintro\nblah blah\n**DESCRIPTION**\ndescription\nblahblah\n",
 			receivedDoneEvent: false,
 		};
 		const parts = extractParts(recombinedStream.content);
