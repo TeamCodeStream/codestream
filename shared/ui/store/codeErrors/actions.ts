@@ -118,6 +118,7 @@ export const fetchCodeError = (codeErrorId: string) => async dispatch => {
  * @returns ResolveStackTraceResponse
  */
 export const resolveStackTrace = (
+	entityGuid: string,
 	errorGroupGuid: string,
 	repoId: string,
 	ref: string,
@@ -128,6 +129,7 @@ export const resolveStackTrace = (
 	domain: string
 ) => {
 	return HostApi.instance.send(ResolveStackTraceRequestType, {
+		entityGuid,
 		errorGroupGuid,
 		stackTrace,
 		repoId,

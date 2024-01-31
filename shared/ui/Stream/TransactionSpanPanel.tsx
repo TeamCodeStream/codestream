@@ -214,9 +214,9 @@ export const TransactionSpanPanel = () => {
 	const [fetchError, setFetchError] = useState<string | undefined>(undefined);
 
 	useDidMount(() => {
-		HostApi.instance.track("codestream/tracing/span displayed", {
-			meta_data: `span_id: ${derivedState.currentTransactionSpan.spanId}`,
-		});
+		// HostApi.instance.track("codestream/tracing/span displayed", {
+		// 	meta_data: `span_id: ${derivedState.currentTransactionSpan.spanId}`,
+		// });
 	});
 
 	const loadChartData = async () => {

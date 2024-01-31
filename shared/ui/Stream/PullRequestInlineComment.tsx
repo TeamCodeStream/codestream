@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { PRComment, PRCommentCard } from "./PullRequestComponents";
 import Tooltip from "./Tooltip";
-import { HostApi } from "../webview-api";
 import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
 import { MessageInput } from "./MessageInput";
 import { ButtonRow } from "../src/components/Dialog";
@@ -43,10 +42,10 @@ export const PullRequestInlineComment = styled((props: Props) => {
 	const [isPreviewing, setIsPreviewing] = useState(false);
 
 	const trackComment = type => {
-		HostApi.instance.track("PR Comment Added", {
-			Host: pr.providerId,
-			"Comment Type": type,
-		});
+		// HostApi.instance.track("PR Comment Added", {
+		// 	Host: pr.providerId,
+		// 	"Comment Type": type,
+		// });
 	};
 
 	const addSingleComment = async e => {

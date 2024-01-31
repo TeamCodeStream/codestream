@@ -1242,9 +1242,9 @@ const ReviewForReview = (props: PropsWithReview) => {
 
 	const webviewFocused = useSelector((state: CodeStreamState) => state.context.hasFocus);
 	useDidMount(() => {
-		if (!props.collapsed && webviewFocused) {
-			HostApi.instance.track("Page Viewed", { "Page Name": "Review Details" });
-		}
+		// if (!props.collapsed && webviewFocused) {
+		// 	HostApi.instance.track("Page Viewed", { "Page Name": "Review Details" });
+		// }
 		return () => {
 			// cleanup this disposable on unmount. it may or may not have been set.
 			disposableDidChangeDataNotification && disposableDidChangeDataNotification.dispose();

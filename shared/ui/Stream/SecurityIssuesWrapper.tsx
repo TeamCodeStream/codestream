@@ -133,11 +133,16 @@ function Additional(props: { onClick: () => void; additional?: number }) {
 	) : null;
 }
 
-function VulnView(props: { vuln: Vuln; onClose: () => void }) {
+function VulnView(props: {
+	accountId: number;
+	entityGuid: string;
+	vuln: Vuln;
+	onClose: () => void;
+}) {
 	const { vuln } = props;
 	HostApi.instance.track("codestream/vulnerability clicked", {
-		entity_guid: "",
-		account_id: "",
+		entity_guid: props.entityGuid,
+		account_id: props.accountId,
 		target: "vulnerability",
 		event_type: "click",
 	});
@@ -194,7 +199,7 @@ function VulnView(props: { vuln: Vuln; onClose: () => void }) {
 	);
 }
 
-function VulnRow(props: { vuln: Vuln }) {
+function VulnRow(props: { accountId: number; entityGuid: string; vuln: Vuln }) {
 	const [expanded, setExpanded] = useState<boolean>(false);
 
 	return (
@@ -219,14 +224,19 @@ function VulnRow(props: { vuln: Vuln }) {
 						setExpanded(false);
 					}}
 				>
-					<VulnView vuln={props.vuln} onClose={() => setExpanded(false)} />
+					<VulnView
+						vuln={props.vuln}
+						accountId={props.accountId}
+						entityGuid={props.entityGuid}
+						onClose={() => setExpanded(false)}
+					/>
 				</Modal>
 			)}
 		</>
 	);
 }
 
-function LibraryRow(props: { library: LibraryDetails }) {
+function LibraryRow(props: { accountId: number; entityGuid: string; library: LibraryDetails }) {
 	const [expanded, setExpanded] = useState<boolean>(false);
 	const { library } = props;
 	const subtleText = library.suggestedVersion
@@ -257,7 +267,10 @@ function LibraryRow(props: { library: LibraryDetails }) {
 				</div>
 				<Severity severity={criticalityToRiskSeverity(library.highestCriticality)} />
 			</Row>
-			{expanded && library.vulns.map(vuln => <VulnRow vuln={vuln} />)}
+			{expanded &&
+				library.vulns.map(vuln => (
+					<VulnRow accountId={props.accountId} entityGuid={props.entityGuid} vuln={vuln} />
+				))}
 		</>
 	);
 }
@@ -416,7 +429,13 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 				data.totalRecords > 0 && (
 					<>
 						{data.libraries.map(library => {
-							return <LibraryRow library={library} />;
+							return (
+								<LibraryRow
+									accountId={props.accountId}
+									entityGuid={props.entityGuid}
+									library={library}
+								/>
+							);
 						})}
 						<Additional onClick={loadAll} additional={additional} />
 					</>

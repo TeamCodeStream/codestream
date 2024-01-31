@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { PRCommentCard, ButtonRow } from "./PullRequestComponents";
 import { MessageInput } from "./MessageInput";
 import { RadioGroup, Radio } from "../src/components/RadioGroup";
-import { HostApi } from "@codestream/webview/webview-api";
 import { Button } from "../src/components/Button";
 import Tooltip from "./Tooltip";
 import { api } from "../store/providerPullRequests/thunks";
@@ -50,10 +49,10 @@ export const PullRequestFinishReview = (props: {
 		e.stopPropagation();
 		setIsLoadingMessage("Submitting Review...");
 		setSubmittingReview(true);
-		HostApi.instance.track("PR Review Finished", {
-			Host: pr.providerId,
-			"Review Type": reviewType,
-		});
+		// HostApi.instance.track("PR Review Finished", {
+		// 	Host: pr.providerId,
+		// 	"Review Type": reviewType,
+		// });
 		await dispatch(
 			api({
 				method: "submitReview",

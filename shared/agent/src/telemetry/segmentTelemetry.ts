@@ -7,6 +7,7 @@ import { SessionStatus } from "../types";
 // FIXME: sorry, typescript purists: i simply gave up trying to get the type definitions for this module to work
 import Analytics from "analytics-node";
 import { debug } from "../system";
+import { TelemetryData, TelemetryEventName } from "@codestream/protocols/agent";
 
 export class SegmentTelemetryService {
 	private _segmentInstance: Analytics | undefined;
@@ -153,7 +154,7 @@ export class SegmentTelemetryService {
 	}
 
 	@debug()
-	track(event: string, data?: { [key: string]: string | number | boolean }) {
+	track(event: TelemetryEventName, data?: TelemetryData) {
 		const cc = Logger.getCorrelationContext();
 
 		if (this._hasOptedOut || this._segmentInstance == null) {

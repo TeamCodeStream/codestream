@@ -48,7 +48,7 @@ export const ChangeFullName = props => {
 		try {
 			await HostApi.instance.send(UpdateAzureFullNameRequestType, { fullName });
 			await HostApi.instance.send(UpdateUserRequestType, { fullName });
-			HostApi.instance.track("fullName Changed", {});
+			// HostApi.instance.track("fullName Changed", {});
 			dispatch(closeModal());
 		} catch (error) {
 			logError(error, { detail: `Unexpected error during change fullName`, fullName });

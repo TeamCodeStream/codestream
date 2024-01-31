@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
-import { HostApi } from "../webview-api";
 import { Button } from "../src/components/Button";
 import { Dialog } from "../src/components/Dialog";
 import { closeModal } from "./actions";
@@ -19,7 +18,7 @@ export const ChangePassword = props => {
 
 	const savePassword = async () => {
 		setLoading(true);
-		HostApi.instance.track("Password Changed", {});
+		// HostApi.instance.track("Password Changed", {});
 		// @ts-ignore
 		// const result = await dispatch(setUserPassword(oldPassword, newPassword2));
 		setLoading(false);

@@ -103,11 +103,11 @@ export function AcceptCompanyInvite() {
 				request
 			)) as JoinCompanyResponse;
 
-			HostApi.instance.track("Joined Organization", {
-				Availability: "Invite",
-				"Auth Provider": "CodeStream",
-				Location: "In-product",
-			});
+			// HostApi.instance.track("Joined Organization", {
+			// 	Availability: "Invite",
+			// 	"Auth Provider": "CodeStream",
+			// 	Location: "In-product",
+			// });
 
 			// slight delay so tracking call completes before ide refreshes
 			setTimeout(() => {

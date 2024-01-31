@@ -118,14 +118,14 @@ export const SignupNewRelic = () => {
 			setLoading(false);
 
 			const sendTelemetry = () => {
-				HostApi.instance.track("Account Created", {
-					email: email,
-					"Auth Provider": "New Relic",
-					Source: derivedState.pendingProtocolHandlerQuerySource,
-				});
-				HostApi.instance.track("NR Connected", {
-					"Connection Location": "Onboarding",
-				});
+				// HostApi.instance.track("Account Created", {
+				// 	email: email,
+				// 	"Auth Provider": "New Relic",
+				// 	Source: derivedState.pendingProtocolHandlerQuerySource,
+				// });
+				// HostApi.instance.track("NR Connected", {
+				// 	"Connection Location": "Onboarding",
+				// });
 			};
 
 			switch (status) {

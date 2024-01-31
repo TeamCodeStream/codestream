@@ -6,6 +6,7 @@ import { Project, RepoProjectType } from "./agent.protocol.scm";
 import { CSRepository, CSStackTraceInfo, CSStackTraceLine } from "./api.protocol.models";
 
 export interface ParseStackTraceRequest {
+	entityGuid: string;
 	errorGroupGuid: string;
 	stackTrace: string | string[];
 }
@@ -23,6 +24,7 @@ export const ParseStackTraceRequestType = new RequestType<
 >("codestream/nr/parseStackTrace");
 
 export interface ResolveStackTraceRequest {
+	entityGuid: string;
 	// tracking
 	errorGroupGuid: string;
 	occurrenceId: string;

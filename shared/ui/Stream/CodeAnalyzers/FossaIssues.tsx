@@ -6,7 +6,6 @@ import {
 	VulnSeverity,
 	VulnerabilityIssue,
 } from "@codestream/protocols/agent";
-import { HostApi } from "@codestream/webview/webview-api";
 import Icon from "../Icon";
 import Tooltip from "../Tooltip";
 import { Link } from "@codestream/webview/Stream/Link";
@@ -76,7 +75,7 @@ const criticalityToRiskSeverity = (riskSeverity: VulnSeverity): VulnSeverity => 
 const eventClicked = (
 	trackingData: { "Analyzer Service": string; Category: string } | undefined
 ) => {
-	HostApi.instance.track("Analyzer Result Clicked", trackingData);
+	// HostApi.instance.track("Analyzer Result Clicked", trackingData);
 };
 
 const ModalView = (props: {

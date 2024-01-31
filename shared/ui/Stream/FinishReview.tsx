@@ -1,5 +1,4 @@
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
-import { HostApi } from "@codestream/webview/webview-api";
 import React, { SyntheticEvent, useState } from "react";
 import { Button } from "../src/components/Button";
 import { Dialog } from "../src/components/Dialog";
@@ -39,10 +38,10 @@ export const FinishReview = (props: { fetch?: Function }) => {
 		e.preventDefault();
 		e.stopPropagation();
 		setSubmittingReview(true);
-		HostApi.instance.track("PR Review Finished", {
-			Host: pr!.providerId,
-			"Review Type": reviewType,
-		});
+		// HostApi.instance.track("PR Review Finished", {
+		// 	Host: pr!.providerId,
+		// 	"Review Type": reviewType,
+		// });
 		await dispatch(
 			api({
 				method: "submitReview",

@@ -1129,14 +1129,14 @@ export const setReviewStatus = (reviewId: string, status: CSReviewStatus) => asy
 				`/me ${describeStatusChange(status)} this feedback request`
 			)
 		);
-		try {
-			HostApi.instance.track("Review State Updated", {
-				"Review ID": reviewId,
-				"Review State": toStatusTelemetryNames(status),
-			});
-		} catch (err) {
-			logError(`failed to track review status change: ${err}`, { reviewId, status });
-		}
+		// try {
+		// 	HostApi.instance.track("Review State Updated", {
+		// 		"Review ID": reviewId,
+		// 		"Review State": toStatusTelemetryNames(status),
+		// 	});
+		// } catch (err) {
+		// 	logError(`failed to track review status change: ${err}`, { reviewId, status });
+		// }
 		dispatch(markItemRead(response.review.id, response.review.numReplies + 1));
 
 		const message = `_${describeStatusChange(status)} this feedback request_`;

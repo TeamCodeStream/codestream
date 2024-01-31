@@ -11,6 +11,7 @@ import {
 	ObservabilityAnomaly,
 	ObservabilityRepo,
 	SpanWithCodeAttrs,
+	TelemetryData,
 } from "@codestream/protocols/agent";
 import { Logger } from "../../logger";
 import { getStorage } from "../../storage";
@@ -145,12 +146,10 @@ export class AnomalyDetectorDrillDown {
 			const durationMetrics = children.filter(_ => _.type === "duration");
 			const errorRateMetrics = children.filter(_ => _.type === "duration");
 
-			const event = {
-				entity_guid: this._request.entityGuid || "",
-				account_id: this._accountId || "",
-				target: "anomaly",
+			const event: TelemetryData = {
+				entity_guid: this._request.entityGuid,
+				account_id: this._accountId,
 				meta_data: `language: ${languageSupport.language ?? "<unknown>"}`,
-
 				meta_data_2: `anomalous_duration_transactions: ${durationAnomalies.length || 0}`,
 				meta_data_3: `anomalous_error_transactions: ${errorRateAnomalies.length || 0}`,
 				meta_data_4: `anomalous_duration_metrics: ${durationMetrics.length || 0}`,

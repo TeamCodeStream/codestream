@@ -401,9 +401,9 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 												// 	setErrorMessage("Could not open file");
 												// }
 
-												HostApi.instance.track("PR File Viewed From Timeline", {
-													Host: props.pr && props.pr.providerId,
-												});
+												// HostApi.instance.track("PR File Viewed From Timeline", {
+												// 	Host: props.pr && props.pr.providerId,
+												// });
 											};
 
 											const goDiff = async filePath => {

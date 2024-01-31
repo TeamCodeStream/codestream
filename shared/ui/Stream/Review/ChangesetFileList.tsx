@@ -426,11 +426,11 @@ export const ChangesetFileList = (props: {
 			await dispatch(showDiff(review.id, checkpoint, f.repoId, f.file));
 			visitFile(visitedKey, index);
 
-			if (props.withTelemetry && review.id) {
-				HostApi.instance.track("Review Diff Viewed", {
-					"Review ID": review.id,
-				});
-			}
+			// if (props.withTelemetry && review.id) {
+			// 	HostApi.instance.track("Review Diff Viewed", {
+			// 		"Review ID": review.id,
+			// 	});
+			// }
 		},
 		[visitedFiles, filesInOrder]
 	);
@@ -448,11 +448,11 @@ export const ChangesetFileList = (props: {
 					range: Range.create(0, 0, 0, 0),
 				});
 
-				if (props.withTelemetry && review.id) {
-					HostApi.instance.track("Review File Viewed", {
-						"Review ID": review.id,
-					});
-				}
+				// if (props.withTelemetry && review.id) {
+				// 	HostApi.instance.track("Review File Viewed", {
+				// 		"Review ID": review.id,
+				// 	});
+				// }
 			}
 		},
 		[visitedFiles, filesInOrder, props.repoRoots]

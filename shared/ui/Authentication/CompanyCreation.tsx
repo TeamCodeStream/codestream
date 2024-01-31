@@ -89,10 +89,10 @@ export function CompanyCreation(props: {
 	const onClickTryAnother = useCallback(async (event: React.FormEvent) => {
 		event.preventDefault();
 
-		HostApi.instance.track("Try Another Email", {
-			"Discarded Email": props.email,
-			"Auth Provider": providerName,
-		});
+		// HostApi.instance.track("Try Another Email", {
+		// 	"Discarded Email": props.email,
+		// 	"Auth Provider": providerName,
+		// });
 		dispatch(changeRegistrationEmail(props.userId!));
 	}, []);
 
@@ -164,11 +164,11 @@ export function CompanyCreation(props: {
 		if (!companiesToJoin || !companiesToJoin.length) {
 			createOrganization();
 		} else {
-			HostApi.instance.track("Organization Options Presented", {
-				"Domain Orgs": organizationsByDomain && organizationsByDomain.length ? true : false,
-				"Invite Orgs": organizationsByInvite && organizationsByInvite.length ? true : false,
-				"Auth Provider": providerName,
-			});
+			// HostApi.instance.track("Organization Options Presented", {
+			// 	"Domain Orgs": organizationsByDomain && organizationsByDomain.length ? true : false,
+			// 	"Invite Orgs": organizationsByInvite && organizationsByInvite.length ? true : false,
+			// 	"Auth Provider": providerName,
+			// });
 			setInitialLoad(false);
 		}
 	});
@@ -194,10 +194,10 @@ export function CompanyCreation(props: {
 				const { team, accessToken } = await HostApi.instance.send(CreateCompanyRequestType, {
 					name: organizationSettings.companyName!,
 				});
-				HostApi.instance.track("New Organization Created", {
-					"Domain Joining": props.isWebmail ? "Not Available" : "Off",
-					"Auth Provider": providerName,
-				});
+				// HostApi.instance.track("New Organization Created", {
+				// 	"Domain Joining": props.isWebmail ? "Not Available" : "Off",
+				// 	"Auth Provider": providerName,
+				// });
 
 				dispatch(
 					completeSignup(props.email!, accessToken || props.token!, team.id, {
@@ -248,11 +248,11 @@ export function CompanyCreation(props: {
 
 			const availabilityType = organization?.byInvite ? "Invite" : organization._type;
 
-			HostApi.instance.track("Joined Organization", {
-				Availability: availabilityType,
-				"Auth Provider": providerName,
-				Location: "Signup",
-			});
+			// HostApi.instance.track("Joined Organization", {
+			// 	Availability: availabilityType,
+			// 	"Auth Provider": providerName,
+			// 	Location: "Signup",
+			// });
 			dispatch(
 				completeSignup(
 					props.email!,

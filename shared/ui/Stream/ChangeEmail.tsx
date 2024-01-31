@@ -60,7 +60,7 @@ export const ChangeEmail = props => {
 		setLoading(true);
 		try {
 			const response = await HostApi.instance.send(UpdateUserRequestType, { email });
-			HostApi.instance.track("Email Change Request", {});
+			// HostApi.instance.track("Email Change Request", {});
 			if (
 				response.user &&
 				(response.user as any).$set &&

@@ -19,6 +19,7 @@ import {
 	ServiceLevelObjectiveResult,
 	isNRErrorResponse,
 	GetIssuesResponse,
+	TelemetryData,
 } from "@codestream/protocols/agent";
 import cx from "classnames";
 import { head as _head, isEmpty as _isEmpty, isNil as _isNil } from "lodash-es";
@@ -83,9 +84,9 @@ import { WarningBox } from "./WarningBox";
 import { ObservabilityAnomaliesWrapper } from "@codestream/webview/Stream/ObservabilityAnomaliesWrapper";
 import { CLMSettings, DEFAULT_CLM_SETTINGS } from "@codestream/protocols/api";
 import { throwIfError } from "@codestream/webview/store/common";
-import { AnyObject } from "@codestream/webview/utils";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { ObservabilityAlertViolations } from "./ObservabilityAlertViolations";
+import { parseId } from "../utilities/newRelic";
 
 interface Props {
 	paneState: PaneState;
@@ -621,9 +622,8 @@ export const Observability = React.memo((props: Props) => {
 
 		if (!_isEmpty(telemetryStateValue)) {
 			console.debug("o11y: O11y Rendered", telemetryStateValue);
-			const properties: AnyObject = {
+			const properties: TelemetryData = {
 				meta_data: `state: ${telemetryStateValue}`,
-				meta_data_2: ``,
 				event_type: "state_load",
 			};
 			if (telemetryStateValue === "no_services") {
@@ -657,7 +657,7 @@ export const Observability = React.memo((props: Props) => {
 
 			const account = currentEntityAccounts?.find(_ => _.entityGuid === entity?.entityGuid);
 
-			const event = {
+			const telemetryData: TelemetryData = {
 				entity_guid: entity?.entityGuid,
 				account_id: account?.accountId,
 				meta_data: `errors_listed: ${
@@ -669,9 +669,9 @@ export const Observability = React.memo((props: Props) => {
 				event_type: "state_load",
 			};
 
-			console.debug(`o11y: NR Service Clicked`, event);
+			console.debug(`o11y: NR Service Clicked`, telemetryData);
 
-			HostApi.instance.track("codestream/service rendered", event);
+			HostApi.instance.track("codestream/service rendered", telemetryData);
 			setPendingServiceClickedTelemetryCall(false);
 		} catch (ex) {
 			console.error(ex);
@@ -1322,6 +1322,7 @@ export const Observability = React.memo((props: Props) => {
 																								)}
 																							{anomalyDetectionSupported && (
 																								<ObservabilityAnomaliesWrapper
+																									accountId={ea.accountId}
 																									observabilityAnomalies={observabilityAnomalies}
 																									observabilityRepo={_observabilityRepo}
 																									entityGuid={ea.entityGuid}
@@ -1369,6 +1370,7 @@ export const Observability = React.memo((props: Props) => {
 																							)}
 																							{currentRepoId && ea?.domain !== "INFRA" && (
 																								<ObservabilityRelatedWrapper
+																									accountId={ea.accountId}
 																									currentRepoId={currentRepoId}
 																									entityGuid={ea.entityGuid}
 																								/>
@@ -1429,6 +1431,12 @@ export const Observability = React.memo((props: Props) => {
 																		`o11y: ObservabilityAddAdditionalService calling doRefresh(force)`
 																	);
 																	doRefresh(true);
+																	HostApi.instance.track("codestream/entity associated_with_repo", {
+																		entity_guid: e?.entityGuid,
+																		account_id: parseId(e?.entityGuid)?.accountId,
+																		event_type: "response",
+																		meta_data: "first_association: false",
+																	});
 																}}
 																remote={currentObsRepo.repoRemote}
 																remoteName={currentObsRepo.repoName}
@@ -1459,10 +1467,10 @@ export const Observability = React.memo((props: Props) => {
 															}
 															onSuccess={async e => {
 																HostApi.instance.track("codestream/entity associated_with_repo", {
-																	"Repo ID": repoForEntityAssociator.repoId,
-																	entity_guid: derivedState.currentObservabilityAnomalyEntityGuid,
-																	account_id: "",
+																	entity_guid: e?.entityGuid,
+																	account_id: parseId(e?.entityGuid)?.accountId,
 																	event_type: "response",
+																	meta_data: "first_association: true",
 																});
 
 																_useDidMount(true);

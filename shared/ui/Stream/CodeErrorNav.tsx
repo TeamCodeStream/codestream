@@ -6,6 +6,7 @@ import {
 	NormalizeUrlRequestType,
 	NormalizeUrlResponse,
 	ResolveStackTraceResponse,
+	TelemetryData,
 	WarningOrError,
 } from "@codestream/protocols/agent";
 import { CSCodeError, CSStackTraceInfo } from "@codestream/protocols/api";
@@ -518,6 +519,7 @@ export function CodeErrorNav(props: Props) {
 
 				if (stack) {
 					stackInfo = (await resolveStackTrace(
+						entityIdToUse!,
 						errorGroupGuidToUse!,
 						repoId!,
 						refToUse!,
@@ -610,8 +612,8 @@ export function CodeErrorNav(props: Props) {
 			setIsResolved(true);
 
 			let trackingData = {
-				entity_guid: entityIdToUse || "",
-				account_id: errorGroupResult?.accountId || codeError?.objectInfo?.accountId || "0",
+				entity_guid: entityIdToUse,
+				account_id: errorGroupResult?.accountId || codeError?.objectInfo?.accountId,
 				meta_data: `error_group_id: ${
 					errorGroupResult?.errorGroup?.guid || codeError?.objectInfo?.entityId
 				}`,
@@ -626,7 +628,8 @@ export function CodeErrorNav(props: Props) {
 				meta_data_3: `stack_trace: ${!!(stackInfo && !stackInfo.error)}`,
 				meta_data_4: `build_sha: missing`,
 				event_type: "modal_display",
-			};
+			} as TelemetryData;
+
 			if (trackingData["meta_data_3"]) {
 				trackingData["meta_data_4"] = !refToUse
 					? "build_sha: missing"
@@ -812,9 +815,9 @@ export function CodeErrorNav(props: Props) {
 							errorGroupGuid: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
 						};
 						if (!skipTracking) {
-							HostApi.instance.track("NR Multi Repo Selected", {
-								"Error Group ID": payload.errorGroupGuid,
-							});
+							// HostApi.instance.track("NR Multi Repo Selected", {
+							// 	"Error Group ID": payload.errorGroupGuid,
+							// });
 						}
 						onConnected(undefined, r.remote);
 					});
@@ -850,9 +853,9 @@ export function CodeErrorNav(props: Props) {
 								setRepoAssociationError(undefined);
 								resolve(true);
 
-								HostApi.instance.track("NR Repo Association", {
-									"Error Group ID": payload.errorGroupGuid,
-								});
+								// HostApi.instance.track("NR Repo Association", {
+								// 	"Error Group ID": payload.errorGroupGuid,
+								// });
 
 								let remoteForOnConnected;
 								let repoFromAssignDirective = _.directives.find(

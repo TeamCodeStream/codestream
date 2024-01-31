@@ -17,12 +17,14 @@ import {
 	DetectionMethod,
 	ObservabilityAnomaly,
 	ObservabilityRepo,
+	TelemetryData,
 } from "@codestream/protocols/agent";
 import Icon from "./Icon";
 import styled from "styled-components";
 import { isEmpty as _isEmpty } from "lodash-es";
 
 interface Props {
+	accountId: number;
 	observabilityAnomalies: ObservabilityAnomaly[];
 	observabilityRepo: ObservabilityRepo;
 	detectionMethod?: DetectionMethod;
@@ -67,9 +69,9 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 	const hasMoreAnomaliesToShow = props.observabilityAnomalies.length > numToShow;
 
 	const handleClickTelemetry = () => {
-		const event = {
-			entity_guid: props.entityGuid || "",
-			account_id: "",
+		const event: TelemetryData = {
+			entity_guid: props.entityGuid,
+			account_id: props.accountId,
 			meta_data: `anomaly_category: ${
 				props.observabilityAnomalies[0].scope ? "metric" : "transaction"
 			}`,

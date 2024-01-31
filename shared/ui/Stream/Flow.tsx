@@ -6,7 +6,6 @@ import { Dialog } from "../src/components/Dialog";
 import { PanelHeader } from "../src/components/PanelHeader";
 import { Tab, Tabs } from "../src/components/Tabs";
 import { useRect } from "../utilities/hooks";
-import { HostApi } from "../webview-api";
 import { closePanel } from "./actions";
 import Icon from "./Icon";
 
@@ -793,11 +792,11 @@ export const Flow = (props: { flow: "adhoc" | "simplified" | "standard"; active?
 		if (flow === "simplified" && index === 3) setRotate(!rotate);
 		if (flow === "standard" && index === 3) setRotate(!rotate);
 
-		HostApi.instance.track("Flow Step Viewed", {
-			"Tour Step":
-				flow === "adhoc" ? "The Basics" : flow === "simplified" ? "Trunk Flow" : "Branch Flow",
-			"Flow Step Viewed": index,
-		});
+		// HostApi.instance.track("Flow Step Viewed", {
+		// 	"Tour Step":
+		// 		flow === "adhoc" ? "The Basics" : flow === "simplified" ? "Trunk Flow" : "Branch Flow",
+		// 	"Flow Step Viewed": index,
+		// });
 
 		// if (flow === "rigorous" && index === 4) setRotate(!rotate);
 	};

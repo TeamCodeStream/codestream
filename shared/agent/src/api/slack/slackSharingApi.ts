@@ -168,13 +168,13 @@ export class SlackSharingApiProvider {
 			const telemetry = Container.instance().telemetry;
 			if (!telemetry) return;
 
-			telemetry.track({
-				eventName: "Connect Error",
-				properties: {
-					Error: msg,
-					Provider: "Slack",
-				},
-			});
+			// telemetry.track({
+			// 	eventName: "Connect Error",
+			// 	properties: {
+			// 		Error: msg,
+			// 		Provider: "Slack",
+			// 	},
+			// });
 		} catch (error) {
 			Logger.error(error);
 		}

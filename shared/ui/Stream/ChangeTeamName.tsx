@@ -47,7 +47,7 @@ export const ChangeTeamName = props => {
 				name: teamName,
 			});
 
-			HostApi.instance.track("teamName Changed", {});
+			// HostApi.instance.track("teamName Changed", {});
 			dispatch(closeModal());
 		} catch (error) {
 			logError(error, { detail: `Unexpected error during change teamName`, teamName });

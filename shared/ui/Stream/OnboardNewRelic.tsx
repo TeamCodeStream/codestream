@@ -975,10 +975,10 @@ const InviteTeammates = (props: { className: string; skip: Function; positionDot
 	const inviteEmail = async (email: string, method: "Onboarding" | "Onboarding Suggestion") => {
 		if (email) {
 			await dispatch(invite({ email, inviteType: method }));
-			HostApi.instance.track("Teammate Invited", {
-				"Invitee Email Address": email,
-				"Invitation Method": method,
-			});
+			// HostApi.instance.track("Teammate Invited", {
+			// 	"Invitee Email Address": email,
+			// 	"Invitation Method": method,
+			// });
 		}
 	};
 

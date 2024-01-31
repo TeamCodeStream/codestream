@@ -342,9 +342,9 @@ export const PullRequestFilesChangedList = (props: Props) => {
 			setErrorMessage("Could not open file");
 		}
 
-		HostApi.instance.track("PR File Viewed", {
-			Host: props.pr && props.pr.providerId,
-		});
+		// HostApi.instance.track("PR File Viewed", {
+		// 	Host: props.pr && props.pr.providerId,
+		// });
 	};
 
 	let insertText: Function;

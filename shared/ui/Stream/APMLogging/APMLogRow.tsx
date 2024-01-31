@@ -121,9 +121,9 @@ export const APMLogRow = (props: {
 	}
 
 	const trackTelemetry = () => {
-		HostApi.instance.track("codestream/expand_button clicked", {
+		HostApi.instance.track("codestream/logs/expand_button clicked", {
 			entity_guid: `${props.entityGuid}`,
-			account_id: `${props.accountId}`,
+			account_id: props.accountId,
 			event_type: "click",
 		});
 	};

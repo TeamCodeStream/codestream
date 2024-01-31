@@ -25,10 +25,10 @@ import {
 	RubyPluginLanguageServer,
 } from "./MethodLevelTelemetry/MissingExtension";
 import { WarningBoxRoot } from "./WarningBox";
-import { HostApi } from "@codestream/webview/webview-api";
 import { setUserPreference } from "./actions";
 
 interface Props {
+	accountId: number;
 	observabilityAnomalies: GetObservabilityAnomaliesResponse;
 	observabilityRepo: any;
 	entityGuid: string;
@@ -111,19 +111,19 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 			if (showAgentWarning) {
 				// Prevent dupe tracking call if user reloads IDE, can trigger rapid double mount
 				setTimeout(() => {
-					HostApi.instance.track("CLM Blocked", {
-						Cause: "Unsupported Agent",
-					});
+					// HostApi.instance.track("CLM Blocked", {
+					// 	Cause: "Unsupported Agent",
+					// });
 				}, 3000);
 			}
 
 			if (showExtensionWarning) {
 				// Prevent dupe tracking call if user reloads IDE, can trigger rapid double mount
-				setTimeout(() => {
-					HostApi.instance.track("CLM Blocked", {
-						Cause: "Missing Language Extension",
-					});
-				}, 3000);
+				// setTimeout(() => {
+				// 	HostApi.instance.track("CLM Blocked", {
+				// 		Cause: "Missing Language Extension",
+				// 	});
+				// }, 3000);
 			}
 		}
 	}, [props.languageAndVersionValidation]);
@@ -134,9 +134,9 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 				// Prevent dupe tracking call if user reloads IDE, can trigger rapid double mount
 				setTimeout(() => {
 					console.warn("distributedTracingEnabled", props.distributedTracingEnabled);
-					HostApi.instance.track("CLM Blocked", {
-						Cause: "DT Not Enabled",
-					});
+					// HostApi.instance.track("CLM Blocked", {
+					// 	Cause: "DT Not Enabled",
+					// });
 				}, 3000);
 			}
 		}
@@ -323,6 +323,7 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 							!showExtensionWarning && (
 								<>
 									<ObservabilityAnomaliesGroup
+										accountId={props.accountId}
 										observabilityAnomalies={anomalies}
 										observabilityRepo={props.observabilityRepo}
 										entityGuid={props.entityGuid}

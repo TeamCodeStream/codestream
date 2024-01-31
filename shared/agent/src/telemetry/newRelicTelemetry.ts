@@ -5,6 +5,7 @@ import { Logger } from "../logger";
 import { CodeStreamSession, SessionStatusChangedEvent } from "../session";
 import { SessionStatus } from "../types";
 import { debug } from "../system";
+import { TelemetryData, TelemetryEventName } from "@codestream/protocols/agent";
 
 export class NewRelicTelemetryService {
 	private _superProps: { [key: string]: any };
@@ -106,7 +107,7 @@ export class NewRelicTelemetryService {
 	}
 
 	@debug()
-	track(event: string, data?: { [key: string]: string | number | boolean }) {
+	track(event: TelemetryEventName, data?: TelemetryData) {
 		if (!this._enabled) return;
 		if (!event) {
 			Logger.debug(`Tracking event missing`);

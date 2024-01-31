@@ -8,6 +8,7 @@ import { useAppSelector, useAppDispatch } from "../utilities/hooks";
 import { CodeStreamState } from "@codestream/webview/store";
 
 interface Props {
+	accountId: number;
 	currentRepoId: string;
 	entityGuid: string;
 }
@@ -55,10 +56,12 @@ export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 			{derivedState.relatedServicesIsExpanded && (
 				<>
 					<ObservabilityRelatedCalls
+						accountId={props.accountId}
 						currentRepoId={props.currentRepoId}
 						entityGuid={props.entityGuid}
 					/>
 					<ObservabilityRelatedCalledBy
+						accountId={props.accountId}
 						currentRepoId={props.currentRepoId}
 						entityGuid={props.entityGuid}
 					/>

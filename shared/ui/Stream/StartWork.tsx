@@ -790,12 +790,12 @@ export const StartWork = (props: Props) => {
 		} catch (e) {
 			console.warn("ERROR: " + e);
 		} finally {
-			HostApi.instance.track("Work Started", {
-				"Branch Created": createTheBranchNow,
-				"Ticket Selected": card ? card.providerIcon : "",
-				"Ticket Moved": moveTheCardNow ? true : false,
-				"Status Set": updateSlackNow,
-			});
+			// HostApi.instance.track("Work Started", {
+			// 	"Branch Created": createTheBranchNow,
+			// 	"Ticket Selected": card ? card.providerIcon : "",
+			// 	"Ticket Moved": moveTheCardNow ? true : false,
+			// 	"Status Set": updateSlackNow,
+			// });
 		}
 
 		const ticketId = card?.id ?? "";

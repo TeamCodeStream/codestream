@@ -8,6 +8,7 @@ import {
 	OtcLoginRequestType,
 	PasswordLoginRequest,
 	PasswordLoginRequestType,
+	TelemetryData,
 	TokenLoginRequest,
 	TokenLoginRequestType,
 	UpdateNewRelicOrgIdRequestType,
@@ -413,10 +414,10 @@ export const completeSignup =
 		const providerName = extra.provider
 			? ProviderNames[extra.provider.toLowerCase()] || extra.provider
 			: "Email";
-		HostApi.instance.track("Signup Completed", {
-			"Signup Type": extra.byDomain ? "Domain" : extra.createdTeam ? "Organic" : "Viral",
-			"Auth Provider": providerName,
-		});
+		// HostApi.instance.track("Signup Completed", {
+		// 	"Signup Type": extra.byDomain ? "Domain" : extra.createdTeam ? "Organic" : "Viral",
+		// 	"Auth Provider": providerName,
+		// });
 		dispatch(onLogin(response, true, extra.createdTeam));
 	};
 
@@ -480,10 +481,10 @@ export const completeAcceptInvite =
 		const providerName = extra.provider
 			? ProviderNames[extra.provider.toLowerCase()] || extra.provider
 			: "Email";
-		HostApi.instance.track("Signup Completed", {
-			"Signup Type": extra.byDomain ? "Domain" : extra.createdTeam ? "Organic" : "Viral",
-			"Auth Provider": providerName,
-		});
+		// HostApi.instance.track("Signup Completed", {
+		// 	"Signup Type": extra.byDomain ? "Domain" : extra.createdTeam ? "Organic" : "Viral",
+		// 	"Auth Provider": providerName,
+		// });
 		dispatch(onLogin(response, true, extra.createdTeam));
 	};
 
@@ -514,11 +515,11 @@ export const validateSignup =
 				case LoginResult.AlreadySignedIn:
 					return dispatch(bootstrap());
 				case LoginResult.NotInCompany:
-					HostApi.instance.track("Account Created", {
-						email: response.extra.email,
-						"Auth Provider": providerName,
-						Source: context.pendingProtocolHandlerQuery?.src,
-					});
+					// HostApi.instance.track("Account Created", {
+					// 	email: response.extra.email,
+					// 	"Auth Provider": providerName,
+					// 	Source: context.pendingProtocolHandlerQuery?.src,
+					// });
 					return dispatch(
 						goToCompanyCreation({
 							email: response.extra && response.extra.email,
@@ -531,11 +532,11 @@ export const validateSignup =
 						})
 					);
 				case LoginResult.NotOnTeam:
-					HostApi.instance.track("Account Created", {
-						email: response.extra.email,
-						"Auth Provider": providerName,
-						Source: context.pendingProtocolHandlerQuery?.src,
-					});
+					// HostApi.instance.track("Account Created", {
+					// 	email: response.extra.email,
+					// 	"Auth Provider": providerName,
+					// 	Source: context.pendingProtocolHandlerQuery?.src,
+					// });
 					return dispatch(
 						goToTeamCreation({
 							email: response.extra && response.extra.email,
@@ -565,17 +566,17 @@ export const validateSignup =
 		}
 
 		if (authInfo && authInfo.fromSignup) {
-			HostApi.instance.track("Account Created", {
-				email: response.loginResponse.user.email,
-				"Auth Provider": providerName,
-				Source: context.pendingProtocolHandlerQuery?.src,
-			});
+			// HostApi.instance.track("Account Created", {
+			// 	email: response.loginResponse.user.email,
+			// 	"Auth Provider": providerName,
+			// 	Source: context.pendingProtocolHandlerQuery?.src,
+			// });
 
-			HostApi.instance.track("Signup Completed", {
-				// i don't think there's any way of reaching here unless user is already on a company/team by invite
-				"Signup Type": "Viral", // authInfo.type === SignupType.CreateTeam ? "Organic" : "Viral",
-				"Auth Provider": providerName,
-			});
+			// HostApi.instance.track("Signup Completed", {
+			// 	// i don't think there's any way of reaching here unless user is already on a company/team by invite
+			// 	"Signup Type": "Viral", // authInfo.type === SignupType.CreateTeam ? "Organic" : "Viral",
+			// 	"Auth Provider": providerName,
+			// });
 
 			return await dispatch(onLogin(response, true));
 		} else {
@@ -587,7 +588,7 @@ export const validateSignup =
 				meta_data_4: `openinide_flow: false`,
 				meta_data: `source: ${context.pendingProtocolHandlerQuery?.src}`,
 				event_type: "response",
-			};
+			} as TelemetryData;
 			if (signupStatus === "teamCreated") {
 				trackingInfo["meta_data_2"] = `org_created: true`;
 				trackingInfo["meta_data_3"] = `user_created: true`;
@@ -598,7 +599,7 @@ export const validateSignup =
 			HostApi.instance.track("codestream/user signed_in", trackingInfo);
 			if (localStore.get("enablingRealTime") === true) {
 				localStore.delete("enablingRealTime");
-				HostApi.instance.track("Slack Chat Enabled");
+				// HostApi.instance.track("Slack Chat Enabled");
 				const result = await dispatch(onLogin(response));
 				dispatch(setContext({ chatProviderAccess: "permissive" }));
 				return result;

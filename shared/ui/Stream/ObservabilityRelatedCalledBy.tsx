@@ -13,6 +13,7 @@ import { ObservabilityRelatedSearch } from "./ObservabilityRelatedSearch";
 import { ObservabilityLoadingRelatedServiceEntities } from "@codestream/webview/Stream/ObservabilityLoading";
 
 interface Props {
+	accountId: number;
 	currentRepoId: string;
 	entityGuid: string;
 }
@@ -56,7 +57,11 @@ export const ObservabilityRelatedCalledBy = React.memo((props: Props) => {
 				<>
 					{relatedEntitiesSlicedSorted.map(_ => {
 						return (
-							<ObservabilityRelatedEntity currentRepoId={props.currentRepoId} relatedEntity={_} />
+							<ObservabilityRelatedEntity
+								accountId={props.accountId}
+								currentRepoId={props.currentRepoId}
+								relatedEntity={_}
+							/>
 						);
 					})}
 				</>

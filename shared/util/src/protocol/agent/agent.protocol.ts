@@ -282,13 +282,87 @@ export const ReportBreadcrumbRequestType = new RequestType<
 	void
 >("codestream/reporting/breadcrumb");
 
+export type TelemetryEventName =
+	| "codestream/anomalies calculated"
+	| "codestream/anomaly clicked"
+	| "codestream/codelense clicked"
+	| "codestream/codelenses displayed"
+	| "codestream/codemarks/codemark created"
+	| "codestream/codemarks/codemark shared"
+	| "codestream/codemarks/codemark displayed"
+	| "codestream/codemarks/reply created"
+	| "codestream/codemarks/slack_sharing failed"
+	| "codestream/email unsubscribed"
+	| "codestream/entity associated_with_repo"
+	| "codestream/errors/error_group displayed"
+	| "codestream/errors/error_group roadblocked"
+	| "codestream/errors/error_group error_parsing_stack_trace"
+	| "codestream/errors/error_group assigned"
+	| "codestream/errors/error_group status_changed"
+	| "codestream/errors/grok_fix applied"
+	| "codestream/grok_response generated"
+	| "codestream/grok_response failed"
+	| "codestream/ide selected"
+	| "codestream/ide redirect_failed"
+	| "codestream/ide_redirect page_viewed"
+	| "codestream/instrumentation_wizard displayed"
+	| "codestream/instrumentation_wizard started"
+	| "codestream/instrumentation_wizard completed"
+	| "codestream/integration connected"
+	| "codestream/link_to_newrelic clicked"
+	| "codestream/logs searched"
+	| "codestream/logs/expand_button clicked"
+	| "codestream/logs/show_surrounding_button clicked"
+	| "codestream/logs/webview opened"
+	| "codestream/nrql/export downloaded"
+	| "codestream/nrql/query submitted"
+	| "codestream/nrql/visualization changed"
+	| "codestream/nrql/webview opened"
+	| "codestream/o11y rendered"
+	| "codestream/o11y fetch_failed"
+	| "codestream/related_service clicked"
+	| "codestream/repo associated_with_entity"
+	| "codestream/repo disambiguated"
+	| "codestream/service rendered"
+	| "codestream/sign_in page_viewed"
+	| "codestream/toast displayed"
+	| "codestream/toast clicked"
+	| "codestream/tracing/span displayed"
+	| "codestream/user login_failed"
+	| "codestream/user signed_in"
+	| "codestream/user switched"
+	| "codestream/vulnerability clicked";
+
+export interface TelemetryData {
+	/** This should not be a string, empty string, or 0. null or undefined is OK */
+	account_id?: number;
+	/** This should not be an empty string. null or undefined is OK */
+	entity_guid?: string;
+	event_type:
+		| "change"
+		| "click"
+		| "modal_display"
+		| "page_view"
+		| "response"
+		| "state_load"
+		| "submit";
+	meta_data?: string;
+	meta_data_2?: string;
+	meta_data_3?: string;
+	meta_data_4?: string;
+	meta_data_5?: string;
+	session_id?: string;
+	target?: string;
+	target_text?: string;
+}
+
 /**
  * @param eventName The name of the telemetry event you want to track, eg: "Page Viewed"
  * @param properties Optional properties to pass along with eventName
  */
 export interface TelemetryRequest {
-	eventName: string;
-	properties?: { [key: string]: string | number | boolean };
+	eventName: TelemetryEventName;
+	properties?: TelemetryData;
 }
 
 export interface TelemetrySetAnonymousIdRequest {

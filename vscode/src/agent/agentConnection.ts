@@ -154,7 +154,9 @@ import {
 	UpdateUserRequestType,
 	UserDidCommitNotification,
 	UserDidCommitNotificationType,
-	DidEncounterInvalidRefreshTokenNotificationType
+	DidEncounterInvalidRefreshTokenNotificationType,
+	TelemetryEventName,
+	TelemetryData
 } from "@codestream/protocols/agent";
 import {
 	ChannelServiceType,
@@ -934,7 +936,7 @@ export class CodeStreamAgentConnection implements Disposable {
 	private readonly _telemetry = new (class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
-		async track(eventName: string, properties?: { [key: string]: string | number | boolean }) {
+		async track(eventName: TelemetryEventName, properties?: TelemetryData) {
 			if (!this._connection.started) return;
 
 			Logger.debug("(5) track called from agentConnection.ts :: ", eventName);

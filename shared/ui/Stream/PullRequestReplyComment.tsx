@@ -6,7 +6,6 @@ import {
 	PRCodeCommentReply,
 	PRCodeCommentReplyInput,
 } from "./PullRequestComponents";
-import { HostApi } from "../webview-api";
 import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
 import { MessageInput } from "./MessageInput";
 import { Button } from "../src/components/Button";
@@ -44,10 +43,10 @@ export const PullRequestReplyComment = styled((props: Props) => {
 			if (text == null || text == "") return;
 			setIsSubmitting(true);
 
-			HostApi.instance.track("PR Comment Added", {
-				Host: pr.providerId,
-				"Comment Type": "Single Reply",
-			});
+			// HostApi.instance.track("PR Comment Added", {
+			// 	Host: pr.providerId,
+			// 	"Comment Type": "Single Reply",
+			// });
 
 			await dispatch(
 				api({

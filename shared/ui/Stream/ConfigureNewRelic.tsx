@@ -127,9 +127,9 @@ export default function ConfigureNewRelic(props: Props) {
 		}
 		setAlreadyConnected(true);
 		let isOnSubmittedPromise = false;
-		HostApi.instance.track("NR Connected", {
-			"Connection Location": props.originLocation,
-		});
+		// HostApi.instance.track("NR Connected", {
+		// 	"Connection Location": props.originLocation,
+		// });
 		if (props.onSubmited) {
 			const result = props.onSubmited();
 			if (typeof result?.then === "function") {
@@ -272,7 +272,7 @@ export default function ConfigureNewRelic(props: Props) {
 								<Link
 									onClick={e => {
 										e.preventDefault();
-										HostApi.instance.track("NR Get API Key");
+										// HostApi.instance.track("NR Get API Key");
 										onClickSignup("nr_getapikey");
 									}}
 								>
@@ -289,7 +289,7 @@ export default function ConfigureNewRelic(props: Props) {
 								className="row-button"
 								onClick={e => {
 									e.preventDefault();
-									HostApi.instance.track("NR Signup Initiated");
+									// HostApi.instance.track("NR Signup Initiated");
 									onClickSignup("nr_signup");
 								}}
 							>

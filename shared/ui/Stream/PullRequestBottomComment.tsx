@@ -47,10 +47,10 @@ export const PullRequestBottomComment = styled((props: Props) => {
 	};
 
 	const trackComment = type => {
-		HostApi.instance.track("PR Comment Added", {
-			Host: pr.providerId,
-			"Comment Type": type,
-		});
+		// HostApi.instance.track("PR Comment Added", {
+		// 	Host: pr.providerId,
+		// 	"Comment Type": type,
+		// });
 	};
 
 	const onCommentClick = async (event?: React.SyntheticEvent) => {

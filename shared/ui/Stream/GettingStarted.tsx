@@ -249,10 +249,10 @@ export function GettingStarted(props: GettingStartedProps) {
 		if (index !== active) {
 			setActive(index);
 
-			const stepLabels = ["Getting Started", "The Basics", "Trunk Flow", "Branch Flow"];
-			HostApi.instance.track("Tour Tab Clicked", {
-				"Tour Step": stepLabels[index],
-			});
+			// const stepLabels = ["Getting Started", "The Basics", "Trunk Flow", "Branch Flow"];
+			// HostApi.instance.track("Tour Tab Clicked", {
+			// 	"Tour Step": stepLabels[index],
+			// });
 		}
 	};
 

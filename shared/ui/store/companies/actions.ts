@@ -23,7 +23,7 @@ export const updateCompany = (company: CSCompany) => action(CompaniesActionsType
 export const createCompany = (request: CreateCompanyRequest) => async dispatch => {
 	const response = await HostApi.instance.send(CreateCompanyRequestType, request);
 
-	HostApi.instance.track("Additional Organization Created", {});
+	// HostApi.instance.track("Additional Organization Created", {});
 
 	if (response.team) dispatch(addTeams([response.team]));
 	if (response.company != undefined) dispatch(addCompanies([response.company]));
@@ -39,7 +39,7 @@ export const createForeignCompany =
 			host,
 		});
 
-		HostApi.instance.track("Additional Foreign Organization Created", {});
+		// HostApi.instance.track("Additional Foreign Organization Created", {});
 
 		let _host = JSON.parse(JSON.stringify(host));
 		_host.accessToken = response.accessToken;

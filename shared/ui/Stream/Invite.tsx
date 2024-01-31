@@ -333,11 +333,11 @@ class Invite extends React.Component<Props, State> {
 					}, 1000);
 				}
 			});
-		HostApi.instance.track("Teammate Invited", {
-			"Invitee Email Address": newMemberEmail,
-			"Invitee Name": newMemberName,
-			"Invitation Method": "Manual",
-		});
+		// HostApi.instance.track("Teammate Invited", {
+		// 	"Invitee Email Address": newMemberEmail,
+		// 	"Invitee Name": newMemberName,
+		// 	"Invitation Method": "Manual",
+		// });
 	};
 
 	onSubmitNRUsers = event => {
@@ -385,11 +385,11 @@ class Invite extends React.Component<Props, State> {
 			default:
 				inviteMethod = "Suggested";
 		}
-		HostApi.instance.track("Teammate Invited", {
-			"Invitee Email Address": user.email,
-			"Invitee Name": user.fullName,
-			"Invitation Method": inviteMethod,
-		});
+		// HostApi.instance.track("Teammate Invited", {
+		// 	"Invitee Email Address": user.email,
+		// 	"Invitee Name": user.fullName,
+		// 	"Invitation Method": inviteMethod,
+		// });
 	};
 
 	focusEmailInput = () => {

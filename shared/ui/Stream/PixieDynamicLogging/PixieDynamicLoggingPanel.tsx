@@ -4,7 +4,6 @@ import {
 	PixieDynamicLoggingReponse,
 	PixieDynamicLoggingRequestType,
 	PixiePod,
-	TelemetryRequestType,
 } from "@codestream/protocols/agent";
 import { Button } from "@codestream/webview/src/components/Button";
 import {
@@ -61,10 +60,10 @@ export const PixieDynamicLoggingPanel = () => {
 	const [pod, setPod] = React.useState<PixiePod | undefined>();
 
 	useDidMount(() => {
-		HostApi.instance.send(TelemetryRequestType, {
-			eventName: "Pixie Logging Selected",
-			properties: {},
-		});
+		// HostApi.instance.send(TelemetryRequestType, {
+		// 	eventName: "Pixie Logging Selected",
+		// 	properties: {},
+		// });
 	});
 
 	const setAndSaveAccount = account => {
@@ -229,10 +228,10 @@ const PixieDynamicLogging = props => {
 		setMinutes(time);
 		if (derivedState.currentPixieDynamicLoggingOptions) {
 			setIsLoading(true);
-			HostApi.instance.send(TelemetryRequestType, {
-				eventName: "Pixie Logging Started",
-				properties: {},
-			});
+			// HostApi.instance.send(TelemetryRequestType, {
+			// 	eventName: "Pixie Logging Started",
+			// 	properties: {},
+			// });
 			const result: PixieDynamicLoggingReponse = await HostApi.instance.send(
 				PixieDynamicLoggingRequestType,
 				{
@@ -250,10 +249,10 @@ const PixieDynamicLogging = props => {
 
 	const stopLogging = async () => {
 		setIsCancelling(true);
-		HostApi.instance.send(TelemetryRequestType, {
-			eventName: "Pixie Logging Stopped",
-			properties: {},
-		});
+		// HostApi.instance.send(TelemetryRequestType, {
+		// 	eventName: "Pixie Logging Stopped",
+		// 	properties: {},
+		// });
 		await dispatch(pixieDynamicLoggingCancel({ id: loggingId }));
 		setTimeout(() => setIsCancelling(false), 2000);
 	};

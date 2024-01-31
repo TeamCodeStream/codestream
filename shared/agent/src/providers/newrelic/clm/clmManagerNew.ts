@@ -7,6 +7,7 @@ import {
 	NameValue,
 	ObservabilityRepo,
 	SpanWithCodeAttrs,
+	TelemetryData,
 } from "@codestream/protocols/agent";
 import { Logger } from "../../../logger";
 import { getLanguageSupport, LanguageSupport } from "./languageSupport";
@@ -60,11 +61,8 @@ export class ClmManagerNew {
 		try {
 			const telemetry = Container.instance().telemetry;
 			const event = {
-				// "Total Methods": symbolStrs.size,
-
-				entity_guid: this._request.entityGuid || "",
+				entity_guid: this._request.entityGuid,
 				account_id: this._accountId,
-				target: "anomaly",
 				meta_data: `language: ${languageSupport.language ?? "<unknown>"}`,
 
 				meta_data_2: `anomalous_duration_transactions: ${
@@ -80,7 +78,7 @@ export class ClmManagerNew {
 					codeLevelMetrics[0].scope ? codeLevelMetrics[0].errorRate : 0
 				}`,
 				event_type: "state_load",
-			};
+			} as TelemetryData;
 			telemetry?.track({
 				eventName: "codestream/anomalies calculated",
 				properties: event,

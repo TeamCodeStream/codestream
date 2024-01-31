@@ -208,9 +208,9 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 			console.warn(err);
 		}
 
-		HostApi.instance.track("PR Diff Viewed", {
-			Host: pr && pr.providerId,
-		});
+		// HostApi.instance.track("PR Diff Viewed", {
+		// 	Host: pr && pr.providerId,
+		// });
 
 		setPendingLineNavigation(true);
 		setPendingLineNavigationAndUriChange(true);
@@ -244,9 +244,9 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 			});
 		}
 
-		HostApi.instance.track("PR Jump to Local File", {
-			Host: pr && pr.providerId,
-		});
+		// HostApi.instance.track("PR Jump to Local File", {
+		// 	Host: pr && pr.providerId,
+		// });
 	};
 
 	const handleResolve = async (e, threadId) => {
@@ -469,9 +469,9 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 														style={{ color: "var(--text-color-subtle)" }}
 														onClick={e => {
 															handleDiffClick();
-															HostApi.instance.track("PR Jump to Diff", {
-																Host: pr && pr.providerId,
-															});
+															// HostApi.instance.track("PR Jump to Diff", {
+															// 	Host: pr && pr.providerId,
+															// });
 														}}
 													>
 														<Icon

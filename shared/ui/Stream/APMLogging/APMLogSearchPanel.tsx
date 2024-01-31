@@ -15,6 +15,7 @@ import {
 	GetSurroundingLogsRequestType,
 	LogFieldDefinition,
 	LogResult,
+	TelemetryData,
 	isNRErrorResponse,
 } from "@codestream/protocols/agent";
 import { parseId } from "@codestream/webview/utilities/newRelic";
@@ -388,7 +389,7 @@ export const APMLogSearchPanel = (props: {
 	) => {
 		HostApi.instance.track("codestream/logs searched", {
 			entity_guid: `${entityGuid}`,
-			account_id: `${accountId}`,
+			account_id: accountId,
 			event_type: "response",
 			meta_data: `results_returned: ${resultsReturned}`,
 		});
@@ -398,7 +399,7 @@ export const APMLogSearchPanel = (props: {
 		const payload = {
 			event_type: "click",
 			meta_data: `entry_point: ${entryPoint}`,
-		};
+		} as TelemetryData;
 
 		if (entityGuid) {
 			payload["entity_guid"] = entityGuid;

@@ -89,6 +89,7 @@ import {
 	SharePostViaServerRequest,
 	SharePostViaServerRequestType,
 	SharePostViaServerResponse,
+	TelemetryData,
 	UpdatePostSharingDataRequest,
 	UpdatePostSharingDataRequestType,
 	UpdatePostSharingDataResponse,
@@ -522,9 +523,7 @@ function trackPostCreation(
 					if (request.codemark) {
 						// this is a standard codemark -- note its event name includes "created" rather than "reply"
 						const { markers = [] } = request.codemark;
-						const codemarkProperties: {
-							[key: string]: any;
-						} = {
+						const codemarkProperties: TelemetryData = {
 							meta_data: `entry_point: ${
 								request.entryPoint === "Gutter"
 									? "gutter"
@@ -552,7 +551,7 @@ function trackPostCreation(
 						if (textDocuments && textDocuments.length) {
 							for (const textDocument of textDocuments) {
 								const firstError = await getGitError(textDocument);
-								codemarkProperties["Git Error"] = firstError;
+								// codemarkProperties["Git Error"] = firstError;
 								if (firstError) {
 									// stop after the first
 									break;
@@ -575,47 +574,47 @@ function trackPostCreation(
 
 								if (parentPost.codemarkId && grandParentPost && grandParentPost.codeErrorId) {
 									// reply to a codemark in a code error
-									const postProperties = {
-										meta_data: "parent_type: error",
-										event_type: "response",
-									};
+
 									telemetry.track({
 										eventName: "codestream/codemarks/reply created",
-										properties: postProperties,
+										properties: {
+											meta_data: "parent_type: error",
+											event_type: "response",
+										},
 									});
 								} else if (grandParentPost && grandParentPost.codeErrorId) {
 									// reply to a reply in a code error
-									const postProperties = {
-										meta_data: "parent_type: error",
-										event_type: "response",
-									};
+
 									telemetry.track({
 										eventName: "codestream/codemarks/reply created",
-										properties: postProperties,
+										properties: {
+											meta_data: "parent_type: error",
+											event_type: "response",
+										},
 									});
 								}
 							} else if (parentPost.codeErrorId) {
 								// reply to a code error
-								const postProperties = {
-									meta_data: "parent_type: error",
-									event_type: "response",
-								};
+
 								telemetry.track({
 									eventName: "codestream/codemarks/reply created",
-									properties: postProperties,
+									properties: {
+										meta_data: "parent_type: error",
+										event_type: "response",
+									},
 								});
 							} else if (parentPost.codemarkId) {
 								// reply to a standard codemark
 								const codemark = await SessionContainer.instance().codemarks.getById(
 									parentPost.codemarkId
 								);
-								const postProperties = {
-									meta_data: "parent_type: codemark",
-									event_type: "response",
-								};
+
 								telemetry.track({
 									eventName: "codestream/codemarks/reply created",
-									properties: postProperties,
+									properties: {
+										meta_data: "parent_type: codemark",
+										event_type: "response",
+									},
 								});
 							}
 						}
@@ -628,75 +627,75 @@ function trackPostCreation(
 	});
 }
 
-export function trackReviewPostCreation(
-	review: ReviewPlus,
-	totalExcludedFilesCount: number,
-	reviewChangesetsSizeInBytes: number,
-	skippedCommitsCount: number,
-	entryPoint?: string,
-	addedUsers?: string[]
-) {
-	process.nextTick(() => {
-		try {
-			const telemetry = Container.instance().telemetry;
-			const reviewProperties: {
-				[key: string]: any;
-			} = {
-				"Review ID": review.id,
-				"Entry Point": entryPoint,
-				Approvals: review.allReviewersMustApprove === true ? "Everyone" : "Anyone",
-				Reviewers: review.reviewers.length,
-				Files: review.reviewChangesets.map(_ => _.modifiedFiles.length).reduce((acc, x) => acc + x),
-				"Pushed Commits": review.reviewChangesets
-					.map(_ => _.commits.filter(c => !c.localOnly).length)
-					.reduce((acc, x) => acc + x),
-				"Local Commits": review.reviewChangesets
-					.map(_ => _.commits.filter(c => c.localOnly).length)
-					.reduce((acc, x) => acc + x),
-				"Staged Changes": review.reviewChangesets.some(_ => _.includeStaged),
-				"Saved Changes": review.reviewChangesets.some(_ => _.includeSaved),
-				"Excluded Files": totalExcludedFilesCount,
-				"Skipped Commits": skippedCommitsCount,
-				// rounds to 4 places
-				"Payload Size":
-					reviewChangesetsSizeInBytes > 0
-						? Math.round((reviewChangesetsSizeInBytes / 1048576) * 10000) / 10000
-						: 0,
-				"Invitee Reviewers": addedUsers ? addedUsers.length : 0,
-			};
+// export function trackReviewPostCreation(
+// 	review: ReviewPlus,
+// 	totalExcludedFilesCount: number,
+// 	reviewChangesetsSizeInBytes: number,
+// 	skippedCommitsCount: number,
+// 	entryPoint?: string,
+// 	addedUsers?: string[]
+// ) {
+// 	process.nextTick(() => {
+// 		try {
+// 			const telemetry = Container.instance().telemetry;
+// 			const reviewProperties: {
+// 				[key: string]: any;
+// 			} = {
+// 				"Review ID": review.id,
+// 				"Entry Point": entryPoint,
+// 				Approvals: review.allReviewersMustApprove === true ? "Everyone" : "Anyone",
+// 				Reviewers: review.reviewers.length,
+// 				Files: review.reviewChangesets.map(_ => _.modifiedFiles.length).reduce((acc, x) => acc + x),
+// 				"Pushed Commits": review.reviewChangesets
+// 					.map(_ => _.commits.filter(c => !c.localOnly).length)
+// 					.reduce((acc, x) => acc + x),
+// 				"Local Commits": review.reviewChangesets
+// 					.map(_ => _.commits.filter(c => c.localOnly).length)
+// 					.reduce((acc, x) => acc + x),
+// 				"Staged Changes": review.reviewChangesets.some(_ => _.includeStaged),
+// 				"Saved Changes": review.reviewChangesets.some(_ => _.includeSaved),
+// 				"Excluded Files": totalExcludedFilesCount,
+// 				"Skipped Commits": skippedCommitsCount,
+// 				// rounds to 4 places
+// 				"Payload Size":
+// 					reviewChangesetsSizeInBytes > 0
+// 						? Math.round((reviewChangesetsSizeInBytes / 1048576) * 10000) / 10000
+// 						: 0,
+// 				"Invitee Reviewers": addedUsers ? addedUsers.length : 0,
+// 			};
 
-			telemetry.track({
-				eventName: "Review Created",
-				properties: reviewProperties,
-			});
-		} catch (ex) {
-			Logger.error(ex);
-		}
-	});
-}
+// 			telemetry.track({
+// 				eventName: "Review Created",
+// 				properties: reviewProperties,
+// 			});
+// 		} catch (ex) {
+// 			Logger.error(ex);
+// 		}
+// 	});
+// }
 
-export function trackCodeErrorPostCreation(
-	codeError: CSCodeError,
-	entryPoint?: string,
-	addedUsers?: string[]
-) {
-	process.nextTick(() => {
-		try {
-			const telemetry = Container.instance().telemetry;
-			const codeErrorProperties: {
-				[key: string]: any;
-			} = {
-				"Code Error ID": codeError.id,
-				"Entry Point": entryPoint,
-				Assignees: codeError.assignees?.length ?? 0,
-				// rounds to 4 places
-				"Invitee Assignees": addedUsers ? addedUsers.length : 0,
-			};
-		} catch (ex) {
-			Logger.error(ex);
-		}
-	});
-}
+// export function trackCodeErrorPostCreation(
+// 	codeError: CSCodeError,
+// 	entryPoint?: string,
+// 	addedUsers?: string[]
+// ) {
+// 	process.nextTick(() => {
+// 		try {
+// 			const telemetry = Container.instance().telemetry;
+// 			const codeErrorProperties: {
+// 				[key: string]: any;
+// 			} = {
+// 				"Code Error ID": codeError.id,
+// 				"Entry Point": entryPoint,
+// 				Assignees: codeError.assignees?.length ?? 0,
+// 				// rounds to 4 places
+// 				"Invitee Assignees": addedUsers ? addedUsers.length : 0,
+// 			};
+// 		} catch (ex) {
+// 			Logger.error(ex);
+// 		}
+// 	});
+// }
 
 function getGitError(textDocument?: TextDocumentIdentifier): Promise<string | void> {
 	return new Promise(resolve => {
@@ -1455,14 +1454,14 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			}
 		}
 
-		trackReviewPostCreation(
-			review,
-			totalExcludedFilesCount,
-			reviewChangesetsSizeInBytes,
-			skippedCommitsCount,
-			request.entryPoint,
-			request.addedUsers
-		);
+		// trackReviewPostCreation(
+		// 	review,
+		// 	totalExcludedFilesCount,
+		// 	reviewChangesetsSizeInBytes,
+		// 	skippedCommitsCount,
+		// 	request.entryPoint,
+		// 	request.addedUsers
+		// );
 		this.cacheResponse(response!);
 		return {
 			stream,
@@ -1500,7 +1499,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 		codeError = response.codeError!;
 
-		trackCodeErrorPostCreation(codeError, request.entryPoint, request.addedUsers);
+		// trackCodeErrorPostCreation(codeError, request.entryPoint, request.addedUsers);
 		this.cacheResponse(response!);
 
 		let replyPostResponse: CreatePostResponse | undefined = undefined;

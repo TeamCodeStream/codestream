@@ -128,7 +128,7 @@ export const EmailConfirmation = (connect() as any)((props: Props) => {
 			}
 			switch (result.status) {
 				case LoginResult.NotInCompany: {
-					HostApi.instance.track("Email Confirmed");
+					// HostApi.instance.track("Email Confirmed");
 					props.dispatch(
 						goToCompanyCreation({
 							...result,
@@ -141,13 +141,13 @@ export const EmailConfirmation = (connect() as any)((props: Props) => {
 					break;
 				}
 				case LoginResult.NotOnTeam: {
-					HostApi.instance.track("Email Confirmed");
+					// HostApi.instance.track("Email Confirmed");
 					props.dispatch(goToTeamCreation({ token: result.token, email: props.email }));
 
 					break;
 				}
 				case LoginResult.Success: {
-					HostApi.instance.track("Email Confirmed");
+					// HostApi.instance.track("Email Confirmed");
 					try {
 						props.dispatch(
 							completeSignup(props.email, result.token!, props.teamId, {

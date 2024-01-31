@@ -17,9 +17,9 @@ export const updateTeam = (team: CSTeam) => action(TeamsActionsType.Update, team
 export const createTeam = (request: CreateTeamRequest) => async dispatch => {
 	const response = await HostApi.instance.send(CreateTeamRequestType, request);
 
-	HostApi.instance.track("New Team Created", {
-		Organization: `${(request as any).companyId ? "Existing" : "New"} Org`,
-	});
+	// HostApi.instance.track("New Team Created", {
+	// 	Organization: `${(request as any).companyId ? "Existing" : "New"} Org`,
+	// });
 
 	if (response.team) dispatch(addTeams([response.team]));
 	if (response.company != undefined) dispatch(addCompanies([response.company]));

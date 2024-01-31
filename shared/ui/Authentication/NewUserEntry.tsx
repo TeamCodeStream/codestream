@@ -91,10 +91,10 @@ export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => 
 		let tosType;
 		const picker = Math.random();
 		picker < 0.5 ? (tosType = "Interstitial") : (tosType = "Links");
-		HostApi.instance.track("Reg Path Selected", {
-			"Reg Path": "Create Team",
-			"TOS Type": tosType,
-		});
+		// HostApi.instance.track("Reg Path Selected", {
+		// 	"Reg Path": "Create Team",
+		// 	"TOS Type": tosType,
+		// });
 		props.dispatch(goToSignup({ type: SignupType.CreateTeam, tosType }));
 	};
 
@@ -111,10 +111,10 @@ export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => 
 		let tosType;
 		const picker = Math.random();
 		picker < 0.5 ? (tosType = "Interstitial") : (tosType = "Links");
-		HostApi.instance.track("Reg Path Selected", {
-			"Reg Path": "Auto Join Team",
-			"TOS Type": tosType,
-		});
+		// HostApi.instance.track("Reg Path Selected", {
+		// 	"Reg Path": "Auto Join Team",
+		// 	"TOS Type": tosType,
+		// });
 		const info = autoJoinInfo.find(info => info.team.id === teamId);
 		if (info) {
 			const repoId = info.repo.id;

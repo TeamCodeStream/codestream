@@ -161,7 +161,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 					onOff: true,
 					path: fileObject.file,
 				},
-			}),
+			})
 		);
 		setIconName("ok");
 		setIsChecked(true);
@@ -175,7 +175,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 					onOff: false,
 					path: fileObject.file,
 				},
-			}),
+			})
 		);
 		setIconName("circle");
 		setIsChecked(false);
@@ -274,13 +274,13 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 				prId,
 				comment?.comment?.id || comment?.review?.id,
 				"",
-				"details",
-			),
+				"details"
+			)
 		);
 
-		HostApi.instance.track("PR Conversation View", {
-			Host: pullRequest?.providerId,
-		});
+		// HostApi.instance.track("PR Conversation View", {
+		// 	Host: pullRequest?.providerId,
+		// });
 	};
 
 	const handlePendingClick = event => {
@@ -341,9 +341,9 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 			});
 		}
 
-		HostApi.instance.track("PR Jump To Local File from Tree", {
-			Host: pullRequest && pullRequest.providerId,
-		});
+		// HostApi.instance.track("PR Jump To Local File from Tree", {
+		// 	Host: pullRequest && pullRequest.providerId,
+		// });
 	};
 
 	let commentsSortedByLineNumber;
@@ -354,7 +354,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 			//@ts-ignore
 			["asc", "comment.bodyText"],
 			//@ts-ignore
-			["asc", "comment.body"],
+			["asc", "comment.body"]
 		);
 	}
 
@@ -425,9 +425,9 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 							: async e => {
 									e.preventDefault();
 									goDiff(index);
-									HostApi.instance.track("PR File Clicked", {
-										Host: pullRequest && pullRequest.providerId,
-									});
+									// HostApi.instance.track("PR File Clicked", {
+									// 	Host: pullRequest && pullRequest.providerId,
+									// });
 							  }
 					}
 					key={index + ":" + fileObject.file}
@@ -523,9 +523,9 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 								: async e => {
 										e.preventDefault();
 										goDiff(index);
-										HostApi.instance.track("PR File Clicked", {
-											Host: pullRequest && pullRequest.providerId,
-										});
+										// HostApi.instance.track("PR File Clicked", {
+										// 	Host: pullRequest && pullRequest.providerId,
+										// });
 								  }
 						}
 						key={index + ":" + fileObject.file}

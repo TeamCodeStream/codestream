@@ -670,12 +670,12 @@ export const api = createAppAsyncThunk<any, ApiRequest>(
 			);
 			logError(error, { providerId, pullRequestId, method, message: errorString });
 
-			HostApi.instance.track("PR Error", {
-				Host: providerId,
-				Operation: method,
-				Error: errorString,
-				IsOAuthError: errorString && errorString.indexOf("OAuth App access restrictions") > -1,
-			});
+			// HostApi.instance.track("PR Error", {
+			// 	Host: providerId,
+			// 	Operation: method,
+			// 	Error: errorString,
+			// 	IsOAuthError: errorString && errorString.indexOf("OAuth App access restrictions") > -1,
+			// });
 			return undefined;
 		}
 	}

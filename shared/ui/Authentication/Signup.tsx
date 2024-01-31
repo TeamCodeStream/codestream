@@ -284,12 +284,12 @@ export const Signup = (props: Props) => {
 			const { status, token } = await HostApi.instance.send(RegisterUserRequestType, attributes);
 
 			const sendTelemetry = () => {
-				HostApi.instance.track("Account Created", {
-					email: email,
-					"Auth Provider": "Email",
-					"Git Email Match?": email === scmEmail,
-					Source: derivedState.pendingProtocolHandlerQuerySource,
-				});
+				// HostApi.instance.track("Account Created", {
+				// 	email: email,
+				// 	"Auth Provider": "Email",
+				// 	"Git Email Match?": email === scmEmail,
+				// 	Source: derivedState.pendingProtocolHandlerQuerySource,
+				// });
 			};
 
 			switch (status) {

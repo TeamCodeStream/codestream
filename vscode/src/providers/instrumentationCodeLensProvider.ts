@@ -6,7 +6,8 @@ import { Event, SymbolKind } from "vscode-languageclient";
 import {
 	FileLevelTelemetryRequestOptions,
 	FunctionLocator,
-	GetFileLevelTelemetryResponse
+	GetFileLevelTelemetryResponse,
+	TelemetryData
 } from "@codestream/protocols/agent";
 
 import {
@@ -606,8 +607,9 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 				this.tryTrack(
 					cacheKey,
 					fileLevelTelemetryResponse && fileLevelTelemetryResponse.newRelicAccountId
-						? fileLevelTelemetryResponse.newRelicAccountId.toString()
-						: "",
+						? fileLevelTelemetryResponse.newRelicAccountId
+						: undefined,
+					fileLevelTelemetryResponse?.newRelicEntityGuid,
 					document.languageId,
 					codeLenses.length
 				);
@@ -621,17 +623,23 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 		return codeLenses;
 	}
 
-	private tryTrack(cacheKey: string, accountId: string, languageId: string, codeLensCount: number) {
+	private tryTrack(
+		cacheKey: string,
+		accountId: number | undefined,
+		entityGuid: string | undefined,
+		languageId: string,
+		codeLensCount: number
+	) {
 		const doc = this.documentManager[cacheKey];
 		if (doc && !doc.tracked) {
 			try {
 				this.telemetryService.track("codestream/codelenses displayed", {
 					account_id: accountId,
-					entity_guid: "",
+					entity_guid: entityGuid,
 					meta_data: `language: ${languageId}`,
 					meta_data_2: `codelense_count: ${codeLensCount}`,
 					event_type: "state_load"
-				});
+				} as TelemetryData);
 				doc.tracked = true;
 			} catch {}
 		}

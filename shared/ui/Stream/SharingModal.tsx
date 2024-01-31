@@ -208,7 +208,7 @@ export function SharingModal(props: SharingModalProps) {
 			) {
 				trackingData["Error Group ID"] = props.codeError.objectId!;
 			}
-			HostApi.instance.track(`Shared ${shareTargetType}`, trackingData);
+			// HostApi.instance.track(`Shared ${shareTargetType}`, trackingData);
 
 			setState({ name: "success" });
 		} catch (error) {

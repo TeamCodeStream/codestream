@@ -532,7 +532,7 @@ export class Commands implements Disposable {
 			trackParams["Comment Location"] = "Diff Gutter";
 		}
 
-		Container.agent.telemetry.track("PR Comment Clicked", trackParams);
+		// Container.agent.telemetry.track("PR Comment Clicked", trackParams);
 
 		if (args.externalUrl) {
 			return openUrl(args.externalUrl);
@@ -608,9 +608,9 @@ export class Commands implements Disposable {
 		try {
 			parsedArgs = JSON.parse(args) as ViewMethodLevelTelemetryCommandArgs;
 			if (parsedArgs.error?.type === "NO_RUBY_VSCODE_EXTENSION") {
-				Container.agent.telemetry.track("MLT Language Extension Prompt", {
-					Language: parsedArgs.languageId
-				});
+				// Container.agent.telemetry.track("MLT Language Extension Prompt", {
+				// 	Language: parsedArgs.languageId
+				// });
 			}
 			if (parsedArgs.error?.type === "NO_SPANS") {
 				// no-op

@@ -4,6 +4,7 @@ import {
 	TelemetrySetAnonymousIdRequest,
 	TelemetrySetAnonymousIdRequestType,
 	GetAnonymousIdRequestType,
+	TelemetryData,
 } from "@codestream/protocols/agent";
 
 import { Logger } from "../logger";
@@ -62,7 +63,7 @@ export class TelemetryManager {
 			this._sessionId = UUID();
 		}
 		this._lastEventTime = now;
-		request.properties = request.properties || {};
+		request.properties = request.properties || ({} as TelemetryData);
 		request.properties["session_id"] = this._sessionId;
 
 		this._providers.forEach(provider => {

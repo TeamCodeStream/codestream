@@ -110,7 +110,6 @@ import { TeamSetup } from "./TeamSetup";
 import { Tester } from "./Tester";
 import { ObservabilityAnomalyPanel } from "@codestream/webview/Stream/MethodLevelTelemetry/ObservabilityAnomalyPanel";
 import { TransactionSpanPanel } from "./TransactionSpanPanel";
-import { APMLogSearchPanel } from "./APMLogging/APMLogSearchPanel";
 
 interface DispatchProps {
 	clearDynamicLogging: Function;
@@ -190,9 +189,9 @@ export class SimpleStream extends PureComponent<Props> {
 
 		this.props.setIsFirstPageview(false);
 
-		if (this.props.activePanel === "main" && this.props.postStreamId != undefined) {
-			HostApi.instance.track("Page Viewed", { "Page Name": "Stream" });
-		}
+		// if (this.props.activePanel === "main" && this.props.postStreamId != undefined) {
+		// 	HostApi.instance.track("Page Viewed", { "Page Name": "Stream" });
+		// }
 		this.disposables.push(
 			HostApi.instance.on(NewCodemarkNotificationType, this.handleNewCodemarkRequest, this)
 		);

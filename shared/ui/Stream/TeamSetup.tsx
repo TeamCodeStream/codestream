@@ -90,7 +90,7 @@ export const TeamSetup = (props: Props) => {
 					companyId: derivedState.company.id!,
 					domainJoining: domainsArray,
 				});
-				HostApi.instance.track("Domain Joining Updated");
+				// HostApi.instance.track("Domain Joining Updated");
 			} catch (ex) {
 				setDomainError(ex.message ? ex.message : ex.toString());
 				setIsLoading(false);

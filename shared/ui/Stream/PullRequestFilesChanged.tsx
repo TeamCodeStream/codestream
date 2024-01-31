@@ -301,9 +301,9 @@ export const PullRequestFilesChanged = (props: Props) => {
 					setErrorMessage(err || "Could not open file diff");
 				}
 
-				HostApi.instance.track("PR Diff Viewed", {
-					Host: pr && pr.providerId,
-				});
+				// HostApi.instance.track("PR Diff Viewed", {
+				// 	Host: pr && pr.providerId,
+				// });
 			})(i);
 		},
 		[derivedState.prRepoId, repoId, visitedFiles, forkPointSha, pr, derivedState.pullRequestId]
@@ -363,9 +363,9 @@ export const PullRequestFilesChanged = (props: Props) => {
 			if (!result.success) {
 				setErrorMessage("Could not open file");
 			} else {
-				HostApi.instance.track("PR File Viewed", {
-					Host: props.pr && props.pr.providerId,
-				});
+				// HostApi.instance.track("PR File Viewed", {
+				// 	Host: props.pr && props.pr.providerId,
+				// });
 			}
 		} else {
 			setErrorMessage("Could not find a repo");

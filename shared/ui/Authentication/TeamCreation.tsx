@@ -40,7 +40,7 @@ export const TeamCreation = (connect() as any)((props: ConnectedProps & Dispatch
 			setIsLoading(true);
 			try {
 				const { team } = await HostApi.instance.send(CreateTeamRequestType, { name: teamName });
-				HostApi.instance.track("Team Created");
+				// HostApi.instance.track("Team Created");
 				props.dispatch(
 					completeSignup(props.email, props.token, team.id, {
 						createdTeam: true,

@@ -432,18 +432,18 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				setIsLoadingPRs({ provider: "*", isLoading: false });
 
 				if (!hasRenderedOnce) {
-					HostApi.instance.track("PR List Rendered", {
-						"List State":
-							count === undefined
-								? "No Auth"
-								: count > 0
-								? activePrListedCount > 0
-									? "Active PRs Listed"
-									: "PRs Listed"
-								: "No PRs",
-						"PR Count": count,
-						Host: PRConnectedProviders ? PRConnectedProviders.map(_ => _.id)[0] : undefined,
-					});
+					// HostApi.instance.track("PR List Rendered", {
+					// 	"List State":
+					// 		count === undefined
+					// 			? "No Auth"
+					// 			: count > 0
+					// 			? activePrListedCount > 0
+					// 				? "Active PRs Listed"
+					// 				: "PRs Listed"
+					// 			: "No PRs",
+					// 	"PR Count": count,
+					// 	Host: PRConnectedProviders ? PRConnectedProviders.map(_ => _.id)[0] : undefined,
+					// });
 					hasRenderedOnce = true;
 				}
 			}
@@ -694,9 +694,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 		prFromUrlInput?.current?.blur();
 
-		HostApi.instance.track("PR Load from URL", {
-			Host: providerId,
-		});
+		// HostApi.instance.track("PR Load from URL", {
+		// 	Host: providerId,
+		// });
 
 		if (response && response.error) {
 			setPrFromUrlLoading(false);
@@ -779,10 +779,10 @@ export const OpenPullRequests = React.memo((props: Props) => {
 					telemetryQueryName = "Custom";
 				}
 
-				HostApi.instance.track("PR Clicked", {
-					Host: pr.providerId,
-					Section: telemetryQueryName || "",
-				});
+				// HostApi.instance.track("PR Clicked", {
+				// 	Host: pr.providerId,
+				// 	Section: telemetryQueryName || "",
+				// });
 			}
 		}
 	};

@@ -60,7 +60,7 @@ import { decompressFromBase64 } from "lz-string";
 import { URI } from "vscode-uri";
 
 import { MessageType } from "../api/apiProvider";
-import { Container, SessionContainer, SessionServiceContainer } from "../container";
+import { SessionContainer, SessionServiceContainer } from "../container";
 import { EMPTY_TREE_SHA, GitRepository } from "../git/gitService";
 import { Logger } from "../logger";
 import { log, lsp, lspHandler, Strings } from "../system";
@@ -501,9 +501,9 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			data: [updateResponse.review],
 		});
 
-		if (isAmending && reviewChangesets.length) {
-			this.trackReviewCheckpointCreation(request.id, reviewChangesets);
-		}
+		// if (isAmending && reviewChangesets.length) {
+		// 	this.trackReviewCheckpointCreation(request.id, reviewChangesets);
+		// }
 
 		return { review };
 	}
@@ -1040,44 +1040,44 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		};
 	}
 
-	private trackReviewCheckpointCreation(
-		reviewId: string,
-		reviewChangesets: CSTransformedReviewChangeset[]
-	) {
-		process.nextTick(() => {
-			try {
-				const telemetry = Container.instance().telemetry;
-				// get the highest number checkpoint by sorting by checkpoint descending
-				const totalCheckpoints = reviewChangesets
-					.map(_ => _!.checkpoint || 0)
-					.sort((a, b) => (b || 0) - (a || 0))[0];
-				const reviewProperties: {
-					[key: string]: any;
-				} = {
-					"Review ID": reviewId,
-					"Checkpoint Total": totalCheckpoints,
-					"Files Added": reviewChangesets
-						.map(_ => _.modifiedFiles.length)
-						.reduce((acc, x) => acc + x),
-					"Pushed Commits Added": reviewChangesets
-						.map(_ => _.commits.filter(c => !c.localOnly).length)
-						.reduce((acc, x) => acc + x),
-					"Local Commits Added": reviewChangesets
-						.map(_ => _.commits.filter(c => c.localOnly).length)
-						.reduce((acc, x) => acc + x),
-					"Staged Changes Added": reviewChangesets.some(_ => _.includeStaged),
-					"Saved Changes Added": reviewChangesets.some(_ => _.includeSaved),
-				};
+	// private trackReviewCheckpointCreation(
+	// 	reviewId: string,
+	// 	reviewChangesets: CSTransformedReviewChangeset[]
+	// ) {
+	// 	process.nextTick(() => {
+	// 		try {
+	// 			const telemetry = Container.instance().telemetry;
+	// 			// get the highest number checkpoint by sorting by checkpoint descending
+	// 			const totalCheckpoints = reviewChangesets
+	// 				.map(_ => _!.checkpoint || 0)
+	// 				.sort((a, b) => (b || 0) - (a || 0))[0];
+	// 			const reviewProperties: {
+	// 				[key: string]: any;
+	// 			} = {
+	// 				"Review ID": reviewId,
+	// 				"Checkpoint Total": totalCheckpoints,
+	// 				"Files Added": reviewChangesets
+	// 					.map(_ => _.modifiedFiles.length)
+	// 					.reduce((acc, x) => acc + x),
+	// 				"Pushed Commits Added": reviewChangesets
+	// 					.map(_ => _.commits.filter(c => !c.localOnly).length)
+	// 					.reduce((acc, x) => acc + x),
+	// 				"Local Commits Added": reviewChangesets
+	// 					.map(_ => _.commits.filter(c => c.localOnly).length)
+	// 					.reduce((acc, x) => acc + x),
+	// 				"Staged Changes Added": reviewChangesets.some(_ => _.includeStaged),
+	// 				"Saved Changes Added": reviewChangesets.some(_ => _.includeSaved),
+	// 			};
 
-				telemetry.track({
-					eventName: "Checkpoint Added",
-					properties: reviewProperties,
-				});
-			} catch (ex) {
-				Logger.error(ex);
-			}
-		});
-	}
+	// 			telemetry.track({
+	// 				eventName: "Checkpoint Added",
+	// 				properties: reviewProperties,
+	// 			});
+	// 		} catch (ex) {
+	// 			Logger.error(ex);
+	// 		}
+	// 	});
+	// }
 	/**
 	 * Sets any undefined checkpoint properties to 0 and copy modifiedFiles to modifiedFilesInCheckpoint.
 	 * Used with legacy reviews.

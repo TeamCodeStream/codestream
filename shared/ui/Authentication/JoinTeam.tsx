@@ -40,10 +40,10 @@ export const JoinTeam = (props: React.PropsWithChildren<JoinTeamProps>) => {
 			let tosType;
 			const picker = Math.random();
 			picker < 0.5 ? (tosType = "Interstitial") : (tosType = "Links");
-			HostApi.instance.track("Reg Path Selected", {
-				"Reg Path": "Join Team",
-				"TOS Type": tosType,
-			});
+			// HostApi.instance.track("Reg Path Selected", {
+			// 	"Reg Path": "Join Team",
+			// 	"TOS Type": tosType,
+			// });
 			// HostApi.instance.track("Joined Organization", {
 			// 	Availability: ""
 			// });

@@ -54,7 +54,7 @@ export const ChangeAvatar = props => {
 		const image = clear ? "" : avatar;
 		try {
 			await HostApi.instance.send(UpdateUserRequestType, { avatar: { image } });
-			HostApi.instance.track("Avatar Change Request", {});
+			// HostApi.instance.track("Avatar Change Request", {});
 			dispatch(closeModal());
 		} catch (error) {
 			logError(error, { detail: `Unexpected error during change avatar`, image });

@@ -1,4 +1,9 @@
-import { TelemetryRequestType, GetAnonymousIdRequestType } from "@codestream/protocols/agent";
+import {
+	TelemetryRequestType,
+	GetAnonymousIdRequestType,
+	TelemetryData,
+	TelemetryEventName,
+} from "@codestream/protocols/agent";
 import { URI } from "vscode-uri";
 
 import { NotificationType, RequestType } from "vscode-jsonrpc";
@@ -14,7 +19,7 @@ import {
 	NewReviewNotification,
 	NewReviewNotificationType,
 } from "./ipc/webview.protocol";
-import { AnyObject, Disposable, shortUuid } from "./utils";
+import { Disposable, shortUuid } from "./utils";
 import {
 	IpcHost,
 	isIpcRequestMessage,
@@ -338,7 +343,7 @@ export class HostApi extends EventEmitter {
 		});
 	}
 
-	track(eventName: string, properties?: AnyObject) {
+	track(eventName: TelemetryEventName, properties?: TelemetryData) {
 		this.send(TelemetryRequestType, {
 			eventName,
 			properties,

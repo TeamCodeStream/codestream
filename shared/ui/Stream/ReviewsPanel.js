@@ -13,7 +13,6 @@ import styled from "styled-components";
 import FiltersButton from "../src/components/FiltersButton";
 import { PanelHeader } from "../src/components/PanelHeader";
 import { lightOrDark } from "../utils";
-import { HostApi } from "../webview-api";
 import Headshot from "./Headshot";
 import { ProTip } from "./ProTip";
 
@@ -65,8 +64,8 @@ export class SimpleReviewsPanel extends Component {
 	}
 
 	componentDidMount() {
-		if (this.props.webviewFocused)
-			HostApi.instance.track("Page Viewed", { "Page Name": "Reviews" });
+		// if (this.props.webviewFocused)
+		// 	HostApi.instance.track("Page Viewed", { "Page Name": "Reviews" });
 		if (false && this.props.reviews.length === 0)
 			this.props.fetchReviews().then(() => {
 				this.setState({ isLoading: false });
