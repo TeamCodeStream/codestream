@@ -88,6 +88,7 @@ export const NRQLPanel = (props: {
 
 	const [userQuery, setUserQuery] = useState<string>("");
 	const [results, setResults] = useState<NRQLResult[]>([]);
+	const [noResults, setNoResults] = useState<boolean>(false);
 	const [eventType, setEventType] = useState<string>();
 	const [since, setSince] = useState<string>();
 	const [selectedAccount, setSelectedAccount] = useState<
@@ -185,6 +186,7 @@ export const NRQLPanel = (props: {
 				return;
 			}
 
+			setNoResults(!response.results || !response.results.length);
 			if (response.results && response.results.length > 0) {
 				HostApi.instance.track("codestream/nrql/query submitted", {
 					account_id: response.accountId,
@@ -381,7 +383,7 @@ export const NRQLPanel = (props: {
 							results &&
 							totalItems > 0 &&
 							resultsTypeGuess === "bar" && <NRQLResultsBar results={results} />}
-
+						{noResults && <div style={{ textAlign: "center" }}>No results found</div>}
 						{nrqlError && (
 							<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
 								{nrqlError}
