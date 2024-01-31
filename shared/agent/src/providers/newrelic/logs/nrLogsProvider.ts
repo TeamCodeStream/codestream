@@ -52,7 +52,7 @@ export class NrLogsProvider {
 				actor {
 				  entitySearch(query: "name LIKE '%${Strings.sanitizeGraphqlValue(
 						request.searchCharacters
-					)}%' AND type IN ('APPLICATION', 'SERVICE')",
+					)}%' AND domain IN ('APM', 'EXT') AND type IN ('APPLICATION', 'SERVICE')",
 				  sortByWithDirection: { attribute: NAME, direction: ASC },
 				  options: { limit: ${limit} }) {
 					count
