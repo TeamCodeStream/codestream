@@ -4,72 +4,13 @@ import { CancellationToken, CodeLens, CodeLensProvider, Range, TextDocument } fr
 import * as vscode from "vscode";
 
 import { CodeStreamSession, SessionStatus } from "../api/session";
+import { NrqlDocumentParser } from "./nrqlDocumentParser";
 
 export class NrqlCodeLensProvider implements CodeLensProvider {
-	private documentManager: any = {};
 	private status: string | undefined = undefined;
-
-	constructor(private session: CodeStreamSession) {}
-
-	documentOpened(document: TextDocument) {
-		this.documentManager[document.uri.toString()] = {
-			document: document,
-			tracked: false
-		};
-	}
-
-	documentClosed(document: TextDocument) {
-		delete this.documentManager[document.uri.toString()];
-	}
-
-	private splitTextOnEmptyLines(
-		document: vscode.TextDocument
-	): Array<{ text: string; range: vscode.Range }> {
-		const splits: Array<{ text: string; range: vscode.Range }> = [];
-
-		const text = document.getText();
-		const emptyLineRegex = /\r?\n\s*\r?\n/g;
-
-		let match: RegExpExecArray | null;
-		let startIndex = 0;
-
-		function checkString(text: string) {
-			const startsWithRegex = /^(SELECT|FROM|SHOW|WITH)\b/gi;
-			const containsRegex = /^(?=.*(?:SELECT.*FROM|FROM.*SELECT|WITH.*SELECT|SHOW))/gis;
-
-			const startsWithMatch = startsWithRegex.test(text);
-			const containsMatch = containsRegex.test(text);
-
-			return startsWithMatch && containsMatch;
-		}
-
-		while ((match = emptyLineRegex.exec(text)) !== null) {
-			const endIndex = match.index + match[0].length;
-			const range = new vscode.Range(
-				document.positionAt(startIndex),
-				document.positionAt(endIndex)
-			);
-
-			const splitText = text.substring(startIndex, endIndex).trim();
-
-			if (checkString(splitText)) {
-				splits.push({ text: splitText, range });
-			}
-
-			startIndex = endIndex;
-		}
-
-		const remainingText = text.substring(startIndex).trim();
-		if (remainingText && checkString(remainingText)) {
-			const remainingRange = new vscode.Range(
-				document.positionAt(startIndex),
-				document.positionAt(text.length)
-			);
-
-			splits.push({ text: remainingText, range: remainingRange });
-		}
-
-		return splits;
+	documentParser = new NrqlDocumentParser();
+	constructor(private session: CodeStreamSession) {
+		this.status = session.status;
 	}
 
 	public async provideCodeLenses(
@@ -90,22 +31,18 @@ export class NrqlCodeLensProvider implements CodeLensProvider {
 			];
 		}
 
-		const lenses: CodeLens[] = [];
-		const parse = this.splitTextOnEmptyLines(document);
-		parse.forEach(_ => {
-			lenses.push(
-				new CodeLens(
-					_.range,
-					new NrqlStatementExecutionCommand("Execute ▶️", "codestream.executeNrql", "", [
-						document.uri,
-						_.text,
-						_.range.start.line
-					])
-				)
+		const parsed = this.documentParser.parse(document.getText());
+		return parsed.map(_ => {
+			const range = new Range(document.positionAt(_.range.start), document.positionAt(_.range.end));
+			return new CodeLens(
+				range,
+				new NrqlStatementExecutionCommand("Execute ▶️", "codestream.executeNrql", "", [
+					document.uri,
+					_.text,
+					range.start.line
+				])
 			);
 		});
-
-		return lenses;
 	}
 
 	public update(status: string) {

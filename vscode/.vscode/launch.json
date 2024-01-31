@@ -4,10 +4,7 @@
 		{
 			"name": "Agent Unit Tests",
 			"request": "launch",
-			"runtimeArgs": [
-				"run-script",
-				"agent:test"
-			],
+			"runtimeArgs": ["run-script", "agent:test"],
 			"runtimeExecutable": "npm",
 			"type": "node",
 			"console": "integratedTerminal"
@@ -15,10 +12,7 @@
 		{
 			"name": "UI Unit Tests",
 			"request": "launch",
-			"runtimeArgs": [
-				"run-script",
-				"webview:test"
-			],
+			"runtimeArgs": ["run-script", "webview:test"],
 			"runtimeExecutable": "npm",
 			"type": "node",
 			"console": "integratedTerminal"
@@ -98,6 +92,15 @@
 				"--extensionTestsPath=${workspaceFolder}/out/__test__/suite/index"
 			],
 			"outFiles": ["${workspaceFolder}/out/__test__/**/*.js"]
+		},
+		{
+			"type": "node",
+			"name": "Extension Unit Tests",
+			"request": "launch",
+			"program": "${workspaceFolder}/node_modules/.bin/jest",
+			"args": ["--runInBand"],
+			"console": "integratedTerminal",
+			"internalConsoleOptions": "neverOpen"
 		}
 	]
 }

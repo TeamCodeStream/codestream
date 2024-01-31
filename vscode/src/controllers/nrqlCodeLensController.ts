@@ -13,11 +13,9 @@ export class NrqlCodeLensController implements Disposable {
 	constructor() {
 		this._disposable = Disposable.from(
 			Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
-			workspace.onDidOpenTextDocument(e => {
-				this._provider && this._provider.documentOpened(e);
-			}),
-			workspace.onDidCloseTextDocument(e => {
-				this._provider && this._provider.documentClosed(e);
+			workspace.onDidSaveTextDocument(e => {
+				// this will refresh the codeLenses
+				this.ensureProvider();
 			})
 		);
 	}

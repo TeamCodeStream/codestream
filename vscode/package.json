@@ -367,7 +367,7 @@
 		"rebuild": "npm install --no-save && npm run agent:rebuild && npm run build",
 		"test": "npm run agent:test && npm run webview:test && npm run vscode:test",
 		"vscode:compile-tests": "rimraf out .tsbuildinfo && tsc --outDir out && tsc-alias --dir out && regex-replace '\".*\\.\\./vscode\"' '\"vscode\"' ./out",
-		"vscode:test": "npx jest --forceExit --testPathPattern=\"__test__\\/unit\\/.*\\.spec\\.ts$\"",
+		"vscode:test": "npx jest --forceExit --runInBand --testPathPattern=\"__test__\\/unit\\/.*\\.spec\\.ts$\"",
 		"vscode:test:ci": "npm run vscode:test",
 		"vscode:test-OLD": "npm run vscode:compile-tests && node ./out/vscode/src/__test__/runTest.js",
 		"verify:compile": "tsc --noEmit",
