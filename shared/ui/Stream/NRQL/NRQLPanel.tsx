@@ -97,7 +97,6 @@ export const NRQLPanel = (props: {
 	const [accounts, setAccounts] = useState<{ name: string; id: number }[] | undefined>(undefined);
 	const [resultsTypeGuess, setResultsTypeGuess] = useState<string>("table");
 	const [isLoading, setIsLoading] = useState<boolean>(false);
-	const [totalItems, setTotalItems] = useState<number>(0);
 	const [nrqlError, setNRQLError] = useState<string | undefined>("");
 	const nrqlEditorRef = useRef<any>(null);
 
@@ -164,7 +163,6 @@ export const NRQLPanel = (props: {
 			setNRQLError(undefined);
 			setResults([]);
 			setResultsTypeGuess("");
-			setTotalItems(0);
 			setEventType("");
 			setSince("");
 
@@ -197,7 +195,6 @@ export const NRQLPanel = (props: {
 				});
 
 				setResults(response.results);
-				setTotalItems(response.results.length);
 				setResultsTypeGuess(response.resultsTypeGuess);
 				setEventType(response.eventType);
 				if (response.since) {
@@ -222,9 +219,9 @@ export const NRQLPanel = (props: {
 		setNRQLError(undefined);
 		setResults([]);
 		setResultsTypeGuess("");
-		setTotalItems(0);
 		setEventType("");
 		setSince("");
+		setNoResults(false);
 	};
 
 	const formatSelectedAccount = (account: Account) => {
@@ -359,29 +356,29 @@ export const NRQLPanel = (props: {
 						{!nrqlError &&
 							!isLoading &&
 							results &&
-							totalItems > 0 &&
+							results.length > 0 &&
 							resultsTypeGuess === "table" && <NRQLResultsTable results={results} />}
 						{!nrqlError &&
 							!isLoading &&
 							results &&
-							totalItems > 0 &&
+							results.length > 0 &&
 							resultsTypeGuess === "billboard" && (
 								<NRQLResultsBillboard results={results} eventType={eventType} />
 							)}
 						{!nrqlError &&
 							!isLoading &&
 							results &&
-							totalItems > 0 &&
+							results.length > 0 &&
 							resultsTypeGuess === "line" && <NRQLResultsLine results={results} />}
 						{!nrqlError &&
 							!isLoading &&
 							results &&
-							totalItems > 0 &&
+							results.length > 0 &&
 							resultsTypeGuess === "json" && <NRQLResultsJSON results={results} />}
 						{!nrqlError &&
 							!isLoading &&
 							results &&
-							totalItems > 0 &&
+							results.length > 0 &&
 							resultsTypeGuess === "bar" && <NRQLResultsBar results={results} />}
 						{noResults && <div style={{ textAlign: "center" }}>No results found</div>}
 						{nrqlError && (
