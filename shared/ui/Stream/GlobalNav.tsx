@@ -23,6 +23,7 @@ import { Link } from "./Link";
 import { PlusMenu } from "./PlusMenu";
 import Tooltip, { placeArrowTopRight, TipTitle } from "./Tooltip";
 import { parseId } from "../utilities/newRelic";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 
 const sum = (total, num) => total + Math.round(num);
 
@@ -61,8 +62,8 @@ export function GlobalNav() {
 			eligibleJoinCompanies,
 			inviteCount,
 			isVsCode: state.ide.name === "VSC",
-			showNrqlBuilder: true, // TODO: NRQL BUILDER - isFeatureEnabled(state, "showNrqlBuilder"),
-			showLogSearch: true, // TODO: LOG SEARCH - isFeatureEnabled(state, "showLogSearch"),
+			showNrqlBuilder: isFeatureEnabled(state, "showNrqlBuilder") && state.ide.name === "VSC",
+			showLogSearch: isFeatureEnabled(state, "showLogSearch") && state.ide.name === "VSC",
 		};
 	});
 
@@ -212,7 +213,7 @@ export function GlobalNav() {
 						)}
 					</label>
 
-					{derivedState.showNrqlBuilder && derivedState.isVsCode && (
+					{derivedState.showNrqlBuilder && (
 						<label onClick={launchNrqlEditor} id="global-nav-query-label">
 							<span>
 								<Icon
@@ -226,7 +227,7 @@ export function GlobalNav() {
 						</label>
 					)}
 
-					{derivedState.showLogSearch && derivedState.isVsCode && (
+					{derivedState.showLogSearch && (
 						<label onClick={launchLogSearch} id="global-nav-logs-label">
 							<span>
 								<Icon
