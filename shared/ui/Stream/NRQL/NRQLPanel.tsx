@@ -27,6 +27,7 @@ import { NRQLResultsTable } from "./NRQLResultsTable";
 import { parseId } from "@codestream/webview/utilities/newRelic";
 import Icon from "../Icon";
 import { fuzzyTimeAgoinWords } from "../Timestamp";
+import { useResizeDetector } from "react-resize-detector";
 
 const QueryWrapper = styled.div`
 	width: 100%;
@@ -99,6 +100,8 @@ export const NRQLPanel = (props: {
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [nrqlError, setNRQLError] = useState<string | undefined>("");
 	const nrqlEditorRef = useRef<any>(null);
+	const { width, height, ref } = useResizeDetector();
+	const trimmedHeight: number = (height ?? 0) - (height ?? 0) * 0.1;
 
 	const disposables: Disposable[] = [];
 	let accountsPromise;
@@ -339,6 +342,7 @@ export const NRQLPanel = (props: {
 				</ActionRow>
 			</PanelHeader>
 			<div
+				ref={ref}
 				style={{
 					padding: "0px 20px 0px 20px",
 					marginBottom: "20px",
@@ -357,7 +361,13 @@ export const NRQLPanel = (props: {
 							!isLoading &&
 							results &&
 							results.length > 0 &&
-							resultsTypeGuess === "table" && <NRQLResultsTable results={results} />}
+							resultsTypeGuess === "table" && (
+								<NRQLResultsTable
+									width={width || "100%"}
+									height={trimmedHeight}
+									results={results}
+								/>
+							)}
 						{!nrqlError &&
 							!isLoading &&
 							results &&
