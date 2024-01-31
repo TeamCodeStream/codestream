@@ -421,7 +421,6 @@ describe("Observability", () => {
 			expect(mockTrack).toHaveBeenCalledTimes(1);
 			expect(mockTrack).toHaveBeenCalledWith("codestream/o11y rendered", {
 				meta_data: `state: services`,
-				meta_data_2: ``,
 				event_type: "state_load",
 			});
 		});
@@ -451,7 +450,6 @@ describe("Observability", () => {
 			expect(mockTrack).toHaveBeenCalledTimes(1);
 			expect(mockTrack).toHaveBeenCalledWith("codestream/o11y rendered", {
 				meta_data: `state: no_entities`,
-				meta_data_2: ``,
 				event_type: "state_load",
 			});
 		});
@@ -525,7 +523,6 @@ describe("Observability", () => {
 			expect(mockTrack).toHaveBeenCalledWith("codestream/o11y rendered", {
 				meta_data: "state: Not Connected",
 				event_type: "state_load",
-				meta_data_2: ``,
 			});
 		});
 	});
