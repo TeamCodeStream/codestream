@@ -84,6 +84,15 @@ export function reduceCodeErrors(
 			}
 			return { ...state, functionToEdit: action.payload };
 		}
+		case CodeErrorsActionsTypes.ResetNrAi: {
+			return {
+				...state,
+				functionToEdit: undefined,
+				functionToEditFailed: false,
+				grokError: undefined,
+				grokRepliesLength: 0,
+			};
+		}
 		case CodeErrorsActionsTypes.SetFunctionToEditFailed: {
 			return { ...state, functionToEditFailed: action.payload };
 		}

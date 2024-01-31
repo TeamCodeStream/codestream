@@ -1367,34 +1367,41 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 		}
 	}, [codeError, jumpLocation, didJumpToFirstAvailableLine]);
 
-	const { stackTracePathsResolved, noUserLines } = useMemo(() => {
-		const stackTracePathsResolved =
-			stackTrace?.filter(_ => _.resolved || !isEmpty(_.error)).length > 0;
-		const noUserLines = stackTrace?.filter(_ => !_.resolved).length === 0;
-		return { stackTracePathsResolved, noUserLines };
+	const { allStackTracePathsResolved, noUserLines } = useMemo(() => {
+		const allStackTracePathsResolved =
+			stackTrace?.filter(_ => _.resolved === true || !isEmpty(_.error)).length ===
+			stackTrace.length;
+		const noUserLines = stackTrace?.filter(_ => !_.resolved).length === stackTrace.length;
+		return { allStackTracePathsResolved, noUserLines };
 	}, [stackTrace]);
 
 	useEffect(() => {
+		const params = {
+			allStackTracePathsResolved,
+			functionToEdit,
+			functionToEditFailed,
+			isGrokLoading,
+			currentGrokRepliesLength,
+			noUserLines,
+		};
 		if (
-			stackTracePathsResolved &&
+			allStackTracePathsResolved &&
 			!functionToEdit &&
 			!functionToEditFailed &&
 			!isGrokLoading &&
 			currentGrokRepliesLength === 0 &&
 			noUserLines
 		) {
-			console.debug("useEffect no user code lines in stack trace => setFunctionToEditFailed", {
-				stackTracePathsResolved,
-				functionToEdit,
-				functionToEditFailed,
-				isGrokLoading,
-				currentGrokRepliesLength,
-				noUserLines,
-			});
+			console.debug(
+				"useEffect no user code lines in stack trace => setFunctionToEditFailed",
+				params
+			);
 			dispatch(setFunctionToEditFailed(true));
+		} else {
+			console.debug("useEffect no user code not triggered", params);
 		}
 	}, [
-		stackTracePathsResolved,
+		allStackTracePathsResolved,
 		functionToEdit,
 		functionToEditFailed,
 		isGrokLoading,
@@ -1743,11 +1750,11 @@ const ReplyInput = (props: { codeError: CSCodeError; setGrokRequested: () => voi
 			dispatch(startGrokLoading(props.codeError));
 		}
 
-		const actualCodeError = (await dispatch(
-			upgradePendingCodeError(props.codeError.id, "Comment")
-		)) as {
-			codeError: CSCodeError;
-		};
+		const actualCodeError = await dispatch(upgradePendingCodeError(props.codeError.id, "Comment"));
+		if (!actualCodeError) {
+			setIsLoading(false);
+			return;
+		}
 		dispatch(markItemRead(props.codeError.id, actualCodeError.codeError.numReplies + 1));
 
 		await dispatch(

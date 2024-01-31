@@ -19,6 +19,7 @@ export enum CodeErrorsActionsTypes {
 	ClearProviderError = "@codeErrors/ClearError",
 	SetErrorGroup = "@codeError/SetErrorGroup",
 	IsLoadingErrorGroup = "@codeError/IsLoadingErrorGroup",
+	ResetNrAi = "@codeError/ResetNrAiState",
 }
 
 export type FunctionToEdit = {

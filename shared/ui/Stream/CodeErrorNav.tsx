@@ -17,6 +17,7 @@ import {
 	bootstrapCodeErrors,
 	fetchCodeError,
 	PENDING_CODE_ERROR_ID_PREFIX,
+	resetNrAi,
 } from "@codestream/webview/store/codeErrors/actions";
 import {
 	api,
@@ -676,6 +677,8 @@ export function CodeErrorNav(props: Props) {
 	};
 
 	useDidMount(() => {
+		// clear nrai states
+		dispatch(resetNrAi());
 		// Kind of a HACK leaving this here, BUT...
 		// since <CancelButton /> uses the OLD version of Button.js
 		// and not Button.tsx (below), there's no way to keep the style.

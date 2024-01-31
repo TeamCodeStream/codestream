@@ -25,7 +25,11 @@ import { isDarkTheme } from "@codestream/webview/src/themes";
 - [X] progress indicator when diff is loading (even on non-streaming posts)
 - [-] restore and expand tests
 - [X] handle light theme in the diff editor
-- [X] update the prompt so that when we don't supply a function we don't get a code fix back
+- [ ] update the prompt so that when we don't supply a function we don't get a code fix back
+- [X] handle description only case - don't show progress indicator for code block if there is no intro (which indicates no code block)
+- [ ] fix styling for triple backticks which broke when i cleaned up the single backtick styling - openai suddenly started adding triple backticks in description section
+- [ ] handle case where code is already fixed before even opening the error
+- [ ] educate user about how the code running in prod may be different than the code we grab in current editor
 */
 
 /*
@@ -59,7 +63,6 @@ export type NrAiComponentProps = {
 	file?: string;
 };
 
-// TODO handle opening current version of code instead of repo specific version
 function Markdown(props: { text: string }) {
 	// TODO do i need attachments and tags in a Grok component? proly not.
 	return (
@@ -78,7 +81,14 @@ export function NrAiComponent(props: NrAiComponentProps) {
 		() => props.post.parts?.intro && props.post.parts.intro.length > 0,
 		[props.post.parts?.intro]
 	);
-	const showGrokLoader = useMemo(() => !hasIntro && isGrokLoading, [isGrokLoading, hasIntro]);
+	const hasDescription = useMemo(
+		() => props.post.parts?.description && props.post.parts.description.length > 0,
+		[props.post.parts?.description]
+	);
+	const showGrokLoader = useMemo(
+		() => !hasIntro && !hasDescription && isGrokLoading,
+		[isGrokLoading, hasIntro, hasDescription]
+	);
 	const showCodeBlockLoader = useMemo(
 		() => !props.post.parts?.description && isGrokLoading,
 		[isGrokLoading, props.post.parts?.description]
@@ -105,7 +115,9 @@ export function NrAiComponent(props: NrAiComponentProps) {
 	const parts = props.post.parts;
 
 	const normalizedCodeFix = useMemo(() => {
-		return normalizeCodeMarkdown(props.post.parts?.codeFix);
+		const result = normalizeCodeMarkdown(props.post.parts?.codeFix);
+		// console.debug("normalizedCodeFix", result);
+		return result;
 	}, [props.post.parts?.codeFix]);
 
 	const applyFix = async () => {
@@ -125,7 +137,7 @@ export function NrAiComponent(props: NrAiComponentProps) {
 				)
 			);
 		} catch (e) {
-			console.error("===--- Error applying fix", e);
+			console.error("Error applying fix", e);
 		}
 	};
 
