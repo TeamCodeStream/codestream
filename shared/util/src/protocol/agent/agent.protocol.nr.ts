@@ -9,6 +9,7 @@ export interface ParseStackTraceRequest {
 	entityGuid: string;
 	errorGroupGuid: string;
 	stackTrace: string | string[];
+	occurrenceId: string | undefined;
 }
 
 export interface ParseStackTraceResponse extends CSStackTraceInfo {

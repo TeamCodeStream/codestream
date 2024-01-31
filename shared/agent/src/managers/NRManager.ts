@@ -133,6 +133,7 @@ export class NRManager {
 		entityGuid,
 		errorGroupGuid,
 		stackTrace,
+		occurrenceId,
 	}: ParseStackTraceRequest): Promise<ParseStackTraceResponse> {
 		const lines: string[] = typeof stackTrace === "string" ? stackTrace.split("\n") : stackTrace;
 		const whole = lines.join("\n");
@@ -153,10 +154,11 @@ export class NRManager {
 
 				const properties: TelemetryData = {
 					meta_data: `error_group_id: ${errorGroupGuid!}`,
-					// TODO
-					// meta_data_2: `trace_id: ${0}`,
 					event_type: "response",
 				};
+				if (occurrenceId) {
+					properties.meta_data_2 = `trace_id: ${occurrenceId}`;
+				}
 				if (entityGuid) {
 					properties.entity_guid = entityGuid;
 				}
@@ -279,6 +281,7 @@ export class NRManager {
 			entityGuid,
 			errorGroupGuid,
 			stackTrace,
+			occurrenceId,
 		});
 		if (parsedStackInfo.parseError) {
 			return { error: parsedStackInfo.parseError };
