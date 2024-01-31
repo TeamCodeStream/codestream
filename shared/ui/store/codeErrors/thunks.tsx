@@ -9,6 +9,8 @@ import {
 	GetNewRelicErrorGroupRequestType,
 	GetNewRelicErrorGroupResponse,
 	ResolveStackTracePositionRequestType,
+	ResolveStackTraceRequest,
+	ResolveStackTraceRequestType,
 	UpdateCodeErrorRequestType,
 } from "@codestream/protocols/agent";
 import { CSCodeError, CSStackTraceLine } from "@codestream/protocols/api";
@@ -50,7 +52,7 @@ import { confirmPopup } from "@codestream/webview/Stream/Confirm";
 import { HostApi } from "@codestream/webview/webview-api";
 import { Position, Range } from "vscode-languageserver-types";
 import React from "react";
-import { getGrokPostLength } from "@codestream/webview/store/posts/reducer";
+import { getNrAiPostLength } from "@codestream/webview/store/posts/reducer";
 import { URI } from "vscode-uri";
 import { clearResolvedFlag } from "@codestream/utils/api/codeErrorCleanup";
 import { GrokStreamEvent } from "@codestream/webview/store/posts/types";
@@ -649,9 +651,27 @@ export const fetchNewRelicErrorGroup =
 		return HostApi.instance.send(GetNewRelicErrorGroupRequestType, request);
 	};
 
+/**
+ *  "resolving" the stack trace here gives us two pieces of info for each line of the stack
+ *	the info parsed directly from the stack, and the "resolved" info that is specific to the
+ *	file the user has currently in their repo ... this position may be different if the user is
+ *	on a particular commit ... the "parsed" stack info is considered permanent, the "resolved"
+ *	stack info is considered ephemeral, since it only applies to the current user in the current state
+ *	resolved line number that gives the full path and line of the
+ * @param errorGroupGuid
+ * @param repoId
+ * @param sha
+ * @param occurrenceId
+ * @param stackTrace
+ * @returns ResolveStackTraceResponse
+ */
+export const resolveStackTrace = (request: ResolveStackTraceRequest) => async dispatch => {
+	return HostApi.instance.send(ResolveStackTraceRequestType, request);
+};
+
 export const startGrokLoading = (codeError: CSCodeError) => async (dispatch, getState) => {
 	const state: CodeStreamState = getState();
-	const grokPostLength = getGrokPostLength(state, codeError.streamId, codeError.postId);
+	const grokPostLength = getNrAiPostLength(state, codeError.streamId, codeError.postId);
 	// console.debug(
 	// 	`===--- startGrokLoading called, grokPostLength: ${grokPostLength}`
 	// );

@@ -5,6 +5,7 @@ import {
 	MatchReposResponse,
 	NormalizeUrlRequestType,
 	NormalizeUrlResponse,
+	ResolveStackTraceRequest,
 	ResolveStackTraceResponse,
 	TelemetryData,
 	WarningOrError,
@@ -16,12 +17,12 @@ import {
 	bootstrapCodeErrors,
 	fetchCodeError,
 	PENDING_CODE_ERROR_ID_PREFIX,
-	resolveStackTrace,
 } from "@codestream/webview/store/codeErrors/actions";
 import {
 	api,
 	fetchErrorGroup,
 	openErrorGroup,
+	resolveStackTrace,
 	setErrorGroup,
 	updateCodeError,
 } from "@codestream/webview/store/codeErrors/thunks";
@@ -518,17 +519,18 @@ export function CodeErrorNav(props: Props) {
 				}
 
 				if (stack) {
-					stackInfo = (await resolveStackTrace(
-						entityIdToUse!,
-						errorGroupGuidToUse!,
-						repoId!,
-						refToUse!,
-						occurrenceIdToUse!,
-						stack!,
-						derivedState.currentCodeErrorId!,
-						derivedState.currentCodeErrorData.stackSourceMap,
-						derivedState.currentCodeErrorData?.domain
-					)) as ResolveStackTraceResponse;
+					const request: ResolveStackTraceRequest = {
+            entityGuid: entityIdToUse!,
+						errorGroupGuid: errorGroupGuidToUse!,
+						repoId: repoId!,
+						ref: refToUse!,
+						occurrenceId: occurrenceIdToUse!,
+						stackTrace: stack!,
+						codeErrorId: derivedState.currentCodeErrorId!,
+						stackSourceMap: derivedState.currentCodeErrorData.stackSourceMap,
+						domain: derivedState.currentCodeErrorData?.domain,
+					};
+					stackInfo = await dispatch(resolveStackTrace(request));
 				}
 			}
 

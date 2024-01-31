@@ -35,7 +35,7 @@ import {
 	upgradePendingCodeError,
 } from "@codestream/webview/store/codeErrors/thunks";
 import {
-	getGrokPostLength,
+	getNrAiPostLength,
 	getThreadPosts,
 	getPost,
 	isGrokStreamLoading,
@@ -82,6 +82,7 @@ import Tooltip from "../Tooltip";
 import { ConditionalNewRelic } from "./ConditionalComponent";
 import { isFeatureEnabled } from "../../store/apiVersioning/reducer";
 import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
+import { isEmpty } from "lodash-es";
 
 interface SimpleError {
 	/**
@@ -1164,6 +1165,8 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 	);
 };
 
+type CopyMethodState = "NOT_STARTED" | "IN_PROGRESS" | "DONE" | "FAILED";
+
 const BaseCodeError = (props: BaseCodeErrorProps) => {
 	const dispatch = useAppDispatch();
 
@@ -1201,16 +1204,15 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 		derivedState.currentCodeErrorData?.lineIndex || 0
 	);
 	const [didJumpToFirstAvailableLine, setDidJumpToFirstAvailableLine] = useState(false);
-	const [didCopyMethod, setDidCopyMethod] = useState(false);
+	const [copyMethodState, setMethodCopyState] = useState<CopyMethodState>("NOT_STARTED");
 	const [jumpLocation, setJumpLocation] = useState<number | undefined>();
-	const [loadGrokTimeout, setLoadGrokTimeout] = useState<NodeJS.Timeout | undefined>();
 	const [grokRequested, setGrokRequested] = useState(false);
 
 	const functionToEdit = useAppSelector(state => state.codeErrors.functionToEdit);
 	const functionToEditFailed = useAppSelector(state => state.codeErrors.functionToEditFailed);
 	const isGrokLoading = useAppSelector(isGrokStreamLoading);
 	const currentGrokRepliesLength = useAppSelector(state =>
-		getGrokPostLength(state, codeError.streamId, codeError.postId)
+		getNrAiPostLength(state, codeError.streamId, codeError.postId)
 	);
 
 	useEffect(() => {
@@ -1286,7 +1288,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 		}
 	};
 
-	const { stackTraces } = codeError as CSCodeError;
+	const { stackTraces } = codeError;
 	const stackTrace = stackTraces && stackTraces[0] && stackTraces[0].lines;
 	const stackTraceText = stackTraces && stackTraces[0] && stackTraces[0].text;
 
@@ -1314,87 +1316,91 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			!props.collapsed &&
 			jumpLocation !== undefined &&
 			didJumpToFirstAvailableLine &&
-			!didCopyMethod
+			copyMethodState === "NOT_STARTED"
 		) {
-			const { stackTraces } = codeError;
-			const stackInfo = stackTraces?.[0];
-			// console.debug(`===--- symbol useEffect`);
-			if (stackInfo?.lines) {
-				// This might be different from the jumpToLine lineIndex if jumpToLine is an anonymous function
-				// This also might not be the best approach, but it's a start
-				const line = extractMethodName(stackInfo.lines);
-				if (line?.fileRelativePath) {
-					const { stackTraces } = codeError;
-					const stackInfo = stackTraces?.[0];
-					// console.debug(`===--- symbol useEffect`, line.method);
-					try {
-						// Need to call copySymbolFromIde every time to get the codeBlockStartLine
-						// TODO handle the case where the code has changed since the error was created - can't use streaming patch from openai
-						// TODO or store diff / startLineNo in the codeError?
-						dispatch(copySymbolFromIde(line, stackInfo.repoId, undefined));
-					} catch (ex) {
-						console.warn("===--- symbol useEffect copySymbolFromIde failed", ex);
-					}
-					setDidCopyMethod(true);
-					setTimeout(() => {
+			const doStuff = async () => {
+				const { stackTraces } = codeError;
+				const stackInfo = stackTraces?.[0];
+				// console.debug(`===--- symbol useEffect`);
+				if (stackInfo?.lines) {
+					// This might be different from the jumpToLine lineIndex if jumpToLine is an anonymous function
+					// This also might not be the best approach, but it's a start
+					const line = extractMethodName(stackInfo.lines);
+					if (line?.fileRelativePath) {
+						const { stackTraces } = codeError;
+						const stackInfo = stackTraces?.[0];
+						// console.debug(`===--- symbol useEffect`, line.method);
 						try {
-							// console.debug(`===--- symbol useEffect calling jumpToStackLine`);
-							const stackLine = stackInfo.lines[jumpLocation];
-							if (stackLine.fileRelativePath && stackInfo.repoId) {
-								console.log("===--- setCurrentNrAiFile", stackLine.fileRelativePath);
-								props.setCurrentNrAiFile(stackLine.fileRelativePath);
-								// Open actual file for NRAI - no ref param
-								dispatch(jumpToStackLine(jumpLocation, stackLine, stackInfo.repoId, undefined));
-							} else {
-								console.warn("nrai jumpToStackLine missing fileRelativePath, or repoId", stackLine);
-							}
+							// Need to call copySymbolFromIde every time to get the codeBlockStartLine
+							// TODO handle the case where the code has changed since the error was created - can't use streaming patch from openai
+							// TODO or store diff / startLineNo in the codeError?
+							setMethodCopyState("IN_PROGRESS");
+							await dispatch(copySymbolFromIde(line, stackInfo.repoId, undefined));
 						} catch (ex) {
-							console.warn(ex);
+							console.warn("symbol useEffect copySymbolFromIde failed", ex);
+							setMethodCopyState("FAILED"); // setFunctionToEditFailed would have been set in preceeding copySymbolFromIde
 						}
-					}, 100);
+						setMethodCopyState("DONE");
+						setTimeout(() => {
+							try {
+								// console.debug(`===--- symbol useEffect calling jumpToStackLine`);
+								const stackLine = stackInfo.lines[jumpLocation];
+								if (stackLine.fileRelativePath && stackInfo.repoId) {
+									console.log("setCurrentNrAiFile", stackLine.fileRelativePath);
+									props.setCurrentNrAiFile(stackLine.fileRelativePath);
+									// Open actual file for NRAI - no ref param
+									dispatch(jumpToStackLine(jumpLocation, stackLine, stackInfo.repoId, undefined));
+								} else {
+									console.warn(
+										"nrai jumpToStackLine missing fileRelativePath, or repoId",
+										stackLine
+									);
+								}
+							} catch (ex) {
+								console.warn(ex);
+							}
+						}, 100);
+					}
 				}
-			}
+			};
+			doStuff();
 		}
 	}, [codeError, jumpLocation, didJumpToFirstAvailableLine]);
 
-	// We keep getting events for resolved stack trace lines, so we have to wait for this to settle down
-	// When there are no more events for 3 seconds, we assume we're done and we can now handle the
-	// edge case when there are no user code lines in the stack trace
+	const { stackTracePathsResolved, noUserLines } = useMemo(() => {
+		const stackTracePathsResolved =
+			stackTrace?.filter(_ => _.resolved || !isEmpty(_.error)).length > 0;
+		const noUserLines = stackTrace?.filter(_ => !_.resolved).length === 0;
+		return { stackTracePathsResolved, noUserLines };
+	}, [stackTrace]);
+
 	useEffect(() => {
-		if (functionToEdit || functionToEditFailed || currentGrokRepliesLength > 0) {
-			// If any of these are true, we're not in the edge case
-			console.debug("loadGrokTimeout clearing edge case", {
+		if (
+			stackTracePathsResolved &&
+			!functionToEdit &&
+			!functionToEditFailed &&
+			!isGrokLoading &&
+			currentGrokRepliesLength === 0 &&
+			noUserLines
+		) {
+			console.debug("useEffect no user code lines in stack trace => setFunctionToEditFailed", {
+				stackTracePathsResolved,
 				functionToEdit,
 				functionToEditFailed,
 				isGrokLoading,
 				currentGrokRepliesLength,
-			});
-			if (loadGrokTimeout) {
-				// console.debug("loadGrokTimeout", loadGrokTimeout);
-				clearTimeout(loadGrokTimeout);
-				setLoadGrokTimeout(undefined);
-			}
-			return;
-		}
-		if (loadGrokTimeout || isGrokLoading) {
-			console.debug("loadGrokTimeout clearing timer 2", loadGrokTimeout);
-			clearTimeout(loadGrokTimeout);
-			setLoadGrokTimeout(undefined);
-		}
-		const timeout = setTimeout(() => {
-			// if (!functionToEdit && !functionToEditFailed && !isGrokLoading && currentGrokRepliesLength === 0) {
-			console.debug("useEffect no user code lines in stack trace setFunctionToEditFailed", {
-				functionToEdit,
-				functionToEditFailed,
-				isGrokLoading,
-				currentGrokRepliesLength,
+				noUserLines,
 			});
 			dispatch(setFunctionToEditFailed(true));
-			// }
-		}, 3000);
-		setLoadGrokTimeout(timeout);
-		console.debug("loadGrokTimeout timer assigned", timeout);
-	}, [codeError, functionToEdit, functionToEditFailed, isGrokLoading]);
+		}
+	}, [
+		stackTracePathsResolved,
+		functionToEdit,
+		functionToEditFailed,
+		isGrokLoading,
+		currentGrokRepliesLength,
+		noUserLines,
+	]);
 
 	useEffect(() => {
 		if (!props.collapsed && !didJumpToFirstAvailableLine) {
@@ -1879,7 +1885,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 	const [isGrokRequested, setIsGrokRequested] = useState(false);
 	const [currentNrAiFile, setCurrentNrAiFile] = useState<string | undefined>(undefined);
 	const currentGrokRepliesLength = useAppSelector(state =>
-		getGrokPostLength(state, props.codeError.streamId, props.codeError.postId)
+		getNrAiPostLength(state, props.codeError.streamId, props.codeError.postId)
 	);
 	const functionToEdit = useAppSelector(state => state.codeErrors.functionToEdit);
 

@@ -121,6 +121,7 @@ export async function replaceSymbol(
 		});
 		await commands.executeCommand(BuiltInCommands.IndentSelection);
 		await commands.executeCommand(BuiltInCommands.FormatSelection);
+		// await commands.executeCommand(BuiltInCommands.FormatDocument);
 		// Undo the highlight done by the stack trace error jump
 		await Editor.highlightRange(uri, updatedTargetSymbol.range, undefined, true);
 		await Editor.selectRange(

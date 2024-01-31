@@ -1,9 +1,9 @@
-import React, { useMemo } from "react";
+import React, { useContext, useMemo } from "react";
 import { CSUser } from "@codestream/protocols/api";
 import { PostPlus } from "@codestream/protocols/agent";
 import { MarkdownText } from "@codestream/webview/Stream/MarkdownText";
 import { MarkdownContent } from "@codestream/webview/Stream/Posts/Reply";
-import styled from "styled-components";
+import styled, { ThemeContext } from "styled-components";
 import { Button } from "@codestream/webview/src/components/Button";
 import { normalizeCodeMarkdown } from "@codestream/webview/Stream/Posts/patchHelper";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
@@ -14,6 +14,7 @@ import { replaceSymbol } from "@codestream/webview/store/codeErrors/thunks";
 import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
 import { NrAiCodeBlockLoading, NrAiLoading } from "./NrAiLoading";
 import { DiffEditor } from "@monaco-editor/react";
+import { isDarkTheme } from "@codestream/webview/src/themes";
 
 /* TODOS
 - [X] don't call copySymbol if there is already a nrai response (actually needed currently)
@@ -23,6 +24,19 @@ import { DiffEditor } from "@monaco-editor/react";
 - [ ] store when fix is applied
 - [X] progress indicator when diff is loading (even on non-streaming posts)
 - [-] restore and expand tests
+- [X] handle light theme in the diff editor
+- [X] update the prompt so that when we don't supply a function we don't get a code fix back
+*/
+
+/*
+  vscode nrAi edge case - super low priority
+  1) open code error, let nrai complete
+  2) leave code error open, do a "Reaload Webviews"
+  3) wait for code error to load
+  4) Do a Delete All Replies
+  expected: code error is closed and posts are deleted
+  actual: double submit of nrAi request and codeError not closed
+  reloading window inststead of webviews works fine
 */
 
 export const DiffSection = styled.div`
@@ -49,8 +63,8 @@ export type NrAiComponentProps = {
 function Markdown(props: { text: string }) {
 	// TODO do i need attachments and tags in a Grok component? proly not.
 	return (
-		<MarkdownContent className="reply-content-container">
-			<MarkdownText text={props.text} className="reply-markdown-content" />
+		<MarkdownContent className="error-content-container">
+			<MarkdownText text={props.text} className="error-markdown-content" />
 		</MarkdownContent>
 	);
 }
@@ -73,6 +87,10 @@ export function NrAiComponent(props: NrAiComponentProps) {
 		() => !!props.post.parts?.codeFix && !isGrokLoading,
 		[props.post.parts?.codeFix, isGrokLoading]
 	);
+	const themeContext = useContext(ThemeContext);
+	const isTheThemeDark = useMemo(() => {
+		return isDarkTheme(themeContext);
+	}, [themeContext]);
 
 	const showFeedback = useMemo(() => {
 		return (
@@ -124,14 +142,15 @@ export function NrAiComponent(props: NrAiComponentProps) {
 						<DiffEditor
 							original={props.functionToEdit?.codeBlock}
 							modified={normalizedCodeFix}
-							height={325}
+							height={300}
 							options={{
 								renderSideBySide: false,
 								renderOverviewRuler: false,
 								folding: false,
 								lineNumbers: "off",
+								readOnly: true,
 							}}
-							theme="vs-dark"
+							theme={isTheThemeDark ? "vs-dark" : "vs"}
 						/>
 						<ButtonRow>
 							{showApplyFix && <Button onClick={() => applyFix()}>Apply Fix</Button>}

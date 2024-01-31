@@ -1,8 +1,5 @@
 import { describe, it, expect } from "@jest/globals";
-import {
-	detectSemicolonLineEndingStyle,
-	normalizeCodeMarkdown,
-} from "@codestream/webview/Stream/Posts/patchHelper";
+import { normalizeCodeMarkdown } from "@codestream/webview/Stream/Posts/patchHelper";
 
 describe("patchHelper normalizeCodeMarkdown", () => {
 	it("should remove text before the code block", () => {
@@ -43,21 +40,5 @@ describe("patchHelper normalizeCodeMarkdown", () => {
 		const expected =
 			"    function countUsersByState() {\n      return userData.reduce((map, user) => {\n        const count = map.get(user.address.state) ?? 0;\n        map.set(user.address.state, count + 1);\n        return map;\n      }, new Map());\n    }\n";
 		expect(normalized).toBe(expected);
-	});
-});
-
-describe("patchHelper detectSemicolonLineEndingStyle", () => {
-	it("should detect semicolon line ending style", () => {
-		const code =
-			"    function countUsersByState() {\n return userData.reduce((map, user) => {\n const count = map.get(user.address.state) ?? 0;\n map.set(user.address.state, count + 1);\n return map;\n }, new Map());\n }\n";
-		const style = detectSemicolonLineEndingStyle(code);
-		expect(style).toBe("semicolon");
-	});
-
-	it("should detect newline line ending style", () => {
-		const code =
-			"function countUsersByState() {\n return userData.reduce((map, user) => {\n const count = map.get(user.address.state) ?? 0\nmap.set\n(user.address.state, count + 1) }, new Map())\n }";
-		const style = detectSemicolonLineEndingStyle(code);
-		expect(style).toBe("newline");
 	});
 });

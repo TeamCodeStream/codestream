@@ -5,7 +5,6 @@ import {
 	DeleteCodeErrorRequestType,
 	FetchCodeErrorsRequestType,
 	GetCodeErrorRequestType,
-	ResolveStackTraceRequestType,
 } from "@codestream/protocols/agent";
 import { CSCodeError, CSStackTraceInfo } from "@codestream/protocols/api";
 import { logError } from "@codestream/webview/logger";
@@ -103,44 +102,6 @@ export const fetchCodeError = (codeErrorId: string) => async dispatch => {
 	const response = await HostApi.instance.send(GetCodeErrorRequestType, { codeErrorId });
 
 	if (response.codeError) return dispatch(saveCodeErrors([response.codeError]));
-};
-
-/**
- *  "resolving" the stack trace here gives us two pieces of info for each line of the stack
- *	the info parsed directly from the stack, and the "resolved" info that is specific to the
- *	file the user has currently in their repo ... this position may be different if the user is
- *	on a particular commit ... the "parsed" stack info is considered permanent, the "resolved"
- *	stack info is considered ephemeral, since it only applies to the current user in the current state
- *	resolved line number that gives the full path and line of the
- * @param errorGroupGuid
- * @param repoId
- * @param sha
- * @param occurrenceId
- * @param stackTrace
- * @returns ResolveStackTraceResponse
- */
-export const resolveStackTrace = (
-	entityGuid: string,
-	errorGroupGuid: string,
-	repoId: string,
-	ref: string,
-	occurrenceId: string,
-	stackTrace: string[],
-	codeErrorId: string,
-	stackSourceMap: any,
-	domain: string
-) => {
-	return HostApi.instance.send(ResolveStackTraceRequestType, {
-		entityGuid,
-		errorGroupGuid,
-		stackTrace,
-		repoId,
-		ref,
-		occurrenceId,
-		codeErrorId,
-		stackSourceMap,
-		domain,
-	});
 };
 
 export const claimCodeError = async request => {

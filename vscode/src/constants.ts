@@ -48,6 +48,7 @@ export enum BuiltInCommands {
 	GoToPreviousChangedFile = "codestream.showPreviousChangedFile",
 	IndentSelection = "editor.action.reindentselectedlines",
 	FormatSelection = "editor.action.formatSelection",
+	FormatDocument = "editor.action.formatDocument",
 	NextEditor = "workbench.action.nextEditor",
 	Open = "vscode.open",
 	ProvideDocumentRangeSemanticTokensLegend = "vscode.provideDocumentRangeSemanticTokensLegend",
