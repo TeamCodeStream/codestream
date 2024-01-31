@@ -255,22 +255,6 @@ export class NrLogsProvider {
 				};
 			}
 
-			// resort some common fields to the front - better way?
-			var timestamp = logDefinitions.find(lfd => lfd.key === "timestamp");
-			var level = logDefinitions.find(lfd => lfd.key === "level");
-			var message = logDefinitions.find(lfd => lfd.key === "message");
-
-			var timestampIndex = logDefinitions.findIndex(lfd => lfd.key === "timestamp");
-			logDefinitions.splice(timestampIndex, 1);
-
-			var levelIndex = logDefinitions.findIndex(lfd => lfd.key === "level");
-			logDefinitions.splice(levelIndex, 1);
-
-			var messageIndex = logDefinitions.findIndex(lfd => lfd.key === "message");
-			logDefinitions.splice(messageIndex, 1);
-
-			logDefinitions.unshift(timestamp!, level!, message!);
-
 			return {
 				logDefinitions,
 			};
