@@ -21,7 +21,7 @@ import { isDarkTheme } from "@codestream/webview/src/themes";
 - [X] move feedback component to this file
 - [ ] move everything to this file?
 - [X] choose between codeBlock and functionToEdit selector
-- [ ] store when fix is applied
+- [ ] store when fix is applied - maybe hide whole code section when fix applied?
 - [X] progress indicator when diff is loading (even on non-streaming posts)
 - [-] restore and expand tests
 - [X] handle light theme in the diff editor
@@ -30,6 +30,8 @@ import { isDarkTheme } from "@codestream/webview/src/themes";
 - [ ] fix styling for triple backticks which broke when i cleaned up the single backtick styling - openai suddenly started adding triple backticks in description section
 - [ ] handle case where code is already fixed before even opening the error
 - [ ] educate user about how the code running in prod may be different than the code we grab in current editor
+- [ ] whitespace formatting on apply fix - especially vscode java
+- [ ] new telemetry events
 */
 
 /*
