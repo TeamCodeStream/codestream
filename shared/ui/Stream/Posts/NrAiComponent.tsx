@@ -34,6 +34,7 @@ import { isDarkTheme } from "@codestream/webview/src/themes";
 - [ ] new telemetry events
 - [ ] show pre apply-fix grok comments that don't have **DESCRIPTION**
 - [X] send language hint from JB
+- [ ] what if user opens different file, then clicks apply fix?
 */
 
 /*
