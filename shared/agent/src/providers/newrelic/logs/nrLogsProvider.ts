@@ -116,10 +116,26 @@ export class NrLogsProvider {
 			const queryOrder = `ORDER BY ${order.field} ${order.direction}`;
 			const queryLimit = `LIMIT ${limit}`;
 
+			//filtering is optional
 			if (filterText) {
-				queryWhere += ` AND allColumnSearch('${this.escapeSearchTerm(
-					filterText
-				)}', insensitive: true)`;
+				var searchTerms = filterText.trim().split(" ");
+
+				if (searchTerms && searchTerms.length > 0) {
+					// two or less, we can use ACS
+					if (searchTerms.length <= 2) {
+						searchTerms.map(st => {
+							queryWhere += ` AND allColumnSearch('${this.escapeSearchTerm(
+								st
+							)}', insensitive: true)`;
+						});
+					}
+					// three or more, and we can only use message
+					else {
+						searchTerms.map(st => {
+							queryWhere += ` AND message LIKE '%${this.escapeSearchTerm(st)}%'`;
+						});
+					}
+				}
 			}
 
 			const query = `SELECT * FROM Log ${queryWhere} ${querySince} ${queryOrder} ${queryLimit}`;

@@ -1374,41 +1374,42 @@ export const Observability = React.memo((props: Props) => {
 																								/>
 																							)}
 
-																							{derivedState.showLogSearch && (
-																								<Row
-																									style={{
-																										padding: "2px 10px 2px 30px",
-																									}}
-																									className={"pr-row"}
-																									onClick={e => {
-																										e.preventDefault();
-																										e.stopPropagation();
+																							{derivedState.showLogSearch &&
+																								(ea?.domain === "APM" || ea?.domain === "EXT") && (
+																									<Row
+																										style={{
+																											padding: "2px 10px 2px 30px",
+																										}}
+																										className={"pr-row"}
+																										onClick={e => {
+																											e.preventDefault();
+																											e.stopPropagation();
 
-																										HostApi.instance.notify(
-																											OpenEditorViewNotificationType,
-																											{
-																												panel: "logs",
-																												title: "Logs",
-																												entityGuid: ea.entityGuid,
-																												entityAccounts: allEntityAccounts,
-																												entryPoint: "tree_view",
-																											}
-																										);
-																									}}
-																								>
-																									<span
-																										data-testid={`view-logs-${ea.entityGuid}`}
-																										style={{ marginLeft: "2px" }}
+																											HostApi.instance.notify(
+																												OpenEditorViewNotificationType,
+																												{
+																													panel: "logs",
+																													title: "Logs",
+																													entityGuid: ea.entityGuid,
+																													entityAccounts: allEntityAccounts,
+																													entryPoint: "tree_view",
+																												}
+																											);
+																										}}
 																									>
-																										<Icon
-																											style={{ marginRight: "4px" }}
-																											name="logs"
-																											title="View Logs"
-																										/>
-																										View Logs
-																									</span>
-																								</Row>
-																							)}
+																										<span
+																											data-testid={`view-logs-${ea.entityGuid}`}
+																											style={{ marginLeft: "2px" }}
+																										>
+																											<Icon
+																												style={{ marginRight: "4px" }}
+																												name="logs"
+																												title="View Logs"
+																											/>
+																											View Logs
+																										</span>
+																									</Row>
+																								)}
 																						</>
 																					</>
 																				)}

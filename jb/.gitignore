@@ -6,6 +6,7 @@ src/main/resources/jxbrowser.license
 .idea/workspace.xml
 .idea/codestream.xml
 src/main/resources/webview
+src/main/resources/webviews
 src/main/resources/agent
 src/main/resources/protobuf
 src/protocols/

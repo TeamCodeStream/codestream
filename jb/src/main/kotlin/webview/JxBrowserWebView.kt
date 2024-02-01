@@ -17,6 +17,7 @@ class JxBrowserWebView(val jxBrowser: Browser, val router: WebViewRouter) : WebV
 
     init {
         logger.info("Initializing JxBrowser WebView")
+        router.webView = this
         jxBrowser.set(InjectJsCallback::class.java, InjectJsCallback {
             val frame = it.frame()
 
