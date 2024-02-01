@@ -11,6 +11,8 @@ const cellStyle = {
 	padding: "4px",
 	borderRight: "1px solid var(--base-border-color)",
 	borderBottom: "1px solid var(--base-border-color)",
+	fontFamily: "'Courier New', Courier, monospace",
+	// backgroundColor: "var(--app-background-color)",
 };
 
 export const NRQLResultsTable = (props: {
@@ -30,6 +32,26 @@ export const NRQLResultsTable = (props: {
 		});
 
 		return result;
+	};
+
+	const Cell = ({ columnIndex, rowIndex, style }) => {
+		const rowArray = Object.values(gridData.resultsWithHeaders[rowIndex]);
+		const value = rowArray[columnIndex];
+
+		return (
+			<div
+				style={{
+					...style,
+					...cellStyle,
+					borderLeft: columnIndex === 0 ? "1px solid var(--base-border-color)" : "none",
+					backgroundColor:
+						rowIndex === 0 ? "var(--app-background-color-hover)" : "var(--app-background-color)",
+					borderTop: rowIndex === 0 ? "1px solid var(--base-border-color)" : "none",
+				}}
+			>
+				{value}
+			</div>
+		);
 	};
 
 	const gridData = useMemo(() => {
@@ -59,32 +81,33 @@ export const NRQLResultsTable = (props: {
 			return columnWidth;
 		});
 
-		let rowHeights = Array.from({ length: resultsWithHeaders.length || 1 }, () => MIN_ROW_HEIGHT);
-		// fixed header row height
-		if (rowHeights.length > 0) {
-			rowHeights[0] = 46;
-		}
+		// rowCalcData =
+		// [
+		// 	[indexOfLongestRow, lengthOfString, widthOfCell]
+		// ]
+		const rowCalcData = resultsWithHeaders.map((obj, i) => {
+			const values = Object.values(obj);
+			const longestIndex = values.findIndex(
+				value => String(value).length === Math.max(...values.map(val => String(val).length))
+			);
+			const longestLength = Math.max(...values.map(value => String(value).length));
+			const updatedIndex = longestIndex < columnWidths.length ? longestIndex : 0;
+			const columnWidthValue = columnWidths[updatedIndex] || 0;
+
+			return [updatedIndex, longestLength, columnWidthValue];
+		});
+
+		const rowHeights = rowCalcData.map(([index, longestLength, columnWidthValue]) => {
+			let lengthOfString = longestLength * 11;
+			const numLines = Math.ceil(lengthOfString / columnWidthValue);
+
+			const lineHeight = 22;
+			const totalHeight = numLines * lineHeight;
+			return totalHeight;
+		});
 
 		return { columnWidths, columnCount, columnHeaders, resultsWithHeaders, rowHeights };
 	}, [props.results]);
-
-	const Cell = ({ columnIndex, rowIndex, style }) => {
-		const rowArray = Object.values(gridData.resultsWithHeaders[rowIndex]);
-		const value = rowArray[columnIndex];
-
-		return (
-			<div
-				style={{
-					...style,
-					...cellStyle,
-					borderLeft: columnIndex === 0 ? "1px solid var(--base-border-color)" : "none",
-					borderTop: rowIndex === 0 ? "1px solid var(--base-border-color)" : "none",
-				}}
-			>
-				{value}
-			</div>
-		);
-	};
 
 	return (
 		<>
