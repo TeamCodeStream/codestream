@@ -12,7 +12,6 @@ const cellStyle = {
 	borderRight: "1px solid var(--base-border-color)",
 	borderBottom: "1px solid var(--base-border-color)",
 	fontFamily: "'Courier New', Courier, monospace",
-	// backgroundColor: "var(--app-background-color)",
 };
 
 export const NRQLResultsTable = (props: {
@@ -28,7 +27,7 @@ export const NRQLResultsTable = (props: {
 		const result = {};
 
 		referenceKeys.forEach(key => {
-			result[key] = hasKey(obj, key) ? obj[key] : ""; // Use existing value or empty string
+			result[key] = hasKey(obj, key) ? obj[key] : "";
 		});
 
 		return result;
@@ -47,6 +46,8 @@ export const NRQLResultsTable = (props: {
 					backgroundColor:
 						rowIndex === 0 ? "var(--app-background-color-hover)" : "var(--app-background-color)",
 					borderTop: rowIndex === 0 ? "1px solid var(--base-border-color)" : "none",
+					color: rowIndex === 0 ? "var(--text-color-highlight)" : "default",
+					fontWeight: rowIndex === 0 ? "bold" : "default",
 				}}
 			>
 				{value}
@@ -54,38 +55,27 @@ export const NRQLResultsTable = (props: {
 		);
 	};
 
-	const gridData = useMemo(() => {
-		if (!props.results || props.results.length === 0) {
-			return { columnWidths: [], columnCount: 0, resultsWithHeaders: [] };
-		}
+	const calculateColumnWidth = value => {
+		return typeof value === "number"
+			? Math.min(MAX_COL_WIDTH, Math.max(MIN_COL_WIDTH, String(value).length + 150))
+			: typeof value === "string"
+			? Math.min(MAX_COL_WIDTH, Math.max(MIN_COL_WIDTH, value.length + 150))
+			: MIN_COL_WIDTH;
+	};
 
-		const firstRowResults = props.results[0];
-		const filledInResults = props.results;
-		const columnCount = Object.keys(firstRowResults).length;
-		const columnHeaders = Object.keys(firstRowResults);
+	const calculateRowHeights = rowCalcData => {
+		return rowCalcData.map(([index, longestLength, columnWidthValue]) => {
+			let lengthOfString = longestLength * 11;
+			const numLines = Math.ceil(lengthOfString / columnWidthValue);
 
-		for (let i = 1; i < filledInResults.length; i++) {
-			filledInResults[i] = fillMissingKeys(filledInResults[i], columnHeaders);
-		}
-
-		const resultsWithHeaders = [columnHeaders, ...filledInResults];
-
-		const columnWidths = Object.entries(firstRowResults).map(([key, value]) => {
-			const columnWidth =
-				typeof value === "number"
-					? Math.min(MAX_COL_WIDTH, Math.max(MIN_COL_WIDTH, String(value).length + 130))
-					: typeof value === "string"
-					? Math.min(MAX_COL_WIDTH, Math.max(MIN_COL_WIDTH, value.length + 130))
-					: MIN_COL_WIDTH;
-
-			return columnWidth;
+			const lineHeight = 22;
+			const totalHeight = numLines * lineHeight;
+			return totalHeight;
 		});
+	};
 
-		// rowCalcData =
-		// [
-		// 	[indexOfLongestRow, lengthOfString, widthOfCell]
-		// ]
-		const rowCalcData = resultsWithHeaders.map((obj, i) => {
+	const generateRowCalcData = (resultsWithHeaders, columnWidths) => {
+		return resultsWithHeaders.map((obj, i) => {
 			const values = Object.values(obj);
 			const longestIndex = values.findIndex(
 				value => String(value).length === Math.max(...values.map(val => String(val).length))
@@ -96,18 +86,34 @@ export const NRQLResultsTable = (props: {
 
 			return [updatedIndex, longestLength, columnWidthValue];
 		});
+	};
 
-		const rowHeights = rowCalcData.map(([index, longestLength, columnWidthValue]) => {
-			let lengthOfString = longestLength * 11;
-			const numLines = Math.ceil(lengthOfString / columnWidthValue);
-
-			const lineHeight = 22;
-			const totalHeight = numLines * lineHeight;
-			return totalHeight;
+	const calculateColumnWidths = firstRowResults => {
+		return Object.entries(firstRowResults).map(([key, value]) => {
+			return calculateColumnWidth(value);
 		});
+	};
+
+	const generateGridData = results => {
+		if (!results || results.length === 0) {
+			return { columnWidths: [], columnCount: 0, resultsWithHeaders: [] };
+		}
+
+		const firstRowResults = results[0];
+		const filledInResults = results.map(result =>
+			fillMissingKeys(result, Object.keys(firstRowResults))
+		);
+		const columnCount = Object.keys(firstRowResults).length;
+		const columnHeaders = Object.keys(firstRowResults);
+		const resultsWithHeaders = [columnHeaders, ...filledInResults];
+		const columnWidths = calculateColumnWidths(firstRowResults);
+		const rowCalcData = generateRowCalcData(resultsWithHeaders, columnWidths);
+		const rowHeights = calculateRowHeights(rowCalcData);
 
 		return { columnWidths, columnCount, columnHeaders, resultsWithHeaders, rowHeights };
-	}, [props.results]);
+	};
+
+	const gridData = useMemo(() => generateGridData(props.results), [props.results]);
 
 	return (
 		<>
