@@ -101,7 +101,7 @@ export const NRQLPanel = (props: {
 	const [nrqlError, setNRQLError] = useState<string | undefined>("");
 	const nrqlEditorRef = useRef<any>(null);
 	const { width, height, ref } = useResizeDetector();
-	const trimmedHeight: number = (height ?? 0) - (height ?? 0) * 0.1;
+	const trimmedHeight: number = (height ?? 0) - (height ?? 0) * 0.05;
 
 	const disposables: Disposable[] = [];
 	let accountsPromise;
@@ -352,7 +352,7 @@ export const NRQLPanel = (props: {
 			>
 				<ResultsRow>
 					{since && (
-						<div>
+						<div style={{ marginBottom: "8px" }}>
 							<small>Since {since}</small>
 						</div>
 					)}

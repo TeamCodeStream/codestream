@@ -59,7 +59,13 @@ export const NRQLResultsTable = (props: {
 			return columnWidth;
 		});
 
-		return { columnWidths, columnCount, columnHeaders, resultsWithHeaders };
+		let rowHeights = Array.from({ length: resultsWithHeaders.length || 1 }, () => MIN_ROW_HEIGHT);
+		// fixed header row height
+		if (rowHeights.length > 0) {
+			rowHeights[0] = 46;
+		}
+
+		return { columnWidths, columnCount, columnHeaders, resultsWithHeaders, rowHeights };
 	}, [props.results]);
 
 	const Cell = ({ columnIndex, rowIndex, style }) => {
@@ -80,32 +86,18 @@ export const NRQLResultsTable = (props: {
 		);
 	};
 
-	// @TODO make dynamic
-	let rowHeights = Array.from({ length: gridData.resultsWithHeaders.length }, () => MIN_ROW_HEIGHT);
-	// fixed header row height
-	if (rowHeights.length > 0) {
-		rowHeights[0] = 46;
-	}
 	return (
 		<>
 			{props.results && props.results.length > 0 && (
 				<>
-					{/* <Grid
-						columnCount={gridData.columnCount}
-						columnWidth={index => gridData.columnWidths[index]}
-						height={props.height}
-						rowCount={gridData.resultsWithHeaders.length}
-						rowHeight={index => rowHeights[index]}
-						width={props.width}
-					>
-						{Cell}
-					</Grid> */}
 					<GridWindow
 						columnCount={gridData.columnCount}
 						columnWidth={index => gridData.columnWidths[index]}
 						height={props.height}
 						rowCount={gridData.resultsWithHeaders.length}
-						rowHeight={index => rowHeights[index]}
+						rowHeight={index =>
+							gridData?.rowHeights ? gridData?.rowHeights[index] : [MIN_ROW_HEIGHT]
+						}
 						width={props.width}
 					>
 						{Cell}
