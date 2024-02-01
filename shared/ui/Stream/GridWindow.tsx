@@ -136,6 +136,7 @@ function useInnerElementType(Cell, columnWidth, rowHeight) {
 								marginTop,
 								width,
 								height,
+								backgroundColor: "var(--app-background-color)",
 								// position: "sticky",
 								// left: 0,
 								// zIndex: 2,
