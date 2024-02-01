@@ -325,8 +325,6 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) =>
 
 	const author = props.author || { username: "???" };
 
-	const showGrokLoader = isForGrok && !postText;
-
 	return (
 		<Root ref={ref} className={props.className}>
 			{props.threadId && !props.lastNestedReply && <div className="bar-left-not-last-child" />}
@@ -445,7 +443,6 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) =>
 					<NrAiComponent
 						codeErrorId={props.codeErrorId}
 						post={props.post as PostPlus}
-						author={props.author}
 						postText={postText}
 						file={props.file!}
 						functionToEdit={props.functionToEdit}

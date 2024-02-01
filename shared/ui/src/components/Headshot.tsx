@@ -107,6 +107,13 @@ export const ThumbsUp = styled.div`
 	}
 `;
 
+const LgIcon = styled(Icon)`
+	svg {
+		width: 20px;
+		height: 20px;
+	}
+`;
+
 export const Headshot = styled((props: HeadshotProps) => {
 	const [imageError, setImageError] = useState(false);
 	const person = props.person;
@@ -140,11 +147,7 @@ export const Headshot = styled((props: HeadshotProps) => {
 				className={className}
 				onClick={props.onClick}
 			>
-				<Image
-					size={size}
-					src={`https://images.codestream.com/icons/grok-green.png`}
-					onError={() => setImageError(true)}
-				/>
+				<LgIcon name="nrai" />
 				{props.addThumbsUp && (
 					<ThumbsUp>
 						<Icon name="thumbsup" />

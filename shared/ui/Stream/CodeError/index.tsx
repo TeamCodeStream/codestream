@@ -1822,7 +1822,7 @@ const ReplyInput = (props: { codeError: CSCodeError; setGrokRequested: () => voi
 				</Tooltip>
 				{showGrok && (
 					<Button style={{ marginLeft: 0 }} onClick={() => setIsAskGrokOpen(true)}>
-						<Icon name="grok" />
+						<Icon name="nrai" />
 						<span style={{ paddingLeft: "4px" }}>Ask AI</span>
 					</Button>
 				)}
