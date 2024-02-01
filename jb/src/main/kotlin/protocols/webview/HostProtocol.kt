@@ -90,6 +90,7 @@ class EditorCopySymbolResponse (
     val success: Boolean,
     val text: String?,
     val range: Range?,
+    val language: String?,
 )
 
 class EditorReplaceSymbolRequest(

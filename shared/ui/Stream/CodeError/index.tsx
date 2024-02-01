@@ -1289,8 +1289,9 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	};
 
 	const { stackTraces } = codeError;
-	const stackTrace = stackTraces && stackTraces[0] && stackTraces[0].lines;
-	const stackTraceText = stackTraces && stackTraces[0] && stackTraces[0].text;
+	const firstStackTrace = stackTraces ? (stackTraces[0] ? stackTraces[0] : undefined) : undefined;
+	const stackTrace = firstStackTrace?.lines;
+	const stackTraceText = firstStackTrace?.text;
 
 	// This can be incredibly complex with nested anonymous inner functions. For the current approach
 	// we rely on the stack trace having a named method for us to latch on to send for error analysis.
@@ -1368,10 +1369,15 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	}, [codeError, jumpLocation, didJumpToFirstAvailableLine]);
 
 	const { allStackTracePathsResolved, noUserLines } = useMemo(() => {
+		if (!stackTrace) {
+			return {
+				allStackTracePathsResolved: false,
+				noUserLines: false,
+			};
+		}
 		const allStackTracePathsResolved =
-			stackTrace?.filter(_ => _.resolved === true || !isEmpty(_.error)).length ===
-			stackTrace.length;
-		const noUserLines = stackTrace?.filter(_ => !_.resolved).length === stackTrace.length;
+			stackTrace.filter(_ => _.resolved === true || !isEmpty(_.error)).length === stackTrace.length;
+		const noUserLines = stackTrace.filter(_ => !_.resolved).length === stackTrace.length;
 		return { allStackTracePathsResolved, noUserLines };
 	}, [stackTrace]);
 
@@ -1978,8 +1984,11 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 
 	const repoInfo = useMemo(() => {
 		const { stackTraces } = codeError;
-		let stackInfo = stackTraces && stackTraces[0]; // TODO deal with multiple stacks
-		if (!stackInfo) stackInfo = (codeError as any).stackInfo; // this is for old code, maybe can remove after a while?
+		let stackInfo = stackTraces ? (stackTraces[0] ? stackTraces[0] : undefined) : undefined; // TODO deal with multiple stacks
+		if (!stackInfo) {
+			console.debug("stackInfo hit old code");
+			stackInfo = (codeError as any).stackInfo; // this is for old code, maybe can remove after a while?
+		}
 		if (stackInfo && stackInfo.repoId) {
 			const repo = derivedState.repos[stackInfo.repoId];
 			if (!repo) return undefined;

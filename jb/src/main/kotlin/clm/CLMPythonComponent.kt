@@ -13,7 +13,12 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.jetbrains.python.psi.PyFile
 
 class CLMPythonComponent(project: Project) :
-    CLMLanguageComponent<CLMPythonEditorManager>(project, PyFile::class.java, ::CLMPythonEditorManager, PythonSymbolResolver()) {
+    CLMLanguageComponent<CLMPythonEditorManager>(
+        project,
+        "python",
+        PyFile::class.java,
+        ::CLMPythonEditorManager,
+        PythonSymbolResolver()) {
 
     private val logger = Logger.getInstance(CLMPythonComponent::class.java)
 
@@ -96,6 +101,6 @@ class PythonSymbolResolver : SymbolResolver {
     }
 }
 
-class CLMPythonEditorManager(editor: Editor) : CLMEditorManager(editor, "python", false, false, PythonSymbolResolver()) {
+class CLMPythonEditorManager(editor: Editor, languageId: String) : CLMEditorManager(editor, languageId, false, false, PythonSymbolResolver()) {
 
 }

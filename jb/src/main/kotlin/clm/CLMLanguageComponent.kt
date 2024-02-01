@@ -40,7 +40,8 @@ val testMode: Boolean = System.getProperty("idea.system.path")?.endsWith("system
 
 class FindSymbolInFileResponse(
     val functionText: String,
-    val range: Range
+    val range: Range,
+    val language: String?,
 )
 
 interface SymbolResolver {
@@ -59,16 +60,22 @@ interface SymbolResolver {
 
 abstract class CLMLanguageComponent<T : CLMEditorManager>(
     val project: Project,
+    val languageId: String,
     private val fileType: Class<out PsiFile>,
-    val editorFactory: (editor: Editor) -> T,
+    val editorFactory: (editor: Editor, languageId: String) -> T,
     private val symbolResolver: SymbolResolver
 ) : EditorFactoryListener, Disposable {
     private val logger = Logger.getInstance(CLMLanguageComponent::class.java)
     private val managersByEditor = mutableMapOf<Editor, CLMEditorManager>()
 
     @Suppress("UNCHECKED_CAST")
-    constructor(project: Project, fileType: String, editorFactory: (editor: Editor) -> T, symbolResolver: SymbolResolver) : this(
+    constructor(project: Project,
+                languageId: String,
+                fileType: String,
+                editorFactory: (editor: Editor, languageId: String) -> T,
+                symbolResolver: SymbolResolver) : this(
         project,
+        languageId,
         CLMLanguageComponent::class.java.classLoader.loadClass(fileType) as Class<PsiFile>,
         editorFactory,
         symbolResolver
@@ -106,7 +113,7 @@ abstract class CLMLanguageComponent<T : CLMEditorManager>(
                     event.editor.document.uri?.startsWith("file://") != true) return
             }
         }
-        managersByEditor[event.editor] = editorFactory(event.editor)
+        managersByEditor[event.editor] = editorFactory(event.editor, languageId)
     }
 
     override fun editorReleased(event: EditorFactoryEvent) {
@@ -174,14 +181,14 @@ abstract class CLMLanguageComponent<T : CLMEditorManager>(
         val start = document.lspPosition(element.textRange.startOffset)
         val end = document.lspPosition(element.textRange.endOffset)
         val range = Range(start, end)
-        return FindSymbolInFileResponse(element.text, range)
+        return FindSymbolInFileResponse(element.text, range, languageId)
     }
 
     @RequiresEdt
     private fun replaceSymbolEdtOperations(virtFile: VirtualFile,
                                            functionName: String,
                                            codeBlock: String,
-                                           namespace: String?,): Boolean {
+                                           namespace: String?): Boolean {
         val psiFile = virtFile.let { PsiManager.getInstance(project).findFile(it) } ?: return false
         if (!isPsiFileSupported(psiFile)) return false
         val editorManager = FileEditorManager.getInstance(project)

@@ -28,7 +28,7 @@ import org.jetbrains.plugins.ruby.ruby.lang.psi.variables.fields.RInstanceVariab
 import org.jetbrains.plugins.ruby.ruby.lang.psi.visitors.RubyRecursiveElementVisitor
 
 class CLMRubyComponent(project: Project) :
-    CLMLanguageComponent<CLMRubyEditorManager>(project, RFileImpl::class.java, ::CLMRubyEditorManager, RubySymbolResolver()) {
+    CLMLanguageComponent<CLMRubyEditorManager>(project, "ruby", RFileImpl::class.java, ::CLMRubyEditorManager, RubySymbolResolver()) {
 
     private val logger = Logger.getInstance(CLMRubyComponent::class.java)
 
@@ -219,6 +219,6 @@ class RubySymbolResolver : SymbolResolver {
     }
 }
 
-class CLMRubyEditorManager(editor: Editor) : CLMEditorManager(editor, "ruby", false, false, RubySymbolResolver()) {
+class CLMRubyEditorManager(editor: Editor, languageId: String) : CLMEditorManager(editor, languageId, false, false, RubySymbolResolver()) {
 
 }

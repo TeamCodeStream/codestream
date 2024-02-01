@@ -14,7 +14,12 @@ import com.intellij.psi.util.descendantsOfType
 val httpMethods = arrayOf("post", "patch", "put", "get", "delete")
 
 class CLMNodeComponent(project: Project) :
-    CLMLanguageComponent<CLMNodeEditorManager>(project, JSFile::class.java, ::CLMNodeEditorManager, NodeSymbolResolver()) {
+    CLMLanguageComponent<CLMNodeEditorManager>(
+        project,
+        "javascript",
+        JSFile::class.java,
+        ::CLMNodeEditorManager,
+        NodeSymbolResolver()) {
 
     private val logger = Logger.getInstance(CLMNodeComponent::class.java)
 
@@ -93,6 +98,6 @@ class NodeSymbolResolver : SymbolResolver {
     }
 }
 
-class CLMNodeEditorManager(editor: Editor) : CLMEditorManager(editor, "javascript", false, true, NodeSymbolResolver()) {
+class CLMNodeEditorManager(editor: Editor, languageId: String) : CLMEditorManager(editor, languageId, false, true, NodeSymbolResolver()) {
 
 }

@@ -123,7 +123,7 @@ class Metrics {
 
 abstract class CLMEditorManager(
     val editor: Editor,
-    private val languageId: String,
+    protected val languageId: String,
     private val lookupByClassName: Boolean,
     private val lookupBySpan: Boolean = false,
     private val symbolResolver: SymbolResolver,

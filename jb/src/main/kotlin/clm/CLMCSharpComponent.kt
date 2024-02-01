@@ -17,7 +17,12 @@ const val CSHARP_NAMESPACE_CLASS =
     "com.jetbrains.rider.ideaInterop.fileTypes.csharp.psi.impl.CSharpNamespaceDeclarationImpl"
 
 class CLMCSharpComponent(project: Project) :
-    CLMLanguageComponent<CLMCSharpEditorManager>(project, CSHARP_FILE_CLASS, ::CLMCSharpEditorManager, CSharpSymbolResolver()) {
+    CLMLanguageComponent<CLMCSharpEditorManager>(
+        project,
+        "csharp",
+        CSHARP_FILE_CLASS,
+        ::CLMCSharpEditorManager,
+        CSharpSymbolResolver()) {
 
     private val logger = Logger.getInstance(CLMCSharpComponent::class.java)
 
@@ -268,6 +273,6 @@ class CSharpSymbolResolver : SymbolResolver {
 
 }
 
-class CLMCSharpEditorManager(editor: Editor) : CLMEditorManager(editor, "csharp", true, false, CSharpSymbolResolver()) {
+class CLMCSharpEditorManager(editor: Editor, languageId: String) : CLMEditorManager(editor, languageId, true, false, CSharpSymbolResolver()) {
 
 }

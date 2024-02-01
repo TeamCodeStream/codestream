@@ -16,7 +16,7 @@ import com.intellij.psi.stubs.StringStubIndexExtension
 
 
 class CLMGoComponent(project: Project) :
-    CLMLanguageComponent<CLMGoEditorManager>(project, GoFile::class.java, ::CLMGoEditorManager, GoSymbolResolver()) {
+    CLMLanguageComponent<CLMGoEditorManager>(project, "go", GoFile::class.java, ::CLMGoEditorManager, GoSymbolResolver()) {
 
     private val logger = Logger.getInstance(CLMGoComponent::class.java)
 
@@ -75,7 +75,7 @@ class GoSymbolResolver : SymbolResolver {
     }
 }
 
-class CLMGoEditorManager(editor: Editor) : CLMEditorManager(editor, "go", true, false, GoSymbolResolver()) {
+class CLMGoEditorManager(editor: Editor, languageId: String) : CLMEditorManager(editor, languageId, true, false, GoSymbolResolver()) {
 
 
 }

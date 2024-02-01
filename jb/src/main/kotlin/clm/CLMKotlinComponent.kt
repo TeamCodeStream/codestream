@@ -12,7 +12,11 @@ import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 
 class CLMKotlinComponent(project: Project) :
-    CLMLanguageComponent<CLMKotlinEditorManager>(project, KtFile::class.java, ::CLMKotlinEditorManager, KotlinSymbolResolver()) {
+    CLMLanguageComponent<CLMKotlinEditorManager>(
+        project,
+        "kotlin",
+        KtFile::class.java,
+        ::CLMKotlinEditorManager, KotlinSymbolResolver()) {
 
     private val logger = Logger.getInstance(CLMKotlinComponent::class.java)
 
@@ -71,6 +75,6 @@ class KotlinSymbolResolver : SymbolResolver {
     }
 }
 
-class CLMKotlinEditorManager(editor: Editor) : CLMEditorManager(editor, "kotlin", true, false, KotlinSymbolResolver()) {
+class CLMKotlinEditorManager(editor: Editor, languageId: String) : CLMEditorManager(editor, languageId, true, false, KotlinSymbolResolver()) {
 
 }

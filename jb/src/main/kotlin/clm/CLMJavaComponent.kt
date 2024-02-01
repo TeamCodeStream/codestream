@@ -19,7 +19,12 @@ import org.jetbrains.kotlin.idea.core.util.range
 import org.jetbrains.kotlin.idea.editor.fixers.range
 
 class CLMJavaComponent(project: Project) :
-    CLMLanguageComponent<CLMJavaEditorManager>(project, PsiJavaFileImpl::class.java, ::CLMJavaEditorManager, JavaSymbolResolver()) {
+    CLMLanguageComponent<CLMJavaEditorManager>(
+        project,
+        "java",
+        PsiJavaFileImpl::class.java,
+        ::CLMJavaEditorManager,
+        JavaSymbolResolver()) {
 
     private val logger = Logger.getInstance(CLMJavaComponent::class.java)
 
@@ -131,7 +136,7 @@ class JavaSymbolResolver : SymbolResolver {
     }
 }
 
-class CLMJavaEditorManager(editor: Editor) : CLMEditorManager(editor, "java", true, false, JavaSymbolResolver()) {
+class CLMJavaEditorManager(editor: Editor, languageId: String) : CLMEditorManager(editor, languageId, true, false, JavaSymbolResolver()) {
     override suspend fun findSymbols(psiFile: PsiFile, names: List<String>): Map<String, String> {
         if (psiFile !is PsiJavaFileImpl) return mapOf<String, String>()
         val foo = psiFile.findChildrenByClass(PsiMethodCallExpressionImpl::class.java)

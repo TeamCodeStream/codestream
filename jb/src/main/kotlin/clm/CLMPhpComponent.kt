@@ -18,7 +18,7 @@ import com.jetbrains.php.lang.psi.elements.PhpNamespace
 import com.jetbrains.php.lang.psi.elements.impl.FunctionImpl
 
 class CLMPhpComponent(project: Project) :
-    CLMLanguageComponent<CLMPhpEditorManager>(project, PhpFileImpl::class.java, ::CLMPhpEditorManager, PhpSymbolResolver()) {
+    CLMLanguageComponent<CLMPhpEditorManager>(project, "php", PhpFileImpl::class.java, ::CLMPhpEditorManager, PhpSymbolResolver()) {
 
     private val logger = Logger.getInstance(CLMPhpComponent::class.java)
 
@@ -110,6 +110,6 @@ class PhpSymbolResolver : SymbolResolver {
     }
 }
 
-class CLMPhpEditorManager(editor: Editor) : CLMEditorManager(editor, "php", true, false, PhpSymbolResolver()) {
+class CLMPhpEditorManager(editor: Editor, languageId: String) : CLMEditorManager(editor, languageId, true, false, PhpSymbolResolver()) {
 
 }
