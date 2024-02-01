@@ -54,7 +54,7 @@ export const DiffSection = styled.div`
 export const ButtonRow = styled.div`
 	display: flex;
 	justify-content: end;
-	margin: 7px 0 -7px 0;
+	margin: 7px 0 -4px 0;
 	column-gap: 10px;
 `;
 
