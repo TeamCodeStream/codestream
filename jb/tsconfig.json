@@ -14,21 +14,7 @@
 		"noImplicitReturns": false,
 		"noImplicitAny": false,
 		"noUnusedLocals": false,
-		"outDir": "./build/ts",
-		"paths": {
-			"@codestream/protocols/agent": [
-				"../shared/util/src/protocol/agent/agent.protocol.ts"
-			],
-			"@codestream/protocols/api": [
-				"../shared/util/src/protocol/agent/api.protocol.ts"
-			],
-			"@codestream/protocols/webview": [
-				"../shared/ui/ipc/webview.protocol.ts"
-			],
-			"@codestream/utils/*": ["../shared/util/src/utils/*"],
-			"@codestream/webview/*": ["../shared/ui/*"],
-			"vscode-jsonrpc": ["../shared/ui/vscode-jsonrpc.shim.ts"]
-		},
+//		"outDir": "./build/ts",
 		"resolveJsonModule": false,
 		"rootDir": "../",
 		"skipDefaultLibCheck": true,

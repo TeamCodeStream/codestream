@@ -10,6 +10,7 @@ import com.codestream.review.ReviewService
 import com.codestream.session.SessionService
 import com.codestream.settings.SettingsService
 import com.codestream.telemetry.TelemetryService
+import com.codestream.webview.WebViewEditorService
 import com.codestream.webview.WebViewService
 import com.intellij.openapi.project.Project
 
@@ -38,6 +39,9 @@ val Project.settingsService: SettingsService?
 
 val Project.webViewService: WebViewService?
     get() = getServiceIfNotDisposed(WebViewService::class.java)
+
+val Project.webViewEditorService: WebViewEditorService?
+    get() = getServiceIfNotDisposed(WebViewEditorService::class.java)
 
 val Project.reviewService: ReviewService?
     get() = getServiceIfNotDisposed(ReviewService::class.java)

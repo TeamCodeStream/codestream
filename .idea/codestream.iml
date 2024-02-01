@@ -6,6 +6,7 @@
       <excludeFolder url="file://$MODULE_DIR$/shared/agent/dist" />
       <excludeFolder url="file://$MODULE_DIR$/vscode/dist" />
       <excludeFolder url="file://$MODULE_DIR$/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/jb/src/main/resources/webviews" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
