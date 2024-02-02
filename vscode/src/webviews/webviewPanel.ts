@@ -73,6 +73,7 @@ export class CodeStreamWebviewPanel implements WebviewLike, Disposable {
 	private _ipcReady: boolean = false;
 
 	private _disposable: Disposable | undefined;
+	private _panelDisposable: Disposable | undefined;
 	private _onIpcReadyResolver: ((cancelled: boolean) => void) | undefined;
 	private readonly _panel: WebviewPanel;
 	private _html: string | undefined;
@@ -103,7 +104,9 @@ export class CodeStreamWebviewPanel implements WebviewLike, Disposable {
 
 		this._disposable = Disposable.from(
 			this._panel,
-			this._panel.onDidDispose(this.onPanelDisposed, this),
+			this._panel.onDidDispose(this.onPanelDisposed, this)
+		);
+		this._panelDisposable = Disposable.from(
 			this._panel.onDidChangeViewState(this.onPanelViewStateChanged, this),
 			window.onDidChangeWindowState(this.onWindowStateChanged, this)
 		);
@@ -133,6 +136,7 @@ export class CodeStreamWebviewPanel implements WebviewLike, Disposable {
 	}
 
 	dispose() {
+		this._panelDisposable && this._panelDisposable.dispose();
 		this._disposable && this._disposable.dispose();
 	}
 
@@ -140,6 +144,7 @@ export class CodeStreamWebviewPanel implements WebviewLike, Disposable {
 		if (this._onIpcReadyResolver !== undefined) {
 			this._onIpcReadyResolver(true);
 		}
+		this._panelDisposable && this._panelDisposable.dispose();
 
 		this._onDidClose.fire();
 	}
