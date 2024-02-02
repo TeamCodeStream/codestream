@@ -178,10 +178,10 @@ export const APMLogRow = (props: {
 						name={props.expandedContent ? "chevron-down-thin" : "chevron-right-thin"}
 						style={{ cursor: "pointer", marginRight: "2px" }}
 					/>
-					<Tooltip content={props.severity.toLowerCase()} delay={0.5}>
+					<Tooltip content={props?.severity?.toLowerCase()} delay={0.5}>
 						<LogSeverity
 							style={{
-								backgroundColor: logSeverityToColor[props.severity.toLowerCase()] || "#0c74df",
+								backgroundColor: logSeverityToColor[props?.severity?.toLowerCase()] || "#0c74df",
 							}}
 						/>
 					</Tooltip>
