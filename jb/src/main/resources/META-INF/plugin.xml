@@ -84,6 +84,8 @@
                                  handlerClass="com.codestream.editor.GutterCodemarkLinkTooltipLinkHandler"/>
 
         <fileEditorProvider implementation="com.codestream.webview.WebViewEditorProvider"/>
+        <iconProvider implementation="com.codestream.webview.WebViewEditorIconProvider"/>
+        <editorTabTitleProvider implementation="com.codestream.webview.WebViewEditorTabTitleProvider"/>
     </extensions>
 
     <project-components>
