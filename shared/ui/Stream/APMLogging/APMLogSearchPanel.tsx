@@ -96,7 +96,7 @@ const OptionAccount = styled.div`
 const HeaderContainer = styled.div`
 	display: flex;
 	overflow: hidden;
-	overflow-y: scroll;
+	// overflow-y: scroll;
 `;
 
 const TimestampHeader = styled.div`
