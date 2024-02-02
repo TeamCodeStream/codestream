@@ -1959,6 +1959,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 								numReplies={props.codeError.numReplies}
 								scrollNewTargetCallback={scrollNewTargetCallback}
 								codeErrorId={props.codeError.id}
+								errorGroup={props.errorGroup}
 								noReply={true}
 								file={currentNrAiFile}
 								functionToEdit={functionToEdit}

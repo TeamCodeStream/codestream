@@ -1,4 +1,4 @@
-import { PostPlus } from "@codestream/protocols/agent";
+import { NewRelicErrorGroup, PostPlus } from "@codestream/protocols/agent";
 import { CodeStreamState } from "@codestream/webview/store";
 import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
 import {
@@ -45,6 +45,7 @@ export const RepliesToPost = (props: {
 	itemId: string;
 	numReplies: number;
 	codeErrorId?: string;
+	errorGroup?: NewRelicErrorGroup;
 	noReply?: boolean;
 	file?: string;
 	functionToEdit?: FunctionToEdit;
@@ -167,6 +168,7 @@ export const RepliesToPost = (props: {
 							editingPostId={editingPostId}
 							nestedReplies={nestedRepliesByParent[reply.id]}
 							codeErrorId={props.codeErrorId}
+							errorGroup={props.errorGroup}
 							renderMenu={(target, close) => (
 								<Menu target={target} action={close} items={menuItems} />
 							)}

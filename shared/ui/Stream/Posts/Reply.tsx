@@ -1,4 +1,4 @@
-import { PostPlus } from "@codestream/protocols/agent";
+import { NewRelicErrorGroup, PostPlus } from "@codestream/protocols/agent";
 import { CSPost, CSUser } from "@codestream/protocols/api";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { ProfileLink } from "@codestream/webview/src/components/ProfileLink";
@@ -212,6 +212,7 @@ export interface ReplyProps {
 	file?: string;
 	functionToEdit?: FunctionToEdit;
 	codeErrorId?: string;
+	errorGroup?: NewRelicErrorGroup;
 	nestedReplies?: PostPlus[];
 	renderMenu?: (target: any, onClose: () => void) => React.ReactNode;
 	className?: string;
@@ -439,10 +440,11 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) =>
 						</div>
 					</>
 				)}
-				{isForGrok && (
+				{isForGrok && props.errorGroup && (
 					<NrAiComponent
 						codeErrorId={props.codeErrorId}
 						post={props.post as PostPlus}
+						errorGroup={props.errorGroup}
 						postText={postText}
 						file={props.file!}
 						functionToEdit={props.functionToEdit}
@@ -492,6 +494,7 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) =>
 const NestedReply = (props: {
 	post: Post;
 	threadId: string;
+	errorGroup?: NewRelicErrorGroup;
 	functionToEdit?: FunctionToEdit;
 	editingPostId?: string;
 	lastNestedReply?: boolean;
@@ -549,6 +552,7 @@ const NestedReply = (props: {
 		<NestedReplyRoot
 			author={author}
 			post={props.post}
+			errorGroup={props.errorGroup}
 			editingPostId={props.editingPostId}
 			threadId={props.threadId}
 			lastNestedReply={props.lastNestedReply}
