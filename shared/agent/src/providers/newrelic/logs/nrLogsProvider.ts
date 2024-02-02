@@ -117,24 +117,31 @@ export class NrLogsProvider {
 			const queryLimit = `LIMIT ${limit}`;
 
 			//filtering is optional
-			if (filterText) {
-				var searchTerms = filterText.trim().split(" ");
+			var searchTerms = filterText
+				?.trim()
+				?.split(" ")
+				?.filter(f => {
+					return f;
+				})
+				?.map(f => {
+					return f.trim();
+				});
 
-				if (searchTerms && searchTerms.length > 0) {
-					// two or less, we can use ACS
-					if (searchTerms.length <= 2) {
-						searchTerms.map(st => {
-							queryWhere += ` AND allColumnSearch('${this.escapeSearchTerm(
-								st
-							)}', insensitive: true)`;
-						});
-					}
-					// three or more, and we can only use message
-					else {
-						searchTerms.map(st => {
-							queryWhere += ` AND message LIKE '%${this.escapeSearchTerm(st)}%'`;
-						});
-					}
+			if (searchTerms) {
+				const termCount = searchTerms.length;
+
+				// two or less, we can use ACS
+				if (termCount >= 1 && termCount <= 2) {
+					searchTerms.map(st => {
+						queryWhere += ` AND allColumnSearch('${this.escapeSearchTerm(st)}', insensitive: true)`;
+					});
+				}
+
+				// three or more, and we can only use message
+				if (termCount >= 3) {
+					searchTerms.map(st => {
+						queryWhere += ` AND message LIKE '%${this.escapeSearchTerm(st)}%'`;
+					});
 				}
 			}
 
