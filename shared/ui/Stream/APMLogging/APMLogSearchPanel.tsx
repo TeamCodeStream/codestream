@@ -30,7 +30,6 @@ interface SelectedOption {
 }
 
 const LogFilterBarContainer = styled.div`
-	padding-top: 10px;
 	padding-bottom: 10px;
 
 	.log-filter-bar-row {
