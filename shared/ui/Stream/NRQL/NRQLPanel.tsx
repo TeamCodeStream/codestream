@@ -50,6 +50,8 @@ const DropdownContainer = styled.div`
 
 const ButtonContainer = styled.div`
 	display: flex;
+	margin-bottom: 8px;
+	justify-content: space-between;
 `;
 
 const ResultsRow = styled.div`
@@ -315,31 +317,9 @@ export const NRQLPanel = (props: {
 						</Button>
 					</ButtonContainer>
 				</ActionRow>
-				<ActionRow>
+				{/* <ActionRow>
 					<DropdownContainer></DropdownContainer>
-					<ButtonContainer>
-						<a
-							style={{ cursor: "pointer" }}
-							href="#"
-							onClick={e => {
-								e.preventDefault();
-
-								HostApi.instance.track("codestream/nrql/export downloaded", {
-									account_id: selectedAccount?.value || accountId,
-									event_type: "submit",
-									meta_data: `format: json`,
-								});
-
-								HostApi.instance.send(OpenInBufferRequestType, {
-									contentType: "json",
-									data: results,
-								});
-							}}
-						>
-							<Icon name="download" title="Open Results as JSON" />
-						</a>
-					</ButtonContainer>
-				</ActionRow>
+				</ActionRow> */}
 			</PanelHeader>
 			<div
 				ref={ref}
@@ -352,9 +332,33 @@ export const NRQLPanel = (props: {
 			>
 				<ResultsRow>
 					{since && (
-						<div style={{ marginBottom: "8px" }}>
-							<small>Since {since}</small>
-						</div>
+						<ButtonContainer>
+							<div>
+								<small>Since {since}</small>
+							</div>
+							<div>
+								<a
+									style={{ cursor: "pointer" }}
+									href="#"
+									onClick={e => {
+										e.preventDefault();
+
+										HostApi.instance.track("codestream/nrql/export downloaded", {
+											account_id: selectedAccount?.value || accountId,
+											event_type: "submit",
+											meta_data: `format: json`,
+										});
+
+										HostApi.instance.send(OpenInBufferRequestType, {
+											contentType: "json",
+											data: results,
+										});
+									}}
+								>
+									<Icon name="download" title="Open Results as JSON" />
+								</a>
+							</div>
+						</ButtonContainer>
 					)}
 					<div>
 						{!nrqlError &&
