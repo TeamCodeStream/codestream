@@ -92,6 +92,10 @@ class EditorCopySymbolResponse (
     val range: Range?,
 )
 
+class EditorOpenRequest(
+    val title: String
+)
+
 class EditorRangeHighlightRequest(
     val uri: String?,
     val range: Range?,
