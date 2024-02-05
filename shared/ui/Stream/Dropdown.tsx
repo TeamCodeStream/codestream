@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 
 import Icon from "./Icon";
@@ -70,6 +70,10 @@ export const Dropdown = (props: Props) => {
 	const [selectedValue, setSelectedValue] = React.useState<string | undefined>(
 		props.selectedValue || ""
 	);
+
+	useEffect(() => {
+		setSelectedValue(props.selectedValue);
+	}, [props.selectedValue]);
 
 	return (
 		<>

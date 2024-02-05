@@ -48,6 +48,7 @@ const ActionRow = styled.div`
 const DropdownContainer = styled.div`
 	display: flex;
 	justify-content: flex-end;
+	margin-bottom: 8px;
 `;
 
 const ButtonContainer = styled.div`
@@ -301,10 +302,7 @@ export const NRQLPanel = (props: {
 					</div>
 				</QueryWrapper>
 				<ActionRow>
-					<DropdownContainer>
-						{/* <Dropdown></Dropdown>
-					<Dropdown></Dropdown> */}
-					</DropdownContainer>
+					<DropdownContainer></DropdownContainer>
 					<ButtonContainer>
 						<Button
 							style={{ padding: "0 10px", marginRight: "5px" }}
@@ -328,6 +326,7 @@ export const NRQLPanel = (props: {
 					<NRQLVisualizationDropdown
 						onSelectCallback={handleVisualizationDropdownCallback}
 						disabledFields={[]}
+						selectedValue={resultsTypeGuess}
 					/>
 				</DropdownContainer>
 			</PanelHeader>

@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { DropdownButtonItems } from "../DropdownButton";
 import { Dropdown } from "../Dropdown";
 import styled from "styled-components";
+import { isEmpty as _isEmpty } from "lodash-es";
 
 const STATES_TO_DISPLAY_STRINGS = {
 	table: "Table",
@@ -22,6 +23,7 @@ const StyledDropdownContainer = styled.div`
 export const NRQLVisualizationDropdown = (props: {
 	onSelectCallback: Function;
 	disabledFields: string[];
+	selectedValue: string;
 }) => {
 	const [selectedValue, setSelectedValue] = useState("Table");
 
@@ -43,8 +45,15 @@ export const NRQLVisualizationDropdown = (props: {
 
 	const dropdownItems: DropdownButtonItems[] = useMemo(
 		() => populateItems(),
-		[props.disabledFields]
+		[props.disabledFields, props.selectedValue]
 	);
+
+	// Avoid empty dropdown visual during loading
+	useEffect(() => {
+		if (!_isEmpty(props.selectedValue)) {
+			setSelectedValue(STATES_TO_DISPLAY_STRINGS[props.selectedValue]);
+		}
+	}, [props.selectedValue]);
 
 	return (
 		<StyledDropdownContainer>
