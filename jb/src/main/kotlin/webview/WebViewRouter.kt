@@ -199,6 +199,15 @@ class WebViewRouter(val project: Project) {
         project.editorService?.insertText(request.marker, request.text)
     }
 
+    private fun editorOpen(message: WebViewMessage) {
+        val editorManager = FileEditorManager.getInstance(project)
+        println(message.params!!.toString())
+        val file = WebViewEditorFile(message.params!!)
+        ApplicationManager.getApplication().invokeLater {
+            editorManager.openFile(file, true)
+        }
+    }
+
     private fun editorRangeHighlight(message: WebViewMessage) {
         val request = gson.fromJson<EditorRangeHighlightRequest>(message.params!!)
 

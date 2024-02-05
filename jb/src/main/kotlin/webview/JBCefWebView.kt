@@ -41,6 +41,8 @@ class JBCefWebView(val jbCefBrowser: JBCefBrowserBase, val router: WebViewRouter
 
     init {
         logger.info("Initializing JBCef WebView")
+        router.webView = this
+        jbCefBrowser.cefBrowser
         if (platform != Platform.LINUX_X64 && platform != Platform.LINUX_ARM64) {
             // we needed this to work around some blank webview glitches in the past,
             // but now it causes the very same glitch on Linux

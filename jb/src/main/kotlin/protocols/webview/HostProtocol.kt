@@ -104,6 +104,10 @@ class EditorReplaceSymbolResponse(
     val success: Boolean
 )
 
+class EditorOpenRequest(
+    val title: String
+)
+
 class EditorRangeHighlightRequest(
     val uri: String?,
     val range: Range?,
