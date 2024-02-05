@@ -28,6 +28,7 @@ import { parseId } from "@codestream/webview/utilities/newRelic";
 import Icon from "../Icon";
 import { fuzzyTimeAgoinWords } from "../Timestamp";
 import { useResizeDetector } from "react-resize-detector";
+import { NRQLVisualizationDropdown } from "./NRQLVisualizationDropdown";
 
 const QueryWrapper = styled.div`
 	width: 100%;
@@ -46,6 +47,7 @@ const ActionRow = styled.div`
 
 const DropdownContainer = styled.div`
 	display: flex;
+	justify-content: flex-end;
 `;
 
 const ButtonContainer = styled.div`
@@ -236,6 +238,11 @@ export const NRQLPanel = (props: {
 		};
 	};
 
+	const handleVisualizationDropdownCallback = value => {
+		setResultsTypeGuess(value);
+		console.warn("eric callback in NRQLPanel.tsx called");
+	};
+
 	return (
 		<>
 			<PanelHeader title="Query Your Data">
@@ -317,9 +324,12 @@ export const NRQLPanel = (props: {
 						</Button>
 					</ButtonContainer>
 				</ActionRow>
-				{/* <ActionRow>
-					<DropdownContainer></DropdownContainer>
-				</ActionRow> */}
+				<DropdownContainer>
+					<NRQLVisualizationDropdown
+						onSelectCallback={handleVisualizationDropdownCallback}
+						disabledFields={[]}
+					/>
+				</DropdownContainer>
 			</PanelHeader>
 			<div
 				ref={ref}

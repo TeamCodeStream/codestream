@@ -78,8 +78,11 @@ export const Dropdown = (props: Props) => {
 			{/* If more than 1 dropdown item, render dropdown */}
 			{props.items.length > 1 && (
 				<DropdownLabel tabIndex={0} onBlur={handleOnBlur} onClick={handleOnClick}>
-					{selectedValue}
-					<Icon name="chevron-down-thin" className="smaller" style={{ verticalAlign: "-1px" }} />
+					<div style={{ display: "flex", justifyContent: "space-between" }}>
+						{selectedValue}
+						<Icon name="chevron-down-thin" className="smaller" style={{ verticalAlign: "-1px" }} />
+					</div>
+
 					{menuOpen && !props.noModal && (
 						<Menu
 							items={props.items.map(_ => {
