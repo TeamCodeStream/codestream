@@ -223,8 +223,14 @@ class WebViewRouter(val project: Project) {
 
     private fun editorOpen(message: WebViewMessage) {
         val editorManager = FileEditorManager.getInstance(project)
-        println(message.params!!.toString())
-        val file = WebViewEditorFile(message.params!!)
+//        val filePath = RemoteFilePath("path", false)
+
+//        val fileType = when (filePath.fileType) {
+//            FileTypes.UNKNOWN -> PlainTextFileType.INSTANCE
+//            else -> filePath.fileType
+//        }
+        message.params
+        val file = WebViewEditorFile(message.params)
         ApplicationManager.getApplication().invokeLater {
             editorManager.openFile(file, true)
         }
