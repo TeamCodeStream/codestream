@@ -67,7 +67,7 @@ export const NRQLResultsTable = (props: {
 		return rowCalcData.map(([index, longestLength, columnWidthValue]) => {
 			let lengthOfString = longestLength * 11;
 			const numLines = Math.ceil(lengthOfString / columnWidthValue);
-
+			//@TODO, make this value dynamic
 			const lineHeight = 22;
 			const totalHeight = numLines * lineHeight;
 			return totalHeight;
