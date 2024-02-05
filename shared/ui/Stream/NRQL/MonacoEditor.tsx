@@ -37,6 +37,8 @@ export function MonacoEditor(props: {
 				renderOverviewRuler: false,
 			},
 			overviewRulerLanes: 0,
+			// Removes box around nrql entry line
+			renderLineHighlight: "none",
 			scrollBeyondLastLine: false,
 			wordwrap: "on",
 			...(props.options || {}),
