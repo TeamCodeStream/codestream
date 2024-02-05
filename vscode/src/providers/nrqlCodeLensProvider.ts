@@ -1,88 +1,140 @@
 "use strict";
-
+import * as vscode from "vscode";
 import {
 	CancellationToken,
 	CodeLens,
 	CodeLensProvider,
 	DocumentSymbol,
 	Range,
-	SymbolKind,
 	TextDocument
 } from "vscode";
-import * as vscode from "vscode";
-
 import { CodeStreamSession, SessionStatus } from "../api/session";
 import { BuiltInCommands } from "../constants";
-import { log } from "../system";
 import { Logger } from "../logger";
+import { SymbolKind } from "vscode-languageclient";
+import { Container } from "../container";
+import { log } from "../system";
+
+// const sleep = async (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
 export class NrqlCodeLensProvider implements CodeLensProvider {
-	private status: string | undefined = undefined;
+	private _status: string | undefined = undefined;
+
 	constructor(private session: CodeStreamSession) {
-		this.status = session.status;
+		this._status = this.session.status;
+		Container.session.onDidChangeCodelenses(e => {
+			this._onDidChangeCodeLenses.fire();
+		});
 	}
+
+	// Define an event emitter for code lens changes
+	private _onDidChangeCodeLenses: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
+
+	// Expose the event emitter as a property
+	readonly onDidChangeCodeLenses: vscode.Event<void> = this._onDidChangeCodeLenses.event;
 
 	@log({ timed: true })
 	public async provideCodeLenses(
 		document: TextDocument,
 		token: CancellationToken
 	): Promise<CodeLens[] | null | undefined> {
-		try {
-			if (this.status !== SessionStatus.SignedIn) {
-				return [
-					new CodeLens(
-						new Range(0, 0, 0, 0),
-						new NrqlStatementExecutionCommand(
-							"Sign in to New Relic CodeStream to execute",
-							"codestream.toggle",
-							"",
-							[]
-						)
-					)
-				];
-			}
+		if (this._status !== SessionStatus.SignedIn) {
+			Logger.log(`NrqlCodeLensProvider.provideCodeLenses not signedIn status=${this._status}`);
 
-			return vscode.commands
-				.executeCommand<DocumentSymbol[]>(
-					BuiltInCommands.ExecuteDocumentSymbolProvider,
-					document.uri
-				)
-				.then(_ => {
-					return _?.filter(_ => _.kind === SymbolKind.String).map(_ => {
-						return new CodeLens(
-							_.range,
-							new NrqlStatementExecutionCommand(
-								"Execute ▶️",
-								"codestream.executeNrql",
-								"Run this nrql statement",
-								[document.uri, _.name, _.range.start.line]
-							)
-						);
-					});
-				});
-		} catch (ex) {
-			Logger.warn("NrqlCodeLensProvider.provideCodeLenses", { error: ex });
+			return [
+				new CodeLens(new Range(0, 0, 0, 0), {
+					title: "Sign in to New Relic CodeStream to run",
+					tooltip: "Run this nrql statement",
+					command: "codestream.toggle",
+					arguments: [document.uri, "", 0]
+				})
+			];
 		}
-		return undefined;
+
+		const cancellationTokenSource = new vscode.CancellationTokenSource();
+		token.onCancellationRequested(() => {
+			Logger.log("NrqlCodeLensProvider.onCancellationRequested");
+			cancellationTokenSource.cancel();
+		});
+
+		let timeout = setTimeout(() => {
+			if (!cancellationTokenSource.token.isCancellationRequested) {
+				Logger.log("NrqlCodeLensProvider.provideCodeLenses setTimeout");
+				cancellationTokenSource.cancel();
+			}
+		}, 10000);
+
+		// leaving this here in case it becomes needed, ExecuteDocumentSymbolProvider
+		// is sometimes flaky
+
+		// let symbols: DocumentSymbol[] = [];
+		// for (const i of [50, 100, 500]) {
+		// 	if (token.isCancellationRequested) {
+		// 		Logger.log("NrqlCodeLensProvider.provideCodeLenses isCancellationRequested=true", {
+		// 			timeout: i
+		// 		});
+		// 		clearTimeout(i);
+		// 		cancellationTokenSource.dispose();
+		// 		return [];
+		// 	}
+		// 	try {
+		// 		symbols = await vscode.commands.executeCommand<DocumentSymbol[]>(
+		// 			BuiltInCommands.ExecuteDocumentSymbolProvider,
+		// 			document.uri,
+		// 			token
+		// 		);
+		// 		if (!symbols || symbols.length === 0) {
+		// 			Logger.debug(`NrqlCodeLensProvider.provideCodeLenses sleeping for ${i}ms`);
+		// 			await sleep(i);
+		// 		} else {
+		// 			Logger.debug(
+		// 				`NrqlCodeLensProvider.provideCodeLenses found ${symbols?.length || 0} at ${i}`
+		// 			);
+		// 			break;
+		// 		}
+		// 	} catch (ex) {
+		// 		Logger.warn(
+		// 			`NrqlCodeLensProvider.provideCodeLenses failed to ExecuteDocumentSymbolProvider canceled=${token.isCancellationRequested}`,
+		// 			{ error: ex }
+		// 		);
+		// 	}
+		// }
+		return vscode.commands
+			.executeCommand<DocumentSymbol[]>(
+				BuiltInCommands.ExecuteDocumentSymbolProvider,
+				document.uri,
+				token
+			)
+			.then(_ => {
+				clearTimeout(timeout);
+				cancellationTokenSource.dispose();
+				Logger.debug(`NrqlCodeLensProvider.provideCodeLenses returning ${_?.length || 0}`);
+				return (
+					_
+						// SymbolKind.String use the languageclient version!
+						?.filter(_ => _.kind === SymbolKind.String)
+						?.map(_ => {
+							return new CodeLens(_.range, {
+								title: "Run ▶️",
+								tooltip: "Run this nrql statement",
+								command: "codestream.executeNrql",
+								arguments: [document.uri, _.name, _.range.start.line]
+							});
+						})
+				);
+			});
 	}
 
 	public update(status: string) {
-		this.status = status;
+		this._status = status;
+		this._onDidChangeCodeLenses.fire();
 	}
 
 	public resolveCodeLens(codeLens: vscode.CodeLens, token: vscode.CancellationToken) {
 		return token.isCancellationRequested ? undefined : codeLens;
 	}
-}
 
-class NrqlStatementExecutionCommand implements vscode.Command {
-	arguments: string[] | undefined;
-	constructor(
-		public title: string,
-		public command: string,
-		public tooltip?: string,
-		args?: any[] | undefined
-	) {
-		this.arguments = args;
+	public dispose() {
+		this._onDidChangeCodeLenses && this._onDidChangeCodeLenses.dispose();
 	}
 }

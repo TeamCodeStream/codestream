@@ -5,7 +5,7 @@ import { WebviewLike } from "./webviews/webviewLike";
 import { GitContentProvider } from "./providers/gitContentProvider";
 import { InstrumentableCodeLensController } from "./controllers/instrumentableCodeLensController";
 import { BaseAgentOptions, CodeStreamAgentConnection } from "./agent/agentConnection";
-import { CodeStreamSession } from "./api/session";
+import { CodeStreamSession, SessionStatus } from "./api/session";
 import { Commands } from "./commands";
 import {
 	Config,
@@ -24,7 +24,7 @@ import { SetServerUrlRequestType } from "@codestream/protocols/agent";
 import { EditorController } from "./controllers/editorController";
 import { NrqlCodeLensController } from "./controllers/nrqlCodeLensController";
 import { PanelController } from "./controllers/panelController";
-import { nrqlDocumentSymbolProvider } from "./providers/nrqlDocumentSymbolProvider";
+import { NrqlDocumentSymbolProvider } from "./providers/nrqlDocumentSymbolProvider";
 
 export class Container {
 	static telemetryOptions?: TelemetryOptions;
@@ -61,8 +61,7 @@ export class Container {
 		context.subscriptions.push(
 			(this._instrumentableCodeLensController = new InstrumentableCodeLensController())
 		);
-		context.subscriptions.push((this._nrqlCodeLensController = new NrqlCodeLensController()));
-		this._nrqlCodeLensController.create();
+
 		context.subscriptions.push(new CodemarkPatchContentProvider());
 		context.subscriptions.push((this._statusBar = new StatusBarController()));
 
@@ -72,12 +71,39 @@ export class Container {
 		context.subscriptions.push((this._panel = new PanelController(context, this._session)));
 		context.subscriptions.push(configuration.onWillChange(this.onConfigurationChanging, this));
 		context.subscriptions.push(configuration.onDidChangeAny(this.onConfigurationChangeAny, this));
-		context.subscriptions.push(
-			languages.registerDocumentSymbolProvider(
-				{ scheme: "file", language: "nrql" },
-				new nrqlDocumentSymbolProvider()
-			)
-		);
+
+		// we want this to be created even before a user logs in
+		// there is a non-authed codelens
+		this._nrqlCodeLensController = new NrqlCodeLensController(this._session);
+		this._nrqlCodeLensController.create();
+
+		context.subscriptions.push(this._nrqlCodeLensController);
+		const onDidStartDisposable = this._session.onDidChangeSessionStatus(e => {
+			const status = e.getStatus();
+			this._nrqlCodeLensController?.update(status);
+			this._nrqlDocumentSymbolProvider?.update(status);
+
+			if (status === SessionStatus.SignedIn) {
+				// only create this once!
+				// _nrqlDocumentSymbolProvider requires a working lsp agent connection
+				// and we won't have that until the user auths
+				if (!this._nrqlDocumentSymbolProvider && !this._nrqlDocumentSymbolProvider) {
+					this._nrqlDocumentSymbolProvider = new NrqlDocumentSymbolProvider(
+						this._session,
+						Container._agent
+					);
+
+					context.subscriptions.push(
+						languages.registerDocumentSymbolProvider(
+							{ scheme: "file", language: "nrql" },
+							this._nrqlDocumentSymbolProvider
+						)
+					);
+				}
+			}
+		});
+
+		context.subscriptions.push(onDidStartDisposable);
 
 		await this._agent.start();
 	}
@@ -191,6 +217,11 @@ export class Container {
 	private static _nrqlCodeLensController: NrqlCodeLensController;
 	static get nrqlCodeLensController() {
 		return this._nrqlCodeLensController;
+	}
+
+	private static _nrqlDocumentSymbolProvider: NrqlDocumentSymbolProvider;
+	static get nrqlDocumentSymbolProvider() {
+		return this._nrqlDocumentSymbolProvider;
 	}
 
 	private static _notifications: NotificationsController;
