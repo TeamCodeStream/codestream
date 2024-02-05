@@ -170,7 +170,7 @@ export const SaveFileRequestType = new RequestType<SaveFileRequest, SaveFileResp
 );
 
 export interface OpenInBufferRequest {
-	contentType: "json" | "plaintext";
+	contentType: "json" | "csv";
 	data: any;
 }
 export interface OpenInBufferResponse {

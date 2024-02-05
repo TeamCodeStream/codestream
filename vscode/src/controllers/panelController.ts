@@ -68,6 +68,8 @@ export class PanelController implements Disposable {
 			const controller = new EditorController(this.session, panel);
 			const onDidClose = () => {
 				const initialization = this._panelInitializations[editorKey];
+				initialization?.panel?.dispose();
+				initialization?.controller?.dispose();
 				delete this._panelInitializations[editorKey];
 			};
 			panel.onDidClose(() => {

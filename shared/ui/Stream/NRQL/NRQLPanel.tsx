@@ -1,34 +1,36 @@
-import React, { useEffect, useRef, useState } from "react";
-import { components, OptionProps } from "react-select";
-import { PanelHeader } from "../../src/components/PanelHeader";
 import {
 	Account,
 	EntityAccount,
 	GetAllAccountsRequestType,
 	GetNRQLRequestType,
-	isNRErrorResponse,
 	NRQLResult,
 	ResultsTypeGuess,
+	isNRErrorResponse,
 } from "@codestream/protocols/agent";
 import {
 	OpenEditorViewNotificationType,
 	OpenInBufferRequestType,
 } from "@codestream/protocols/webview";
+import { InlineMenu } from "@codestream/webview/src/components/controls/InlineMenu";
+import { parseId } from "@codestream/webview/utilities/newRelic";
 import { Disposable } from "@codestream/webview/utils";
+import { stringify } from "csv-stringify/browser/esm/sync";
+import React, { useEffect, useRef, useState } from "react";
+import { useResizeDetector } from "react-resize-detector";
+import { OptionProps, components } from "react-select";
 import { AsyncPaginate } from "react-select-async-paginate";
 import styled from "styled-components";
+import { PanelHeader } from "../../src/components/PanelHeader";
 import { HostApi } from "../../webview-api";
 import Button from "../Button";
+import { default as Icon } from "../Icon";
+import { fuzzyTimeAgoinWords } from "../Timestamp";
 import { NRQLEditor } from "./NRQLEditor";
 import { NRQLResultsBar } from "./NRQLResultsBar";
 import { NRQLResultsBillboard } from "./NRQLResultsBillboard";
 import { NRQLResultsJSON } from "./NRQLResultsJSON";
 import { NRQLResultsLine } from "./NRQLResultsLine";
 import { NRQLResultsTable } from "./NRQLResultsTable";
-import { parseId } from "@codestream/webview/utilities/newRelic";
-import Icon from "../Icon";
-import { fuzzyTimeAgoinWords } from "../Timestamp";
-import { useResizeDetector } from "react-resize-detector";
 import { NRQLVisualizationDropdown } from "./NRQLVisualizationDropdown";
 
 const QueryWrapper = styled.div`
@@ -354,33 +356,52 @@ export const NRQLPanel = (props: {
 							<div style={{ paddingTop: "2px" }}>
 								<small>Since {since}</small>
 							</div>
+
 							<div style={{ marginLeft: "auto", marginRight: "8px", fontSize: "11px" }}>
 								<NRQLVisualizationDropdown
 									onSelectCallback={handleVisualizationDropdownCallback}
 									resultsTypeGuess={resultsTypeGuess}
 								/>
 							</div>
+
 							<div style={{ paddingTop: "2px" }}>
-								<a
-									style={{ cursor: "pointer" }}
-									href="#"
-									onClick={e => {
-										e.preventDefault();
+								<InlineMenu
+									title="Export"
+									noFocusOnSelect
+									items={Object.values(["JSON", "CSV"]).map((_: any) => ({
+										label: `Export ${_}`,
+										key: _,
+										checked: false,
+										action: () => {
+											let handled;
+											if (_ === "JSON") {
+												handled = JSON.stringify(results, null, 4);
+											} else if (_ === "CSV") {
+												handled = stringify(results, {
+													header: true,
+												});
+											}
+											if (handled) {
+												HostApi.instance.track("codestream/nrql/export downloaded", {
+													account_id: selectedAccount?.value || accountId,
+													event_type: "submit",
+													meta_data: `format: ${_.toLowerCase()}`,
+												});
 
-										HostApi.instance.track("codestream/nrql/export downloaded", {
-											account_id: selectedAccount?.value || accountId,
-											event_type: "submit",
-											meta_data: `format: json`,
-										});
-
-										HostApi.instance.send(OpenInBufferRequestType, {
-											contentType: "json",
-											data: results,
-										});
-									}}
+												HostApi.instance.send(OpenInBufferRequestType, {
+													contentType: _.toLowerCase(),
+													data: handled,
+												});
+											}
+										},
+									}))}
+									align="bottomRight"
+									className="dropdown"
 								>
-									<Icon name="download" title="Open Results as JSON" />
-								</a>
+									<span>
+										<Icon name="download" title="Export Results" />
+									</span>
+								</InlineMenu>
 							</div>
 						</SinceContainer>
 					)}
