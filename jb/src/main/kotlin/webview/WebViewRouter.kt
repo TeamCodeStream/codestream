@@ -53,18 +53,15 @@ import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.fileChooser.FileChooser
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.teamdev.jxbrowser.js.JsAccessible
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.jsonrpc.ResponseErrorException
-import org.eclipse.lsp4j.jsonrpc.messages.ResponseError
 import java.util.concurrent.CompletableFuture
 
 class WebViewRouter(val project: Project) {
-    var webView: WebView? = null
     private val logger = Logger.getInstance(WebViewRouter::class.java)
     private var _isReady = false
     val isReady get() = _isReady
@@ -91,10 +88,10 @@ class WebViewRouter(val project: Project) {
             if (message.id != null) {
                 if (e is ResponseErrorException) {
                     logger.debug("Posting response ${message.id} - Error: ${e.responseError.message}")
-                    postResponse(message.id, null, null, e.responseError)
+                    project.webViewService?.postResponse(message.id, null, null, e.responseError)
                 } else {
                     logger.debug("Posting response ${message.id} - Error: ${e.message}")
-                    postResponse(message.id, null, e.message, null)
+                    project.webViewService?.postResponse(message.id, null, e.message, null)
                 }
             }
         }
@@ -106,7 +103,7 @@ class WebViewRouter(val project: Project) {
         val response = agentService.remoteEndpoint.request(message.method, message.params).await()
         if (message.id != null) {
             logger.debug("Posting response (agent) ${message.id}")
-            postResponse(message.id, response)
+            webViewService.postResponse(message.id, response)
         }
     }
 
@@ -130,7 +127,6 @@ class WebViewRouter(val project: Project) {
             "host/editor/context" -> {
                 ActiveEditorContextResponse(project.editorService?.getEditorContext())
             }
-            "host/editor/open" -> editorOpen(message)
             "host/editor/range/highlight" -> editorRangeHighlight(message)
             "host/editor/range/reveal" -> editorRangeReveal(message)
             "host/editor/range/select" -> editorRangeSelect(message)
@@ -153,26 +149,8 @@ class WebViewRouter(val project: Project) {
         }
         if (message.id != null) {
             logger.debug("Posting response (host) ${message.id}")
-            postResponse(message.id, response.orEmptyObject)
+            project.webViewService?.postResponse(message.id, response.orEmptyObject)
         }
-    }
-
-    private fun postResponse(id: String, params: Any?, error: String? = null, responseError: ResponseError? = null) {
-        val message = if (responseError != null) {
-            jsonObject(
-                "id" to id,
-                "params" to gson.toJsonTree(params),
-                "error" to gson.toJsonTree(responseError)
-            )
-        } else {
-            jsonObject(
-                "id" to id,
-                "params" to gson.toJsonTree(params),
-                "error" to error
-            )
-        }
-
-        webView?.postMessage(message)
     }
 
     private suspend fun logout(message: WebViewMessage) {
@@ -219,21 +197,6 @@ class WebViewRouter(val project: Project) {
     private fun hostMarkerInsertText(message: WebViewMessage) {
         val request = gson.fromJson<MarkerInsertTextRequest>(message.params!!)
         project.editorService?.insertText(request.marker, request.text)
-    }
-
-    private fun editorOpen(message: WebViewMessage) {
-        val editorManager = FileEditorManager.getInstance(project)
-//        val filePath = RemoteFilePath("path", false)
-
-//        val fileType = when (filePath.fileType) {
-//            FileTypes.UNKNOWN -> PlainTextFileType.INSTANCE
-//            else -> filePath.fileType
-//        }
-        message.params
-        val file = WebViewEditorFile(message.params)
-        ApplicationManager.getApplication().invokeLater {
-            editorManager.openFile(file, true)
-        }
     }
 
     private fun editorRangeHighlight(message: WebViewMessage) {
