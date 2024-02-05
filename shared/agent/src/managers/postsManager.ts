@@ -527,22 +527,25 @@ function trackPostCreation(
 							meta_data: `entry_point: ${
 								request.entryPoint === "Gutter"
 									? "gutter"
-									: "Global Nav"
+									: request.entryPoint === "Global Nav"
 									? "global_nav"
-									: "Shortcut"
+									: request.entryPoint === "Shortcut"
 									? "shortcut"
-									: "Lightbulb Menu"
+									: request.entryPoint === "Lightbulb Menu"
 									? "lightbulb_menu"
-									: "Action List"
+									: request.entryPoint === "Action List"
 									? "action_list"
-									: "Hover Icons"
+									: request.entryPoint === "Hover Icons"
 									? "hover_icons"
-									: "Advanced Link"
+									: request.entryPoint === "Advanced Link"
 									? "advanced_link"
 									: ""
 							}`,
 							meta_data_2: `linked_service: ${request.codemark.externalProvider}`,
-							meta_data_3: `false`,
+							meta_data_3: `error_group: false`,
+							meta_data_4: `codemark_type: ${
+								markerType === "Comment" ? "comment" : markerType === "Issue" ? "issue" : ""
+							}`,
 							event_type: "response",
 						};
 						if (request.codemark.codeErrorId) {
