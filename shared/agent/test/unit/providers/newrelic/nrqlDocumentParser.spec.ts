@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@jest/globals";
-import { NrqlDocumentParser } from "../../providers/nrqlDocumentParser";
+import { NrqlDocumentParser } from "../../../../src/providers/newrelic/nrql/nrqlDocumentParser";
 
 describe("NrqlDocumentParser", () => {
 	it("should handle multiline single statements", () => {
@@ -9,9 +9,10 @@ Email not like '%dhe%' SINCE 1 days AGO `;
 		const results = new NrqlDocumentParser().parse(content);
 		expect(results).toStrictEqual([
 			{
+				invalid: false,
 				range: { end: 169, start: 0 },
-				text: content
-			}
+				text: content,
+			},
 		]);
 	});
 
@@ -20,9 +21,10 @@ Email not like '%dhe%' SINCE 1 days AGO `;
 		const results = new NrqlDocumentParser().parse(content);
 		expect(results).toStrictEqual([
 			{
+				invalid: false,
 				range: { end: 63, start: 0 },
-				text: content
-			}
+				text: content,
+			},
 		]);
 	});
 
@@ -42,36 +44,47 @@ FROM Transaction SELECT * WHERE appId like '%sss%'
 SELECT * FR
 		   `;
 		const results = new NrqlDocumentParser().parse(content);
-		expect(results.length).toStrictEqual(4);
 		expect(results).toStrictEqual([
 			{
+				invalid: false,
 				text: "FROM Transaction SELECT * WHERE appId\n",
 				range: {
 					start: 0,
-					end: 37
-				}
+					end: 37,
+				},
 			},
 			{
+				invalid: false,
 				text: "FROM Transaction SELECT * WHERE appId\nIS NOT NULL\n",
 				range: {
 					start: 54,
-					end: 103
-				}
+					end: 103,
+				},
 			},
 			{
+				invalid: false,
 				text: "SELECT * FROM Transaction WHERE appId IS NULL\n",
 				range: {
 					start: 111,
-					end: 156
-				}
+					end: 156,
+				},
 			},
 			{
+				invalid: false,
 				text: "FROM Transaction SELECT * WHERE appId like '%sss%'\n",
 				range: {
 					start: 163,
-					end: 213
-				}
-			}
+					end: 213,
+				},
+			},
+			{
+				invalid: true,
+				text: "SELECT * FR\n",
+				range: {
+					start: 215,
+					end: 226,
+				},
+			},
 		]);
 	});
 
@@ -85,19 +98,21 @@ SELECT foo from Log where appName = 'bar'
 		expect(results.length).toStrictEqual(2);
 		expect(results).toStrictEqual([
 			{
+				invalid: false,
 				text: "FROM Transaction SELECT * WHERE appId IS not null\n",
 				range: {
 					start: 0,
-					end: 49
-				}
+					end: 49,
+				},
 			},
 			{
+				invalid: false,
 				text: "SELECT foo from Log where appName = 'bar'\n",
 				range: {
 					start: 51,
-					end: 92
-				}
-			}
+					end: 92,
+				},
+			},
 		]);
 	});
 });

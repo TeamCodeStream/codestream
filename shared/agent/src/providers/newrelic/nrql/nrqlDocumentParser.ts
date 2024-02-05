@@ -1,6 +1,18 @@
 export interface NrqlStatement {
+	/**
+	 * the actual nrql statement
+	 */
 	text: string;
+	/**
+	 * the range of the nrql statement
+	 */
 	range: RangeLike;
+	/**
+	 * true: is something that looks like a statement, but is somehow incorrect (SELECT * FORM)
+	 * undefined: something that is not a statement, but probably a regular string or comment
+	 * false: a valid nrql statement
+	 */
+	invalid?: boolean;
 }
 
 export interface RangeLike {
@@ -25,7 +37,7 @@ export class NrqlDocumentParser {
 			const end = currentPosition + line.length - 1;
 			matches.push({
 				text: line,
-				range: { start, end }
+				range: { start, end },
 			});
 			currentPosition += line.length;
 		}
@@ -78,7 +90,12 @@ export class NrqlDocumentParser {
 			statements.push(buffer);
 		}
 
-		return statements.filter(_ => this.validate(_.text));
+		return statements.filter(_ => {
+			const validate = this.validate(_.text);
+			// undefined means the string doesn't appear to be a statement
+			_.invalid = validate === undefined ? undefined : validate === false;
+			return _;
+		});
 	}
 
 	/**
@@ -94,7 +111,9 @@ export class NrqlDocumentParser {
 
 		const startsWithMatch = startsWithRegex.test(text);
 		const containsMatch = containsRegex.test(text);
-
-		return startsWithMatch && containsMatch;
+		if (startsWithMatch) {
+			return containsMatch;
+		}
+		return undefined;
 	}
 }

@@ -19,6 +19,7 @@ import {
 	Connection,
 	DidChangeConfigurationNotification,
 	Disposable,
+	DocumentSymbolParams,
 	Emitter,
 	Event,
 	InitializedParams,
@@ -31,6 +32,8 @@ import {
 	RequestHandler0,
 	RequestType,
 	RequestType0,
+	TextDocument,
+	TextDocumentChangeEvent,
 	TextDocuments,
 	TextDocumentSyncKind,
 } from "vscode-languageserver";
@@ -42,6 +45,8 @@ import { CodeStreamSession } from "./session";
 import { Disposables, Functions, log, memoize } from "./system";
 import { HistoryCounter } from "@codestream/utils/system/historyCounter";
 import { RATE_LIMIT_INTERVAL } from "./rateLimits";
+import { NrqlDocumentHandler } from "./providers/newrelic/nrql/nrqlDocumentHandler";
+import { DocumentSymbolHandler, DocumentSymbolHandlers } from "./providers/documentSymbolHandler";
 
 export type ErrorAttributes = {
 	csEnvironment: string;
@@ -82,6 +87,11 @@ export class CodeStreamAgent implements Disposable {
 	private _session: CodeStreamSession | undefined;
 	private _signedIn: boolean = false;
 
+	private documentSymbolHandlers: DocumentSymbolHandlers = {
+		// currently only support symbols for files that end in nrql
+		nrql: new NrqlDocumentHandler(),
+	};
+
 	constructor(
 		private readonly _connection: Connection,
 		options: {
@@ -101,6 +111,14 @@ export class CodeStreamAgent implements Disposable {
 			options.documents || new TextDocuments(),
 			this._connection
 		);
+
+		this._connection.onDocumentSymbol((params: DocumentSymbolParams) => {
+			return this.onDocumentSymbol(this.documents.get(params.textDocument.uri)!);
+		});
+
+		this.documents.onDidChangeContent((params: TextDocumentChangeEvent) => {
+			return this.onDocumentSymbol(this.documents.get(params.document.uri)!);
+		});
 	}
 
 	dispose() {
@@ -255,6 +273,23 @@ export class CodeStreamAgent implements Disposable {
 			// TODO: Probably should avoid throwing here and return better error reporting to the extension
 			throw ex;
 		}
+	}
+
+	onDocumentSymbol(document: TextDocument) {
+		try {
+			const instance = this.documentSymbolHandlers[document.languageId] as DocumentSymbolHandler;
+			if (!instance) return [];
+
+			const results = instance.handle(document);
+			this._connection.sendDiagnostics({
+				uri: document.uri,
+				diagnostics: results.diagnostics,
+			});
+			return results.symbols;
+		} catch (ex) {
+			Logger.warn(`onDocumentSymbol error uri=${document.uri}`, { error: ex });
+		}
+		return [];
 	}
 
 	async logout(reason: LogoutReason) {

@@ -1,46 +1,45 @@
 "use strict";
-import { Disposable, commands, languages, workspace } from "vscode";
-import { Container } from "../container";
-import { SessionStatusChangedEvent } from "../api/session";
 import { NrqlCodeLensProvider } from "providers/nrqlCodeLensProvider";
+import { Disposable, languages } from "vscode";
+import { CodeStreamSession, SessionStatus, SessionStatusChangedEvent } from "../api/session";
+import { Container } from "../container";
 import { Logger } from "../logger";
 
 export class NrqlCodeLensController implements Disposable {
 	private _disposable: Disposable | undefined;
 	private _provider: NrqlCodeLensProvider | undefined;
-	private _providerDisposable: Disposable | undefined;
-	private _status: any;
+	private _status: SessionStatus | undefined = undefined;
 
-	constructor() {
-		this._disposable = Disposable.from(
-			Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
-			workspace.onDidSaveTextDocument(e => {
-				// this will refresh the codeLenses
-				commands.executeCommand("editor.action.refreshCodeLens");
-			})
-		);
-	}
-
-	dispose() {
-		this._providerDisposable && this._providerDisposable.dispose();
-		this._disposable && this._disposable.dispose();
-	}
+	constructor(private session: CodeStreamSession) {}
 
 	private onSessionStatusChanged(e: SessionStatusChangedEvent) {
 		this._status = e.getStatus();
+		Logger.log(`NrqlCodeLensController:onSessionStatusChanged status=${this._status}`);
 		this._provider?.update(this._status);
+	}
+
+	update(status: SessionStatus) {
+		this._status = status;
+		this._provider?.update(status);
 	}
 
 	create() {
 		if (this._provider) {
-			// do not attempt to destroy + recreate the provider as it will leave
-			// orphaned codelenses on other editors -- leaving them in a state
-			// where they cannot be clicked
-			Logger.warn("NrqlCodeLensController:NrqlCodeLensProvider already created");
+			Logger.warn("NrqlCodeLensController:NrqlCodeLensProvider already created!");
+			return;
 		}
+
+		Logger.debug("NrqlCodeLensController:create");
 		this._provider = new NrqlCodeLensProvider(Container.session);
-		this._providerDisposable = Disposable.from(
-			languages.registerCodeLensProvider([{ scheme: "file", language: "nrql" }], this._provider)
+		this._disposable = Disposable.from(
+			languages.registerCodeLensProvider([{ scheme: "file", language: "nrql" }], this._provider),
+			this.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this)
 		);
+	}
+
+	dispose() {
+		Logger.debug("NrqlCodeLensController:dispose");
+
+		this._disposable && this._disposable.dispose();
 	}
 }
