@@ -893,6 +893,9 @@ export interface CSMePreferences {
 	};
 	codeErrorTimeWindow?: CodeErrorTimeWindow;
 	clmSettings?: CLMSettings;
+
+	whatsNewSeen?: string[];
+
 	[key: string]: any;
 }
 

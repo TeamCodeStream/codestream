@@ -473,3 +473,10 @@ export const ConfigChangeReloadNotificationType = new NotificationType<
 	ConfigChangeReloadRequest,
 	void
 >("codestream/configChangeReload");
+
+export interface WhatsNewNotification {
+	title: string;
+}
+export const WhatsNewNotificationType = new NotificationType<WhatsNewNotification, void>(
+	"codestream/whatsNew"
+);

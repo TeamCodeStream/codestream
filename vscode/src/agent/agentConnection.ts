@@ -153,7 +153,9 @@ import {
 	UserDidCommitNotificationType,
 	DidEncounterInvalidRefreshTokenNotificationType,
 	TelemetryEventName,
-	TelemetryData
+	TelemetryData,
+	WhatsNewNotificationType,
+	WhatsNewNotification
 } from "@codestream/protocols/agent";
 import {
 	ChannelServiceType,
@@ -1122,6 +1124,23 @@ export class CodeStreamAgentConnection implements Disposable {
 		await Container.sidebar.onProcessBufferChanged(e);
 	}
 
+	@log()
+	private async onWhatsNew(e: WhatsNewNotification) {
+		window
+			.showInformationMessage(
+				e.title,
+				{ title: "See What's New", isCloseAffordance: false },
+				{ title: "Dismiss", isCloseAffordance: true }
+			)
+			.then(selection => {
+				if (selection?.title === "See What's New") {
+					window.showInformationMessage("You DO want to see more whats new!");
+				} else if (selection?.title === "Dismiss") {
+					window.showInformationMessage("You DO NOT want to see more whats new :(");
+				}
+			});
+	}
+
 	@started
 	async sendNotification<NT extends NotificationType<any, any>>(
 		type: NT,
@@ -1392,6 +1411,9 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._client.onNotification(DidChangeCodelensesNotificationType, e =>
 			this._onDidChangeCodelenses.fire(e)
 		);
+		this._client.onNotification(WhatsNewNotificationType, e => {
+			this.onWhatsNew(e);
+		});
 		this._client.onRequest(AgentOpenUrlRequestType, e => this._onOpenUrl.fire(e));
 
 		this._client.onRequest(AgentValidateLanguageExtensionRequestType, async request => {

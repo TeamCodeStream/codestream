@@ -79,6 +79,7 @@ import {
 	VersionCompatibility,
 	DidRefreshAccessTokenNotificationType,
 	ThirdPartyProviders,
+	WhatsNewNotificationType,
 } from "@codestream/protocols/agent";
 import {
 	CSAccessTokenType,
@@ -129,6 +130,7 @@ import {
 } from "./system";
 import { testGroups } from "./testGroups";
 import { ProxyAgent, setGlobalDispatcher } from "undici";
+import * as fs from "fs";
 
 // https://regex101.com/r/Yn5uqi/1
 const envRegex = /https?:\/\/(?:codestream)?-?([a-zA-Z]+)?(?:[0-9])?(?:\.)((\w+)-?(?:\w+)?)?/i;
@@ -703,6 +705,31 @@ export class CodeStreamSession {
 			data,
 		});
 		return data[0];
+	}
+
+	@log()
+	async whatsNewNotification() {
+		const me = await SessionContainer.instance().users.getMe();
+		const preferences = me.preferences;
+
+		const whatsNewBuffer = fs.readFileSync(path.join(__dirname, "WhatsNew.json"), {
+			encoding: "utf-8",
+		});
+		const whatsNew: string[] = JSON.parse(whatsNewBuffer);
+
+		const currentVersion = this.versionInfo.extension.version;
+
+		const isFlagged = whatsNew.includes(currentVersion);
+
+		if (isFlagged && preferences) {
+			if (!preferences.whatsNewSeen?.includes(currentVersion)) {
+				this.agent.sendNotification(WhatsNewNotificationType, {
+					title: `CodeStream has been upgraded to v${currentVersion}!`,
+				});
+				preferences.whatsNewSeen?.push(currentVersion);
+				this._api?.updatePreferences({ preferences });
+			}
+		}
 	}
 
 	@log()
@@ -1301,6 +1328,7 @@ export class CodeStreamSession {
 
 		setImmediate(() => {
 			this.agent.sendNotification(DidLoginNotificationType, { data: loginResponse });
+			this.whatsNewNotification();
 		});
 
 		if (!response.user.timeZone) {
