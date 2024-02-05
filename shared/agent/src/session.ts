@@ -726,8 +726,10 @@ export class CodeStreamSession {
 				this.agent.sendNotification(WhatsNewNotificationType, {
 					title: `CodeStream has been upgraded to v${currentVersion}!`,
 				});
-				preferences.whatsNewSeen?.push(currentVersion);
-				this._api?.updatePreferences({ preferences });
+				const newPreference = {
+					whatsNewSeen: [...(preferences.whatsNewSeen ?? []), currentVersion],
+				};
+				this._api?.updatePreferences({ preferences: newPreference });
 			}
 		}
 	}
