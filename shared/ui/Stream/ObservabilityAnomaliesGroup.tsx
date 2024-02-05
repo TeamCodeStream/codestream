@@ -68,17 +68,15 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 	const [hoveredRowIndex, setHoveredRowIndex] = useState<string | undefined>(undefined);
 	const hasMoreAnomaliesToShow = props.observabilityAnomalies.length > numToShow;
 
-	const handleClickTelemetry = () => {
+	const handleClickTelemetry = (anomaly: ObservabilityAnomaly) => {
 		const event: TelemetryData = {
 			entity_guid: props.entityGuid,
 			account_id: props.accountId,
-			meta_data: `anomaly_category: ${
-				props.observabilityAnomalies[0].scope ? "metric" : "transaction"
-			}`,
+			meta_data: `anomaly_category: ${anomaly.scope ? "metric" : "transaction"}`,
 			meta_data_2: `anomaly_type: ${
-				props.observabilityAnomalies[0].type === "duration"
+				anomaly.type === "duration"
 					? "avg_duration"
-					: props.observabilityAnomalies[0].type === "errorRate"
+					: anomaly.type === "errorRate"
 					? "error_rate"
 					: ""
 			}`,
@@ -99,7 +97,7 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 	};
 
 	const handleClick = (anomaly: ObservabilityAnomaly) => {
-		handleClickTelemetry();
+		handleClickTelemetry(anomaly);
 		HostApi.instance.send(EditorRevealSymbolRequestType, {
 			codeFilepath: anomaly.codeAttrs?.codeFilepath,
 			codeNamespace: anomaly.codeAttrs?.codeNamespace,
