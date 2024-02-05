@@ -48,6 +48,7 @@
         <projectService serviceImplementation="com.codestream.settings.SettingsService"/>
         <projectService serviceImplementation="com.codestream.session.SessionService"/>
         <projectService serviceImplementation="com.codestream.webview.WebViewService"/>
+        <projectService serviceImplementation="com.codestream.webview.WebViewEditorService"/>
         <projectService serviceImplementation="com.codestream.editor.EditorService"/>
         <projectService serviceImplementation="com.codestream.review.ReviewService"/>
         <projectService serviceImplementation="com.codestream.telemetry.TelemetryService"/>
@@ -83,8 +84,6 @@
                                  handlerClass="com.codestream.editor.GutterCodemarkLinkTooltipLinkHandler"/>
 
         <fileEditorProvider implementation="com.codestream.webview.WebViewEditorProvider"/>
-        <iconProvider implementation="com.codestream.webview.WebViewEditorIconProvider"/>
-        <editorTabTitleProvider implementation="com.codestream.webview.WebViewEditorTabTitleProvider"/>
     </extensions>
 
     <project-components>

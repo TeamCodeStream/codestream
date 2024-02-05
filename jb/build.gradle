@@ -61,6 +61,7 @@ idea {
     module {
         excludeDirs += file("src/main/resources/agent")
         excludeDirs += file("src/main/resources/webview")
+        excludeDirs += file("src/main/resources/webviews")
     }
 }
 
@@ -110,7 +111,7 @@ runIde {
 //    jvmArgs '-Dsun.java2d.uiScale.enabled=false'
 //    jvmArgs '-Dkotlinx.coroutines.debug=on'
 //    jvmArgs '-Dcom.codestream.recordRequests=true'
-    jvmArgs "-Dcom.codestream.webview=$projectDir/src/main/resources/webview"
+    jvmArgs "-Dcom.codestream.webviewSidebar=$projectDir/src/main/resources/webviews/sidebar"
     jvmArgs "-Dcom.codestream.agent=$projectDir/../shared/agent/dist"
     jvmArgs '-Xmx2048m'
     jvmArgs '-Xms128m'
