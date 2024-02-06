@@ -15,6 +15,8 @@ import {
 	GetNRQLRequestType,
 	GetNRQLResponse,
 	ResultsTypeGuess,
+	SaveRecentQueryRequest,
+	SaveRecentQueryResponse,
 } from "@codestream/protocols/agent";
 import { escapeNrql } from "@codestream/utils/system/string";
 import { CompletionItemKind } from "vscode-languageserver";
@@ -72,6 +74,8 @@ export class NrNRQLProvider {
 			const query = escapeNrql(request.query).trim();
 			const response = await this.graphqlClient.runNrqlWithMetadata<any>(accountId, query, 400);
 
+			void this.saveRecentQuery(request);
+
 			return {
 				accountId,
 				results: response.results,
@@ -90,6 +94,34 @@ export class NrNRQLProvider {
 				resultsTypeGuess: { selected: "table", enabled: [] },
 			};
 		}
+	}
+
+	@log()
+	private async saveRecentQuery(
+		request: SaveRecentQueryRequest
+	): Promise<SaveRecentQueryResponse | undefined> {
+		try {
+			const response = await this.graphqlClient.mutate<{
+				queryHistoryRecordNrql: {
+					createdAt: number;
+				};
+			}>(
+				`mutation QueryHistoryRecordNrql($accountId: Int!, $query: Nrql!){
+  queryHistoryRecordNrql(query: {query: $query, accountIds: [$accountId]}) {
+    createdAt    
+  }
+}`,
+				{
+					accountId: request.accountId,
+					query: request.query,
+				}
+			);
+
+			return { createdAt: response?.queryHistoryRecordNrql?.createdAt };
+		} catch (ex) {
+			Logger.error(ex, "saveRecentQuery");
+		}
+		return undefined;
 	}
 
 	@lspHandler(GetNRQLConstantsRequestType)
@@ -257,33 +289,84 @@ export class NrNRQLProvider {
 		try {
 			const response = await this.graphqlClient.query<{
 				actor: {
+					accounts: {
+						id: number;
+						name: string;
+					}[];
 					queryHistory: {
 						nrql: {
 							query: string;
-							accountIds: Number[];
-							createdAt: string;
+							accountIds: number[];
+							createdAt: number;
 						}[];
 					};
 				};
 			}>(`{
-					actor {
-						queryHistory {
-						nrql(options: {limit: 10}) {
-							query
-							accountIds
-							createdAt
-						}
-					}
-				}
-			}`);
+  actor {
+    accounts {
+      id
+      name
+    }
+    queryHistory {
+      nrql(options: {limit: 50}) {
+        query
+        accountIds
+        createdAt
+      }
+    }
+  }
+}`);
 
 			if (response) {
-				return { items: response.actor.queryHistory.nrql };
+				const accounts = response?.actor?.accounts || [];
+				return {
+					items: response?.actor?.queryHistory?.nrql?.map(_ => {
+						return {
+							..._,
+							dayString: this.toDayString(_.createdAt),
+							accounts: accounts.filter(obj => (_.accountIds || []).includes(obj.id)),
+						};
+					}),
+				};
 			}
 		} catch (ex) {
 			Logger.warn(`Failed to fetchRecentQueries for user`, { error: ex });
 		}
 		return { items: [] };
+	}
+
+	private toDayString(date: number | undefined) {
+		try {
+			if (!date) return "";
+
+			const currentDate = new Date();
+			const today = new Date(
+				currentDate.getFullYear(),
+				currentDate.getMonth(),
+				currentDate.getDate()
+			);
+			const yesterday = new Date(today);
+			yesterday.setDate(yesterday.getDate() - 1);
+
+			const lastWeek = new Date(today);
+			lastWeek.setDate(lastWeek.getDate() - 7);
+
+			const thisMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+
+			const dateObj = new Date(date);
+			if (dateObj >= today) {
+				return "Today";
+			} else if (dateObj >= yesterday) {
+				return "Yesterday";
+			} else if (dateObj >= lastWeek) {
+				return "Last Week";
+			} else if (dateObj >= thisMonth) {
+				return "This Month";
+			} else {
+				return "Older";
+			}
+		} catch (ex) {}
+		return "";
 	}
 
 	private async getCurrentAccountId() {

@@ -14,11 +14,13 @@ import { MonacoEditor } from "./MonacoEditor";
 export const NRQLEditor = React.forwardRef(
 	(
 		props: {
-			onChange: (e: { value: string | undefined }) => void;
+			className?: string;
+			defaultValue?: string;
+			height?: string | undefined;
+			onChange?: (e: { value: string | undefined }) => void;
 			onSubmit?: (e: { value: string | undefined }) => void;
 			setValue?: (e: { value: string | undefined }) => void;
-			className?: string;
-			defaultQuery?: string;
+			isReadonly?: boolean;
 		},
 		ref
 	) => {
@@ -140,15 +142,18 @@ export const NRQLEditor = React.forwardRef(
 		return (
 			<>
 				<MonacoEditor
-					height="10vh"
+					height={props.height || "10vh"}
 					className={props.className}
 					defaultLanguage="nrql"
-					defaultValue={props.defaultQuery}
+					defaultValue={props.defaultValue}
 					theme={theme}
 					onMount={handleEditorDidMount}
 					onChange={e => {
-						props.onChange(e);
+						if (props.onChange) {
+							props.onChange(e);
+						}
 					}}
+					options={{ readonly: props.isReadonly }}
 				/>
 			</>
 		);

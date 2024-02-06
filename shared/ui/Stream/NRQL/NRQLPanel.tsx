@@ -32,6 +32,7 @@ import { NRQLResultsJSON } from "./NRQLResultsJSON";
 import { NRQLResultsLine } from "./NRQLResultsLine";
 import { NRQLResultsTable } from "./NRQLResultsTable";
 import { NRQLVisualizationDropdown } from "./NRQLVisualizationDropdown";
+import { RecentQueries } from "./RecentQueries";
 
 const QueryWrapper = styled.div`
 	width: 100%;
@@ -46,6 +47,19 @@ const ActionRow = styled.div`
 	align-items: center;
 	justify-content: space-between;
 	padding: 10px 0;
+`;
+
+const AccountRecentContainer = styled.div`
+	display: flex;
+	justify-content: space-between;
+`;
+
+const AccountContainer = styled.div`
+	flex-grow: 1;
+`;
+
+const RecentContainer = styled.div`
+	margin-left: auto;
 `;
 
 const DropdownContainer = styled.div`
@@ -119,6 +133,9 @@ export const NRQLPanel = (props: {
 	);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [nrqlError, setNRQLError] = useState<string | undefined>("");
+	const [shouldRefetchRecentQueriesTimestamp, setShouldRefetchRecentQueriesTimestamp] = useState<
+		number | undefined
+	>(undefined);
 	const nrqlEditorRef = useRef<any>(null);
 	const { width, height, ref } = useResizeDetector();
 	const trimmedHeight: number = (height ?? 0) - (height ?? 0) * 0.05;
@@ -227,6 +244,12 @@ export const NRQLPanel = (props: {
 						setSince(response.since.toLowerCase());
 					}
 				}
+				if (shouldRefetchRecentQueriesTimestamp == null) {
+					// first time, set to 0 (don't trigger an update)
+					setShouldRefetchRecentQueriesTimestamp(0);
+				} else if (!isNaN(shouldRefetchRecentQueriesTimestamp)) {
+					setShouldRefetchRecentQueriesTimestamp(new Date().getTime());
+				}
 			}
 		} catch (ex) {
 			handleError(ex);
@@ -268,45 +291,73 @@ export const NRQLPanel = (props: {
 				<QueryWrapper>
 					<div className="search-input">
 						<div style={{ marginBottom: "10px" }}>
-							<AsyncPaginate
-								id="input-account-autocomplete"
-								name="account-autocomplete"
-								classNamePrefix="react-select"
-								loadOptions={async (
-									search: string,
-									_loadedOptions,
-									additional?: { nextCursor?: string }
-								) => {
-									await accountsPromise;
+							<AccountRecentContainer>
+								<AccountContainer>
+									<AsyncPaginate
+										style={{ width: "300px" }}
+										id="input-account-autocomplete"
+										name="account-autocomplete"
+										classNamePrefix="react-select"
+										loadOptions={async (
+											search: string,
+											_loadedOptions,
+											additional?: { nextCursor?: string }
+										) => {
+											await accountsPromise;
 
-									return {
-										options: accounts!
-											.filter(_ =>
-												search ? _.name.toLowerCase().indexOf(search.toLowerCase()) > -1 : true
-											)
-											.map(account => {
-												return formatSelectedAccount(account);
-											}),
-										hasMore: false,
-									};
-								}}
-								value={selectedAccount}
-								debounceTimeout={750}
-								placeholder={`Type to search for accounts...`}
-								onChange={newValue => {
-									setSelectedAccount(newValue);
-								}}
-								components={{ Option }}
-								tabIndex={1}
-								autoFocus
-								isClearable
-							/>
+											return {
+												options: accounts!
+													.filter(_ =>
+														search ? _.name.toLowerCase().indexOf(search.toLowerCase()) > -1 : true
+													)
+													.map(account => {
+														return formatSelectedAccount(account);
+													}),
+												hasMore: false,
+											};
+										}}
+										value={selectedAccount}
+										debounceTimeout={750}
+										placeholder={`Type to search for accounts...`}
+										onChange={newValue => {
+											setSelectedAccount(newValue);
+										}}
+										components={{ Option }}
+										tabIndex={1}
+										autoFocus
+										isClearable={false}
+									/>
+								</AccountContainer>
+								<RecentContainer>
+									<RecentQueries
+										lastRunTimestamp={shouldRefetchRecentQueriesTimestamp}
+										onSelect={e => {
+											if (!e) return;
+											// a query may cross accounts -- get the account for it
+											const newAccount = formatSelectedAccount(e.accounts[0]);
+											setSelectedAccount(newAccount);
+
+											let value = e.query;
+											if (nrqlEditorRef?.current) {
+												nrqlEditorRef.current!.setValue(value);
+											}
+											setUserQuery(value!);
+											executeNRQL(
+												newAccount?.value || selectedAccount?.value,
+												props.entityGuid!,
+												value!
+											);
+										}}
+									/>
+								</RecentContainer>
+							</AccountRecentContainer>
 						</div>
 
 						<div style={{ border: "var(--base-border-color) solid 1px", padding: "8px" }}>
 							<NRQLEditor
 								className="input-text control"
-								defaultQuery={props.query || DEFAULT_QUERY}
+								defaultValue={props.query || DEFAULT_QUERY}
+								height="10vh"
 								onChange={e => {
 									setUserQuery(e.value || "");
 								}}
@@ -368,6 +419,7 @@ export const NRQLPanel = (props: {
 								<InlineMenu
 									title="Export"
 									noFocusOnSelect
+									noChevronDown={true}
 									items={Object.values(["JSON", "CSV"]).map((_: any) => ({
 										label: `Export ${_}`,
 										key: _,

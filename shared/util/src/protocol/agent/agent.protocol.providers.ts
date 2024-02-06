@@ -2639,6 +2639,15 @@ export const GetLogFieldDefinitionsRequestType = new RequestType<
 	void
 >("codestream/newrelic/logs/fieldDefinitions");
 
+export interface SaveRecentQueryRequest {
+	accountId?: number;
+	query: string;
+}
+
+export interface SaveRecentQueryResponse {
+	createdAt?: number;
+}
+
 export interface GetNRQLRequest {
 	accountId?: number;
 	entityGuid?: string;
@@ -2731,18 +2740,20 @@ export const GetNRQLCompletionItemsType = new RequestType<
 	void
 >("codestream/newrelic/nrql/completions");
 
-export interface NRQLRecentQueries {
+export interface NRQLRecentQuery {
 	/**
 	 * Recent, runnable, query from the current user
 	 */
 	query: string;
-	accountIds: Number[];
-	createdAt: string;
+	accountIds: number[];
+	accounts: Account[];
+	createdAt: number;
+	dayString?: string;
 }
 
 export interface GetNRQLRecentQueriesRequest {}
 export interface GetNRQLRecentQueriesResponse {
-	items: NRQLRecentQueries[];
+	items: NRQLRecentQuery[];
 }
 export const GetNRQLRecentQueriesType = new RequestType<
 	GetNRQLRecentQueriesRequest,
