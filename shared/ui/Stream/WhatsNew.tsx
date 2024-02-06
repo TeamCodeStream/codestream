@@ -1,30 +1,28 @@
 import React from "react";
-import { PanelHeader } from "../src/components/PanelHeader";
 
-export const WhatsNewPanel = (props: {}) => {
+export const WhatsNewPanel = () => {
 	return (
 		<>
-			<PanelHeader title="What's New"></PanelHeader>
-
-			<div className="whats-new-container">
-				<div className="version-container">
-					<div className="version">15.2.0</div>
-					<div className="item">
-						<span className="title">Unread messages on mobile</span>
-						<span className="body">
+			<div style={{ padding: "20px" }}>
+				<h1>What's New</h1>
+				<div>
+					<h2>15.2.0</h2>
+					<div>
+						<h3>Unread messages on mobile</h3>
+						<span>
 							Catch up on all of your unread conversations at once, right from your mobile device.
 						</span>
 					</div>
-					<div className="item">
-						<span className="title">Theme customization is back!</span>
-						<span className="body">
+					<div>
+						<h3>Theme customization is back!</h3>
+						<span>
 							Change the look of your workspace with the option to choose colors for different
 							elements of your Slack theme.
 						</span>
 					</div>
-					<div className="item">
-						<span className="title">Other Updates</span>
-						<span className="body">
+					<div>
+						<h3>Other Updates</h3>
+						<span>
 							<ul>
 								<li>
 									Screen reader users can now use keyboard shortcuts to hear a summary of unread
