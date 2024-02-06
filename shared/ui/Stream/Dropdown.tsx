@@ -19,7 +19,6 @@ const DropdownItemsContainer = styled.div`
 `;
 
 const DropdownItemContainer = styled.div`
-	// margin: 8px 0 8px 0;
 	padding: 8px 8px 8px 8px;
 	&:hover {
 		background: var(--button-background-color);
@@ -113,8 +112,6 @@ export const Dropdown = (props: Props) => {
 									key={`dropdown_item_${index}_${_?.label}`}
 									onClick={e => {
 										if (!_?.disabled) {
-											// e.stopPropagation();
-											// e.preventDefault();
 											setSelectedValue(_.label);
 											if (typeof _.action === "function") {
 												_.action();

@@ -34,17 +34,9 @@ export const NRQLVisualizationDropdown = (props: {
 	const populateItems = (): DropdownItem[] => {
 		return [
 			...Object.entries(STATES_TO_DISPLAY_STRINGS).map(([key, label]: [string, string]) => {
-				// let disabled = false;
-				// if (props.resultsTypeGuess.enabled && props.resultsTypeGuess.enabled?.indexOf(key) !== -1) {
-				// 	disabled = false;
-				// } else {
-				// 	disabled = true;
-				// }
-
 				const disabled = !(
 					props.resultsTypeGuess.enabled && props.resultsTypeGuess.enabled?.includes(key)
 				);
-
 				return {
 					key,
 					label,
