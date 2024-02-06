@@ -1,5 +1,5 @@
 import { CSPost } from "@codestream/protocols/api";
-import { sortBy as _sortBy } from "lodash-es";
+import { sortBy as _sortBy, isEmpty } from "lodash-es";
 import { createSelector } from "reselect";
 import { CodeStreamState } from "..";
 import { ActionType } from "../common";
@@ -27,8 +27,17 @@ const addPost = (byStream: { [streamId: string]: Index<PostPlus> }, post: CSPost
 	const streamId = post.streamId;
 	const streamPosts = byStream[streamId] || {};
 	if (post.forGrok) {
-		post.parts = extractParts(post.text);
-		// console.log("*** addPost: extracted post.parts", post.parts);
+		let parts = extractParts(post.text);
+		if (
+			!isEmpty(post.text) &&
+			isEmpty(parts.codeFix) &&
+			isEmpty(parts.intro) &&
+			isEmpty(parts.description)
+		) {
+			// Legacy NRAI post without sections
+			parts = { description: post.text, intro: "", codeFix: "" };
+		}
+		post.parts = parts;
 	}
 	return { ...byStream, [streamId]: { ...streamPosts, [post.id]: post } };
 };
