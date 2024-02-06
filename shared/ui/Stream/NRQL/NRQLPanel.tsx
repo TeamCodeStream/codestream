@@ -8,6 +8,7 @@ import {
 	GetNRQLRequestType,
 	isNRErrorResponse,
 	NRQLResult,
+	ResultsTypeGuess,
 } from "@codestream/protocols/agent";
 import {
 	OpenEditorViewNotificationType,
@@ -53,8 +54,13 @@ const DropdownContainer = styled.div`
 
 const ButtonContainer = styled.div`
 	display: flex;
-	margin-bottom: 8px;
 	justify-content: space-between;
+`;
+
+const SinceContainer = styled.div`
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 8px;
 `;
 
 const ResultsRow = styled.div`
@@ -79,6 +85,11 @@ const Option = (props: OptionProps) => {
 
 const DEFAULT_QUERY = "FROM ";
 
+export const DEFAULT_VISUALIZATION_GUESS = {
+	selected: "table",
+	enabled: ["json", "billboard", "line", "bar", "table"],
+};
+
 export const NRQLPanel = (props: {
 	accountId?: number;
 	entityAccounts: EntityAccount[];
@@ -101,7 +112,9 @@ export const NRQLPanel = (props: {
 		{ label: string; value: number } | undefined
 	>(undefined);
 	const [accounts, setAccounts] = useState<{ name: string; id: number }[] | undefined>(undefined);
-	const [resultsTypeGuess, setResultsTypeGuess] = useState<string>("table");
+	const [resultsTypeGuess, setResultsTypeGuess] = useState<ResultsTypeGuess>(
+		DEFAULT_VISUALIZATION_GUESS as ResultsTypeGuess
+	);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [nrqlError, setNRQLError] = useState<string | undefined>("");
 	const nrqlEditorRef = useRef<any>(null);
@@ -170,7 +183,7 @@ export const NRQLPanel = (props: {
 			setIsLoading(true);
 			setNRQLError(undefined);
 			setResults([]);
-			setResultsTypeGuess("");
+			setResultsTypeGuess({});
 			setEventType("");
 			setSince("");
 
@@ -203,7 +216,7 @@ export const NRQLPanel = (props: {
 				});
 
 				setResults(response.results);
-				setResultsTypeGuess(response.resultsTypeGuess);
+				setResultsTypeGuess(response.resultsTypeGuess || {});
 				setEventType(response.eventType);
 				if (response.since) {
 					if (/^[0-9]+$/.test(response.since)) {
@@ -226,7 +239,7 @@ export const NRQLPanel = (props: {
 
 		setNRQLError(undefined);
 		setResults([]);
-		setResultsTypeGuess("");
+		setResultsTypeGuess({});
 		setEventType("");
 		setSince("");
 		setNoResults(false);
@@ -240,7 +253,10 @@ export const NRQLPanel = (props: {
 	};
 
 	const handleVisualizationDropdownCallback = value => {
-		setResultsTypeGuess(value);
+		setResultsTypeGuess(prevState => ({
+			...prevState,
+			selected: value,
+		}));
 	};
 
 	return (
@@ -326,7 +342,8 @@ export const NRQLPanel = (props: {
 					<NRQLVisualizationDropdown
 						onSelectCallback={handleVisualizationDropdownCallback}
 						disabledFields={[]}
-						selectedValue={resultsTypeGuess}
+						selectedValue={"table"}
+						resultsTypeGuess={resultsTypeGuess}
 					/>
 				</DropdownContainer>
 			</PanelHeader>
@@ -341,7 +358,7 @@ export const NRQLPanel = (props: {
 			>
 				<ResultsRow>
 					{since && (
-						<ButtonContainer>
+						<SinceContainer>
 							<div>
 								<small>Since {since}</small>
 							</div>
@@ -367,14 +384,14 @@ export const NRQLPanel = (props: {
 									<Icon name="download" title="Open Results as JSON" />
 								</a>
 							</div>
-						</ButtonContainer>
+						</SinceContainer>
 					)}
 					<div>
 						{!nrqlError &&
 							!isLoading &&
 							results &&
 							results.length > 0 &&
-							resultsTypeGuess === "table" && (
+							resultsTypeGuess.selected === "table" && (
 								<NRQLResultsTable
 									width={width || "100%"}
 									height={trimmedHeight}
@@ -385,24 +402,24 @@ export const NRQLPanel = (props: {
 							!isLoading &&
 							results &&
 							results.length > 0 &&
-							resultsTypeGuess === "billboard" && (
+							resultsTypeGuess.selected === "billboard" && (
 								<NRQLResultsBillboard results={results} eventType={eventType} />
 							)}
 						{!nrqlError &&
 							!isLoading &&
 							results &&
 							results.length > 0 &&
-							resultsTypeGuess === "line" && <NRQLResultsLine results={results} />}
+							resultsTypeGuess.selected === "line" && <NRQLResultsLine results={results} />}
 						{!nrqlError &&
 							!isLoading &&
 							results &&
 							results.length > 0 &&
-							resultsTypeGuess === "json" && <NRQLResultsJSON results={results} />}
+							resultsTypeGuess.selected === "json" && <NRQLResultsJSON results={results} />}
 						{!nrqlError &&
 							!isLoading &&
 							results &&
 							results.length > 0 &&
-							resultsTypeGuess === "bar" && <NRQLResultsBar results={results} />}
+							resultsTypeGuess.selected === "bar" && <NRQLResultsBar results={results} />}
 						{noResults && <div style={{ textAlign: "center" }}>No results found</div>}
 						{nrqlError && (
 							<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>

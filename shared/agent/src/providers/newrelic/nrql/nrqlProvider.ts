@@ -14,6 +14,7 @@ import {
 	GetNRQLRequest,
 	GetNRQLRequestType,
 	GetNRQLResponse,
+	ResultsTypeGuess,
 } from "@codestream/protocols/agent";
 import { escapeNrql } from "@codestream/utils/system/string";
 import { CompletionItemKind } from "vscode-languageserver";
@@ -76,14 +77,18 @@ export class NrNRQLProvider {
 				results: response.results,
 				eventType: response?.rawResponse?.metadata?.eventType,
 				since: response?.rawResponse?.metadata?.rawSince,
-				resultsTypeGuess: this.getResultsType(query, response.results),
+				resultsTypeGuess: this.getResultsType(query, response.results) as ResultsTypeGuess,
 			};
 		} catch (ex) {
 			ContextLogger.warn("executeNRQL failure", {
 				request,
 				error: ex,
 			});
-			return { error: mapNRErrorResponse(ex), accountId, resultsTypeGuess: "table" };
+			return {
+				error: mapNRErrorResponse(ex),
+				accountId,
+				resultsTypeGuess: { selected: "table", enabled: [] },
+			};
 		}
 	}
 
@@ -261,16 +266,16 @@ export class NrNRQLProvider {
 					};
 				};
 			}>(`{
-  actor {
-    queryHistory {
-      nrql(options: {limit: 10}) {
-        query
-		accountIds
-        createdAt
-      }
-    }
-  }
-}`);
+					actor {
+						queryHistory {
+						nrql(options: {limit: 10}) {
+							query
+							accountIds
+							createdAt
+						}
+					}
+				}
+			}`);
 
 			if (response) {
 				return { items: response.actor.queryHistory.nrql };
@@ -302,16 +307,21 @@ export class NrNRQLProvider {
 	}
 
 	private getResultsType(query: string, results: any[]) {
-		if (!results || !results.length) return "table";
+		const ALL_RESULT_TYPES = ["table", "json", "billboard", "line", "bar"];
+		if (!results || !results.length) return { selected: "table", enabled: ALL_RESULT_TYPES };
 
 		if (results.length === 1) {
 			const value = results[0];
 			if (typeof value === "object" && value != null && !Array.isArray(value)) {
-				return Object.keys(value).length === 1 && !Array.isArray(value[Object.keys(value)[0]])
-					? "billboard"
-					: "json";
+				return {
+					selected:
+						Object.keys(value).length === 1 && !Array.isArray(value[Object.keys(value)[0]])
+							? "billboard"
+							: "json",
+					enabled: ALL_RESULT_TYPES,
+				};
 			} else {
-				return "billboard";
+				return { selected: "billboard", enabled: ALL_RESULT_TYPES };
 			}
 		}
 
@@ -322,18 +332,18 @@ export class NrNRQLProvider {
 			);
 
 			if (dataKeys.length > 1) {
-				return "json";
+				return { selected: "json", enabled: ALL_RESULT_TYPES };
 			}
 			// complex timeseries data
 			if (Array.isArray(results[0][dataKeys[0]])) {
-				return "json";
+				return { selected: "json", enabled: ALL_RESULT_TYPES };
 			}
 			// easy timeseries data like a TIMESERIES of a count
-			return "line";
+			return { selected: "line", enabled: ALL_RESULT_TYPES };
 		}
 		if (query.indexOf("FACET") > -1) {
-			return "json"; // should be "bar"??
+			return { selected: "json", enabled: ALL_RESULT_TYPES }; // should be "bar"??
 		}
-		return "table";
+		return { selected: "table", enabled: ALL_RESULT_TYPES };
 	}
 }

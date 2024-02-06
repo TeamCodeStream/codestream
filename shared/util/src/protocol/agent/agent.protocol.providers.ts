@@ -2655,7 +2655,12 @@ export interface GetNRQLResponse {
 	eventType?: string;
 	since?: string;
 	error?: NRErrorResponse;
-	resultsTypeGuess: "table" | "json" | "billboard" | "line" | "bar";
+	resultsTypeGuess?: ResultsTypeGuess;
+}
+
+export interface ResultsTypeGuess {
+	selected?: string;
+	enabled?: string[];
 }
 
 export const GetNRQLRequestType = new RequestType<GetNRQLRequest, GetNRQLResponse, void, void>(

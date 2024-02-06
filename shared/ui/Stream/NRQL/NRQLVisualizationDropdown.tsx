@@ -2,8 +2,12 @@ import React, { useMemo, useState, useEffect } from "react";
 import { Dropdown, DropdownItem } from "../Dropdown";
 import styled from "styled-components";
 import { isEmpty as _isEmpty } from "lodash-es";
+import { ResultsTypeGuess } from "@codestream/protocols/agent";
 
-const STATES_TO_DISPLAY_STRINGS = {
+interface StatesToDisplay {
+	[key: string]: string;
+}
+const STATES_TO_DISPLAY_STRINGS: StatesToDisplay = {
 	table: "Table",
 	billboard: "Billboard",
 	line: "Line",
@@ -23,20 +27,32 @@ export const NRQLVisualizationDropdown = (props: {
 	onSelectCallback: Function;
 	disabledFields: string[];
 	selectedValue: string;
+	resultsTypeGuess: ResultsTypeGuess;
 }) => {
 	const [selectedValue, setSelectedValue] = useState("Table");
 
 	const populateItems = (): DropdownItem[] => {
 		return [
-			...Object.entries(STATES_TO_DISPLAY_STRINGS).map(([key, label]) => {
+			...Object.entries(STATES_TO_DISPLAY_STRINGS).map(([key, label]: [string, string]) => {
+				// let disabled = false;
+				// if (props.resultsTypeGuess.enabled && props.resultsTypeGuess.enabled?.indexOf(key) !== -1) {
+				// 	disabled = false;
+				// } else {
+				// 	disabled = true;
+				// }
+
+				const disabled = !(
+					props.resultsTypeGuess.enabled && props.resultsTypeGuess.enabled?.includes(key)
+				);
+
 				return {
 					key,
 					label,
 					action: e => {
-						setSelectedValue(key);
+						setSelectedValue(STATES_TO_DISPLAY_STRINGS[key]);
 						props.onSelectCallback(key);
 					},
-					// disabled: true,
+					disabled,
 				};
 			}),
 		];
@@ -49,10 +65,10 @@ export const NRQLVisualizationDropdown = (props: {
 
 	// Avoid empty dropdown visual during loading
 	useEffect(() => {
-		if (!_isEmpty(props.selectedValue)) {
-			setSelectedValue(STATES_TO_DISPLAY_STRINGS[props.selectedValue]);
+		if (!_isEmpty(props.resultsTypeGuess) && props.resultsTypeGuess.selected) {
+			setSelectedValue(STATES_TO_DISPLAY_STRINGS[props.resultsTypeGuess.selected]);
 		}
-	}, [props.selectedValue]);
+	}, [props.resultsTypeGuess.selected]);
 
 	return (
 		<StyledDropdownContainer>
