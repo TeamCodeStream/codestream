@@ -937,11 +937,12 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 														meta_data_2: `codestream_section: code_level_metrics`,
 														event_type: "click",
 													});
+													HostApi.instance.send(OpenUrlRequestType, {
+														url:
+															props.errorGroup?.errorGroupUrl! +
+															`&utm_source=codestream&utm_medium=ide-${derivedState.ideName}&utm_campaign=error_group_link`,
+													});
 												}}
-												href={
-													props.errorGroup.errorGroupUrl! +
-													`&utm_source=codestream&utm_medium=ide-${derivedState.ideName}&utm_campaign=error_group_link`
-												}
 											>
 												{title} <Icon name="link-external" className="open-external"></Icon>
 											</Link>
