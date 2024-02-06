@@ -709,30 +709,35 @@ export class CodeStreamSession {
 
 	@log()
 	async whatsNewNotification() {
-		const me = await SessionContainer.instance().users.getMe();
-		const preferences = me.preferences;
+		try {
+			const me = await SessionContainer.instance().users.getMe();
+			const preferences = me.preferences;
 
-		const whatsNewBuffer = fs.readFileSync(path.join(__dirname, "WhatsNew.json"), {
-			encoding: "utf-8",
-		});
-		const whatsNew: { version: string; title: string }[] = JSON.parse(whatsNewBuffer);
-
-		const currentVersion = this.versionInfo.extension.version;
-
-		const isFlagged = whatsNew.find(wn => {
-			return wn.version === currentVersion;
-		});
-
-		if (isFlagged && preferences) {
-			//if (!preferences.whatsNewSeen?.includes(currentVersion)) {
-			this.agent.sendNotification(WhatsNewNotificationType, {
-				title: isFlagged.title,
+			const whatsNewBuffer = fs.readFileSync(path.join(__dirname, "WhatsNew.json"), {
+				encoding: "utf-8",
 			});
-			const newPreference = {
-				whatsNewSeen: [...(preferences.whatsNewSeen ?? []), currentVersion],
-			};
-			this._api?.updatePreferences({ preferences: newPreference });
-			//}
+			const whatsNew: { version: string; title: string }[] = JSON.parse(whatsNewBuffer);
+
+			const currentVersion = this.versionInfo.extension.version;
+
+			const isFlagged = whatsNew.find(wn => {
+				return wn.version === currentVersion;
+			});
+
+			if (isFlagged && preferences) {
+				if (!preferences.whatsNewSeen?.includes(currentVersion)) {
+					this.agent.sendNotification(WhatsNewNotificationType, {
+						title: isFlagged.title,
+					});
+					const newPreference = {
+						whatsNewSeen: [...(preferences.whatsNewSeen ?? []), currentVersion],
+					};
+					this._api?.updatePreferences({ preferences: newPreference });
+				}
+			}
+		} catch (err) {
+			//log it, but bail silently. don't want this interrupting users
+			Logger.error(err, `whatsNewNotification`);
 		}
 	}
 
