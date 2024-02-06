@@ -18,6 +18,7 @@ interface Props {
 	noDropdown?: boolean;
 	recentIssues?: GetIssuesResponse;
 	entityGuid: string;
+	accountId?: number;
 }
 
 export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
@@ -33,7 +34,8 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 		};
 	});
 
-	const { errors, entityGuid, entityGoldenMetrics, loadingGoldenMetrics, noDropdown } = props;
+	const { errors, entityGuid, accountId, entityGoldenMetrics, loadingGoldenMetrics, noDropdown } =
+		props;
 
 	const pillsData = entityGoldenMetrics?.pillsData;
 
@@ -122,6 +124,13 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 				onClick={e => {
 					e.preventDefault();
 					e.stopPropagation();
+					HostApi.instance.track("codestream/link_to_newrelic clicked", {
+						entity_guid: entityGuid,
+						account_id: accountId,
+						meta_data: "destination: change_tracking",
+						meta_data_2: `codestream_section: code_level_metrics`,
+						event_type: "click",
+					});
 					HostApi.instance.send(OpenUrlRequestType, {
 						url:
 							pillsData?.responseTimeData?.permalinkUrl ||

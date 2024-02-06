@@ -322,7 +322,21 @@ export const ObservabilityAnomalyPanel = () => {
 					<span style={{ marginRight: "6px" }}>
 						{derivedState.currentObservabilityAnomaly.name}
 					</span>
-					{titleHovered && <Icon title="Open on New Relic" delay={1} name="link-external" />}
+					{titleHovered && (
+						<Icon
+							title="Open on New Relic"
+							delay={1}
+							onClick={e => {
+								HostApi.instance.track("codestream/link_to_newrelic clicked", {
+									entity_guid: derivedState.currentObservabilityAnomalyEntityGuid,
+									meta_data: "destination: clm_anomalies",
+									meta_data_2: `codestream_section: clm_details`,
+									event_type: "click",
+								});
+							}}
+							name="link-external"
+						/>
+					)}
 				</a>
 			);
 		}
