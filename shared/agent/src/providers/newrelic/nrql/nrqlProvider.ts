@@ -313,12 +313,13 @@ export class NrNRQLProvider {
 		if (results.length === 1) {
 			const value = results[0];
 			if (typeof value === "object" && value != null && !Array.isArray(value)) {
+				let selectedValue =
+					Object.keys(value).length === 1 && !Array.isArray(value[Object.keys(value)[0]])
+						? "billboard"
+						: "json";
 				return {
-					selected:
-						Object.keys(value).length === 1 && !Array.isArray(value[Object.keys(value)[0]])
-							? "billboard"
-							: "json",
-					enabled: ALL_RESULT_TYPES,
+					selected: selectedValue,
+					enabled: selectedValue === "billboard" ? ALL_RESULT_TYPES : ["json"],
 				};
 			} else {
 				return { selected: "billboard", enabled: ALL_RESULT_TYPES };
@@ -332,17 +333,17 @@ export class NrNRQLProvider {
 			);
 
 			if (dataKeys.length > 1) {
-				return { selected: "json", enabled: ALL_RESULT_TYPES };
+				return { selected: "json", enabled: ["json"] };
 			}
 			// complex timeseries data
 			if (Array.isArray(results[0][dataKeys[0]])) {
-				return { selected: "json", enabled: ALL_RESULT_TYPES };
+				return { selected: "json", enabled: ["json"] };
 			}
 			// easy timeseries data like a TIMESERIES of a count
-			return { selected: "line", enabled: ALL_RESULT_TYPES };
+			return { selected: "line", enabled: ["table", "json", "line", "bar"] };
 		}
 		if (query.indexOf("FACET") > -1) {
-			return { selected: "json", enabled: ALL_RESULT_TYPES }; // should be "bar"??
+			return { selected: "json", enabled: ["json"] }; // should be "bar"??
 		}
 		return { selected: "table", enabled: ALL_RESULT_TYPES };
 	}

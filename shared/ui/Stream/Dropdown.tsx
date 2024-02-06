@@ -19,8 +19,8 @@ const DropdownItemsContainer = styled.div`
 `;
 
 const DropdownItemContainer = styled.div`
-	margin: 8px 0 8px 0;
-	padding: 0 8px 0 8px;
+	// margin: 8px 0 8px 0;
+	padding: 8px 8px 8px 8px;
 	&:hover {
 		background: var(--button-background-color);
 	}
