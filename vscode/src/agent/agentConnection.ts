@@ -318,6 +318,7 @@ export class CodeStreamAgentConnection implements Disposable {
 	private _restartCount = 0;
 	private _outputChannel: OutputChannel | undefined;
 	private _logsOutputChannel: OutputChannel | undefined;
+	private _context: ExtensionContext;
 
 	constructor(context: ExtensionContext, options: BaseAgentOptions) {
 		const env = process.env;
@@ -328,6 +329,8 @@ export class CodeStreamAgentConnection implements Disposable {
 			NODE_TLS_REJECT_UNAUTHORIZED: options.disableStrictSSL ? 0 : 1,
 			NODE_EXTRA_CA_CERTS: options.extraCerts
 		};
+
+		this._context = context;
 
 		this._serverOptions = {
 			run: {
@@ -1134,9 +1137,7 @@ export class CodeStreamAgentConnection implements Disposable {
 			)
 			.then(selection => {
 				if (selection?.title === "See What's New") {
-					window.showInformationMessage("You DO want to see more whats new!");
-				} else if (selection?.title === "Dismiss") {
-					window.showInformationMessage("You DO NOT want to see more whats new :(");
+					Container.sidebar.whatsNew();
 				}
 			});
 	}

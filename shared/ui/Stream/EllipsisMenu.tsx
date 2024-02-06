@@ -2,7 +2,11 @@ import { UpdateTeamSettingsRequestType } from "@codestream/protocols/agent";
 import { sortBy as _sortBy } from "lodash-es";
 import React from "react";
 import styled from "styled-components";
-import { WebviewModals, OpenUrlRequestType } from "@codestream/protocols/webview";
+import {
+	WebviewModals,
+	OpenUrlRequestType,
+	OpenEditorViewNotificationType,
+} from "@codestream/protocols/webview";
 import { logout, switchToTeamSSO } from "@codestream/webview/store/session/thunks";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { WebviewPanels, SidebarPanes, CSPossibleAuthDomain } from "@codestream/protocols/api";
@@ -363,6 +367,18 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			label: "Help",
 			key: "help",
 			submenu: [
+				{
+					label: "What's New",
+					key: "whatsnew",
+					action: () => {
+						HostApi.instance.notify(OpenEditorViewNotificationType, {
+							panel: "whatsnew",
+							title: "What's New",
+							entryPoint: "profile",
+							entityAccounts: [],
+						});
+					},
+				},
 				{
 					label: "Documentation",
 					key: "documentation",

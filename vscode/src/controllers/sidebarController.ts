@@ -535,6 +535,20 @@ export class SidebarController implements Disposable {
 	}
 
 	@log()
+	async whatsNew(): Promise<void> {
+		if (!this._sidebar) {
+			return;
+		}
+
+		this._sidebar!.notify(OpenEditorViewNotificationType, {
+			panel: "whatsnew",
+			title: "Whats New",
+			entityAccounts: [],
+			entryPoint: "notification"
+		});
+	}
+
+	@log()
 	async logSearch(args: InitiateLogSearchNotification): Promise<void> {
 		if (!this._sidebar) {
 			// it's possible that the webview is closing...

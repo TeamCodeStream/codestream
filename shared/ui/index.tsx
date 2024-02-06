@@ -993,6 +993,10 @@ function listenForEvents(store) {
 		);
 	});
 
+	api.on(OpenEditorViewNotificationType, params => {
+		HostApi.instance.notify(OpenEditorViewNotificationType, params);
+	});
+
 	api.on(InitiateLogSearchNotificationType, params => {
 		const { session, users, context, ide } = store.getState() as CodeStreamState;
 		const currentUser = session.userId ? (users[session.userId] as CSMe) : null;

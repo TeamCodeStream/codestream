@@ -207,7 +207,7 @@ export const HandlePullRequestDirectivesNotificationType = new NotificationType<
 
 export interface InitiateLogSearchNotification {
 	query?: string;
-	entryPoint: "global_nav" | "context_menu" | "tree_view" | "codelens";
+	entryPoint: "global_nav" | "context_menu" | "tree_view";
 }
 
 export const InitiateLogSearchNotificationType = new NotificationType<

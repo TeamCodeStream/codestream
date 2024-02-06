@@ -5,6 +5,7 @@ import React from "../../../shared/ui/node_modules/react";
 import { APMLogSearchPanel } from "../../ui/Stream/APMLogging/APMLogSearchPanel";
 import { ModalRoot } from "../../ui/Stream/Modal";
 import { NRQLPanel } from "../../ui/Stream/NRQL/NRQLPanel";
+import {WhatsNewPanel} from "../../ui/Stream/WhatsNew";
 import { OpenEditorViewNotification } from "../../ui/ipc/host.protocol";
 import { createTheme } from "../../ui/src/themes";
 import { HostApi } from "../../ui/webview-api";
@@ -30,6 +31,7 @@ export function App() {
 					></APMLogSearchPanel>
 				)}
 				{codestreamProps.panel === "nrql" && <NRQLPanel {...codestreamProps}></NRQLPanel>}
+				{codestreamProps.panel === "whatsnew" && <WhatsNewPanel></WhatsNewPanel>}
 			</div>
 		</ThemeProvider>
 	);

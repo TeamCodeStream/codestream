@@ -715,22 +715,24 @@ export class CodeStreamSession {
 		const whatsNewBuffer = fs.readFileSync(path.join(__dirname, "WhatsNew.json"), {
 			encoding: "utf-8",
 		});
-		const whatsNew: string[] = JSON.parse(whatsNewBuffer);
+		const whatsNew: { version: string; title: string }[] = JSON.parse(whatsNewBuffer);
 
 		const currentVersion = this.versionInfo.extension.version;
 
-		const isFlagged = whatsNew.includes(currentVersion);
+		const isFlagged = whatsNew.find(wn => {
+			return wn.version === currentVersion;
+		});
 
 		if (isFlagged && preferences) {
-			if (!preferences.whatsNewSeen?.includes(currentVersion)) {
-				this.agent.sendNotification(WhatsNewNotificationType, {
-					title: `CodeStream has been upgraded to v${currentVersion}!`,
-				});
-				const newPreference = {
-					whatsNewSeen: [...(preferences.whatsNewSeen ?? []), currentVersion],
-				};
-				this._api?.updatePreferences({ preferences: newPreference });
-			}
+			//if (!preferences.whatsNewSeen?.includes(currentVersion)) {
+			this.agent.sendNotification(WhatsNewNotificationType, {
+				title: isFlagged.title,
+			});
+			const newPreference = {
+				whatsNewSeen: [...(preferences.whatsNewSeen ?? []), currentVersion],
+			};
+			this._api?.updatePreferences({ preferences: newPreference });
+			//}
 		}
 	}
 
