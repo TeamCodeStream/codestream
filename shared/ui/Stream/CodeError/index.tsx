@@ -938,9 +938,10 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 														event_type: "click",
 													});
 													HostApi.instance.send(OpenUrlRequestType, {
-														url:
-															props.errorGroup?.errorGroupUrl! +
-															`&utm_source=codestream&utm_medium=ide-${derivedState.ideName}&utm_campaign=error_group_link`,
+														url: `${props.errorGroup
+															?.errorGroupUrl!}&utm_source=codestream&utm_medium=ide-${
+															derivedState.ideName
+														}&utm_campaign=error_group_link`,
 													});
 												}}
 											>
