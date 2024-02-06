@@ -319,10 +319,10 @@ export class NrNRQLProvider {
 						: "json";
 				return {
 					selected: selectedValue,
-					enabled: ["json"],
+					enabled: selectedValue === "billboard" ? ["billboard, json"] : ["json"],
 				};
 			} else {
-				return { selected: "billboard", enabled: ["json"] };
+				return { selected: "billboard", enabled: ["billboard, json"] };
 			}
 		}
 
