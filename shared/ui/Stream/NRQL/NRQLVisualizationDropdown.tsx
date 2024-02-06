@@ -1,6 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { DropdownButtonItems } from "../DropdownButton";
-import { Dropdown } from "../Dropdown";
+import { Dropdown, DropdownItem } from "../Dropdown";
 import styled from "styled-components";
 import { isEmpty as _isEmpty } from "lodash-es";
 
@@ -27,23 +26,23 @@ export const NRQLVisualizationDropdown = (props: {
 }) => {
 	const [selectedValue, setSelectedValue] = useState("Table");
 
-	const populateItems = (): DropdownButtonItems[] => {
+	const populateItems = (): DropdownItem[] => {
 		return [
 			...Object.entries(STATES_TO_DISPLAY_STRINGS).map(([key, label]) => {
 				return {
 					key,
 					label,
 					action: e => {
-						console.warn("eric callback here", key, label);
 						setSelectedValue(key);
 						props.onSelectCallback(key);
 					},
+					// disabled: true,
 				};
 			}),
 		];
 	};
 
-	const dropdownItems: DropdownButtonItems[] = useMemo(
+	const dropdownItems: DropdownItem[] = useMemo(
 		() => populateItems(),
 		[props.disabledFields, props.selectedValue]
 	);

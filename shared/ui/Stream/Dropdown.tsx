@@ -47,6 +47,7 @@ export type DropdownItem = {
 	type?: string;
 	placeholder?: string;
 	searchLabel?: string;
+	disabled?: boolean;
 };
 
 interface Props {
@@ -111,11 +112,19 @@ export const Dropdown = (props: Props) => {
 								<DropdownItemContainer
 									key={`dropdown_item_${index}_${_?.label}`}
 									onClick={e => {
-										setSelectedValue(_.label);
-										if (typeof _.action === "function") {
-											_.action();
+										if (!_?.disabled) {
+											// e.stopPropagation();
+											// e.preventDefault();
+											setSelectedValue(_.label);
+											if (typeof _.action === "function") {
+												_.action();
+											}
+										} else {
+											e.stopPropagation();
+											e.preventDefault();
 										}
 									}}
+									style={{ opacity: _?.disabled ? 0.5 : 1 }}
 								>
 									<CheckboxContainer>{selectedValue === _.label && <>✔</>}</CheckboxContainer>
 									{_?.label}

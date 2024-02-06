@@ -241,11 +241,11 @@ export const NRQLPanel = (props: {
 
 	const handleVisualizationDropdownCallback = value => {
 		setResultsTypeGuess(value);
-		console.warn("eric callback in NRQLPanel.tsx called");
 	};
 
 	return (
 		<>
+			<div id="modal-root"></div>
 			<PanelHeader title="Query Your Data">
 				<QueryWrapper>
 					<div className="search-input">
