@@ -94,8 +94,17 @@ export function reducePosts(state: PostsState = initialState, action: PostsActio
 			const streamPosts = { ...(state.byStream[streamId] || {}) };
 			posts.filter(Boolean).forEach(post => {
 				if (post.forGrok) {
-					post.parts = extractParts(post.text);
-					// console.log("*** AddForStream: extracted post.parts", post.parts);
+					let parts = extractParts(post.text);
+					if (
+						!isEmpty(post.text) &&
+						isEmpty(parts.codeFix) &&
+						isEmpty(parts.intro) &&
+						isEmpty(parts.description)
+					) {
+						// Legacy NRAI post without sections
+						parts = { description: post.text, intro: "", codeFix: "" };
+					}
+					post.parts = parts;
 				}
 				streamPosts[post.id] = post;
 			});
