@@ -119,6 +119,7 @@ export interface BaseCodeErrorProps extends CardProps {
 	setGrokRequested: () => void;
 	readOnly: boolean;
 	setCurrentNrAiFile: (file: string) => void;
+	showGrok: boolean;
 }
 
 export interface BaseCodeErrorHeaderProps {
@@ -1175,7 +1176,6 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 		const codeError: CSCodeError = state.codeErrors[props.codeError.id] || props.codeError;
 		const codeAuthorId = (props.codeError.codeAuthorIds || [])[0];
 		const currentCodeErrorData = state.context.currentCodeErrorData;
-		const showGrok = state.nrCapabilities.nrai || isFeatureEnabled(state, "showGrok");
 
 		return {
 			providers: state.providers,
@@ -1192,7 +1192,6 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			replies: props.collapsed
 				? emptyArray
 				: getThreadPosts(state, codeError.streamId, codeError.postId),
-			showGrok,
 		};
 	}, shallowEqual);
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
@@ -1216,8 +1215,10 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 		getNrAiPostLength(state, codeError.streamId, codeError.postId)
 	);
 
+	// console.log("*** BaseCodeError showGrok", props.showGrok);
+
 	useEffect(() => {
-		if (derivedState.showGrok && !props.readOnly) {
+		if (props.showGrok && !props.readOnly) {
 			const submitNrAi = async (functionToEdit?: FunctionToEdit) => {
 				// console.debug("===--- useEffect startGrokLoading");
 				props.setGrokRequested();
@@ -1274,7 +1275,13 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 				});
 			}
 		}
-	}, [functionToEdit, functionToEditFailed, isPostThreadsLoading, derivedState.replies]);
+	}, [
+		functionToEdit,
+		functionToEditFailed,
+		isPostThreadsLoading,
+		derivedState.replies,
+		props.showGrok,
+	]);
 
 	const onClickStackLine = async (event, lineIndex) => {
 		event && event.preventDefault();
@@ -1734,16 +1741,19 @@ const AskGrok = (props: { setText: (text: string) => void; onClose: () => void }
 	);
 };
 
-const ReplyInput = (props: { codeError: CSCodeError; setGrokRequested: () => void }) => {
+export type ReplyInputProps = {
+	codeError: CSCodeError;
+	setGrokRequested: () => void;
+	showGrok: boolean;
+};
+
+const ReplyInput = (props: ReplyInputProps) => {
 	const dispatch = useAppDispatch();
 	const [text, setText] = useState("");
 	const [isAskGrokOpen, setIsAskGrokOpen] = useState(false);
 	const [attachments, setAttachments] = useState<AttachmentField[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const teamMates = useAppSelector((state: CodeStreamState) => getTeamMates(state));
-	const showGrok = useAppSelector(
-		(state: CodeStreamState) => state.nrCapabilities.nrai || isFeatureEnabled(state, "showGrok")
-	);
 
 	const submit = async () => {
 		// don't create empty replies
@@ -1752,7 +1762,8 @@ const ReplyInput = (props: { codeError: CSCodeError; setGrokRequested: () => voi
 		props.setGrokRequested();
 
 		setIsLoading(true);
-		if (showGrok && text.match(/@AI/gim)) {
+		// console.debug("*** ReplyInput showGrok", props.showGrok);
+		if (props.showGrok && text.match(/@AI/gim)) {
 			dispatch(startGrokLoading(props.codeError));
 		}
 
@@ -1794,7 +1805,7 @@ const ReplyInput = (props: { codeError: CSCodeError; setGrokRequested: () => voi
 				attachments={attachments}
 				attachmentContainerType="reply"
 				setAttachments={setAttachments}
-				suggestGrok={showGrok}
+				suggestGrok={props.showGrok}
 			/>
 			<ButtonRow
 				style={{
@@ -1820,7 +1831,7 @@ const ReplyInput = (props: { codeError: CSCodeError; setGrokRequested: () => voi
 						Comment
 					</Button>
 				</Tooltip>
-				{showGrok && (
+				{props.showGrok && (
 					<Button style={{ marginLeft: 0 }} onClick={() => setIsAskGrokOpen(true)}>
 						<Icon name="nrai" />
 						<span style={{ paddingLeft: "4px" }}>Ask AI</span>
@@ -1882,6 +1893,19 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 			isPDIdev: isFeatureEnabled(state, "PDIdev"),
 		};
 	}, shallowEqual);
+
+	const grokNraiCapability = useAppSelector(
+		(state: CodeStreamState) => state.nrCapabilities.nrai === true
+	);
+	const grokFeatureEnabled = useAppSelector((state: CodeStreamState) =>
+		isFeatureEnabled(state, "showGrok")
+	);
+
+	const showGrok = useMemo(() => {
+		const result = grokNraiCapability || grokFeatureEnabled;
+		console.debug("grokStates", { grokNraiCapability, grokFeatureEnabled, result });
+		return result;
+	}, [grokNraiCapability, grokFeatureEnabled]);
 
 	const isGrokLoading = useAppSelector(isGrokStreamLoading);
 	const grokError = useAppSelector(state =>
@@ -1981,7 +2005,11 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 
 					{InputContainer && !derivedState.isPDIdev && (
 						<InputContainer>
-							<ReplyInput codeError={codeError} setGrokRequested={setGrokRequested} />
+							<ReplyInput
+								codeError={codeError}
+								setGrokRequested={setGrokRequested}
+								showGrok={showGrok}
+							/>
 						</InputContainer>
 					)}
 				</Footer>
@@ -2028,6 +2056,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 				setGrokRequested={setGrokRequested}
 				readOnly={props.readOnly === true}
 				setCurrentNrAiFile={setCurrentNrAiFile}
+				showGrok={showGrok}
 			/>
 		</>
 	);
