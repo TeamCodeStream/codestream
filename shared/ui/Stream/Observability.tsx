@@ -235,19 +235,11 @@ export const ErrorRow = (props: {
 								event_type: "click",
 							});
 							HostApi.instance.send(OpenUrlRequestType, {
-								url:
-									props.url +
-									`&utm_source=codestream&utm_medium=ide-${derivedState.ideName}&utm_campaign=error_group_link`,
+								url: `${props.url}&utm_source=codestream&utm_medium=ide-${derivedState.ideName}&utm_campaign=error_group_link`,
 							});
 						}}
 					>
-						<Icon
-							name="globe"
-							className="clickable"
-							title="View on New Relic"
-							placement="bottomLeft"
-							delay={1}
-						/>
+						<Icon name="globe" title="View on New Relic" placement="bottomLeft" delay={1} />
 					</span>
 				)}
 
