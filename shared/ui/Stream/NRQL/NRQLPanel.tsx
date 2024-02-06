@@ -358,7 +358,6 @@ export const NRQLPanel = (props: {
 								<NRQLVisualizationDropdown
 									onSelectCallback={handleVisualizationDropdownCallback}
 									disabledFields={[]}
-									selectedValue={"table"}
 									resultsTypeGuess={resultsTypeGuess}
 								/>
 							</div>
