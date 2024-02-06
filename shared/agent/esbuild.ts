@@ -71,6 +71,10 @@ function getPostBuildCopy(args: Args): CopyStuff[] {
 				from: "node_modules/opn/**/xdg-open",
 				to: outputDir,
 			},
+			{
+				from: path.join(__dirname, "../../WhatsNew.*"),
+				to: outputDir,
+			},
 		];
 	}
 	packageLockSha = currentPackageLockSha;
