@@ -345,6 +345,6 @@ export class NrNRQLProvider {
 		if (query.indexOf("FACET") > -1) {
 			return { selected: "json", enabled: ["json"] }; // should be "bar"??
 		}
-		return { selected: "table", enabled: ALL_RESULT_TYPES };
+		return { selected: "table", enabled: ["table", "json"] };
 	}
 }
