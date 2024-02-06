@@ -165,6 +165,7 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 						loadingGoldenMetrics={loadingGoldenMetrics}
 						noDropdown={true}
 						entityGuid={relatedEntity.guid}
+						accountId={props.accountId}
 					/>
 				</>
 			)}

@@ -521,7 +521,7 @@ export function CodeErrorNav(props: Props) {
 
 				if (stack) {
 					const request: ResolveStackTraceRequest = {
-            entityGuid: entityIdToUse!,
+						entityGuid: entityIdToUse!,
 						errorGroupGuid: errorGroupGuidToUse!,
 						repoId: repoId!,
 						ref: refToUse!,

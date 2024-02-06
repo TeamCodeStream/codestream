@@ -934,7 +934,20 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 													`&utm_source=codestream&utm_medium=ide-${derivedState.ideName}&utm_campaign=error_group_link`
 												}
 											>
-												{title} <Icon name="link-external" className="open-external"></Icon>
+												{title}{" "}
+												<Icon
+													name="link-external"
+													className="open-external"
+													onClick={e => {
+														HostApi.instance.track("codestream/link_to_newrelic clicked", {
+															entity_guid: props.errorGroup?.entityGuid,
+															account_id: props.errorGroup?.accountId,
+															meta_data: "destination: error_group",
+															meta_data_2: `codestream_section: code_level_metrics`,
+															event_type: "click",
+														});
+													}}
+												></Icon>
 											</Link>
 										</span>
 									) : (
