@@ -1,0 +1,245 @@
+{
+	"See all attributes in an event/table": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": ["$1", "FROM Transaction SELECT keyset()"],
+		"description": "See all attributes in an event/table"
+	},
+	"See all attributes & their values in an event/table": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": ["$1", "FROM Transaction SELECT *"],
+		"description": "See all attributes & their values in an event/table"
+	},
+	"See how much data you're sending New Relic": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": [
+			"$1",
+			"FROM NrConsumption SELECT sum(GigabytesIngested) SINCE 31 days ago FACET usageMetric"
+		],
+		"description": "See how much data you're sending New Relic"
+	},
+	"See all metric names you're sending to New Relic": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": [
+			"$1",
+			"FROM Metric SELECT",
+			"bytecountestimate()/10e8 AS '1 Day (GB)',",
+			"rate(bytecountestimate()/10e8, 1 month) AS '1 Month (GB)'",
+			"FACET metricName",
+			"SINCE 24 HOURS AGO"
+		],
+		"description": "See all metric names you're sending to New Relic"
+	},
+	"See all transactions and durations in 95th percentile, faceted by HTTP request URL": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": ["$1", "FROM Transaction SELECT count(*), percentile(duration, 95) FACET request.uri "],
+		"description": "See all transactions and durations in 95th percentile, faceted by HTTP request URL"
+	},
+	"See all installed APM agent versions, faceted by appName & apmLanguage": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": [
+			"$1",
+			"FROM NrDailyUsage SELECT latest(apmAgentVersion) WHERE productLine = 'APM' AND usageType = 'Application' FACET apmAppName, apmLanguage SINCE 1 day AGO LIMIT MAX"
+		],
+		"description": "See all installed APM agent versions, faceted by appName & apmLanguage"
+	},
+	"See application response time for the last 6 hours, faceted by application": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": [
+			"$1",
+			"FROM Transaction  SELECT average(duration) TIMESERIES SINCE 6 hours ago FACET appName"
+		],
+		"description": "See application response time for the last 6 hours, faceted by application"
+	},
+	"See deployment history of applications": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": [
+			"$1",
+			"FROM NrAuditEvent SELECT * SINCE 3 days ago WHERE actionIdentifier = 'apm_deployment_create'"
+		],
+		"description": "See deployment history of applications"
+	},
+	"See what days your applications are busiest": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": ["$1", "FROM PageView SELECT count(*) FACET weekdayOf(timestamp) SINCE 7 days ago"],
+		"description": "See what days your applications are busiest"
+	},
+	"See what AppD would see for Business Transactions health": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": [
+			"$1",
+			"WITH ",
+			"  1 as warnDurationThresh,",
+			"  4 as critDurationThresh,",
+			"  3 as warnErrPctThresh,",
+			"  10 as critErrPctThresh",
+			"SELECT ",
+			"  average(duration)*1000 AS 'Response Time (ms)', ",
+			"  if(",
+			"    average(duration) >= 0 and average(duration) < warnDurationThresh and percentage(count(*), WHERE error is True) < warnErrPctThresh, '🟢',",
+			"      if(",
+			"        (average(duration) >= warnDurationThresh and average(duration) < critDurationThresh) OR",
+			"        (percentage(count(*), WHERE error is True) >= warnErrPctThresh and percentage(count(*), WHERE error is True) < critErrPctThresh), '🟡'",
+			"        ,'🔴' )",
+			"  ) AS 'Health',",
+			"  max(duration)*1000 as 'Max Response Time (ms)',",
+			"  count(*) as 'Calls',",
+			"  rate(count(*),1 minute) as 'Calls / min',",
+			"  percentage(count(*), WHERE error is true) as '% Errors',",
+			"  filter(count(*), WHERE error is true) as 'Total Errors'",
+			"FROM Transaction ",
+			"WHERE ",
+			"  transactionType = 'Web' AND",
+			"  request.uri NOT RLIKE r'/.*.(ico|css)'",
+			"FACET appName,request.uri AS 'Business Transaction' ",
+			"SINCE 1 day ago",
+			"LIMIT MAX"
+		],
+		"description": "See what AppD would see for Business Transactions health"
+	},
+	"See all installed infrastructure agent versions, faceted by hostname, agentName, & agentVersion": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": [
+			"$1",
+			"FROM SystemSample SELECT latest(agentVersion) FACET hostname, agentName, agentVersion LIMIT MAX"
+		],
+		"description": "See all installed infrastructure agent versions, faceted by hostname, agentName, & agentVersion"
+	},
+	"See IP addresses of all EC2 hosts in AWS": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": [
+			"$1",
+			"FROM Metric SELECT latest(timestamp), latest(aws.ec2.state), average(`aws.ec2.CPUUtilization`) FACET `aws.ec2.privateDnsName`,`aws.ec2.publicIpAddress`, `aws.ec2.privateIpAddress`, `aws.region` SINCE 2 hours ago"
+		],
+		"description": "See IP addresses of all EC2 hosts in AWS"
+	},
+	"See traffic per host (load balance)": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": ["$1", "FROM Transaction SELECT count(*) SINCE 1 day ago FACET host LIMIT 100"],
+		"description": "See traffic per host (load balance)"
+	},
+	"See what errors your hosts and applications are getting": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": [
+			"$1",
+			"FROM TransactionError SELECT count(*) FACET appName, host, error.message SINCE 1 week ago"
+		],
+		"description": "See what errors your hosts and applications are getting"
+	},
+	"See disk utilization by host": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": [
+			"$1",
+			"SELECT max(diskUsedPercent) as 'Percent Full' FROM StorageSample FACET Hostname SINCE 1 minute ago"
+		],
+		"description": "See disk utilization by host"
+	},
+
+	"See all installed browser agent versions, faceted by appName": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": ["$1", "FROM PageView SELECT latest(nr.browserAgentVersion) FACET appName LIMIT MAX"],
+		"description": "See all installed browser agent versions, faceted by appName"
+	},
+	"See how many 'live' users are on your site right now": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": [
+			"$1",
+			"FROM PageView SELECT uniqueCount(session) AS 'Site Visitors' SINCE 2 minutes ago"
+		],
+		"description": "See how many 'live' users are on your site right now"
+	},
+	"See how many site visitors I have had this week compared to 2 weeks ago": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": [
+			"$1",
+			"FROM PageView SELECT uniqueCount(session) AS 'Site Visitors' SINCE 2 weeks ago COMPARE with 1 week ago"
+		],
+		"description": "See how many site visitors I have had this week compared to 2 weeks ago"
+	},
+	"See how the frontend and backend performance compares right now": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": [
+			"$1",
+			"FROM PageView SELECT average(duration) as 'Avg Frontend Duration', average(backendDuration) SINCE 2 minutes ago UNTIL 10 secs ago TIMESERIES"
+		],
+		"description": "See how the frontend and backend performance compares right now"
+	},
+	"See a comparison of site traffic right now vs 1 week ago": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": [
+			"$1",
+			"FROM PageView SELECT count(*) TIMESERIES since 1 hour ago COMPARE WITH 1 week ago"
+		],
+		"description": "See a comparison of site traffic right now vs 1 week ago"
+	},
+	"See all requests and limits of Kubernetes containers, faceted by containerName": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": [
+			"$1",
+			"FROM K8sContainerSample SELECT uniqueCount(podName) AS '# of pods', average(cpuRequestedCores) AS 'CPU request', average(cpuRequestedCores) * uniqueCount(podName) AS 'CPU request total', average(cpuLimitCores) AS 'CPU limit', average(cpuUsedCores) AS 'Used cores', average(cpuUsedCores) * uniqueCount(podName) AS 'Used cores total', average(memoryRequestedBytes) / 1024 / 1024 AS 'Memory request', (average(memoryRequestedBytes) / 1024 / 1024) * uniqueCount(podName) AS 'Memory request total', average(memoryLimitBytes) / 1024 / 1024 / 1024 AS 'Memory limit', average(memoryWorkingSetBytes) / 1024 / 1024 AS 'Used memory', (average(memoryWorkingSetBytes) / 1024 / 1024) * uniqueCount(podName) AS 'Used memory total' WHERE ec2Tag_Name LIKE '%primary-primary%' AND clusterName LIKE '%primary%' SINCE 5 minutes ago FACET containerName LIMIT MAX"
+		],
+		"description": "See all requests and limits of Kubernetes containers, faceted by containerName"
+	},
+	"See which containers use more CPU resources to deliver similar performance": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": [
+			"$1",
+			"FROM Transaction JOIN (FROM ProcessSample SELECT average(cpuPercent) AS cpu FACET containerid LIMIT MAX) ON containerid SELECT average(duration)/latest(cpu) FACET containerid, containerName"
+		],
+		"description": "See which containers use more CPU resources to deliver similar performance"
+	},
+	"See the total number of successful synthetic checks": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": ["$1", "FROM SyntheticCheck SELECT count(*) SINCE today WHERE result = 'SUCCESS'"],
+		"description": "See the total number of successful synthetic checks"
+	},
+	"See percentage of unresponsive synthetic checks": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": [
+			"$1",
+			"FROM SyntheticCheck SELECT percentage(count(result), WHERE result = 'FAILED') SINCE today"
+		],
+		"description": "See percentage of unresponsive synthetic checks"
+	},
+	"See synthetic monitor availability": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": [
+			"$1",
+			"FROM SyntheticCheck SELECT percentage(count(result), WHERE result = 'SUCCESS') AS '%Availability' WHERE monitorName = 'Verify checkout flow is working' SINCE 1 day ago"
+		],
+		"description": "See synthetic monitor availability"
+	},
+	"See external uptime": {
+		"scope": "nrql",
+		"prefix": "FROM...",
+		"body": [
+			"$1",
+			"FROM SyntheticCheck SELECT percentage(count(*), WHERE result = 'SUCCESS') as '' LIMIT 1000 SINCE 1 hour ago"
+		],
+		"description": "See external uptime"
+	}
+}

@@ -38,6 +38,12 @@
 		"slack"
 	],
 	"contributes": {
+		"snippets": [
+			{
+				"language": "nrql",
+				"path": "./nrql.snippets.json"
+			}
+		],
 		"languages": [
 			{
 				"id": "nrql",
