@@ -338,14 +338,6 @@ export const NRQLPanel = (props: {
 						</Button>
 					</ButtonContainer>
 				</ActionRow>
-				<DropdownContainer>
-					<NRQLVisualizationDropdown
-						onSelectCallback={handleVisualizationDropdownCallback}
-						disabledFields={[]}
-						selectedValue={"table"}
-						resultsTypeGuess={resultsTypeGuess}
-					/>
-				</DropdownContainer>
 			</PanelHeader>
 			<div
 				ref={ref}
@@ -359,10 +351,18 @@ export const NRQLPanel = (props: {
 				<ResultsRow>
 					{since && (
 						<SinceContainer>
-							<div>
+							<div style={{ paddingTop: "2px" }}>
 								<small>Since {since}</small>
 							</div>
-							<div>
+							<div style={{ marginLeft: "auto", marginRight: "8px", fontSize: "11px" }}>
+								<NRQLVisualizationDropdown
+									onSelectCallback={handleVisualizationDropdownCallback}
+									disabledFields={[]}
+									selectedValue={"table"}
+									resultsTypeGuess={resultsTypeGuess}
+								/>
+							</div>
+							<div style={{ paddingTop: "2px" }}>
 								<a
 									style={{ cursor: "pointer" }}
 									href="#"
