@@ -22,6 +22,7 @@ import {
 import styled from "styled-components";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import {
+	OpenUrlRequestType,
 	RefreshEditorsCodeLensRequestType,
 	UpdateConfigurationRequestType,
 } from "@codestream/webview/ipc/host.protocol";
@@ -43,6 +44,7 @@ import { PanelHeader } from "../../src/components/PanelHeader";
 import { ErrorRow } from "../Observability";
 import { openErrorGroup } from "@codestream/webview/store/codeErrors/thunks";
 import { CLMSettings } from "@codestream/protocols/api";
+import { Link } from "../Link";
 
 const Root = styled.div``;
 
@@ -318,26 +320,26 @@ export const ObservabilityAnomalyPanel = () => {
 			const href = `${baseUrl}${derivedState.currentObservabilityAnomalyEntityGuid}`;
 
 			return (
-				<a href={href} style={{ color: "inherit", textDecoration: "none" }}>
+				<Link
+					style={{ color: "inherit", textDecoration: "none" }}
+					onClick={e => {
+						e.preventDefault();
+						HostApi.instance.track("codestream/link_to_newrelic clicked", {
+							entity_guid: derivedState.currentObservabilityAnomalyEntityGuid,
+							meta_data: "destination: clm_anomalies",
+							meta_data_2: `codestream_section: clm_details`,
+							event_type: "click",
+						});
+						HostApi.instance.send(OpenUrlRequestType, {
+							url: href,
+						});
+					}}
+				>
 					<span style={{ marginRight: "6px" }}>
 						{derivedState.currentObservabilityAnomaly.name}
 					</span>
-					{titleHovered && (
-						<Icon
-							title="Open on New Relic"
-							delay={1}
-							onClick={e => {
-								HostApi.instance.track("codestream/link_to_newrelic clicked", {
-									entity_guid: derivedState.currentObservabilityAnomalyEntityGuid,
-									meta_data: "destination: clm_anomalies",
-									meta_data_2: `codestream_section: clm_details`,
-									event_type: "click",
-								});
-							}}
-							name="link-external"
-						/>
-					)}
-				</a>
+					{titleHovered && <Icon title="Open on New Relic" delay={1} name="link-external" />}
+				</Link>
 			);
 		}
 

@@ -229,6 +229,11 @@ export const ErrorRow = (props: {
 						onClick={e => {
 							e.preventDefault();
 							e.stopPropagation();
+							HostApi.instance.track("codestream/link_to_newrelic clicked", {
+								meta_data: "destination: error_group",
+								meta_data_2: `codestream_section: code_level_metrics`,
+								event_type: "click",
+							});
 							HostApi.instance.send(OpenUrlRequestType, {
 								url:
 									props.url +
@@ -242,13 +247,6 @@ export const ErrorRow = (props: {
 							title="View on New Relic"
 							placement="bottomLeft"
 							delay={1}
-							onClick={e => {
-								HostApi.instance.track("codestream/link_to_newrelic clicked", {
-									meta_data: "destination: error_group",
-									meta_data_2: `codestream_section: code_level_metrics`,
-									event_type: "click",
-								});
-							}}
 						/>
 					</span>
 				)}
