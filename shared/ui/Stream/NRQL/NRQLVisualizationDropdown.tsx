@@ -25,7 +25,6 @@ const StyledDropdownContainer = styled.div`
 
 export const NRQLVisualizationDropdown = (props: {
 	onSelectCallback: Function;
-	disabledFields: string[];
 	resultsTypeGuess: ResultsTypeGuess;
 }) => {
 	const [selectedValue, setSelectedValue] = useState("Table");
@@ -49,9 +48,9 @@ export const NRQLVisualizationDropdown = (props: {
 		];
 	};
 
-	const dropdownItems: DropdownItem[] = useMemo(() => populateItems(), [props.disabledFields]);
+	const dropdownItems: DropdownItem[] = useMemo(() => populateItems(), []);
 
-	// Avoid empty dropdown visual during loading
+	// Avoid empty dropdown during loading
 	useEffect(() => {
 		if (!_isEmpty(props.resultsTypeGuess) && props.resultsTypeGuess.selected) {
 			setSelectedValue(STATES_TO_DISPLAY_STRINGS[props.resultsTypeGuess.selected]);
