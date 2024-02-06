@@ -43,7 +43,7 @@ export class NrqlCodeLensProvider implements CodeLensProvider {
 
 			return [
 				new CodeLens(new Range(0, 0, 0, 0), {
-					title: "Sign in to New Relic CodeStream to run",
+					title: "Sign in to New Relic to run queries",
 					tooltip: "Run this nrql statement",
 					command: "codestream.toggle",
 					arguments: [document.uri, "", 0]
