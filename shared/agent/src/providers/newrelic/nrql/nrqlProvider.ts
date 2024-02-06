@@ -319,15 +319,29 @@ export class NrNRQLProvider {
 
 			if (response) {
 				const accounts = response?.actor?.accounts || [];
-				return {
-					items: response?.actor?.queryHistory?.nrql?.map(_ => {
-						return {
-							..._,
-							dayString: this.toDayString(_.createdAt),
-							accounts: accounts.filter(obj => (_.accountIds || []).includes(obj.id)),
-						};
-					}),
-				};
+
+				const uniqueObjects: any = {};
+				if (response?.actor?.queryHistory?.nrql) {
+					// make a unique list based on the query + accountIds -- last one wins
+					response.actor.queryHistory.nrql.forEach(object => {
+						uniqueObjects[JSON.stringify({ query: object.query, accountIds: object.accountIds })] =
+							object;
+					});
+					const uniqueList = Object.values(uniqueObjects) as {
+						query: string;
+						accountIds: number[];
+						createdAt: number;
+					}[];
+					return {
+						items: uniqueList.map(_ => {
+							return {
+								..._,
+								dayString: this.toDayString(_.createdAt),
+								accounts: accounts.filter(obj => (_.accountIds || []).includes(obj.id)),
+							};
+						}),
+					};
+				}
 			}
 		} catch (ex) {
 			Logger.warn(`Failed to fetchRecentQueries for user`, { error: ex });
