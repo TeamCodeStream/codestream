@@ -7,7 +7,7 @@ const BillboardValueWrapper = styled.div`
 `;
 
 const BillboardValue = styled.div`
-	font-size: 15em;
+	font-size: 20vw;
 	font-weight: normal;
 	margin: 0;
 	line-height: 1;
@@ -41,7 +41,7 @@ export const NRQLResultsBillboard = (props: { results: NRQLResult[]; eventType?:
 
 	return (
 		<BillboardValueWrapper>
-			<BillboardValue>
+			<BillboardValue title={value}>
 				{typeof value === "number" ? formatLargeNumber(value) : value}
 			</BillboardValue>
 			{props.eventType && <div>{props.eventType.replace(/_/g, " ")}</div>}
