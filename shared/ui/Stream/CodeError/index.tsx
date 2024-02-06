@@ -930,6 +930,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 										<span data-testid="code-error-title">
 											<Link
 												onClick={e => {
+													e.preventDefault();
 													HostApi.instance.track("codestream/link_to_newrelic clicked", {
 														entity_guid: props.errorGroup?.entityGuid,
 														account_id: props.errorGroup?.accountId,
