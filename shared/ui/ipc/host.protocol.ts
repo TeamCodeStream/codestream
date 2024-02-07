@@ -29,6 +29,8 @@ export interface Collaborator {
 	};
 }
 
+export type IdeNames = "VSC" | "VS" | "JETBRAINS";
+
 export interface BootstrapInHostResponse {
 	capabilities: Capabilities;
 	configs: {
@@ -38,7 +40,7 @@ export interface BootstrapInHostResponse {
 	context: Partial<WebviewContext>;
 	environmentInfo?: CodeStreamEnvironmentInfo;
 	ide?: {
-		name: string | undefined;
+		name?: IdeNames;
 		detail: string | undefined;
 	};
 	session: SessionState;
@@ -336,6 +338,9 @@ export interface OpenEditorViewNotification {
 	entityGuid?: string;
 	query?: string;
 	hash?: string;
+	ide: {
+		name?: "VSC" | "VS" | "JETBRAINS";
+	};
 }
 
 export const OpenEditorViewNotificationType = new NotificationType<

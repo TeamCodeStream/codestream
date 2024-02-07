@@ -1,29 +1,29 @@
-import React, { useState } from "react";
-import Icon from "../Icon";
-import { PanelHeader } from "../../src/components/PanelHeader";
-import styled from "styled-components";
-import { components, OptionProps } from "react-select";
-import { useDidMount } from "../../utilities/hooks";
-import Button from "../Button";
-import { HostApi } from "../../webview-api";
-import { Link } from "../Link";
 import {
 	EntityAccount,
 	GetLogFieldDefinitionsRequestType,
 	GetLoggingEntitiesRequestType,
 	GetLogsRequestType,
 	GetSurroundingLogsRequestType,
+	isNRErrorResponse,
 	LogFieldDefinition,
 	LogResult,
 	TelemetryData,
-	isNRErrorResponse,
 } from "@codestream/protocols/agent";
+import { IdeNames } from "@codestream/protocols/webview";
 import { parseId } from "@codestream/webview/utilities/newRelic";
+import React, { useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
+import Select, { components, OptionProps } from "react-select";
+import { AsyncPaginate } from "react-select-async-paginate";
+import styled from "styled-components";
+import { PanelHeader } from "../../src/components/PanelHeader";
+import { useDidMount } from "../../utilities/hooks";
+import { HostApi } from "../../webview-api";
+import Button from "../Button";
+import Icon from "../Icon";
+import { Link } from "../Link";
 import { TableWindow } from "../TableWindow";
 import { APMLogRow } from "./APMLogRow";
-import { AsyncPaginate } from "react-select-async-paginate";
-import Select from "react-select";
 
 interface SelectedOption {
 	value: string;
@@ -138,6 +138,7 @@ export const APMLogSearchPanel = (props: {
 	entryPoint: string;
 	entityGuid?: string;
 	suppliedQuery?: string;
+	ide?: { name?: IdeNames };
 }) => {
 	const [hasEntityGuid, setHasEntityGuid] = useState<boolean>();
 	const [fieldDefinitions, setFieldDefinitions] = useState<LogFieldDefinition[]>([]);

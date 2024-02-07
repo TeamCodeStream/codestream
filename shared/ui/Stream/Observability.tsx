@@ -281,6 +281,7 @@ export const Observability = React.memo((props: Props) => {
 			activeO11y,
 			observabilityRepoEntities: preferences.observabilityRepoEntities || EMPTY_ARRAY,
 			showGoldenSignalsInEditor: state?.configs?.showGoldenSignalsInEditor,
+			ideName: state.ide.name,
 			isVS: state.ide.name === "VS",
 			isVsCode: state.ide.name === "VSC",
 			hideCodeLevelMetricsInstructions: state.preferences.hideCodeLevelMetricsInstructions,
@@ -1403,6 +1404,9 @@ export const Observability = React.memo((props: Props) => {
 																													entityGuid: ea.entityGuid,
 																													entityAccounts: allEntityAccounts,
 																													entryPoint: "tree_view",
+																													ide: {
+																														name: derivedState.ideName,
+																													},
 																												}
 																											);
 																										}}

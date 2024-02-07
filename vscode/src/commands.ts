@@ -668,7 +668,10 @@ export class Commands implements Disposable {
 				title: "NRQL",
 				query: nrqlQuery,
 				entryPoint: "nrql_file",
-				hash: md5(fileUri.toString())
+				hash: md5(fileUri.toString()),
+				ide: {
+					name: "VSC"
+				}
 			});
 		}
 	}

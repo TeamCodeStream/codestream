@@ -22,10 +22,11 @@ export function App() {
 				<ModalRoot />
 				{codestreamProps.panel === "logs" && (
 					<APMLogSearchPanel
-						entityAccounts={codestreamProps.entityAccounts}
+						entityAccounts={codestreamProps.entityAccounts!}
 						entityGuid={codestreamProps.entityGuid}
 						suppliedQuery={codestreamProps.query}
 						entryPoint={codestreamProps.entryPoint}
+						ide={codestreamProps.ide}
 					></APMLogSearchPanel>
 				)}
 				{codestreamProps.panel === "nrql" && <NRQLPanel {...codestreamProps}></NRQLPanel>}

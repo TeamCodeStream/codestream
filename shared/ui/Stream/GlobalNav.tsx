@@ -62,6 +62,7 @@ export function GlobalNav() {
 			eligibleJoinCompanies,
 			inviteCount,
 			isVsCode: state.ide.name === "VSC",
+			ideName: state.ide.name,
 			showNrqlBuilder: isFeatureEnabled(state, "showNrqlBuilder") && state.ide.name === "VSC",
 			showLogSearch: isFeatureEnabled(state, "showLogSearch") && state.ide.name === "VSC",
 		};
@@ -109,6 +110,9 @@ export function GlobalNav() {
 			accountId: parseId(derivedState.currentEntityGuid || "")?.accountId,
 			entityGuid: derivedState.currentEntityGuid!,
 			entityAccounts: derivedState.entityAccounts,
+			ide: {
+				name: derivedState.ideName,
+			},
 		});
 	};
 
@@ -119,6 +123,9 @@ export function GlobalNav() {
 			entryPoint: "global_nav",
 			entityAccounts: derivedState.entityAccounts,
 			entityGuid: derivedState.currentEntityGuid,
+			ide: {
+				name: derivedState.ideName,
+			},
 		});
 	};
 

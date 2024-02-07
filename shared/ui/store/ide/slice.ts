@@ -1,3 +1,4 @@
+import { IdeNames } from "@codestream/webview/ipc/host.protocol";
 import { IdeState } from "@codestream/webview/store/ide/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
@@ -9,7 +10,7 @@ const slice = createSlice({
 	reducers: {
 		setIde: (state, action: PayloadAction<IdeState>) => {
 			if (action.payload.name) {
-				action.payload.name = action.payload.name.toUpperCase();
+				action.payload.name = action.payload.name.toUpperCase() as IdeNames;
 			}
 			return action.payload;
 		},

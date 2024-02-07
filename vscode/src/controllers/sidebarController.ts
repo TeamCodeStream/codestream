@@ -93,7 +93,8 @@ import {
 	WebviewDidInitializeNotificationType,
 	WebviewIpcMessage,
 	WebviewIpcNotificationMessage,
-	WebviewIpcRequestMessage
+	WebviewIpcRequestMessage,
+	IdeNames
 } from "@codestream/protocols/webview";
 import {
 	authentication,
@@ -1392,7 +1393,7 @@ export class SidebarController implements Disposable {
 			},
 			environmentInfo: this.session.environmentInfo,
 			ide: {
-				name: "VSC",
+				name: "VSC" as IdeNames,
 				detail: env.appName
 			},
 			context: this._context

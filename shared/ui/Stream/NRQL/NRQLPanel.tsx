@@ -1,6 +1,5 @@
 import {
 	Account,
-	EntityAccount,
 	GetAllAccountsRequestType,
 	GetNRQLRequestType,
 	NRQLResult,
@@ -8,6 +7,7 @@ import {
 	isNRErrorResponse,
 } from "@codestream/protocols/agent";
 import {
+	IdeNames,
 	OpenEditorViewNotificationType,
 	OpenInBufferRequestType,
 } from "@codestream/protocols/webview";
@@ -108,11 +108,13 @@ export const DEFAULT_VISUALIZATION_GUESS = {
 
 export const NRQLPanel = (props: {
 	accountId?: number;
-	entityAccounts: EntityAccount[];
 	entryPoint: string;
 	entityGuid?: string;
 	query?: string;
+	ide?: { name?: IdeNames };
 }) => {
+	const supports = { export: props.ide?.name === "VSC" };
+
 	const accountId = props.accountId
 		? props.accountId
 		: props.entityGuid
@@ -415,46 +417,48 @@ export const NRQLPanel = (props: {
 								/>
 							</div>
 
-							<div style={{ paddingTop: "2px" }}>
-								<InlineMenu
-									title="Export"
-									noFocusOnSelect
-									noChevronDown={true}
-									items={Object.values(["JSON", "CSV"]).map((_: any) => ({
-										label: `Export ${_}`,
-										key: _,
-										checked: false,
-										action: () => {
-											let handled;
-											if (_ === "JSON") {
-												handled = JSON.stringify(results, null, 4);
-											} else if (_ === "CSV") {
-												handled = stringify(results, {
-													header: true,
-												});
-											}
-											if (handled) {
-												HostApi.instance.track("codestream/nrql/export downloaded", {
-													account_id: selectedAccount?.value || accountId,
-													event_type: "submit",
-													meta_data: `format: ${_.toLowerCase()}`,
-												});
+							{supports.export && (
+								<div style={{ paddingTop: "2px" }}>
+									<InlineMenu
+										title="Export"
+										noFocusOnSelect
+										noChevronDown={true}
+										items={Object.values(["JSON", "CSV"]).map((_: any) => ({
+											label: `Export ${_}`,
+											key: _,
+											checked: false,
+											action: () => {
+												let handled;
+												if (_ === "JSON") {
+													handled = JSON.stringify(results, null, 4);
+												} else if (_ === "CSV") {
+													handled = stringify(results, {
+														header: true,
+													});
+												}
+												if (handled) {
+													HostApi.instance.track("codestream/nrql/export downloaded", {
+														account_id: selectedAccount?.value || accountId,
+														event_type: "submit",
+														meta_data: `format: ${_.toLowerCase()}`,
+													});
 
-												HostApi.instance.send(OpenInBufferRequestType, {
-													contentType: _.toLowerCase(),
-													data: handled,
-												});
-											}
-										},
-									}))}
-									align="bottomRight"
-									className="dropdown"
-								>
-									<span>
-										<Icon name="download" title="Export Results" />
-									</span>
-								</InlineMenu>
-							</div>
+													HostApi.instance.send(OpenInBufferRequestType, {
+														contentType: _.toLowerCase(),
+														data: handled,
+													});
+												}
+											},
+										}))}
+										align="bottomRight"
+										className="dropdown"
+									>
+										<span>
+											<Icon name="download" title="Export Results" />
+										</span>
+									</InlineMenu>
+								</div>
+							)}
 						</SinceContainer>
 					)}
 					<div>
