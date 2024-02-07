@@ -228,7 +228,7 @@ class WebViewRouter(val project: Project) {
         ApplicationManager.getApplication().invokeLater {
             val editor = editorManager.openFile(file, true, true).firstOrNull()
             (editor as? WebViewEditor)?.webView?.postNotification(message.method, message.params)
-            editor?.component?.requestFocus()
+//            editor?.component?.requestFocus()
             editor?.component?.repaint()
         }
     }

@@ -331,7 +331,7 @@ class AgentService(private val project: Project) : Disposable {
 
         FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/agent/agent.js"), agentJsDestFile)
         FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/agent/agent.js.map"), agentJsMap)
-        FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/webview/index.js.map"), webJsMap)
+        FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/webviews/sidebar/index.js.map"), webJsMap)
 
         val targetDir = userHomeDir.resolve(".codestream").resolve("agent")
         extractExtraLibs(targetDir)
@@ -390,7 +390,7 @@ class AgentService(private val project: Project) : Disposable {
             FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/agent/agent.js"), agentJs)
             try {
                 FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/agent/agent.js.map"), agentJsMap)
-                FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/webview/index.js.map"), webJsMap)
+                FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/webviews/sidebar/index.js.map"), webJsMap)
             } catch (ex: Exception) {
                 logger.warn("Could not extract agent.js.map", ex)
             }
