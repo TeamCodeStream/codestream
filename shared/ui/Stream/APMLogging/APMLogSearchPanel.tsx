@@ -165,24 +165,11 @@ export const APMLogSearchPanel = (props: {
 	const trimmedListHeight: number = (height ?? 0) - (height ?? 0) * 0.08;
 
 	useDidMount(() => {
-		if (props.entityGuid) {
-			const parsedId = parseId(props.entityGuid);
-
-			if (parsedId) {
-				trackOpenTelemetry(props.entryPoint, props.entityGuid, parsedId.accountId);
-			} else {
-				trackOpenTelemetry(props.entryPoint);
-			}
-		} else {
-			trackOpenTelemetry(props.entryPoint);
-		}
-
 		const defaultOption: SelectedOption = {
 			value: "30 MINUTES AGO",
 			label: "30 Minutes Ago",
 		};
 
-		// TODO: Sliding time window selector?
 		const sinceOptions: SelectedOption[] = [
 			defaultOption,
 			{ value: "60 MINUTES AGO", label: "60 Minutes Ago" },
@@ -196,26 +183,32 @@ export const APMLogSearchPanel = (props: {
 		setSelectSinceOptions(sinceOptions);
 		setSelectedSinceOption(defaultOption);
 
-		if (props.entityGuid) {
-			const entityAccount = props.entityAccounts.find(ea => ea.entityGuid === props.entityGuid)!;
-
-			handleSelectDropdownOption({
-				value: entityAccount.entityGuid,
-				label: entityAccount.entityName,
-				accountName: entityAccount.accountName,
-				entityType: entityAccount.entityTypeDescription,
-			});
-
-			setHasEntityGuid(true);
-			fetchFieldDefinitions(props.entityGuid);
-
-			// possible there is no searchTerm
-			if (props.suppliedQuery) {
-				setQuery(props.suppliedQuery);
-			}
-
-			fetchLogs(props.entityGuid, props.suppliedQuery);
+		// possible there is no searchTerm
+		if (props.suppliedQuery) {
+			setQuery(props.suppliedQuery);
 		}
+
+		const entityAccount = props.entityAccounts.find(ea => ea.entityGuid === props.entityGuid);
+
+		if (entityAccount) {
+			trackOpenTelemetry(props.entryPoint, entityAccount.entityGuid, entityAccount.accountId);
+		} else {
+			// its possible a race condition could get us here and the entity guid passed in doesn't match any in the list
+			// allow it, so the user can still use the panel - it just won't have a default selection/query/execution.
+			trackOpenTelemetry(props.entryPoint);
+			return;
+		}
+
+		handleSelectDropdownOption({
+			value: entityAccount.entityGuid,
+			label: entityAccount.entityName,
+			accountName: entityAccount.accountName,
+			entityType: entityAccount.entityTypeDescription,
+		});
+
+		setHasEntityGuid(true);
+		fetchFieldDefinitions(entityAccount.entityGuid);
+		fetchLogs(entityAccount.entityGuid, props.suppliedQuery);
 	});
 
 	const handleSelectDropdownOption = entityAccount => {
