@@ -381,7 +381,7 @@ export const MethodLevelTelemetryPanel = () => {
 																	account_id:
 																		derivedState.currentMethodLevelTelemetry.newRelicAccountId,
 																	meta_data: "destination: apm_service_summary",
-																	meta_data_2: `codestream_section: code_level_metrics`,
+																	meta_data_2: `codestream_section: clm_details`,
 																	event_type: "click",
 																});
 																HostApi.instance.send(OpenUrlRequestType, {

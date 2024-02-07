@@ -231,7 +231,7 @@ export const ErrorRow = (props: {
 							e.stopPropagation();
 							HostApi.instance.track("codestream/link_to_newrelic clicked", {
 								meta_data: "destination: error_group",
-								meta_data_2: `codestream_section: code_level_metrics`,
+								meta_data_2: `codestream_section: error`,
 								event_type: "click",
 							});
 							HostApi.instance.send(OpenUrlRequestType, {

@@ -128,7 +128,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 						entity_guid: entityGuid,
 						account_id: accountId,
 						meta_data: "destination: change_tracking",
-						meta_data_2: `codestream_section: code_level_metrics`,
+						meta_data_2: `codestream_section: golden_metrics`,
 						event_type: "click",
 					});
 					HostApi.instance.send(OpenUrlRequestType, {
