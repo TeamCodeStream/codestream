@@ -23,7 +23,6 @@ import { Link } from "./Link";
 import { PlusMenu } from "./PlusMenu";
 import Tooltip, { placeArrowTopRight, TipTitle } from "./Tooltip";
 import { parseId } from "../utilities/newRelic";
-import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 
 const sum = (total, num) => total + Math.round(num);
 
@@ -63,8 +62,8 @@ export function GlobalNav() {
 			inviteCount,
 			isVsCode: state.ide.name === "VSC",
 			ideName: state.ide.name,
-			showNrqlBuilder: isFeatureEnabled(state, "showNrqlBuilder") && state.ide.name === "VSC",
-			showLogSearch: isFeatureEnabled(state, "showLogSearch") && state.ide.name === "VSC",
+			showNrqlBuilder: state.ide.name === "VSC" || state.ide.name === "JETBRAINS",
+			showLogSearch: state.ide.name === "VSC" || state.ide.name === "JETBRAINS",
 		};
 	});
 
