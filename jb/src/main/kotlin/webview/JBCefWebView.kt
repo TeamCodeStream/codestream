@@ -25,9 +25,9 @@ import org.cef.network.CefRequest
 
 private const val BASE_ZOOM_LEVEL = 1.0
 
-class JBCefWebView(val jbCefBrowser: JBCefBrowserBase, val router: WebViewRouter, val project: Project) : WebView {
+class JBCefWebView(val jbCefBrowser: JBCefBrowserBase, override val router: WebViewRouter, val project: Project) : WebView {
 
-    private val logger = Logger.getInstance(JBCefWebView::class.java)
+    override val logger = Logger.getInstance(JBCefWebView::class.java)
     private var routerConnected = false
 
     val routerQuery: JBCefJSQuery = JBCefJSQuery.create(jbCefBrowser).also {

@@ -12,13 +12,13 @@ class WebViewEditorService(project: Project): BaseWebViewService(project) {
         val webView = createWebView(WebViewRouter(project))
         extractAssets()
         generateHtmlFile {
-            it.replace("{csInitialization}", "window._cs = ${file.params?.toString()}")
+            it.replace("{csInitialization}", "window._cs = ${file.notificationJson?.toString()}")
         }
 
         webView.loadUrl(htmlFile.url)
-        ApplicationManager.getApplication().invokeLater {
-            webView.openDevTools()
-        }
+//        ApplicationManager.getApplication().invokeLater {
+//            webView.openDevTools()
+//        }
         return WebViewEditor(file, webView)
     }
 

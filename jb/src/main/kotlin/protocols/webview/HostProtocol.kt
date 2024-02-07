@@ -104,8 +104,11 @@ class EditorReplaceSymbolResponse(
     val success: Boolean
 )
 
-class EditorOpenRequest(
-    val title: String
+class EditorOpenNotification(
+    val title: String,
+    val panel: String,
+    val hash: String?,
+    val entityGuid: String
 )
 
 class EditorRangeHighlightRequest(

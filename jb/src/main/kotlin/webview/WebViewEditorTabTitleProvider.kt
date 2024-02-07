@@ -8,7 +8,7 @@ class WebViewEditorTabTitleProvider : EditorTabTitleProvider {
 
     override fun getEditorTabTitle(project: Project, file: VirtualFile): String? {
         if (file is WebViewEditorFile) {
-            return "CodeStream (${file.editorOpenRequest.title})"
+            return "CodeStream (${file.notification.title})"
         }
         return null
     }

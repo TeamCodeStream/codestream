@@ -7,9 +7,9 @@ import com.teamdev.jxbrowser.browser.callback.InjectJsCallback
 import com.teamdev.jxbrowser.js.JsObject
 import com.teamdev.jxbrowser.view.swing.BrowserView
 
-class JxBrowserWebView(val jxBrowser: Browser, val router: WebViewRouter) : WebView {
+class JxBrowserWebView(val jxBrowser: Browser, override val router: WebViewRouter) : WebView {
 
-    private val logger = Logger.getInstance(JxBrowserWebView::class.java)
+    override val logger = Logger.getInstance(JxBrowserWebView::class.java)
 
     override val component: BrowserView by lazy {
         BrowserView.newInstance(jxBrowser)

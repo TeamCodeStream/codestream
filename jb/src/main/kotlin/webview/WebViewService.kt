@@ -80,25 +80,11 @@ class WebViewService(project: Project) : BaseWebViewService(project), Disposable
     }
 
     fun postNotification(notification: WebViewNotification, force: Boolean? = false) {
-        logger.debug("Posting ${notification.getMethod()}")
-        val message = jsonObject(
-            "method" to notification.getMethod(),
-            "params" to gson.toJsonTree(notification)
-        )
-        postMessage(message, force)
+        if (router.isReady || force == true) webView.postNotification(notification, force)
     }
 
     fun postNotification(method: String, params: Any?, force: Boolean? = false) {
-        logger.debug("Posting $method")
-        val message = jsonObject(
-            "method" to method,
-            "params" to gson.toJsonTree(params)
-        )
-        postMessage(message, force)
-    }
-
-    private fun postMessage(message: JsonElement, force: Boolean? = false) {
-        if (router.isReady || force == true) webView.postMessage(message)
+        if (router.isReady || force == true) webView.postNotification(method, params, force)
     }
 
     override fun dispose() {

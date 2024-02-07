@@ -54,6 +54,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.fileChooser.FileChooser
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.teamdev.jxbrowser.js.JsAccessible
@@ -223,10 +224,12 @@ class WebViewRouter(val project: Project) {
 
     private fun editorOpen(message: WebViewMessage) {
         val editorManager = FileEditorManager.getInstance(project)
-        println(message.params!!.toString())
-        val file = WebViewEditorFile(message.params!!)
+        val file = WebViewEditorFile.create(message.params!!)
         ApplicationManager.getApplication().invokeLater {
-            editorManager.openFile(file, true)
+            val editor = editorManager.openFile(file, true, true).firstOrNull()
+            (editor as? WebViewEditor)?.webView?.postNotification(message.method, message.params)
+            editor?.component?.requestFocus()
+            editor?.component?.repaint()
         }
     }
 
