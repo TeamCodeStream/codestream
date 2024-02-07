@@ -244,7 +244,7 @@ export const NRQLPanel = (props: {
 				HostApi.instance.track("codestream/nrql/query submitted", {
 					account_id: response.accountId,
 					event_type: "response",
-					meta_data: `default_visualization: ${response.resultsTypeGuess}`,
+					meta_data: `default_visualization: ${response.resultsTypeGuess?.selected}`,
 					meta_data_2: `recent_query: ${options.isRecent}`,
 				});
 
