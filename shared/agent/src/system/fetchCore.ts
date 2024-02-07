@@ -17,6 +17,7 @@ const noLogRetries = [
 	"UND_ERR_RESPONSE_STATUS_CODE",
 	"ENOTFOUND",
 	"ECONNREFUSED",
+	"ECONNRESET",
 ];
 
 function isUndiciError(error: unknown): error is errors.UndiciError {
