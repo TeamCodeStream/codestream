@@ -152,8 +152,6 @@ export const NRQLPanel = (props: {
 	const [shouldRefetchRecentQueriesTimestamp, setShouldRefetchRecentQueriesTimestamp] = useState<
 		number | undefined
 	>(undefined);
-	const [refHeight, setRefHeight] = useState(0);
-
 	const nrqlEditorRef = useRef<any>(null);
 	const { height: editorHeight, ref: editorRef } = useResizeDetector();
 	const { width, height, ref } = useResizeDetector();
@@ -199,13 +197,6 @@ export const NRQLPanel = (props: {
 			disposables && disposables.forEach(_ => _.dispose());
 		};
 	}, []);
-
-	useEffect(() => {
-		if (editorRef.current) {
-			const height = editorRef.current.clientHeight;
-			setRefHeight(height);
-		}
-	}, [editorRef]);
 
 	const handleError = (message: string) => {
 		setNRQLError(message);
