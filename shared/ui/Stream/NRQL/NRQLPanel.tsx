@@ -373,7 +373,7 @@ export const NRQLPanel = (props: {
 							<NRQLEditor
 								className="input-text control"
 								defaultValue={props.query || DEFAULT_QUERY}
-								height={`${editorHeight}px` || "10vh"}
+								height={`${editorHeight}px`}
 								onChange={e => {
 									setUserQuery(e.value || "");
 								}}
