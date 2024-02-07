@@ -152,8 +152,10 @@ export const NRQLPanel = (props: {
 	const [shouldRefetchRecentQueriesTimestamp, setShouldRefetchRecentQueriesTimestamp] = useState<
 		number | undefined
 	>(undefined);
+	const [refHeight, setRefHeight] = useState(0);
+
 	const nrqlEditorRef = useRef<any>(null);
-	const { ref: editorRef } = useResizeDetector();
+	const { height: editorHeight, ref: editorRef } = useResizeDetector();
 	const { width, height, ref } = useResizeDetector();
 	const trimmedHeight: number = (height ?? 0) - (height ?? 0) * 0.05;
 
@@ -197,6 +199,13 @@ export const NRQLPanel = (props: {
 			disposables && disposables.forEach(_ => _.dispose());
 		};
 	}, []);
+
+	useEffect(() => {
+		if (editorRef.current) {
+			const height = editorRef.current.clientHeight;
+			setRefHeight(height);
+		}
+	}, [editorRef]);
 
 	const handleError = (message: string) => {
 		setNRQLError(message);
@@ -373,7 +382,7 @@ export const NRQLPanel = (props: {
 							<NRQLEditor
 								className="input-text control"
 								defaultValue={props.query || DEFAULT_QUERY}
-								height="10vh"
+								height={`${editorHeight}px` || "10vh"}
 								onChange={e => {
 									setUserQuery(e.value || "");
 								}}
