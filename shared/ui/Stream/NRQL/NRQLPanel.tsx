@@ -36,7 +36,6 @@ import { RecentQueries } from "./RecentQueries";
 
 const QueryWrapper = styled.div`
 	width: 100%;
-	// max-height: 200px;
 	padding: 0px;
 `;
 
@@ -96,6 +95,15 @@ const ResultsContainer = styled.div`
 	overflow: hidden;
 `;
 
+const ResizeEditorContainer = styled.div`
+	resize: vertical;
+	overflow: auto;
+	min-height: 120px;
+	max-height: 40vh;
+	border: var(--base-border-color) solid 1px;
+	padding: 8px;
+`;
+
 const Option = (props: OptionProps) => {
 	const children = (
 		<>
@@ -145,7 +153,7 @@ export const NRQLPanel = (props: {
 		number | undefined
 	>(undefined);
 	const nrqlEditorRef = useRef<any>(null);
-	const { width: editorWidth, height: editorHeight, ref: editorRef } = useResizeDetector();
+	const { ref: editorRef } = useResizeDetector();
 	const { width, height, ref } = useResizeDetector();
 	const trimmedHeight: number = (height ?? 0) - (height ?? 0) * 0.05;
 
@@ -361,18 +369,7 @@ export const NRQLPanel = (props: {
 								</RecentContainer>
 							</AccountRecentContainer>
 						</div>
-
-						<div
-							style={{
-								resize: "vertical",
-								overflow: "auto",
-								minHeight: "120px",
-								maxHeight: "40vh",
-								border: "var(--base-border-color) solid 1px",
-								padding: "8px",
-							}}
-							ref={editorRef}
-						>
+						<ResizeEditorContainer ref={editorRef}>
 							<NRQLEditor
 								className="input-text control"
 								defaultValue={props.query || DEFAULT_QUERY}
@@ -386,7 +383,7 @@ export const NRQLPanel = (props: {
 								}}
 								ref={nrqlEditorRef}
 							/>
-						</div>
+						</ResizeEditorContainer>
 						<ActionRow>
 							<DropdownContainer></DropdownContainer>
 							<ButtonContainer>
