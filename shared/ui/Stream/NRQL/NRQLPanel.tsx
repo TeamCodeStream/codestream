@@ -166,27 +166,32 @@ export const NRQLPanel = (props: {
 				if (nrqlEditorRef?.current) {
 					nrqlEditorRef.current!.setValue(e.query);
 					setUserQuery(e.query!);
-					executeNRQL(selectedAccount?.value || accountId, props.entityGuid!, e.query!);
+					executeNRQL((selectedAccount?.value || accountId)!, e.query!);
 				}
 			})
 		);
 
 		accountsPromise = HostApi.instance.send(GetAllAccountsRequestType, {}).then(result => {
 			setAccounts(result.accounts);
+			let foundAccount: Account | undefined = undefined;
 			if (result?.accounts?.length) {
 				if (accountId) {
-					const foundAccount = result.accounts.find(_ => _.id === accountId);
-					if (foundAccount) {
-						setSelectedAccount(formatSelectedAccount(foundAccount));
-					}
-				} else if (result.accounts.length === 1) {
-					setSelectedAccount(formatSelectedAccount(result.accounts[0]));
+					foundAccount = result.accounts.find(_ => _.id === accountId);
+				}
+				if (!foundAccount) {
+					foundAccount = result.accounts[0];
+				}
+				if (foundAccount) {
+					setSelectedAccount(formatSelectedAccount(foundAccount));
 				}
 			}
-
-			if (props.query) {
-				setUserQuery(props.query);
-				executeNRQL(selectedAccount?.value || accountId, props.entityGuid!, props.query);
+			if (!foundAccount) {
+				handleError("Missing account");
+			} else {
+				if (props.query) {
+					setUserQuery(props.query);
+					executeNRQL(foundAccount.id, props.query);
+				}
 			}
 		});
 		return () => {
@@ -200,8 +205,7 @@ export const NRQLPanel = (props: {
 	};
 
 	const executeNRQL = async (
-		accountId: number | undefined,
-		entityGuid: string,
+		accountId: number,
 		nrqlQuery: string,
 		options: { isRecent: boolean } = { isRecent: false }
 	) => {
@@ -221,7 +225,6 @@ export const NRQLPanel = (props: {
 			const response = await HostApi.instance.send(GetNRQLRequestType, {
 				accountId,
 				query: nrqlQuery.replace(/[\n\r]/g, " "),
-				entityGuid,
 			});
 
 			if (!response) {
@@ -353,12 +356,9 @@ export const NRQLPanel = (props: {
 												nrqlEditorRef.current!.setValue(value);
 											}
 											setUserQuery(value!);
-											executeNRQL(
-												newAccount?.value || selectedAccount?.value,
-												props.entityGuid!,
-												value!,
-												{ isRecent: true }
-											);
+											executeNRQL((newAccount?.value || selectedAccount?.value)!, value!, {
+												isRecent: true,
+											});
 										}}
 									/>
 								</RecentContainer>
@@ -374,7 +374,7 @@ export const NRQLPanel = (props: {
 								}}
 								onSubmit={e => {
 									setUserQuery(e.value!);
-									executeNRQL(selectedAccount?.value, props.entityGuid!, e.value!);
+									executeNRQL(selectedAccount?.value!, e.value!);
 								}}
 								ref={nrqlEditorRef}
 							/>
@@ -393,7 +393,7 @@ export const NRQLPanel = (props: {
 								</Button>
 								<Button
 									style={{ padding: "0 10px" }}
-									onClick={() => executeNRQL(selectedAccount?.value, props.entityGuid!, userQuery)}
+									onClick={() => executeNRQL(selectedAccount?.value!, userQuery)}
 									loading={isLoading}
 								>
 									Run

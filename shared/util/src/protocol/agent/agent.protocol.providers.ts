@@ -2649,8 +2649,7 @@ export interface SaveRecentQueryResponse {
 }
 
 export interface GetNRQLRequest {
-	accountId?: number;
-	entityGuid?: string;
+	accountId: number;
 	query: string;
 }
 

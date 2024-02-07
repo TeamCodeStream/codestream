@@ -57,17 +57,10 @@ export class NrNRQLProvider {
 	@lspHandler(GetNRQLRequestType)
 	@log()
 	public async executeNRQL(request: GetNRQLRequest): Promise<GetNRQLResponse> {
-		let accountId;
-		if (request.accountId) {
-			accountId = request.accountId;
-		} else {
-			const entityGuid = request.entityGuid;
-			if (entityGuid) {
-				accountId = parseId(entityGuid)!.accountId;
-			}
-		}
+		const accountId = request.accountId;
+
 		if (!accountId) {
-			throw new Error("Missing accountId or entityGuid");
+			throw new Error("Missing accountId");
 		}
 
 		try {
