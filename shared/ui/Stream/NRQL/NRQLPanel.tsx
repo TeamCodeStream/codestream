@@ -90,6 +90,12 @@ const OptionName = styled.div`
 	overflow: hidden;
 `;
 
+const ResultsContainer = styled.div`
+	padding: 0px 20px 13px 20px;
+	width: 100%;
+	overflow: hidden;
+`;
+
 const Option = (props: OptionProps) => {
 	const children = (
 		<>
@@ -405,14 +411,7 @@ export const NRQLPanel = (props: {
 					</div>
 				</QueryWrapper>
 			</PanelHeader>
-			<div
-				ref={ref}
-				style={{
-					padding: "0px 20px 13px 20px",
-					width: "100%",
-					overflow: "hidden",
-				}}
-			>
+			<ResultsContainer ref={ref}>
 				<ResultsRow>
 					{since && (
 						<SinceContainer>
@@ -513,7 +512,7 @@ export const NRQLPanel = (props: {
 						)}
 					</div>
 				</ResultsRow>
-			</div>
+			</ResultsContainer>
 		</>
 	);
 };
