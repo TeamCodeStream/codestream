@@ -544,6 +544,9 @@ function trackPostCreation(
 							case "Advanced Link":
 								entryPoint = "advanced_link";
 								break;
+							case "Context Menu":
+								entryPoint = "context_menu";
+								break;
 						}
 					}
 
