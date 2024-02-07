@@ -83,6 +83,98 @@ export const RecentQueries = (props: {
 		return undefined;
 	};
 
+	const loadOptions = async (search: string, _loadedOptions, additional: { page: number }) => {
+		await recentQueriesPromise;
+		const searchLowered = search ? search.toLowerCase() : search;
+		// first try to attach a match onto the collection
+		const filtered = queries
+			.map(_ => {
+				return {
+					..._,
+					match: indexOfWithMatchLength(_.query, searchLowered),
+				};
+			})
+			// then apply a formatted label that highlights the search matches (if any)
+			.map(_ => {
+				const match = _.match;
+				let labelQuery;
+				if (match) {
+					labelQuery = (
+						<Query
+							dangerouslySetInnerHTML={{
+								__html: _.query.replace(new RegExp(`(${search})`, "ig"), `<strong>$1</strong>`),
+							}}
+						></Query>
+					);
+				} else {
+					labelQuery = <Query>{_.query}</Query>;
+				}
+				return {
+					match: match,
+					value: _,
+					dayString: _.dayString,
+					label: (
+						<div>
+							<OptionName>
+								<AccountName>
+									Accounts:{" "}
+									{_.accounts
+										.map(_ => {
+											return `${_.id} - ${_.name}`;
+										})
+										.join(", ")}
+								</AccountName>
+								<br />
+								{labelQuery}
+							</OptionName>
+						</div>
+					),
+				};
+			})
+			// return matches if there's a search term
+			.filter(_ => {
+				return search ? _.match : true;
+			})
+			// we use the dayString to group by in the dropdown
+			.map(_ => {
+				return {
+					label: _.label,
+					dayString: _.dayString,
+					value: _.value,
+				};
+			});
+
+		const mapTypeToIndex = new Map();
+
+		const result: Array<{
+			label: string;
+			options: any[];
+		}> = [];
+
+		filtered.forEach(option => {
+			const { dayString } = option;
+
+			if (mapTypeToIndex.has(dayString)) {
+				const index = mapTypeToIndex.get(dayString);
+				result[index].options.push(option);
+			} else {
+				const index = result.length;
+				mapTypeToIndex.set(dayString, index);
+				result.push({
+					label: `${dayString}`,
+					options: [option],
+				});
+			}
+		});
+		return {
+			options: result,
+			hasMore: queries.length > additional.page * optionsPerPage,
+			additional: {
+				page: additional.page + 1,
+			},
+		};
+	};
+
 	return (
 		<div style={{ width: "200px" }}>
 			<AsyncPaginate
@@ -91,100 +183,7 @@ export const RecentQueries = (props: {
 				classNamePrefix="react-select"
 				key={props.lastRunTimestamp}
 				reduceOptions={reduceGroupedOptions}
-				loadOptions={async (search: string, _loadedOptions, additional: { page: number }) => {
-					await recentQueriesPromise;
-					const searchLowered = search ? search.toLowerCase() : search;
-					// first try to attach a match onto the collection
-					const filtered = queries
-						.map(_ => {
-							return {
-								..._,
-								match: indexOfWithMatchLength(_.query, searchLowered),
-							};
-						})
-						// then apply a formatted label that highlights the search matches (if any)
-						.map(_ => {
-							const match = _.match;
-							let labelQuery;
-							if (match) {
-								labelQuery = (
-									<Query
-										dangerouslySetInnerHTML={{
-											__html: _.query.replace(
-												new RegExp(`(${search})`, "ig"),
-												`<strong>$1</strong>`
-											),
-										}}
-									></Query>
-								);
-							} else {
-								labelQuery = <Query>{_.query}</Query>;
-							}
-							return {
-								match: match,
-								value: _,
-								dayString: _.dayString,
-								label: (
-									<div>
-										<OptionName>
-											<AccountName>
-												Accounts:{" "}
-												{_.accounts
-													.map(_ => {
-														return `${_.id} - ${_.name}`;
-													})
-													.join(", ")}
-											</AccountName>
-											<br />
-											{labelQuery}
-										</OptionName>
-									</div>
-								),
-							};
-						})
-						// return matches if there's a search term
-						.filter(_ => {
-							return search ? _.match : true;
-						})
-						// we use the dayString to group by in the dropdown
-						.map(_ => {
-							return {
-								label: _.label,
-								dayString: _.dayString,
-								value: _.value,
-							};
-						});
-
-					const mapTypeToIndex = new Map();
-
-					const result: Array<{
-						label: string;
-						options: any[];
-					}> = [];
-
-					filtered.forEach(option => {
-						const { dayString } = option;
-
-						if (mapTypeToIndex.has(dayString)) {
-							const index = mapTypeToIndex.get(dayString);
-							result[index].options.push(option);
-						} else {
-							const index = result.length;
-							mapTypeToIndex.set(dayString, index);
-							result.push({
-								label: `${dayString}`,
-								options: [option],
-							});
-						}
-					});
-					return {
-						options: result,
-						hasMore: queries.length > additional.page * optionsPerPage,
-						additional: {
-							page: additional.page + 1,
-						},
-					};
-				}}
+				loadOptions={loadOptions}
 				closeMenuOnSelect={true}
 				additional={{
 					page: 1,

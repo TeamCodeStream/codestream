@@ -6,15 +6,9 @@ import {
 	ResultsTypeGuess,
 	isNRErrorResponse,
 } from "@codestream/protocols/agent";
-import {
-	IdeNames,
-	OpenEditorViewNotificationType,
-	OpenInBufferRequestType,
-} from "@codestream/protocols/webview";
-import { InlineMenu } from "@codestream/webview/src/components/controls/InlineMenu";
+import { IdeNames, OpenEditorViewNotificationType } from "@codestream/protocols/webview";
 import { parseId } from "@codestream/webview/utilities/newRelic";
 import { Disposable } from "@codestream/webview/utils";
-import { stringify } from "csv-stringify/browser/esm/sync";
 import React, { useEffect, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { OptionProps, components } from "react-select";
@@ -23,8 +17,8 @@ import styled from "styled-components";
 import { PanelHeader } from "../../src/components/PanelHeader";
 import { HostApi } from "../../webview-api";
 import Button from "../Button";
-import { default as Icon } from "../Icon";
 import { fuzzyTimeAgoinWords } from "../Timestamp";
+import ExportResults from "./ExportResults";
 import { NRQLEditor } from "./NRQLEditor";
 import { NRQLResultsBar } from "./NRQLResultsBar";
 import { NRQLResultsBillboard } from "./NRQLResultsBillboard";
@@ -158,6 +152,7 @@ export const NRQLPanel = (props: {
 	const trimmedHeight: number = (height ?? 0) - (height ?? 0) * 0.05;
 
 	const disposables: Disposable[] = [];
+
 	let accountsPromise;
 
 	useEffect(() => {
@@ -165,12 +160,13 @@ export const NRQLPanel = (props: {
 			event_type: "click",
 			meta_data: `entry_point: ${props.entryPoint}`,
 		});
+
 		disposables.push(
 			HostApi.instance.on(OpenEditorViewNotificationType, e => {
 				if (nrqlEditorRef?.current) {
 					nrqlEditorRef.current!.setValue(e.query);
 					setUserQuery(e.query!);
-					executeNRQL(selectedAccount?.value || accountId, props.entityGuid!, e.query);
+					executeNRQL(selectedAccount?.value || accountId, props.entityGuid!, e.query!);
 				}
 			})
 		);
@@ -206,11 +202,10 @@ export const NRQLPanel = (props: {
 	const executeNRQL = async (
 		accountId: number | undefined,
 		entityGuid: string,
-		suppliedQuery?: string
+		nrqlQuery: string,
+		options: { isRecent: boolean } = { isRecent: false }
 	) => {
 		try {
-			const nrqlQuery = suppliedQuery || userQuery;
-
 			if (!nrqlQuery) {
 				handleError("Please provide a query to execute");
 				return;
@@ -247,8 +242,7 @@ export const NRQLPanel = (props: {
 					account_id: response.accountId,
 					event_type: "response",
 					meta_data: `default_visualization: ${response.resultsTypeGuess}`,
-					// TODO add recent queries
-					meta_data_2: `recent_query: false`,
+					meta_data_2: `recent_query: ${options.isRecent}`,
 				});
 
 				setResults(response.results);
@@ -362,7 +356,8 @@ export const NRQLPanel = (props: {
 											executeNRQL(
 												newAccount?.value || selectedAccount?.value,
 												props.entityGuid!,
-												value!
+												value!,
+												{ isRecent: true }
 											);
 										}}
 									/>
@@ -398,7 +393,7 @@ export const NRQLPanel = (props: {
 								</Button>
 								<Button
 									style={{ padding: "0 10px" }}
-									onClick={() => executeNRQL(selectedAccount?.value, props.entityGuid!)}
+									onClick={() => executeNRQL(selectedAccount?.value, props.entityGuid!, userQuery)}
 									loading={isLoading}
 								>
 									Run
@@ -425,44 +420,10 @@ export const NRQLPanel = (props: {
 
 							{supports.export && (
 								<div style={{ paddingTop: "2px" }}>
-									<InlineMenu
-										title="Export"
-										noFocusOnSelect
-										noChevronDown={true}
-										items={Object.values(["JSON", "CSV"]).map((_: any) => ({
-											label: `Export ${_}`,
-											key: _,
-											checked: false,
-											action: () => {
-												let handled;
-												if (_ === "JSON") {
-													handled = JSON.stringify(results, null, 4);
-												} else if (_ === "CSV") {
-													handled = stringify(results, {
-														header: true,
-													});
-												}
-												if (handled) {
-													HostApi.instance.track("codestream/nrql/export downloaded", {
-														account_id: selectedAccount?.value || accountId,
-														event_type: "submit",
-														meta_data: `format: ${_.toLowerCase()}`,
-													});
-
-													HostApi.instance.send(OpenInBufferRequestType, {
-														contentType: _.toLowerCase(),
-														data: handled,
-													});
-												}
-											},
-										}))}
-										align="bottomRight"
-										className="dropdown"
-									>
-										<span>
-											<Icon name="download" title="Export Results" />
-										</span>
-									</InlineMenu>
+									<ExportResults
+										results={results}
+										accountId={selectedAccount?.value || accountId}
+									/>
 								</div>
 							)}
 						</SinceContainer>
