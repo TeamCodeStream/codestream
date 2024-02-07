@@ -392,6 +392,7 @@ export const NRQLPanel = (props: {
 									Clear
 								</Button>
 								<Button
+									data-testid="run"
 									style={{ padding: "0 10px" }}
 									onClick={() => executeNRQL(selectedAccount?.value!, userQuery)}
 									loading={isLoading}
