@@ -10,6 +10,7 @@ import type monaco from "monaco-editor";
 import { ThemeContext } from "styled-components";
 // transient dependency
 import { MonacoEditor } from "./MonacoEditor";
+import { useResizeDetector } from "react-resize-detector";
 
 export const NRQLEditor = React.forwardRef(
 	(
@@ -24,6 +25,8 @@ export const NRQLEditor = React.forwardRef(
 		},
 		ref
 	) => {
+		const { width, height, ref: resizeRef } = useResizeDetector(); // Get width and height of the resizable container
+
 		// Expose the ref and various functions to the parent component
 		React.useImperativeHandle(ref, () => ({
 			setValue: value => {
@@ -141,6 +144,15 @@ export const NRQLEditor = React.forwardRef(
 
 		return (
 			<>
+				{/* <div
+					style={{
+						resize: "vertical",
+						overflow: "auto",
+						border: "1px solid #ccc",
+						minHeight: "100px",
+					}}
+					ref={resizeRef}
+				> */}
 				<MonacoEditor
 					height={props.height || "10vh"}
 					className={props.className}
@@ -155,6 +167,7 @@ export const NRQLEditor = React.forwardRef(
 					}}
 					options={{ readonly: props.isReadonly }}
 				/>
+				{/* </div> */}
 			</>
 		);
 	}

@@ -36,7 +36,7 @@ import { RecentQueries } from "./RecentQueries";
 
 const QueryWrapper = styled.div`
 	width: 100%;
-	max-height: 200px;
+	// max-height: 200px;
 	padding: 0px;
 `;
 
@@ -139,6 +139,7 @@ export const NRQLPanel = (props: {
 		number | undefined
 	>(undefined);
 	const nrqlEditorRef = useRef<any>(null);
+	const { width: editorWidth, height: editorHeight, ref: editorRef } = useResizeDetector();
 	const { width, height, ref } = useResizeDetector();
 	const trimmedHeight: number = (height ?? 0) - (height ?? 0) * 0.05;
 
@@ -355,7 +356,17 @@ export const NRQLPanel = (props: {
 							</AccountRecentContainer>
 						</div>
 
-						<div style={{ border: "var(--base-border-color) solid 1px", padding: "8px" }}>
+						<div
+							style={{
+								resize: "vertical",
+								overflow: "auto",
+								minHeight: "120px",
+								maxHeight: "40vh",
+								border: "var(--base-border-color) solid 1px",
+								padding: "8px",
+							}}
+							ref={editorRef}
+						>
 							<NRQLEditor
 								className="input-text control"
 								defaultValue={props.query || DEFAULT_QUERY}
@@ -370,37 +381,36 @@ export const NRQLPanel = (props: {
 								ref={nrqlEditorRef}
 							/>
 						</div>
+						<ActionRow>
+							<DropdownContainer></DropdownContainer>
+							<ButtonContainer>
+								<Button
+									style={{ padding: "0 10px", marginRight: "5px" }}
+									isSecondary={true}
+									onClick={() => {
+										resetQuery();
+									}}
+								>
+									Clear
+								</Button>
+								<Button
+									style={{ padding: "0 10px" }}
+									onClick={() => executeNRQL(selectedAccount?.value, props.entityGuid!)}
+									loading={isLoading}
+								>
+									Run
+								</Button>
+							</ButtonContainer>
+						</ActionRow>
 					</div>
 				</QueryWrapper>
-				<ActionRow>
-					<DropdownContainer></DropdownContainer>
-					<ButtonContainer>
-						<Button
-							style={{ padding: "0 10px", marginRight: "5px" }}
-							isSecondary={true}
-							onClick={() => {
-								resetQuery();
-							}}
-						>
-							Clear
-						</Button>
-						<Button
-							style={{ padding: "0 10px" }}
-							onClick={() => executeNRQL(selectedAccount?.value, props.entityGuid!)}
-							loading={isLoading}
-						>
-							Run
-						</Button>
-					</ButtonContainer>
-				</ActionRow>
 			</PanelHeader>
 			<div
 				ref={ref}
 				style={{
-					padding: "0px 20px 0px 20px",
-					marginBottom: "20px",
+					padding: "0px 20px 13px 20px",
 					width: "100%",
-					height: "100%",
+					overflow: "hidden",
 				}}
 			>
 				<ResultsRow>
