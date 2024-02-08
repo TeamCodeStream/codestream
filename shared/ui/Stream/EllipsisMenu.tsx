@@ -115,6 +115,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			eligibleJoinCompanies: _sortBy(user?.eligibleJoinCompanies, "name"),
 			possibleAuthDomains,
 			nrUserId: user?.nrUserId,
+			ide: state.ide,
 		};
 	});
 
@@ -376,6 +377,9 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 							title: "What's New",
 							entryPoint: "profile",
 							entityAccounts: [],
+							ide: {
+								name: derivedState.ide.name,
+							},
 						});
 					},
 				},

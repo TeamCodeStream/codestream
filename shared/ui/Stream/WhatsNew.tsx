@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import Icon from "../Stream/Icon";
+import { Link } from "./Link";
 
 const Main = styled.main``;
 
@@ -77,31 +78,81 @@ export const WhatsNewPanel = () => {
 			<TimelineContent>
 				<TimelineHeader>
 					<TimelineMarker />
-					<TimelineTitle>15.2 - Unread messages on mobile</TimelineTitle>
+					<TimelineTitle>15.2.0</TimelineTitle>
 					<TimelineDate>February 7, 2024</TimelineDate>
 				</TimelineHeader>
 				<div className="tl-body">
 					<Update>
-						<UpdateTitle>Theme customization is back!</UpdateTitle>
-						<UpdateItem>
-							Change the look of your workspace with the option to choose colors for different
-							elements of your Slack theme.
-						</UpdateItem>
-					</Update>
-					<Update>
-						<UpdateTitle>Other Updates</UpdateTitle>
+						<UpdateTitle>Added</UpdateTitle>
 						<ListContainer>
 							<li>
-								Screen reader users can now use keyboard shortcuts to hear a summary of unread
-								activity in all of their logged in workspaces.
+								A new "Apply Fix" button allows you to easily accept a suggested code fix when NRAI
+								analyzes an error for you
+							</li>
+							<li>Code fixes suggested by NRAI are now presented in a diff view</li>
+						</ListContainer>
+					</Update>
+				</div>
+			</TimelineContent>
+			<TimelineContent>
+				<TimelineHeader>
+					<TimelineMarker />
+					<TimelineTitle>15.1.1</TimelineTitle>
+					<TimelineDate>January 15, 2024</TimelineDate>
+				</TimelineHeader>
+				<div className="tl-body">
+					<Update>
+						<UpdateTitle>Fixed</UpdateTitle>
+						<ListContainer>
+							<li>Fixes an issue with an infinite loop on non-refresh token errors</li>
+						</ListContainer>
+					</Update>
+				</div>
+			</TimelineContent>
+			<TimelineContent>
+				<TimelineHeader>
+					<TimelineMarker />
+					<TimelineTitle>15.1.0</TimelineTitle>
+					<TimelineDate>January 23, 2024</TimelineDate>
+				</TimelineHeader>
+				<div className="tl-body">
+					<Update>
+						<UpdateTitle>Added</UpdateTitle>
+						<ListContainer>
+							<li>Adds support for errors from Browser services</li>
+							<li>
+								Adds change in error rate and response time in Golden Metrics section from three
+								hours before your last deployment to three hours after
+							</li>
+							<li>Adds display of Golden Metrics, SLOs and Related Services for OTel services</li>
+							<li>Adds display of Golden Metrics for Lambda functions</li>
+						</ListContainer>
+					</Update>
+					<Update>
+						<UpdateTitle>Changed</UpdateTitle>
+						<ListContainer>
+							<li>
+								Anomalies in the Code-Level Metrics section are now displayed in a hierarchy of
+								transactions and metrics
 							</li>
 							<li>
-								Admins on the Enterprise Grid plan can adjust the banners that appear in Slack
-								Connect conversations to make them more visible.
+								When viewing anomaly details, the chart appropriate to the type of anomaly is now
+								displayed first
+							</li>
+						</ListContainer>
+					</Update>
+					<Update>
+						<UpdateTitle>Fixed</UpdateTitle>
+						<ListContainer>
+							<li>
+								Addressed{" "}
+								<Link href="https://github.com/TeamCodeStream/codestream/issues/1682">#1682</Link> -
+								Export data has bad header
 							</li>
 							<li>
-								Show or hide your list of workspaces by clicking the workspace switcher icon in the
-								top bar of the desktop app.
+								Addressed{" "}
+								<Link href="https://github.com/TeamCodeStream/codestream/issues/1683">#1683</Link> -
+								Export data corrupt when comment has a comma
 							</li>
 						</ListContainer>
 					</Update>
@@ -110,32 +161,14 @@ export const WhatsNewPanel = () => {
 			<TimelineContent>
 				<TimelineHeader>
 					<TimelineMarker />
-					<TimelineTitle>15.1 - Cool Update Dummy Content</TimelineTitle>
-					<TimelineDate>December 25, 2023</TimelineDate>
+					<TimelineTitle>15.0.1</TimelineTitle>
+					<TimelineDate>December 15, 2023</TimelineDate>
 				</TimelineHeader>
 				<div className="tl-body">
 					<Update>
-						<UpdateTitle>Theme customization is back!</UpdateTitle>
-						<UpdateItem>
-							Change the look of your workspace with the option to choose colors for different
-							elements of your Slack theme.
-						</UpdateItem>
-					</Update>
-					<Update>
-						<UpdateTitle>Other Updates</UpdateTitle>
+						<UpdateTitle>Changed</UpdateTitle>
 						<ListContainer>
-							<li>
-								Screen reader users can now use keyboard shortcuts to hear a summary of unread
-								activity in all of their logged in workspaces.
-							</li>
-							<li>
-								Admins on the Enterprise Grid plan can adjust the banners that appear in Slack
-								Connect conversations to make them more visible.
-							</li>
-							<li>
-								Show or hide your list of workspaces by clicking the workspace switcher icon in the
-								top bar of the desktop app.
-							</li>
+							<li>Generative AI assistant is now named New Relic AI</li>
 						</ListContainer>
 					</Update>
 				</div>
@@ -143,97 +176,44 @@ export const WhatsNewPanel = () => {
 			<TimelineContent>
 				<TimelineHeader>
 					<TimelineMarker />
-					<TimelineTitle>15.0 - Massive Gamechanging Update</TimelineTitle>
-					<TimelineDate>September 20, 2023</TimelineDate>
+					<TimelineTitle>15.0.0</TimelineTitle>
+					<TimelineDate>December 13, 2023</TimelineDate>
 				</TimelineHeader>
 				<div className="tl-body">
 					<Update>
-						<UpdateTitle>Theme customization is back!</UpdateTitle>
-						<UpdateItem>
-							Change the look of your workspace with the option to choose colors for different
-							elements of your Slack theme.
-						</UpdateItem>
-					</Update>
-					<Update>
-						<UpdateTitle>Other Updates</UpdateTitle>
+						<UpdateTitle>Changed</UpdateTitle>
 						<ListContainer>
 							<li>
-								Screen reader users can now use keyboard shortcuts to hear a summary of unread
-								activity in all of their logged in workspaces.
+								Identity is now unified with New Relic, and you will sign in to CodeStream using
+								your New Relic credentials
 							</li>
 							<li>
-								Admins on the Enterprise Grid plan can adjust the banners that appear in Slack
-								Connect conversations to make them more visible.
+								Adding and removing organization members is now handled via New Relic on the web
 							</li>
 							<li>
-								Show or hide your list of workspaces by clicking the workspace switcher icon in the
-								top bar of the desktop app.
+								Changing your email address or full name is now handled via New Relic on the web
 							</li>
+							<li>
+								The expanded/collapsed state of each top-level section of the CodeStream pane is
+								preserved as you switch between services
+							</li>
+							<li>
+								Open incidents for a given service have been replaced by open issues, and are now
+								displayed above the Golden Metrics
+							</li>
+							<li>
+								Anomalous methods in the Code-Level Metrics section are no longer split up between
+								average duration and error rate anomalies
+							</li>
+							<li>The "Switch Organization" menu has been renamed to "Switch Users"</li>
 						</ListContainer>
 					</Update>
-				</div>
-			</TimelineContent>
-			<TimelineContent>
-				<TimelineHeader>
-					<TimelineMarker />
-					<TimelineTitle>14.9 - Update Foo Bar Baz</TimelineTitle>
-					<TimelineDate>June 20, 2023</TimelineDate>
-				</TimelineHeader>
-				<div className="tl-body">
 					<Update>
-						<UpdateTitle>Theme customization is back!</UpdateTitle>
-						<UpdateItem>
-							Change the look of your workspace with the option to choose colors for different
-							elements of your Slack theme.
-						</UpdateItem>
-					</Update>
-					<Update>
-						<UpdateTitle>Other Updates</UpdateTitle>
+						<UpdateTitle>Fixed</UpdateTitle>
 						<ListContainer>
 							<li>
-								Screen reader users can now use keyboard shortcuts to hear a summary of unread
-								activity in all of their logged in workspaces.
-							</li>
-							<li>
-								Admins on the Enterprise Grid plan can adjust the banners that appear in Slack
-								Connect conversations to make them more visible.
-							</li>
-							<li>
-								Show or hide your list of workspaces by clicking the workspace switcher icon in the
-								top bar of the desktop app.
-							</li>
-						</ListContainer>
-					</Update>
-				</div>
-			</TimelineContent>
-			<TimelineContent>
-				<TimelineHeader>
-					<TimelineMarker />
-					<TimelineTitle>15.2 - Fixing Things Here and There</TimelineTitle>
-					<TimelineDate>June 10, 2023</TimelineDate>
-				</TimelineHeader>
-				<div className="tl-body">
-					<Update>
-						<UpdateTitle>Theme customization is back!</UpdateTitle>
-						<UpdateItem>
-							Change the look of your workspace with the option to choose colors for different
-							elements of your Slack theme.
-						</UpdateItem>
-					</Update>
-					<Update>
-						<UpdateTitle>Other Updates</UpdateTitle>
-						<ListContainer>
-							<li>
-								Screen reader users can now use keyboard shortcuts to hear a summary of unread
-								activity in all of their logged in workspaces.
-							</li>
-							<li>
-								Admins on the Enterprise Grid plan can adjust the banners that appear in Slack
-								Connect conversations to make them more visible.
-							</li>
-							<li>
-								Show or hide your list of workspaces by clicking the workspace switcher icon in the
-								top bar of the desktop app.
+								Fixes an issue where a newly opened repo wouldn't be recognized by the CodeStream
+								pane without a reload
 							</li>
 						</ListContainer>
 					</Update>
