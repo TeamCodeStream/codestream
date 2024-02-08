@@ -9,7 +9,7 @@ import {
 import { IdeNames, OpenEditorViewNotificationType } from "@codestream/protocols/webview";
 import { parseId } from "@codestream/webview/utilities/newRelic";
 import { Disposable } from "@codestream/webview/utils";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { OptionProps, components } from "react-select";
 import { AsyncPaginate } from "react-select-async-paginate";
@@ -123,7 +123,7 @@ export const NRQLPanel = (props: {
 }) => {
 	const supports = { export: props.ide?.name === "VSC" };
 
-	const accountId = props.accountId
+	const initialAccountId = props.accountId
 		? props.accountId
 		: props.entityGuid
 		? parseId(props.entityGuid)?.accountId
@@ -155,6 +155,10 @@ export const NRQLPanel = (props: {
 
 	let accountsPromise;
 
+	const accountId = useMemo(() => {
+		return (selectedAccount?.value || initialAccountId)!;
+	}, [selectedAccount]);
+
 	useEffect(() => {
 		HostApi.instance.track("codestream/nrql/webview opened", {
 			event_type: "click",
@@ -166,34 +170,39 @@ export const NRQLPanel = (props: {
 				if (nrqlEditorRef?.current) {
 					nrqlEditorRef.current!.setValue(e.query);
 					setUserQuery(e.query!);
-					executeNRQL((selectedAccount?.value || accountId)!, e.query!);
+					executeNRQL(accountId, e.query!);
 				}
 			})
 		);
 
-		accountsPromise = HostApi.instance.send(GetAllAccountsRequestType, {}).then(result => {
-			setAccounts(result.accounts);
-			let foundAccount: Account | undefined = undefined;
-			if (result?.accounts?.length) {
-				if (accountId) {
-					foundAccount = result.accounts.find(_ => _.id === accountId);
+		accountsPromise = HostApi.instance
+			.send(GetAllAccountsRequestType, {})
+			.then(result => {
+				setAccounts(result.accounts);
+				let foundAccount: Account | undefined = undefined;
+				if (result?.accounts?.length) {
+					if (initialAccountId) {
+						foundAccount = result.accounts.find(_ => _.id === initialAccountId);
+					}
+					if (!foundAccount) {
+						foundAccount = result.accounts[0];
+					}
+					if (foundAccount) {
+						setSelectedAccount(formatSelectedAccount(foundAccount));
+					}
 				}
 				if (!foundAccount) {
-					foundAccount = result.accounts[0];
+					handleError("Missing account");
+				} else {
+					if (props.query) {
+						setUserQuery(props.query);
+						executeNRQL(foundAccount.id, props.query);
+					}
 				}
-				if (foundAccount) {
-					setSelectedAccount(formatSelectedAccount(foundAccount));
-				}
-			}
-			if (!foundAccount) {
-				handleError("Missing account");
-			} else {
-				if (props.query) {
-					setUserQuery(props.query);
-					executeNRQL(foundAccount.id, props.query);
-				}
-			}
-		});
+			})
+			.catch(ex => {
+				handleError(ex?.message || "Error fetching accounts");
+			});
 		return () => {
 			disposables && disposables.forEach(_ => _.dispose());
 		};
@@ -414,7 +423,7 @@ export const NRQLPanel = (props: {
 
 							<div style={{ marginLeft: "auto", marginRight: "8px", fontSize: "11px" }}>
 								<NRQLVisualizationDropdown
-									accountId={(selectedAccount?.value || accountId)!}
+									accountId={accountId}
 									onSelectCallback={handleVisualizationDropdownCallback}
 									resultsTypeGuess={resultsTypeGuess}
 								/>
@@ -422,10 +431,7 @@ export const NRQLPanel = (props: {
 
 							{supports.export && (
 								<div style={{ paddingTop: "2px" }}>
-									<ExportResults
-										results={results}
-										accountId={selectedAccount?.value || accountId}
-									/>
+									<ExportResults results={results} accountId={accountId} />
 								</div>
 							)}
 						</SinceContainer>
