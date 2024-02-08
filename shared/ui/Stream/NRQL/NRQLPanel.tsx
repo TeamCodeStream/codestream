@@ -414,6 +414,7 @@ export const NRQLPanel = (props: {
 
 							<div style={{ marginLeft: "auto", marginRight: "8px", fontSize: "11px" }}>
 								<NRQLVisualizationDropdown
+									accountId={(selectedAccount?.value || accountId)!}
 									onSelectCallback={handleVisualizationDropdownCallback}
 									resultsTypeGuess={resultsTypeGuess}
 								/>

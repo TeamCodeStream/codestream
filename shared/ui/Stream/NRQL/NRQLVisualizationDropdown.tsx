@@ -1,8 +1,9 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { Dropdown, DropdownItem } from "../Dropdown";
-import styled from "styled-components";
-import { isEmpty as _isEmpty } from "lodash-es";
 import { ResultsTypeGuess } from "@codestream/protocols/agent";
+import { HostApi } from "@codestream/webview/webview-api";
+import { isEmpty as _isEmpty } from "lodash-es";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import styled from "styled-components";
+import { Dropdown, DropdownItem } from "../Dropdown";
 
 interface StatesToDisplay {
 	[key: string]: string;
@@ -24,10 +25,12 @@ const StyledDropdownContainer = styled.div`
 `;
 
 export const NRQLVisualizationDropdown = (props: {
+	accountId: number;
 	onSelectCallback: Function;
 	resultsTypeGuess: ResultsTypeGuess;
 }) => {
 	const [selectedValue, setSelectedValue] = useState("Table");
+	const prevVisualizationType = useRef(props.resultsTypeGuess?.selected);
 
 	const populateItems = (): DropdownItem[] => {
 		return [
@@ -39,6 +42,12 @@ export const NRQLVisualizationDropdown = (props: {
 					key,
 					label,
 					action: e => {
+						HostApi.instance.track("codestream/nrql/visualization changed", {
+							event_type: "change",
+							account_id: props.accountId,
+							meta_data: `old_value: ${prevVisualizationType.current}; new_value: ${key}`,
+						});
+						prevVisualizationType.current = key;
 						setSelectedValue(STATES_TO_DISPLAY_STRINGS[key]);
 						props.onSelectCallback(key);
 					},
