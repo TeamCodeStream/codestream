@@ -710,30 +710,35 @@ export class CodeStreamSession {
 	@log()
 	async whatsNewNotification() {
 		try {
+			const currentVersion = this.versionInfo.extension.version;
 			const me = await SessionContainer.instance().users.getMe();
 			const preferences = me.preferences;
+
+			// already tracked for this version; bail out
+			if (preferences?.whatsNewNotificationsSent?.includes(currentVersion)) {
+				return;
+			}
 
 			const whatsNewBuffer = fs.readFileSync(path.join(__dirname, "WhatsNew.json"), {
 				encoding: "utf-8",
 			});
 			const whatsNew: { version: string; title: string }[] = JSON.parse(whatsNewBuffer);
 
-			const currentVersion = this.versionInfo.extension.version;
-
 			const isFlagged = whatsNew.find(wn => {
 				return wn.version === currentVersion;
 			});
 
-			if (isFlagged && preferences) {
-				if (!preferences.whatsNewSeen?.includes(currentVersion)) {
-					this.agent.sendNotification(WhatsNewNotificationType, {
-						title: isFlagged.title,
-					});
-					const newPreference = {
-						whatsNewSeen: [...(preferences.whatsNewSeen ?? []), currentVersion],
-					};
-					this._api?.updatePreferences({ preferences: newPreference });
-				}
+			if (isFlagged) {
+				this.agent.sendNotification(WhatsNewNotificationType, {
+					title: isFlagged.title,
+				});
+				const newPreference = {
+					whatsNewNotificationsSent: [
+						...(preferences?.whatsNewNotificationsSent ?? []),
+						currentVersion,
+					],
+				};
+				this._api?.updatePreferences({ preferences: newPreference });
 			}
 		} catch (err) {
 			//log it, but bail silently. don't want this interrupting users

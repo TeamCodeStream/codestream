@@ -894,7 +894,7 @@ export interface CSMePreferences {
 	codeErrorTimeWindow?: CodeErrorTimeWindow;
 	clmSettings?: CLMSettings;
 
-	whatsNewSeen?: string[];
+	whatsNewNotificationsSent?: string[];
 
 	[key: string]: any;
 }
