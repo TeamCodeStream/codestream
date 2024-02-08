@@ -541,7 +541,7 @@ export const ActivityPanel = () => {
 													: ""
 											}`,
 											meta_data_3: `following: ${(codemark.followerIds || []).includes(
-												derivedState.currentUserId || ""
+												derivedState.currentUserId!
 											)}`,
 											event_type: "modal_display",
 										});

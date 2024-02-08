@@ -936,7 +936,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 														entity_guid: props.errorGroup?.entityGuid,
 														account_id: props.errorGroup?.accountId,
 														meta_data: "destination: error_group",
-														meta_data_2: `codestream_section: code_level_metrics`,
+														meta_data_2: `codestream_section: error`,
 														event_type: "click",
 													});
 													HostApi.instance.send(OpenUrlRequestType, {

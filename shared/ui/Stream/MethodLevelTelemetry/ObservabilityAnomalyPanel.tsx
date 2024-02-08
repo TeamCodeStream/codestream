@@ -327,7 +327,7 @@ export const ObservabilityAnomalyPanel = () => {
 						HostApi.instance.track("codestream/link_to_newrelic clicked", {
 							entity_guid: derivedState.currentObservabilityAnomalyEntityGuid,
 							meta_data: "destination: transactions",
-							meta_data_2: `codestream_section: clm_anomalies`,
+							meta_data_2: `codestream_section: transactions`,
 							event_type: "click",
 						});
 						HostApi.instance.send(OpenUrlRequestType, {
