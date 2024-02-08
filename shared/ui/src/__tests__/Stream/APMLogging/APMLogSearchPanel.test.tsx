@@ -1,13 +1,9 @@
 /**
  * @jest-environment jsdom
  */
-import {
-	GetAllAccountsResponse,
-	GetNRQLRecentQueriesResponse,
-	GetNRQLResponse,
-} from "@codestream/protocols/agent";
+
+
 import { createTheme } from "@codestream/webview/src/themes";
-import { isFeatureEnabled } from "@codestream/webview/store/apiVersioning/reducer";
 import { APMLogSearchPanel } from "@codestream/webview/Stream/APMLogging/APMLogSearchPanel";
 import { HostApi } from "@codestream/webview/webview-api";
 import "@testing-library/jest-dom";
@@ -21,12 +17,7 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
 	disconnect: jest.fn(),
 }));
 
-jest.mock("@codestream/webview/store/apiVersioning/reducer");
 jest.mock("@codestream/webview/webview-api");
-jest.mock("@codestream/webview/store/providers/reducer");
-
-const mockIsFeatureEnabled = jest.mocked(isFeatureEnabled);
-mockIsFeatureEnabled.mockReturnValue(true);
 
 const MockedHostApi = HostApi as any;
 const mockTrack = jest.fn();
@@ -38,23 +29,6 @@ const mockHostApi = {
 		};
 	},
 	send: async (a: { method: string }, b, c) => {
-		if (a.method === "codestream/newrelic/nrql/queries/recent") {
-			return {
-				items: [{ query: "SELECT * FROM FOO", accountIds: [1], createdAt: new Date().getTime() }],
-			} as GetNRQLRecentQueriesResponse;
-		}
-		if (a.method === "codestream/newrelic/accounts/all") {
-			return {
-				accounts: [{ id: 1, name: "account1" }],
-			} as GetAllAccountsResponse;
-		}
-		if (a.method === "codestream/newrelic/nrql/search") {
-			return {
-				results: [{ foo: "bar" }],
-				accountId: 1,
-				resultsTypeGuess: { selected: "json", enabled: [] },
-			} as GetNRQLResponse;
-		}
 		return true;
 	},
 };
