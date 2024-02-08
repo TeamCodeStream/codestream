@@ -523,6 +523,7 @@ export const APMLogSearchPanel = (props: {
 						<div className="log-filter-bar-query">
 							<Icon name="search" className="search" />
 							<input
+								data-testid="query-text"
 								name="q"
 								value={query}
 								className="input-text control"
@@ -539,6 +540,7 @@ export const APMLogSearchPanel = (props: {
 
 						<div className="log-filter-bar-search">
 							<Button
+								data-testid="query-btn"
 								className="query"
 								onClick={() => fetchLogs(selectedEntityAccount?.value)}
 								loading={isLoading}
@@ -607,7 +609,9 @@ export const APMLogSearchPanel = (props: {
 
 					{!logError && !totalItems && !isLoading && !hasSearched && (
 						<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
-							<span>Enter search criteria above, or just click Query to see recent logs.</span>
+							<span data-testid="default-message">
+								Enter search criteria above, or just click Query to see recent logs.
+							</span>
 						</div>
 					)}
 
