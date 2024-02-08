@@ -191,7 +191,11 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 											}}
 										>
 											<TransactionIconSpan>
-												<Icon style={{ paddingTop: "2px" }} className="subtle" name="anomaly" />
+												<Icon
+													style={{ paddingTop: "2px", paddingLeft: "0px" }}
+													className="subtle"
+													name="anomaly"
+												/>
 											</TransactionIconSpan>
 											<Tooltip title={tooltipContent(anomaly)} placement="topRight" delay={1}>
 												{formatFilePath(anomaly.text)}
@@ -210,7 +214,7 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 													return (
 														<Row
 															style={{
-																padding: "0 10px 0 48px",
+																padding: "0 10px 0 54px",
 															}}
 															className={"pr-row"}
 															onClick={e => {
@@ -225,7 +229,7 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 														>
 															<TransactionIconSpan>
 																<Icon
-																	style={{ paddingTop: "2px" }}
+																	style={{ paddingTop: "2px", paddingLeft: "0px" }}
 																	className="subtle"
 																	name="anomaly"
 																/>
