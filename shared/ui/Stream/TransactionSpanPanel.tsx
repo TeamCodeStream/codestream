@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Range } from "vscode-languageserver-types";
 import { CodeStreamState } from "../store";
 import { PanelHeader } from "../src/components/PanelHeader";
 import { CurrentTransactionSpan } from "../store/context/types";
@@ -7,11 +8,21 @@ import CancelButton from "./CancelButton";
 import { closePanel, setCurrentTransactionSpan } from "../store/context/actions";
 import { HostApi } from "../webview-api";
 import {
+	GetObservabilityErrorGroupMetadataRequestType,
+	GetRepoFileFromAbsolutePathRequestType,
 	GetSpanChartDataRequestType,
 	GetSpanChartDataResponse,
+	MatchReposRequestType,
+	MatchReposResponse,
+	NormalizeUrlRequestType,
+	RelatedRepository,
 	SpanHistogramData,
 	SpanLineChartData,
-} from "../../util/src/protocol/agent/agent.protocol.providers";
+} from "@codestream/protocols/agent";
+import {
+	EditorRevealSymbolRequestType,
+	EditorSelectRangeRequestType,
+} from "@codestream/protocols/webview";
 import { MetaLabel } from "./Codemark/BaseCodemark";
 import {
 	Bar,
@@ -28,6 +39,7 @@ import {
 import { DelayedRender } from "../Container/DelayedRender";
 import { LoadingMessage } from "../src/components/LoadingMessage";
 import { useDidMount } from "../utilities/hooks";
+import { CSRepository } from "@codestream/protocols/api";
 
 const COLOR_LINE_1 = "#8884d8";
 const COLOR_LINE_2 = "#7aa7d2";
@@ -213,10 +225,89 @@ export const TransactionSpanPanel = () => {
 	const [chartData, setChartData] = useState<GetSpanChartDataResponse | undefined>(undefined);
 	const [fetchError, setFetchError] = useState<string | undefined>(undefined);
 
+	const navigateToCode = async () => {
+		if (
+			derivedState.currentTransactionSpan.lineNumber &&
+			derivedState.currentTransactionSpan.newRelicEntityGuid
+		) {
+			const metadataResponse = await HostApi.instance.send(
+				GetObservabilityErrorGroupMetadataRequestType,
+				{
+					entityGuid: derivedState.currentTransactionSpan.newRelicEntityGuid,
+				}
+			);
+			const relatedRepos = metadataResponse?.relatedRepos as RelatedRepository[];
+
+			const repoUrls = (
+				await Promise.all(
+					relatedRepos.map(_ =>
+						_.url ? HostApi.instance.send(NormalizeUrlRequestType, { url: _.url }) : undefined
+					)
+				)
+			)
+				.filter(Boolean)
+				.map(_ => _!.normalizedUrl);
+
+			const repoResponse = (await HostApi.instance.send(MatchReposRequestType, {
+				repos: [
+					{
+						remotes: repoUrls,
+						knownCommitHashes: derivedState.currentTransactionSpan.commitSha
+							? [derivedState.currentTransactionSpan.commitSha]
+							: [],
+					},
+				],
+			})) as MatchReposResponse;
+
+			let repo: CSRepository;
+			if (repoResponse.repos.length === 1 && derivedState.currentTransactionSpan.filePath) {
+				repo = repoResponse.repos[0];
+				const { uri, error } = await HostApi.instance.send(GetRepoFileFromAbsolutePathRequestType, {
+					repo,
+					absoluteFilePath: derivedState.currentTransactionSpan.filePath,
+				});
+				if (error) {
+					console.error(`Error finding repo file: ${error}`);
+				}
+				if (uri) {
+					const range = Range.create(
+						parseInt(derivedState.currentTransactionSpan.lineNumber || "1") - 1,
+						0,
+						parseInt(derivedState.currentTransactionSpan.lineNumber || "1") - 1,
+						9999
+					);
+					HostApi.instance.send(EditorSelectRangeRequestType, {
+						uri,
+						selection: {
+							start: range.start,
+							end: range.end,
+							cursor: range.start,
+						},
+						preserveFocus: true,
+					});
+					return;
+				}
+			}
+		}
+		if (derivedState.currentTransactionSpan.language) {
+			HostApi.instance.send(EditorRevealSymbolRequestType, {
+				codeFilepath: derivedState.currentTransactionSpan.filePath,
+				codeNamespace: derivedState.currentTransactionSpan.codeNamespace,
+				codeFunction: derivedState.currentTransactionSpan.functionName,
+				language: derivedState.currentTransactionSpan.language,
+			});
+		}
+	};
+
 	useDidMount(() => {
-		// HostApi.instance.track("codestream/tracing/span displayed", {
-		// 	meta_data: `span_id: ${derivedState.currentTransactionSpan.spanId}`,
-		// });
+		HostApi.instance.track("codestream/tracing/span displayed", {
+			event_type: "modal_display",
+			entity_guid: derivedState.currentTransactionSpan.newRelicEntityGuid,
+			account_id: derivedState.currentTransactionSpan.newRelicAccountId,
+			meta_data: `span_id: ${derivedState.currentTransactionSpan.spanId}`,
+			meta_data_2: `trace_id: ${derivedState.currentTransactionSpan.traceId}`,
+		});
+		navigateToCode();
 	});
 
 	const loadChartData = async () => {

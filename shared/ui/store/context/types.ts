@@ -197,9 +197,11 @@ export interface CurrentTransactionSpan {
 	newRelicEntityGuid?: string;
 	newRelicAccountId?: number;
 	spanId?: string;
+	traceId?: string;
 	spanName?: string;
 	spanHost?: string;
 	url?: string;
+	language?: string;
 	codeNamespace?: string;
 	functionName?: string;
 	filePath?: string;
