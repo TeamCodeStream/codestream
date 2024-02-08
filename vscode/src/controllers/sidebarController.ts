@@ -544,7 +544,10 @@ export class SidebarController implements Disposable {
 			panel: "whatsnew",
 			title: "Whats New",
 			entityAccounts: [],
-			entryPoint: "notification"
+			entryPoint: "notification",
+			ide: {
+				name: "VSC"
+			}
 		});
 	}
 
