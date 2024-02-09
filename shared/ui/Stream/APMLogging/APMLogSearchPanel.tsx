@@ -218,6 +218,11 @@ export const APMLogSearchPanel = (props: {
 				fetchFieldDefinitions(entityAccount.entityGuid);
 				fetchLogs(entityAccount.entityGuid, props.suppliedQuery);
 			})
+			.catch(ex => {
+				handleError(
+					"We ran into an error fetching a default service. Please select a service from the list above."
+				);
+			})
 			.finally(() => {
 				setIsInitializing(false);
 			});
