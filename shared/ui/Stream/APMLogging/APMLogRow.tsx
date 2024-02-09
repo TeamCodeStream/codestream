@@ -38,7 +38,7 @@ const TimestampData = styled.div`
 `;
 
 const MessageData = styled.div`
-	width: 80%;
+	width: 78%;
 	font-family: "Menlo", "Consolas", monospace;
 `;
 
@@ -112,6 +112,16 @@ export const APMLogRow = (props: {
 }) => {
 	const [isExpanded, setIsExpanded] = useState(false);
 
+	const [isHovered, setIsHovered] = useState(false);
+
+	const handleMouseEnter = () => {
+		setIsHovered(true);
+	};
+
+	const handleMouseLeave = () => {
+		setIsHovered(false);
+	};
+
 	if (props.showMore) {
 		return (
 			<ShowMoreContainer>
@@ -171,7 +181,7 @@ export const APMLogRow = (props: {
 
 	return (
 		<>
-			<RowContainer>
+			<RowContainer onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
 				<TimestampData>
 					<Icon
 						onClick={handleClickExpand}
@@ -187,7 +197,21 @@ export const APMLogRow = (props: {
 					</Tooltip>
 					<Timestamp time={props.timestamp} expandedTime={true} />
 				</TimestampData>
-				{!props.expandedContent && <MessageData>{props.message}</MessageData>}
+				{!props.expandedContent && (
+					<MessageData>
+						{props.message}
+						{isHovered && (
+							<span style={{ cursor: "pointer", position: "absolute", top: 12, right: 10 }}>
+								<Icon
+									onClick={handleClickExpand}
+									name="resize-vertical"
+									style={{ cursor: "pointer" }}
+									title="Show Surrounding"
+								/>{" "}
+							</span>
+						)}
+					</MessageData>
+				)}
 				{props.expandedContent && <MessageData>{props.expandedContent}</MessageData>}
 			</RowContainer>
 		</>
