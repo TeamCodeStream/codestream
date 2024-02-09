@@ -9,12 +9,7 @@ import React from "react";
 import { WebviewPanels } from "@codestream/protocols/api";
 import { HeadshotName } from "../src/components/HeadshotName";
 import { CodeStreamState } from "../store";
-import {
-	clearCurrentPullRequest,
-	setCreatePullRequest,
-	setCurrentCodemark,
-	setCurrentReview,
-} from "../store/context/actions";
+import { setCurrentCodemark, setCurrentReview } from "../store/context/actions";
 import { HostApi } from "../webview-api";
 import { openPanel } from "./actions";
 import { EllipsisMenu } from "./EllipsisMenu";
@@ -134,8 +129,6 @@ export function GlobalNav() {
 	};
 
 	const close = () => {
-		dispatch(setCreatePullRequest());
-		dispatch(clearCurrentPullRequest());
 		dispatch(setCurrentReview());
 		dispatch(setCurrentCodemark());
 		if (currentReviewId) {

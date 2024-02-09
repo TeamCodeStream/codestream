@@ -2,7 +2,6 @@ import { Button } from "../src/components/Button";
 import styled from "styled-components";
 import { Headshot, PRHeadshot } from "../src/components/Headshot";
 import { PRHeadshotName } from "../src/components/HeadshotName";
-import { PullRequestReactButton } from "./PullRequestReactions";
 import { TextButton } from "../src/components/controls/InlineMenu";
 import { Tabs, Tab } from "../src/components/Tabs";
 
@@ -443,15 +442,6 @@ export const PRReactions = styled.div`
 	border-top: 1px solid var(--base-border-color);
 	border-bottom: 1px solid var(--base-border-color);
 	margin: 10px -10px 10px -10px;
-	${PullRequestReactButton} {
-		display: none;
-	}
-	&:hover {
-		${PullRequestReactButton} {
-			padding-left: 15px;
-			display: inline-block;
-		}
-	}
 `;
 
 export const PRButtonRow = styled.div`

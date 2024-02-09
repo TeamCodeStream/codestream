@@ -644,6 +644,8 @@ export const Observability = React.memo((props: Props) => {
 			}
 			HostApi.instance.track("codestream/o11y rendered", properties);
 		}
+
+		console.warn(new Date().toLocaleString(), "cheese");
 	};
 
 	const callServiceClickedTelemetry = () => {

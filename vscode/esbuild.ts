@@ -42,6 +42,7 @@ async function webBuild(args: Args) {
 		outdir: target
 	};
 
+	console.info(JSON.stringify(buildOptions, null, 4));
 	await startEsbuild(args, buildOptions);
 }
 

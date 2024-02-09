@@ -2,11 +2,7 @@
 
 import { ParsedDiff } from "diff";
 
-import {
-	EnvironmentHost,
-	FetchProviderDefaultPullResponse,
-	ThirdPartyProviders,
-} from "./agent.protocol";
+import { EnvironmentHost, ThirdPartyProviders } from "./agent.protocol";
 import { CSEligibleJoinCompany, CSPossibleAuthDomain, CSReviewCheckpoint } from "./api.protocol";
 
 /* NOTE: there can be dynamic panel names that begin with configure-provider- or configure-enterprise- */
@@ -21,7 +17,6 @@ export enum WebviewPanels {
 	NewIssue = "new-issue",
 	NewReview = "new-review",
 	Profile = "profile", // DO NOT USE
-	PullRequest = "pull-request",
 	Review = "review",
 	Status = "status",
 	Tasks = "tasks",
@@ -29,12 +24,10 @@ export enum WebviewPanels {
 	PRInfo = "pr-info",
 	Integrations = "integrations",
 	GettingStarted = "gtting-started", // this is a typo but now baked into user data, so let's just leave it
-	NewPullRequest = "new-pull-request",
 	Flow = "flow",
 	Tester = "tester",
 	Sidebar = "sidebar",
 	OpenReviews = "open-reviews",
-	OpenPullRequests = "open-pull-requests",
 	Onboard = "onboard",
 	OnboardNewRelic = "onboard-newrelic",
 	Commits = "commits",
@@ -844,7 +837,6 @@ export interface CSMePreferences {
 	skipEmailingAuthors?: boolean;
 	skipPostCreationModal?: boolean;
 	pullRequestFilesChangedMode?: "files" | "tree" | "hunks";
-	pullRequestQueries?: FetchProviderDefaultPullResponse;
 	fetchRequestQueries?: FetchRequestQuery[];
 	pullRequestQueryShowAllRepos?: boolean;
 	pullRequestQueryHideLabels?: boolean;

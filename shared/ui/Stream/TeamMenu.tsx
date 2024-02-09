@@ -5,11 +5,7 @@ import { WebviewModals } from "../ipc/webview.protocol.common";
 import Icon from "./Icon";
 import { openModal, openPanel } from "./actions";
 import Menu from "./Menu";
-import {
-	setCurrentReview,
-	clearCurrentPullRequest,
-	setCreatePullRequest,
-} from "../store/context/actions";
+import { setCurrentReview } from "../store/context/actions";
 import { CodeStreamState } from "../store";
 import { keyFilter } from "../utils";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
@@ -90,15 +86,11 @@ export function TeamMenu(props: TeamMenuProps) {
 	};
 
 	const go = modal => {
-		dispatch(setCreatePullRequest());
-		dispatch(clearCurrentPullRequest());
 		dispatch(setCurrentReview());
 		dispatch(openModal(modal));
 	};
 
 	const goPanel = panel => {
-		dispatch(setCreatePullRequest());
-		dispatch(clearCurrentPullRequest());
 		dispatch(setCurrentReview());
 		dispatch(openPanel(panel));
 	};

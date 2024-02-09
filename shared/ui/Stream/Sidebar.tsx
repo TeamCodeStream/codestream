@@ -9,7 +9,6 @@ import { HostApi } from "@codestream/webview/webview-api";
 import { HostDidChangeWorkspaceFoldersNotificationType } from "@codestream/protocols/webview";
 import { Pane, PaneState } from "../src/components/Pane";
 import { CodeStreamState } from "../store";
-import { getConnectedSupportedPullRequestHosts } from "../store/providers/reducer";
 import { getRepos } from "../store/repos/reducer";
 import { getPreferences } from "../store/users/reducer";
 import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
@@ -93,7 +92,6 @@ export const Sidebar = React.memo(function Sidebar() {
 			sidebarPanes,
 			sidebarPaneOrder,
 			currentUserId: state.session.userId!,
-			hasPRProvider: getConnectedSupportedPullRequestHosts(state).length > 0,
 			ideName: state.ide.name,
 			currentRepoId: state.editorContext.scmInfo?.scm?.repoId,
 			textEditorUri: state.editorContext.textEditorUri,

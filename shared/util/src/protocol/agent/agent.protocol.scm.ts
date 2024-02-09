@@ -269,10 +269,6 @@ export interface GetReposScmRequest {
 	 * Set this flag to also return the remotes
 	 */
 	includeRemotes?: boolean;
-	/**
-	 * Set this flag to also return the providerId if a repo is connected to one
-	 */
-	includeConnectedProviders?: boolean;
 
 	/**
 	 * if set to a number, will return a tree structure of directories within this repo up to the specific depth

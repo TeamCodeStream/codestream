@@ -198,9 +198,7 @@ export class ScmManager {
 			if (request && (request.includeRemotes || request.includeProviders)) {
 				remotes = await Promise.all(repositories.map(repo => repo.getRemotes()));
 			}
-			if (request && request.includeConnectedProviders) {
-				user = await SessionContainer.instance().users.getMe();
-			}
+
 			if (
 				request &&
 				request.withSubDirectoriesDepth != null &&
@@ -219,29 +217,14 @@ export class ScmManager {
 			error: gitError,
 		};
 
-		if (request && request.includeConnectedProviders) {
-			response.repositories = await Promise.all(
-				repositories.map(async (repo, index) => {
-					const repoScm = GitRepositoryExtensions.toRepoScm(
-						repo,
-						branches[index],
-						remotes[index],
-						withSubDirectoriesDepth
-					);
-					repoScm.providerId = (await repo.getPullRequestProvider(user))?.providerId;
-					return repoScm;
-				})
-			);
-		} else {
-			response.repositories = repositories.map((repo, index) =>
-				GitRepositoryExtensions.toRepoScm(
-					repo,
-					branches[index],
-					remotes[index],
-					withSubDirectoriesDepth
-				)
-			);
-		}
+		response.repositories = repositories.map((repo, index) =>
+			GitRepositoryExtensions.toRepoScm(
+				repo,
+				branches[index],
+				remotes[index],
+				withSubDirectoriesDepth
+			)
+		);
 
 		if (request && request.guessProjectTypes) {
 			for (const repo of response.repositories) {
@@ -1138,28 +1121,6 @@ export class ScmManager {
 		const gitRemotes = await repo.getRemotes();
 		const remotes = [...Iterables.map(gitRemotes, r => ({ name: r.name, url: r.normalizedUrl }))];
 
-		let pullRequestReviewId;
-		let context;
-		// if we're looking at a review for a provider we support...
-		// try to lookup any possible metadata for additional context...
-		// github, for example, only allows 1 review per PR per user...
-		// so we want to know if we already have one...
-		if (
-			providerRegistry.providerSupportsPullRequests(codeStreamDiff.context?.pullRequest?.providerId)
-		) {
-			if (codeStreamDiff.context?.pullRequest?.id) {
-				pullRequestReviewId = await providerRegistry.executeMethod({
-					method: "getPullRequestReviewId",
-					providerId: codeStreamDiff.context.pullRequest.providerId,
-					params: {
-						pullRequestId: codeStreamDiff.context.pullRequest.id,
-					},
-				});
-				context = codeStreamDiff.context;
-				context.pullRequest!.pullRequestReviewId = pullRequestReviewId;
-			}
-		}
-
 		return {
 			// keep this as the original uri, as it is used in follow up requests
 			uri: documentUri.toString(),
@@ -1175,7 +1136,7 @@ export class ScmManager {
 				branch:
 					codeStreamDiff.side === "left" ? codeStreamDiff.baseBranch : codeStreamDiff.headBranch,
 			},
-			context: context,
+			context: undefined,
 			error: undefined,
 		};
 	}
@@ -1488,49 +1449,16 @@ export class ScmManager {
 	@lspHandler(GetBlameRequestType)
 	async getBlame(request: GetBlameRequest): Promise<GetBlameResponse> {
 		const uri = URI.parse(request.uri);
-		const { git, reviews, users, providerRegistry } = SessionContainer.instance();
+		const { git, reviews } = SessionContainer.instance();
 		const { shas, revisionEntries } = await git.getLineBlames(
 			uri,
 			request.startLine,
 			request.endLine
 		);
 		const repo = await git.getRepositoryByFilePath(uri.fsPath);
-		const user = await users.getMe();
-		const connectedProviders = await providerRegistry.getConnectedPullRequestProviders(user);
-		const providerRepo = repo && (await repo.getPullRequestProvider(user, connectedProviders));
-		const weightedRemotes =
-			repo &&
-			providerRepo?.remotes &&
-			(await repo.getWeightedRemotesByStrategy("prioritizeUpstream", providerRepo.remotes));
-		const ownersAndNames =
-			providerRepo?.provider &&
-			weightedRemotes?.map(r => providerRepo.provider.getOwnerFromRemote(r.path));
 
 		const commitInfos = new Map<string, GetBlameCommitInfo>();
 		for (const revisionEntry of revisionEntries) {
-			let prs = [];
-			if (ownersAndNames && !isUncommitted(revisionEntry.sha)) {
-				try {
-					const providerPrs =
-						(await providerRepo?.provider?.getPullRequestsContainigSha(
-							ownersAndNames,
-							revisionEntry.sha
-						)) || [];
-					prs.push(
-						...providerPrs.map(pr => ({
-							id: pr.id,
-							title: pr.title,
-							url: pr.url,
-							providerId: providerRepo.providerId,
-							providerName: providerRepo.providerName,
-						}))
-					);
-				} catch (e) {
-					Logger.warn(e);
-				}
-			}
-			prs = [...prs.reduce((map, obj) => map.set(obj.url, obj), new Map()).values()];
-
 			const dateFormatter = toFormatter(revisionEntry.date);
 			commitInfos.set(revisionEntry.sha, {
 				sha: revisionEntry.sha,
@@ -1543,7 +1471,7 @@ export class ScmManager {
 				gravatarUrl: toGravatar(revisionEntry.authorEmail, 16),
 				summary: revisionEntry.summary,
 				reviews: repo?.id ? await reviews.getReviewsContainingSha(repo.id, revisionEntry.sha) : [],
-				prs: prs || [],
+				prs: [],
 			});
 		}
 

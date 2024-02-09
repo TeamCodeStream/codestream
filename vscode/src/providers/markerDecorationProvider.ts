@@ -29,7 +29,7 @@ import {
 	SessionStatusChangedEvent,
 	TextDocumentMarkersChangedEvent
 } from "../api/session";
-import { OpenCodemarkCommandArgs, OpenPullRequestCommandArgs } from "../commands";
+import { OpenCodemarkCommandArgs } from "../commands";
 import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
@@ -499,58 +499,6 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 						// &nbsp; &middot; &nbsp; [__Unpin Marker \u1F4CC__](command:codestream.openStream?${encodeURIComponent(
 						// 	JSON.stringify(args)
 						// )} "Unpin Marker")
-					} else if (m.externalContent && m.externalContent.provider) {
-						const { externalContent } = m;
-						const viewCommandArgs: OpenPullRequestCommandArgs = {
-							providerId: externalContent.provider.id,
-							pullRequestId: externalContent.externalId!,
-							commentId: externalContent.externalChildId,
-							sourceUri: uri
-						};
-
-						const isGitHub = ["github*com", "github/enterprise"].includes(
-							m.externalContent.provider.id
-						);
-						const isGitLab = ["gitlab*com", "gitlab/enterprise"].includes(
-							m.externalContent.provider.id
-						);
-						const isBitbucket = ["bitbucket*org"].includes(m.externalContent.provider.id);
-						let typeString = "Comment";
-						if (m.type === "prcomment") {
-							if (isGitLab) {
-								typeString = "MR Comment";
-							} else {
-								typeString = "PR Comment";
-							}
-						}
-						message += `__${m.creatorName}__, ${m.fromNow()} \n\n ${m.summaryMarkdown} \n\n __${
-							isGitLab ? "MERGE" : "PULL"
-						} REQUEST__\n\n`;
-						if (isGitHub) {
-							message += "  $(github-inverted) ";
-						}
-						message += m.title ? m.title : "";
-						if (isGitHub || isGitLab || isBitbucket) {
-							message += ` \n\n[__View ${typeString} \u2197__](command:codestream.openPullRequest?${encodeURIComponent(
-								JSON.stringify(viewCommandArgs)
-							)} "View ${typeString}")`;
-						}
-
-						if (m.externalContent.actions && m.externalContent.actions.length) {
-							m.externalContent.actions.map(action => {
-								if (action.label === "Open Comment" || action.label === "Open Note") {
-									viewCommandArgs.externalUrl = action.uri;
-									message += ` \n\n[__View ${typeString} \u2197__](command:codestream.openPullRequest?${encodeURIComponent(
-										JSON.stringify(viewCommandArgs)
-									)} "View ${typeString}")`;
-								}
-							});
-						}
-
-						// TODO: Add actions from the external content
-						// message += `__${m.creatorName}__, ${m.fromNow()} &nbsp; _(${m.formatDate()})_ ${
-						// 	m.summaryMarkdown
-						// }`;
 					}
 
 					if (range) {

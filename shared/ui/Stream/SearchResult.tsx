@@ -11,7 +11,6 @@ import * as userSelectors from "../store/users/reducer";
 import Icon from "./Icon";
 import { markdownify } from "./Markdowner";
 import { Marker } from "./Marker";
-import { ChangesetFileList } from "./Review/ChangesetFileList";
 import Tag from "./Tag";
 import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
@@ -134,20 +133,16 @@ export default function SearchResult(props: Props) {
 	};
 
 	const buildTip = () => {
-		if (isCSReview(result)) {
-			return <ChangesetFileList noOnClick showRepoLabels review={result} />;
-		} else {
-			// @ts-ignore
-			const markers = result.markers || [];
-			return (
-				<Tip>
-					{!props.fullTitle && <span dangerouslySetInnerHTML={{ __html: titleHTML }} />}
-					{markers.map(marker => (
-						<Marker marker={marker} />
-					))}
-				</Tip>
-			);
-		}
+		// @ts-ignore
+		const markers = result.markers || [];
+		return (
+			<Tip>
+				{!props.fullTitle && <span dangerouslySetInnerHTML={{ __html: titleHTML }} />}
+				{markers.map(marker => (
+					<Marker marker={marker} />
+				))}
+			</Tip>
+		);
 	};
 
 	function escapeRegExp(str: string) {

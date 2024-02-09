@@ -28,7 +28,6 @@ import { Loading } from "../Container/Loading";
 import {
 	EditorSelectRangeRequestType,
 	NewCodemarkNotificationType,
-	NewPullRequestNotificationType,
 	NewReviewNotificationType,
 	PixieDynamicLoggingType,
 } from "../ipc/webview.protocol";
@@ -43,13 +42,11 @@ import {
 	setCurrentInstrumentationOptions,
 	setCurrentOrganizationInvite,
 	setCurrentPixieDynamicLoggingOptions,
-	setCurrentPullRequest,
 	setCurrentReview,
 	setCurrentReviewOptions,
 	setCurrentStream,
 	setIsFirstPageview,
 	setNewPostEntry,
-	setNewPullRequestOptions,
 } from "../store/context/actions";
 import { clearDynamicLogging } from "../store/dynamicLogging/actions";
 import { getPost } from "../store/posts/reducer";
@@ -80,13 +77,9 @@ import ConfigureTokenProviderPanel from "./ConfigureTokenProviderPanel";
 import ConfigureYouTrackPanel from "./ConfigureYouTrackPanel";
 import ConfigureMSTeamsPanel from "./ConfigureMSTeamsPanel";
 import { CreateCompanyPage } from "./CreateCompanyPage";
-import { CreatePullRequestPanel } from "./CreatePullRequestPanel";
 import { CreateTeamPage } from "./CreateTeamPage";
 import { ExportPanel } from "./ExportPanel";
 import FilterSearchPanel from "./FilterSearchPanel";
-import { FinishReview } from "./FinishReview";
-import { FlowPanel } from "./Flow";
-import { GettingStarted } from "./GettingStarted";
 import { GlobalNav } from "./GlobalNav";
 import InlineCodemarks from "./InlineCodemarks";
 import { IntegrationsPanel } from "./IntegrationsPanel";
@@ -101,11 +94,9 @@ import { OnboardNewRelic } from "./OnboardNewRelic";
 import { PixieDynamicLoggingPanel } from "./PixieDynamicLogging/PixieDynamicLoggingPanel";
 import { ProfilePanel } from "./ProfilePanel";
 import { PRProviderErrorBanner } from "./PRProviderErrorBanner";
-import { ReviewForm } from "./ReviewForm";
 import { CLMSettings } from "./CLMSettings";
 import { Sidebar } from "./Sidebar";
 import { PRInfoModal } from "./SpatialView/PRInfoModal";
-import { Team } from "./Team";
 import { TeamSetup } from "./TeamSetup";
 import { Tester } from "./Tester";
 import { ObservabilityAnomalyPanel } from "@codestream/webview/Stream/MethodLevelTelemetry/ObservabilityAnomalyPanel";
@@ -120,14 +111,12 @@ interface DispatchProps {
 	openPanel: typeof openPanel;
 	setCurrentCodemark: typeof setCurrentCodemark;
 	setCurrentPixieDynamicLoggingOptions: typeof setCurrentPixieDynamicLoggingOptions;
-	setCurrentPullRequest: typeof setCurrentPullRequest;
 	setCurrentOrganizationInvite: typeof setCurrentOrganizationInvite;
 	setCurrentReview: typeof setCurrentReview;
 	setCurrentReviewOptions: typeof setCurrentReviewOptions;
 	setCurrentStream: typeof setCurrentStream;
 	setIsFirstPageview: typeof setIsFirstPageview;
 	setNewPostEntry: typeof setNewPostEntry;
-	setNewPullRequestOptions: typeof setNewPullRequestOptions;
 	setUserPreference: (request: SetUserPreferenceRequest) => void;
 }
 
@@ -198,9 +187,7 @@ export class SimpleStream extends PureComponent<Props> {
 		this.disposables.push(
 			HostApi.instance.on(NewReviewNotificationType, this.handleNewReviewRequest, this)
 		);
-		this.disposables.push(
-			HostApi.instance.on(NewPullRequestNotificationType, this.handleNewPullRequestRequest, this)
-		);
+
 		this.disposables.push(
 			HostApi.instance.on(PixieDynamicLoggingType, this.handlePixieDynamicLoggingType, this)
 		);
@@ -237,25 +224,12 @@ export class SimpleStream extends PureComponent<Props> {
 			this.props.setNewPostEntry(e.source);
 		}
 		this.props.setCurrentReview("");
-		this.props.setCurrentPullRequest("", "");
-		this.props.setNewPullRequestOptions(undefined);
 		if (e) {
 			this.props.setCurrentReviewOptions({
 				includeLatestCommit: e.includeLatestCommit,
 			});
 		}
 		this.props.openPanel(WebviewPanels.NewReview);
-	}
-
-	handleNewPullRequestRequest(e) {
-		if (e.source) {
-			// this can come externally (from an IDE)
-			this.props.setNewPostEntry(e.source);
-		}
-		this.props.setCurrentReview("");
-		this.props.setCurrentPullRequest("", "");
-		this.props.setNewPullRequestOptions({ branch: e.branch });
-		this.props.openPanel(WebviewPanels.NewPullRequest);
 	}
 
 	handlePixieDynamicLoggingType(e) {
@@ -411,31 +385,8 @@ export class SimpleStream extends PureComponent<Props> {
 			"no-headshots": !showHeadshots,
 		});
 
-		// these panels do not have global nav
-		let renderNav =
-			![
-				"create-channel",
-				"create-dm",
-				"public-channels",
-				// WebviewPanels.Status,
-				WebviewPanels.Profile,
-				WebviewPanels.Flow,
-				WebviewPanels.NewPullRequest,
-			].includes(activePanel) &&
-			// !this.props.currentReviewId &&
-			// !this.props.currentPullRequestId &&
-			!activePanel.startsWith("configure-provider-") &&
-			!activePanel.startsWith("configure-enterprise-") &&
-			!activePanel.startsWith("oauthpat-provider-");
-
-		// if (this.state.floatCompose) renderNav = false;
-		// if (threadId) renderNav = false;
-
 		const onInlineCodemarks = activePanel === WebviewPanels.CodemarksForFile;
-		const contentClass =
-			onInlineCodemarks || this.props.currentCodemarkId
-				? "content inline"
-				: "content vscroll inline";
+
 		const configureProviderInfo =
 			activePanel.startsWith("configure-provider-") ||
 			activePanel.startsWith("configure-enterprise-") ||
@@ -484,11 +435,9 @@ export class SimpleStream extends PureComponent<Props> {
 						{activeModal === WebviewModals.ChangePassword && <ChangePassword />}
 						{activeModal === WebviewModals.ChangeTeamName && <ChangeTeamName />}
 						{activeModal === WebviewModals.ChangeCompanyName && <ChangeCompanyName />}
-						{activeModal === WebviewModals.FinishReview && <FinishReview />}
 						{activeModal === WebviewModals.Profile && <ProfilePanel />}
 						{activeModal === WebviewModals.BlameMap && <BlameMap />}
 						{activeModal === WebviewModals.Invite && <Invite />}
-						{activeModal === WebviewModals.Team && <Team />}
 						{activeModal === WebviewModals.TeamSetup && <TeamSetup />}
 						{activeModal === WebviewModals.Keybindings && (
 							<Keybindings onClick={this.props.closeModal}>
@@ -508,11 +457,9 @@ export class SimpleStream extends PureComponent<Props> {
 					activePanel !== WebviewPanels.Status &&
 					activePanel !== WebviewPanels.Codemarks &&
 					activePanel !== WebviewPanels.Invite &&
-					activePanel !== WebviewPanels.PullRequest &&
 					activePanel !== WebviewPanels.Review &&
 					activePanel !== WebviewPanels.Tasks &&
 					activePanel !== WebviewPanels.OpenReviews &&
-					activePanel !== WebviewPanels.OpenPullRequests &&
 					activePanel !== WebviewPanels.Sidebar &&
 					activePanel !== WebviewPanels.Onboard &&
 					activePanel !== WebviewPanels.OnboardNewRelic &&
@@ -556,8 +503,6 @@ export class SimpleStream extends PureComponent<Props> {
 									</DelayedRender>
 								</>
 							)}
-							{activePanel === WebviewPanels.Flow && <FlowPanel />}
-							{activePanel === WebviewPanels.NewReview && <ReviewForm />}
 							{activePanel === WebviewPanels.PixieDynamicLogging && <PixieDynamicLoggingPanel />}
 							{activePanel === WebviewPanels.MethodLevelTelemetry && <MethodLevelTelemetryPanel />}
 							{activePanel === WebviewPanels.TransactionSpan && <TransactionSpanPanel />}
@@ -566,10 +511,7 @@ export class SimpleStream extends PureComponent<Props> {
 							{/* {activePanel === WebviewPanels.APMLoggingSearch && <APMLogSearchPanel />} */}
 							{activePanel === WebviewPanels.Integrations && <IntegrationsPanel />}
 							{activePanel === WebviewPanels.Profile && <ProfilePanel />}
-							{activePanel === WebviewPanels.NewPullRequest && (
-								<CreatePullRequestPanel closePanel={() => this.props.closePanel()} />
-							)}
-							{activePanel === WebviewPanels.GettingStarted && <GettingStarted />}
+
 							{configureProviderInfo &&
 								!enterpriseProvider &&
 								!customConfigureProvider &&
@@ -848,13 +790,11 @@ export default connect(mapStateToProps, {
 	setCurrentCodeError,
 	setCurrentInstrumentationOptions,
 	setCurrentPixieDynamicLoggingOptions,
-	setCurrentPullRequest,
 	setCurrentOrganizationInvite,
 	setCurrentReview,
 	setCurrentReviewOptions,
 	setCurrentStream,
 	setIsFirstPageview,
 	setNewPostEntry,
-	setNewPullRequestOptions,
 	setUserPreference,
 })(SimpleStream);

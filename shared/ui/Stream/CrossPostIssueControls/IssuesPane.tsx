@@ -36,7 +36,6 @@ import {
 import { configureAndConnectProvider } from "../../store/providers/actions";
 import { getUserProviderInfo } from "../../store/providers/utils";
 import { setUserPreference, setUserStatus } from "../actions";
-import { ErrorMessage } from "../ConfigurePullRequestQuery";
 import Filter from "../Filter";
 import Icon from "../Icon";
 import { IntegrationButtons, Provider } from "../IntegrationsPanel";
@@ -45,10 +44,14 @@ import Menu from "../Menu";
 import { Modal } from "../Modal";
 import { PrePRProviderInfoModal, PrePRProviderInfoModalProps } from "../PrePRProviderInfoModal";
 import { SmartFormattedList } from "../SmartFormattedList";
-import { EMPTY_STATUS, StartWork } from "../StartWork";
 import Tooltip from "../Tooltip";
 import { ProviderDisplay, PROVIDER_MAPPINGS } from "./types";
 import { IssuesLoading } from "@codestream/webview/Stream/IssuesLoading";
+
+export const ErrorMessage = styled.div`
+	text-align: right;
+`;
+
 interface FetchCardError {
 	provider: string;
 	error: string;
@@ -420,8 +423,8 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		const status =
 			currentUser.status && currentUser.status[teamId] && "label" in currentUser.status[teamId]
 				? currentUser.status[teamId]
-				: EMPTY_STATUS;
-		const selectedCardId = status.ticketId || "";
+				: {};
+		const selectedCardId = "";
 		const invisible =
 			(currentUser.status && currentUser.status[teamId] && currentUser.status[teamId].invisible) ||
 			false;
@@ -1083,15 +1086,6 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 
 	return (
 		<>
-			{startWorkCard && (
-				<StartWork
-					card={startWorkCard}
-					onClose={() => {
-						setStartWorkCard(undefined);
-						setReload(reload + 1);
-					}}
-				/>
-			)}
 			{renderCustomFilter()}
 			<PaneHeader
 				title="Issues"

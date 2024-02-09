@@ -48,9 +48,8 @@ import { CodeErrorsState } from "../store/codeErrors/types";
 import { NewCodemarkAttributes, parseCodeStreamDiffUri } from "../store/codemarks/actions";
 import { getCodemark } from "../store/codemarks/reducer";
 import { CodemarksState } from "../store/codemarks/types";
-import { setCurrentPullRequestNeedsRefresh, setCurrentStream } from "../store/context/actions";
+import { setCurrentStream } from "../store/context/actions";
 import { getCurrentSelection } from "../store/editorContext/reducer";
-import { getPullRequestConversationsFromProvider } from "../store/providerPullRequests/thunks";
 import { getPRLabel, LabelHash } from "../store/providers/reducer";
 import { ReposState } from "../store/repos/types";
 import {
@@ -89,7 +88,6 @@ import Button from "./Button";
 import CancelButton from "./CancelButton";
 import { confirmPopup } from "./Confirm";
 import CrossPostIssueControls from "./CrossPostIssueControls";
-import { VideoLink } from "./Flow";
 import Headshot from "./Headshot";
 import Icon from "./Icon";
 import { Link } from "./Link";
@@ -103,6 +101,7 @@ import ContainerAtEditorSelection from "./SpatialView/ContainerAtEditorSelection
 import Tag from "./Tag";
 import Tooltip from "./Tooltip";
 import { isEmpty as _isEmpty } from "lodash-es";
+import styled from "styled-components";
 
 export interface ICrossPostIssueContext {
 	setSelectedAssignees(any: { value: string | ThirdPartyProviderUser; label: string }[]): void;
@@ -142,8 +141,6 @@ interface Props extends ConnectedProps {
 	error?: string;
 	openPanel: Function;
 	openModal: Function;
-	getPullRequestConversationsFromProvider: Function;
-	setCurrentPullRequestNeedsRefresh: Function;
 	setCurrentStream: typeof setCurrentStream;
 	setUserPreference: (request: SetUserPreferenceRequest) => void;
 	markItemRead(
@@ -267,6 +264,25 @@ interface State {
 	isDragging: number;
 	currentCodeErrorId?: string;
 }
+
+export const VideoLink = styled.a`
+	margin-top: 30px;
+	display: flex;
+	align-items: center;
+	> img {
+		height: 22px;
+		cursor: pointer;
+		opacity: 0.8;
+		margin-right: 5px;
+	}
+	> span {
+		text-decoration: none !important;
+	}
+	&:hover > img {
+		opacity: 1;
+		text-shadow: 0 5px 10px rgba(0, 0, 0, 0.8);
+	}
+`;
 
 function merge(defaults: Partial<State>, codemark: CSCodemark): State {
 	return Object.entries(defaults).reduce((object, entry) => {
@@ -2742,8 +2758,6 @@ const ConnectedCodemarkForm = connect(mapStateToProps, {
 	setUserPreference,
 	fetchCodeError,
 	upgradePendingCodeError,
-	getPullRequestConversationsFromProvider,
-	setCurrentPullRequestNeedsRefresh,
 	setCurrentStream,
 })(CodemarkForm);
 

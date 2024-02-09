@@ -65,6 +65,7 @@ export class Container {
 		context.subscriptions.push(new CodemarkPatchContentProvider());
 		context.subscriptions.push((this._statusBar = new StatusBarController()));
 
+		Logger.log(new Date().toLocaleString(), "cheese");
 		context.subscriptions.push(
 			(this._sidebar = new SidebarController(context, this._session, sidebar))
 		);

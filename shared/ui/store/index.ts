@@ -29,7 +29,6 @@ import reduceConfigs from "./configs/slice";
 import { reduceDynamicLogging } from "./dynamicLogging/reducer";
 import { reduceEditorContext } from "./editorContext/reducer";
 import reduceIde from "./ide/slice";
-import providerPullRequests from "./providerPullRequests/slice";
 import { reduceReviews } from "./reviews/reducer";
 import { reduceNrCapabilities } from "./nrCapabilities/reducer";
 
@@ -66,7 +65,6 @@ export const store = configureStore({
 		providers: reduceProviders,
 		versioning: reduceVersioning,
 		apiVersioning: reduceApiVersioning,
-		providerPullRequests: providerPullRequests,
 		codeErrors: reduceCodeErrors,
 		dynamicLogging: reduceDynamicLogging,
 		nrCapabilities: reduceNrCapabilities,

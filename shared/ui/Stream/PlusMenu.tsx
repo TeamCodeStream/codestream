@@ -9,11 +9,7 @@ import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { canCreateCodemark } from "../store/codemarks/actions";
 import { HostApi } from "../webview-api";
 import { StartWorkNotificationType } from "@codestream/protocols/webview";
-import {
-	setCurrentReview,
-	clearCurrentPullRequest,
-	setCreatePullRequest,
-} from "../store/context/actions";
+import { setCurrentReview } from "../store/context/actions";
 import { ComposeKeybindings } from "./ComposeTitles";
 import { getPRLabel } from "../store/providers/reducer";
 
@@ -43,7 +39,6 @@ export function PlusMenu(props: PlusMenuProps) {
 	});
 
 	const handleStartWorkRequest = () => {
-		dispatch(clearCurrentPullRequest());
 		dispatch(setCurrentReview());
 		if (derivedState.activePanel === WebviewPanels.Sidebar) {
 			const div = document.getElementById("start-work-div");
@@ -60,8 +55,6 @@ export function PlusMenu(props: PlusMenuProps) {
 	};
 
 	const go = panel => {
-		dispatch(setCreatePullRequest());
-		dispatch(clearCurrentPullRequest());
 		dispatch(setCurrentReview());
 		dispatch(openPanel(panel));
 	};

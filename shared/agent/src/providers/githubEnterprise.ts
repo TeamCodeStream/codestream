@@ -199,19 +199,3 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 		return super.query<T>(query, variables);
 	}
 }
-
-interface GitHubEnterpriseRepo {
-	id: string;
-	node_id: string;
-	full_name: string;
-	path: string;
-	has_issues: boolean;
-	default_branch: string;
-}
-
-interface GitHubEnterprisePullRequest {
-	id: string;
-	html_url: string;
-	base: { ref: string };
-	head: { ref: string };
-}

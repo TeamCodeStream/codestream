@@ -51,7 +51,6 @@ import { getPost, getThreadPosts } from "../store/posts/reducer";
 import Menu from "./Menu";
 import { FormattedPlural } from "react-intl";
 import { Codemark } from "./Codemark/index";
-import { Review } from "./Review";
 import { CodeError } from "./CodeError";
 import { saveReviews } from "../store/reviews/actions";
 import { saveCodeErrors } from "../store/codeErrors/actions";
@@ -556,69 +555,6 @@ export const ActivityPanel = () => {
 												parentPost={post}
 												pinnedReplies={codemark.pinnedReplies}
 											/>
-										</Footer>
-									)}
-								/>
-							)}
-						</ActivityItem>
-					</ActivityWrapper>
-				);
-			}
-
-			if (type === "review") {
-				if (
-					derivedState.codemarkTypeFilter != "all" &&
-					"review" !== derivedState.codemarkTypeFilter
-				)
-					return null;
-
-				// @ts-ignore
-				const repoName = record.reviewChangesets
-					.map(changeset =>
-						derivedState.repos[changeset.repoId]
-							? derivedState.repos[changeset.repoId].name
-							: undefined
-					)
-					// remove duplictes
-					.filter((val, index, arr) => arr.indexOf(val) === index)
-					.filter(Boolean)
-					.join(", ");
-
-				return (
-					<ActivityWrapper key={record.id}>
-						<ActivityVerb>
-							<ProfileLink id={person.id}>
-								<Headshot size={24} person={person} />
-							</ProfileLink>
-							<div>
-								<b>{person.username}</b>{" "}
-								<span className="verb">requested feedback {repoName && <>in {repoName}</>}</span>{" "}
-								<Timestamp relative time={record.createdAt} className="no-padding" />
-							</div>
-						</ActivityVerb>
-						<ActivityItem streamId={record.streamId} postId={record.postId}>
-							{({ className, post }) => (
-								<Review
-									className={className}
-									review={record as CSReview}
-									collapsed
-									hoverEffect
-									onClick={e => {
-										const target = e.target;
-										if (
-											target &&
-											// @ts-ignore
-											(target.closest(".emoji-mart") || target.closest(".reactions"))
-										)
-											return;
-
-										dispatch(setCurrentReview(record.id));
-									}}
-									renderFooter={Footer => (
-										<Footer
-											style={{ borderTop: "none", paddingLeft: 0, paddingRight: 0, marginTop: 0 }}
-										>
-											<RepliesForActivity parentPost={post} />
 										</Footer>
 									)}
 								/>

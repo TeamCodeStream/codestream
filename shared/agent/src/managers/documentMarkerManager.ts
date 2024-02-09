@@ -5,7 +5,6 @@ import {
 	CalculateNonLocalRangesRequest,
 	CalculateNonLocalRangesRequestType,
 	CalculateNonLocalRangesResponse,
-	CodeStreamDiffUriData,
 	CreateDocumentMarkerPermalinkRequest,
 	CreateDocumentMarkerPermalinkRequestType,
 	CreateDocumentMarkerPermalinkResponse,
@@ -23,24 +22,15 @@ import {
 	MarkerNotLocated,
 	MarkerNotLocatedReason,
 } from "@codestream/protocols/agent";
-import {
-	CodemarkType,
-	CSCodemark,
-	CSLocationArray,
-	CSMarker,
-	CSMe,
-	CSUser,
-} from "@codestream/protocols/api";
+import { CodemarkType, CSCodemark, CSMarker, CSMe, CSUser } from "@codestream/protocols/api";
 import { structuredPatch } from "diff";
 import { Range, TextDocumentChangeEvent } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 import * as Strings from "@codestream/utils/system/string";
 
-import { ThirdPartyProvider } from "providers/provider";
 import { CodeStreamSession } from "session";
 import { Marker, MarkerLocation, Ranges } from "../api/extensions";
 import { Container, SessionContainer } from "../container";
-import * as gitUtils from "../git/utils";
 import { Logger } from "../logger";
 import {
 	calculateRanges,
@@ -258,235 +248,12 @@ export class DocumentMarkerManager {
 		const uri = request.textDocument.uri;
 		if (uri.startsWith("codestream-diff://")) {
 			if (csUri.Uris.isCodeStreamDiffUri(uri)) {
-				return this.getDocumentMarkersForPullRequestDiff(request);
+				return emptyResponse;
 			}
 			return this.getDocumentMarkersForReviewDiff(request);
 		} else {
 			return this.getDocumentMarkersForRegularFile(request);
 		}
-	}
-
-	private async getDocumentMarkersForPullRequestDiff({
-		textDocument: documentId,
-	}: FetchDocumentMarkersRequest) {
-		const { git, providerRegistry } = SessionContainer.instance();
-		const uri = documentId.uri;
-
-		const cc = Logger.getCorrelationContext();
-		const parsedUri = csUri.Uris.fromCodeStreamDiffUri<CodeStreamDiffUriData>(uri);
-		if (!parsedUri) throw new Error(`Could not parse uri ${uri}`);
-		let providerId;
-		let pullRequestId;
-		if (parsedUri.context && parsedUri.context.pullRequest) {
-			providerId = parsedUri.context.pullRequest.providerId;
-			if (!providerRegistry.providerSupportsPullRequests(providerId)) {
-				Logger.log(cc, `UnsupportedProvider ${providerId}`);
-				return emptyResponse;
-			}
-			pullRequestId = parsedUri.context.pullRequest.id;
-		} else {
-			Logger.log(cc, `missing context for uri ${uri}`);
-			return emptyResponse;
-		}
-
-		const result = await providerRegistry.executeMethod({
-			method: "getPullRequest",
-			providerId,
-			params: {
-				pullRequestId,
-			},
-		});
-		const documentMarkers: DocumentMarker[] = [];
-
-		// TODO hardcoded stuff
-		if (providerId === "gitlab/enterprise" || providerId === "gitlab*com") {
-			const pr = result.project.mergeRequest;
-			const comments: any[] = [];
-			result.project.mergeRequest.discussions.nodes.forEach((_: any) => {
-				if (_.notes && _.notes.nodes) {
-					_.notes.nodes.forEach((n: any) => {
-						if (n.position && n.position.newPath === parsedUri.path) {
-							comments.push(n);
-						}
-					});
-				}
-			});
-
-			const provider = providerRegistry
-				.getProviders()
-				.find((provider: ThirdPartyProvider) => provider.getConfig().id === pr.providerId);
-			if (provider) {
-				comments.forEach(async (comment: any) => {
-					let summary = comment.body;
-					if (summary.length !== 0) {
-						summary = summary.replace(emojiRegex, (s: string, code: string) => emojiMap[code] || s);
-					}
-
-					const gotoLine = comment.position.newLine;
-
-					const location: CSLocationArray = [gotoLine, 0, gotoLine, 0, undefined];
-					documentMarkers.push({
-						createdAt: +new Date(comment.createdAt),
-						modifiedAt: +new Date(comment.createdAt),
-						id: comment.id,
-						file: comment.position.newPath,
-						repoId: "",
-						creatorId: comment.author.username,
-						teamId: "",
-						fileStreamId: "",
-						creatorAvatar: comment.author ? comment.author.avatarUrl : undefined,
-						code: "",
-						fileUri: documentId.uri,
-						creatorName: comment.author ? comment.author.name : "Unknown",
-						range: MarkerLocation.toRangeFromArray(location),
-						location: MarkerLocation.fromArray(location, comment.id),
-						title: pr.title,
-						summary: summary,
-						summaryMarkdown: `${Strings.escapeMarkdown(summary, { quoted: false })}`,
-						type: CodemarkType.PRComment,
-						externalContent: {
-							provider: { name: provider.name, id: pr.providerId, icon: provider.icon },
-							externalId: pr.idComputed,
-							externalChildId: comment.id,
-							externalType: "pr",
-							title: comment.body,
-							subhead: "",
-						},
-					});
-				});
-			}
-		} else if (providerId === "bitbucket*org") {
-			const pr = result.repository.pullRequest;
-			const comments: any[] = [];
-			pr.comments.forEach((_: { inline: any }) => {
-				if (_.inline) {
-					comments.push(_);
-				}
-			});
-
-			const provider = providerRegistry
-				.getProviders()
-				.find((provider: ThirdPartyProvider) => provider.getConfig().id === pr.providerId);
-			if (provider) {
-				comments.forEach((comment: any) => {
-					//TODO: fix any
-					let summary = comment.bodyText;
-					if (summary.length !== 0) {
-						summary = summary.replace(emojiRegex, (s: string, code: string) => emojiMap[code] || s);
-					}
-					const gotoLine = comment.inline.to;
-					const location: CSLocationArray = [gotoLine, 0, gotoLine, 0, undefined];
-					documentMarkers.push({
-						createdAt: new Date(comment.created_on).getTime(),
-						modifiedAt: new Date(comment.updated_on).getTime(),
-						id: comment.id,
-						file: comment.inline.path,
-						repoId: "",
-						creatorId: comment.author.login,
-						teamId: "",
-						fileStreamId: "",
-						creatorAvatar: comment.author ? comment.author.avatarUrl : undefined,
-						code: "",
-						fileUri: documentId.uri,
-						creatorName: comment.author ? comment.author.login : "Unknown",
-						range: MarkerLocation.toRangeFromArray(location),
-						location: MarkerLocation.fromArray(location, comment.id),
-						title: comment.pullrequest.title,
-						summary: summary,
-						summaryMarkdown: `${Strings.escapeMarkdown(summary, { quoted: false })}`,
-						type: CodemarkType.PRComment,
-						externalContent: {
-							provider: { name: provider.name, id: pr.providerId, icon: provider.icon },
-							externalId: pr.idComputed,
-							externalChildId: comment.id,
-							externalType: "pr",
-							title: comment.bodyText,
-							subhead: "",
-						},
-					});
-				});
-			}
-		} else {
-			// TODO this is all GH-specific
-			const pr = result.repository.pullRequest;
-			const comments: any[] = [];
-			pr.timelineItems.nodes
-				.filter((node: any) => node.__typename === "PullRequestReview")
-				.forEach((review: any) => {
-					review.comments &&
-						review.comments.nodes.forEach((comment: any) => {
-							if (comment.path === parsedUri.path) comments.push(comment);
-						});
-				});
-			const provider = providerRegistry
-				.getProviders()
-				.find((provider: ThirdPartyProvider) => provider.getConfig().id === pr.providerId);
-			if (provider) {
-				const gitRepo = await git.getRepositoryById(parsedUri.repoId);
-				const repoPath = path.join(gitRepo ? gitRepo.path : "", parsedUri.path);
-				const diff = await git.getDiffBetweenCommits(
-					parsedUri.leftSha,
-					parsedUri.rightSha,
-					repoPath,
-					true
-				);
-
-				const diffWithMetadata = gitUtils.translatePositionToLineNumber(diff);
-
-				comments.forEach(async (comment: any) => {
-					let summary = comment.body || comment.bodyText;
-					if (summary.length !== 0) {
-						summary = summary.replace(emojiRegex, (s: string, code: string) => emojiMap[code] || s);
-					}
-
-					let gotoLine = 1;
-					if (comment.diffHunk && diffWithMetadata) {
-						const lineNumber = gitUtils.getLineNumber(diffWithMetadata, comment.position);
-						if (lineNumber != null) {
-							gotoLine = lineNumber;
-						} else {
-							return;
-						}
-					} else {
-						return;
-					}
-
-					const location: CSLocationArray = [gotoLine, 0, gotoLine, 0, undefined];
-					documentMarkers.push({
-						createdAt: +new Date(comment.createdAt),
-						modifiedAt: +new Date(comment.createdAt),
-						id: comment.id,
-						file: comment.path,
-						repoId: "",
-						creatorId: comment.author.login,
-						teamId: "",
-						fileStreamId: "",
-						creatorAvatar: comment.author ? comment.author.avatarUrl : undefined,
-						code: "",
-						fileUri: documentId.uri,
-						creatorName: comment.author ? comment.author.login : "Unknown",
-						range: MarkerLocation.toRangeFromArray(location),
-						location: MarkerLocation.fromArray(location, comment.id),
-						title: pr.title,
-						summary: summary,
-						summaryMarkdown: `${Strings.escapeMarkdown(summary, { quoted: false })}`,
-						type: CodemarkType.PRComment,
-						externalContent: {
-							provider: { name: provider.name, id: pr.providerId, icon: provider.icon },
-							externalId: pr.id,
-							externalChildId: comment.id,
-							externalType: "pr",
-							title: comment.bodyText,
-							subhead: "",
-						},
-					});
-				});
-			}
-		}
-		return {
-			markers: documentMarkers,
-			markersNotLocated: [],
-		};
 	}
 
 	private async getDocumentMarkersForReviewDiff({

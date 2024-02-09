@@ -57,7 +57,6 @@ import {
 	PullRequestCommentsChangedEvent,
 	UnreadsChangedEvent,
 	ReviewsChangedEvent,
-	PullRequestsChangedEvent,
 	PreferencesChangedEvent
 } from "./sessionEvents";
 import { SessionState } from "./sessionState";
@@ -160,11 +159,6 @@ export class CodeStreamSession implements Disposable {
 		250,
 		{ maxWait: 1000 }
 	);
-
-	private _onDidChangePullRequests = new EventEmitter<PullRequestsChangedEvent>();
-	get onDidChangePullRequests(): Event<PullRequestsChangedEvent> {
-		return this._onDidChangePullRequests.event;
-	}
 
 	private fireDidChangePullRequests = createMergableDebouncedEvent(this._onDidChangePullRequests);
 
@@ -334,9 +328,6 @@ export class CodeStreamSession implements Disposable {
 				Container.diffContents.clearLocalContents(e.data.map(_ => _.id));
 				break;
 			}
-			case ChangeDataType.PullRequests:
-				this.fireDidChangePullRequests(new PullRequestsChangedEvent(this, e));
-				break;
 		}
 	}
 

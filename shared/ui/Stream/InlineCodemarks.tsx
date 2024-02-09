@@ -35,7 +35,6 @@ import {
 	closeAllModals,
 	closeAllPanels,
 	closePanel,
-	closePrDetailModal,
 	repositionCodemark,
 	setCodemarksFileViewStyle,
 	setCodemarksShowArchived,
@@ -78,10 +77,6 @@ import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import Feedback from "./Feedback";
 import Icon from "./Icon";
 import { Modal } from "./Modal";
-import { PullRequest } from "./PullRequest";
-import { PullRequest as BitbucketPullRequest } from "./PullRequests/Bitbucket/PullRequest";
-import { PullRequest as GitLabPullRequest } from "./PullRequests/GitLab/PullRequest";
-import { ReviewNav } from "./ReviewNav";
 import ScrollBox from "./ScrollBox";
 import ContainerAtEditorLine from "./SpatialView/ContainerAtEditorLine";
 import { PRInfoModal } from "./SpatialView/PRInfoModal";
@@ -153,7 +148,6 @@ interface Props {
 	closePanel: Function;
 	closeAllModals: Function;
 	closeAllPanels: Function;
-	closePrDetailModal: Function;
 	createPostAndCodemark: (...args: Parameters<typeof createPostAndCodemark>) => any;
 	addDocumentMarker: Function;
 	changeSelection: Function;
@@ -1163,14 +1157,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		if (currentReviewId) {
 			HostApi.instance.send(ReviewCloseDiffRequestType, {});
 			this.props.closeAllModals();
-		} else if (currentPullRequestId) {
-			HostApi.instance.send(LocalFilesCloseDiffRequestType, {});
-			// this.props.closeAllModals();
-			this.props.closePrDetailModal(
-				currentPullRequestProviderId,
-				currentPullRequestId,
-				expandedPullRequestGroupIndex
-			);
 		} else if (currentCodeErrorId) {
 			this.props.closeAllModals();
 			this.props.closeAllPanels();
@@ -1208,34 +1194,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				translucent={currentPullRequestCommentId ? true : undefined}
 			>
 				<div style={{ overflow: isGitLabPR ? "visible" : "hidden" }}>
-					{currentReviewId ? (
-						<ReviewNav reviewId={currentReviewId} composeOpen={composeOpen} />
-					) : currentCodeErrorId ? (
+					{currentCodeErrorId ? (
 						<CodeErrorNav codeErrorId={currentCodeErrorId} composeOpen={composeOpen} />
-					) : currentPullRequestId ? (
-						currentPullRequestProviderId === "github*com" ||
-						currentPullRequestProviderId === "github/enterprise" ? (
-							<PullRequest />
-						) : isGitLabPR ? (
-							<GitLabPullRequest />
-						) : isBitbucketPR ? (
-							<BitbucketPullRequest />
-						) : (
-							<div id="oops">
-								<form className="standard-form">
-									<fieldset className="form-body">
-										<div className="border-bottom-box">
-											<p>
-												<h3>Oops</h3>
-												<br />
-												Sorry we don't support viewing pull requests for that provider yet
-												<br />
-											</p>
-										</div>
-									</fieldset>
-								</form>
-							</div>
-						)
 					) : (
 						this.renderHeader()
 					)}
@@ -1463,7 +1423,6 @@ export default connect(mapStateToProps, {
 	setNewPostEntry,
 	closeAllModals,
 	closeAllPanels,
-	closePrDetailModal,
 	closePanel,
 })(SimpleInlineCodemarks);
 

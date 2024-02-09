@@ -13,8 +13,56 @@ import { SearchContext } from "./SearchContextProvider";
 import styled from "styled-components";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { setUserPreference } from "./actions";
-import { PRDiffHunk } from "./PullRequestFilesChangedList";
-import { PullRequestPatch } from "./PullRequestPatch";
+import { PullRequestPatch, PRPatchRoot } from "./PullRequestPatch";
+
+export const PRDiffHunks = styled.div`
+	font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
+	white-space: pre;
+	margin-right: 10px;
+	${PRPatchRoot} {
+		border-radius: 0 0 5px 5px;
+	}
+}
+`;
+
+export const PRDiffHunk = styled.div`
+	margin: 0 0 20px 0;
+	h1 {
+		display: flex;
+		align-items: center;
+		border-radius: 5px 5px 0 0;
+		font-size: 12px;
+		font-weight: normal;
+		margin: 0;
+		padding: 10px;
+		background: var(--base-background-color);
+		border: 1px solid var(--base-border-color);
+		width: 100%;
+		overflow: hidden;
+		position: sticky;
+		top: -14px;
+		z-index: 5;
+		.filename-container {
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+		&.hidden {
+			border-radius: 5px;
+		}
+		.toggle {
+			display: inline-block;
+			margin-right: 5px;
+			margin-top: -2px;
+		}
+		.viewed {
+			flex-shrink: 0;
+			margin-left: auto;
+		}
+		a .icon {
+			color: var(--text-color);
+		}
+	}
+`;
 
 const Label = styled.span`
 	display: inline-block;

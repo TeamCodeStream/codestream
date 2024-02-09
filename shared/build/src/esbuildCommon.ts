@@ -3,7 +3,7 @@ import { statsPlugin } from "./statsPlugin";
 import { vscShimPlugin } from "./vscShim";
 import { lessLoader } from "esbuild-plugin-less";
 import * as path from "path";
-
+import * as fs from "fs";
 export type Mode = "production" | "development";
 
 export type IdeType = "vs" | "vscode" | "jb";
@@ -55,7 +55,8 @@ export function commonEsbuildOptions(
 		// To support @log
 		keepNames: true,
 		plugins,
-		sourcemap: "linked"
+		sourcemap: "linked",
+		metafile: true
 	};
 }
 
@@ -64,7 +65,15 @@ export async function startEsbuild(args: Args, buildOptions: esbuild.BuildOption
 	if (args.watchMode) {
 		await ctx.watch();
 	} else {
-		await esbuild.build(buildOptions);
+		const response = await esbuild.build(buildOptions);
+
+		if (response && response.metafile) {
+			fs.writeFileSync(
+				`meta-${args.webview || "extension" || new Date().getTime()}.json`,
+				JSON.stringify(response.metafile, null, 2),
+				"utf-8"
+			);
+		}
 		await ctx.dispose();
 	}
 }

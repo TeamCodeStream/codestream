@@ -27,9 +27,6 @@ import {
 	FetchAssignableUsersAutocompleteRequestType,
 	FetchAssignableUsersRequest,
 	FetchAssignableUsersRequestType,
-	FetchProviderDefaultPullRequest,
-	FetchProviderDefaultPullRequestsType,
-	FetchProviderDefaultPullResponse,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsRequestType,
 	FetchThirdPartyBoardsResponse,
@@ -48,22 +45,14 @@ import {
 	FetchThirdPartyCodeAnalyzersRequest,
 	FetchThirdPartyLicenseDependenciesRequestType,
 	FetchThirdPartyLicenseDependenciesResponse,
-	FetchThirdPartyPullRequestCommitsRequest,
-	FetchThirdPartyPullRequestCommitsType,
-	FetchThirdPartyPullRequestRequest,
-	FetchThirdPartyPullRequestRequestType,
 	FetchThirdPartyRepoMatchToFossaRequest,
 	FetchThirdPartyRepoMatchToFossaRequestType,
 	FetchThirdPartyRepoMatchToFossaResponse,
 	FetchThirdPartyVulnerabilitiesRequestType,
 	FetchThirdPartyVulnerabilitiesResponse,
-	GetMyPullRequestsResponse,
 	MoveThirdPartyCardRequest,
 	MoveThirdPartyCardRequestType,
 	MoveThirdPartyCardResponse,
-	PRProviderQueries,
-	QueryThirdPartyRequest,
-	QueryThirdPartyRequestType,
 	RemoveEnterpriseProviderRequest,
 	RemoveEnterpriseProviderRequestType,
 	UpdateThirdPartyStatusRequest,
@@ -71,158 +60,26 @@ import {
 	UpdateThirdPartyStatusResponse,
 } from "@codestream/protocols/agent";
 import { CSMe } from "@codestream/protocols/api";
-import { differenceWith } from "lodash";
-import semver from "semver";
-import { URI } from "vscode-uri";
-
-import { SessionContainer } from "../container";
 import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
 import { getProvider, getRegisteredProviders, log, lsp, lspHandler } from "../system";
-import { GitLabEnterpriseProvider } from "./gitlabEnterprise";
+import { getNrDirectives } from "./newrelic/nrContainer";
 import {
-	ProviderCreatePullRequestRequest,
-	ProviderCreatePullRequestResponse,
-	ProviderGetRepoInfoRequest,
 	ThirdPartyBuildProvider,
 	ThirdPartyCodeAnalyzerProvider,
 	ThirdPartyIssueProvider,
 	ThirdPartyPostProvider,
 	ThirdPartyProvider,
-	ThirdPartyProviderSupportsPullRequests,
-	ThirdPartyProviderSupportsViewingPullRequests,
 } from "./provider";
-import { getNrDirectives } from "./newrelic/nrContainer";
-
-const PR_QUERIES: PRProviderQueries = {
-	"gitlab*com": [
-		{
-			providerId: "gitlab*com",
-			name: "is waiting on your review",
-			query: `state=opened&reviewer_username=@me&scope=all`,
-		},
-		{
-			providerId: "gitlab*com",
-			name: "was assigned to you",
-			query: `state=opened&scope=assigned_to_me`,
-		},
-	],
-	"gitlab/enterprise": [
-		{
-			providerId: "gitlab/enterprise",
-			name: "was assigned to you",
-			query: `state=opened&scope=assigned_to_me`,
-		},
-	],
-	"github*com": [
-		{
-			providerId: "github*com",
-			name: "is waiting on your review",
-			query: `is:pr is:open review-requested:@me -author:@me`,
-		},
-		{
-			providerId: "github*com",
-			name: "was assigned to you",
-			query: `is:pr is:open assignee:@me -author:@me`,
-		},
-	],
-	"github/enterprise": [
-		{
-			providerId: "github/enterprise",
-			name: "is waiting on your review",
-			query: `is:pr is:open review-requested:@me -author:@me`,
-		},
-		{
-			providerId: "github/enterprise",
-			name: "was assigned to you",
-			query: `is:pr is:open assignee:@me -author:@me`,
-		},
-	],
-	"bitbucket*org": [
-		{
-			providerId: "bitbucket*org",
-			name: "Waiting on my Review",
-			query: `with_default_reviewer=true&state=OPEN`,
-		},
-	],
-};
-
-interface ProviderPullRequests {
-	providerId: string;
-	queriedPullRequests: GetMyPullRequestsResponse[][];
-}
-
-export const ASSIGNED_TO_ME = "Assigned to Me";
-export const WAITING_ON_REVIEW = "Waiting on my Review";
-export const CREATED_BY_ME = "Created by Me";
-const RECENT = "Recent";
 
 @lsp
 export class ThirdPartyProviderRegistry {
-	private _lastProvidersPRs: ProviderPullRequests[] | undefined;
-	private _queriedPRsAgeLimit?: { providerId: string; ageLimit: number[] }[] | undefined;
 	private session: CodeStreamSession | undefined = undefined;
 
 	initialize(session: CodeStreamSession) {
 		this.session = session;
 		return this;
 	}
-
-	private getProvidersPRsDiff = (providersPRs: ProviderPullRequests[]): ProviderPullRequests[] => {
-		const newProvidersPRs: ProviderPullRequests[] = [];
-		if (this._lastProvidersPRs === undefined) {
-			this._queriedPRsAgeLimit = providersPRs.map(providerPRs => {
-				const ageLimit = providerPRs.queriedPullRequests.map(
-					(pullRequests: GetMyPullRequestsResponse[], index: number) => {
-						if (pullRequests.length > 0) {
-							return pullRequests[pullRequests.length - 1].createdAt;
-						}
-						return 0;
-					}
-				);
-				return {
-					providerId: providerPRs.providerId,
-					ageLimit,
-				};
-			});
-			return [];
-		}
-
-		providersPRs.map(providerPRs => {
-			const previousProviderPRs = this._lastProvidersPRs?.find(
-				_ => _.providerId === providerPRs.providerId
-			);
-			if (!previousProviderPRs) {
-				return;
-			}
-
-			const queriedPullRequests: GetMyPullRequestsResponse[][] = [];
-			providerPRs.queriedPullRequests.map(
-				(pullRequests: GetMyPullRequestsResponse[], index: number) => {
-					const ageLimit = this._queriedPRsAgeLimit?.find(
-						_ => _.providerId === providerPRs.providerId
-					);
-					const actualPRs = pullRequests.filter(
-						pr => pr.createdAt >= (ageLimit ? ageLimit.ageLimit[index] : 0)
-					);
-					queriedPullRequests.push(
-						differenceWith(
-							actualPRs,
-							previousProviderPRs.queriedPullRequests[index],
-							(value, other) => value.id === other.id
-						)
-					);
-				}
-			);
-
-			newProvidersPRs.push({
-				providerId: providerPRs.providerId,
-				queriedPullRequests,
-			});
-		});
-
-		return newProvidersPRs;
-	};
 
 	@log()
 	@lspHandler(ConnectThirdPartyProviderRequestType)
@@ -523,72 +380,6 @@ export class ThirdPartyProviderRegistry {
 		return response;
 	}
 
-	async createPullRequest(
-		request: ProviderCreatePullRequestRequest
-	): Promise<ProviderCreatePullRequestResponse | undefined> {
-		const provider = getProvider(request.providerId);
-		if (provider === undefined) {
-			throw new Error(`No registered provider for '${request.providerId}'`);
-		}
-
-		const pullRequestProvider = provider as ThirdPartyIssueProvider;
-		if (
-			pullRequestProvider == null ||
-			typeof pullRequestProvider.supportsCreatingPullRequests !== "function" ||
-			!pullRequestProvider.supportsCreatingPullRequests()
-		) {
-			throw new Error(`Provider(${provider.name}) doesn't support pull requests`);
-		}
-		const response = await pullRequestProvider.createPullRequest(request);
-		return response;
-	}
-
-	async getRepoInfo(request: ProviderGetRepoInfoRequest) {
-		// this is used in the create pr flow hence the check for create
-		const provider = getProvider(request.providerId);
-		if (provider === undefined) {
-			throw new Error(`No registered provider for '${request.providerId}'`);
-		}
-
-		const pullRequestProvider = provider as ThirdPartyIssueProvider;
-		if (
-			pullRequestProvider == null ||
-			typeof pullRequestProvider.supportsCreatingPullRequests !== "function" ||
-			!pullRequestProvider.supportsCreatingPullRequests()
-		) {
-			throw new Error(`Provider(${provider.name}) doesn't support pull requests`);
-		}
-
-		const response = await pullRequestProvider.getRepoInfo(request);
-		return response;
-	}
-
-	@log()
-	@lspHandler(FetchThirdPartyPullRequestRequestType)
-	async getPullRequest(request: FetchThirdPartyPullRequestRequest) {
-		const provider = getProvider(request.providerId);
-		if (provider === undefined) {
-			throw new Error(`No registered provider for '${request.providerId}'`);
-		}
-
-		const pullRequestProvider = this.getPullRequestProvider(provider);
-		const response = await pullRequestProvider.getPullRequest(request);
-		return response;
-	}
-
-	@log()
-	@lspHandler(FetchThirdPartyPullRequestCommitsType)
-	async getPullRequestCommits(request: FetchThirdPartyPullRequestCommitsRequest) {
-		const provider = getProvider(request.providerId);
-		if (provider === undefined) {
-			throw new Error(`No registered provider for '${request.providerId}'`);
-		}
-
-		const pullRequestProvider = this.getPullRequestProvider(provider);
-		const response = await pullRequestProvider.getPullRequestCommits(request);
-		return response;
-	}
-
 	@log({
 		prefix: (context, args) => `${context.prefix}:${args.method}`,
 	})
@@ -625,68 +416,6 @@ export class ThirdPartyProviderRegistry {
 			throw ex;
 		}
 		return result;
-	}
-
-	@log({
-		prefix: (context, args) => `${context.prefix}:${args.method}`,
-	})
-	@lspHandler(QueryThirdPartyRequestType)
-	async queryThirdParty(request: QueryThirdPartyRequest) {
-		if (!request || !request.url) {
-			Logger.warn(`queryThirdParty: no url found, returning`);
-			return undefined;
-		}
-		try {
-			const uri = URI.parse(request.url);
-			const providers = getRegisteredProviders();
-			for (const provider of providers.filter(_ => {
-				const provider = _ as ThirdPartyIssueProvider &
-					ThirdPartyProviderSupportsViewingPullRequests;
-				try {
-					return (
-						provider.supportsViewingPullRequests != undefined &&
-						provider.supportsViewingPullRequests()
-					);
-				} catch {
-					return false;
-				}
-			})) {
-				try {
-					const thirdPartyIssueProvider = provider as ThirdPartyIssueProvider &
-						ThirdPartyProviderSupportsPullRequests;
-					let isConnected;
-					try {
-						// this can throw -- ignore failures
-						await provider.ensureConnected();
-						isConnected = true;
-					} catch {}
-					if (!isConnected) continue;
-
-					const fn = thirdPartyIssueProvider.getIsMatchingRemotePredicate();
-					if (fn && fn({ domain: uri.authority, uri: uri })) {
-						const id = provider.getConfig().id;
-						Logger.log(
-							`queryThirdParty: found matching provider for ${uri.authority}. providerId=${id}`
-						);
-						return {
-							providerId: id,
-						};
-					}
-				} catch (err) {
-					// only warn the log here as `fn` might fail.
-					Logger.warn(err, "queryThirdParty: provider failed", {
-						url: request.url,
-					});
-				}
-			}
-		} catch (ex) {
-			Logger.error(ex, "queryThirdParty: generic failure", {
-				url: request.url,
-			});
-		}
-
-		Logger.log(`queryThirdParty: no matching provider found for ${request.url}`);
-		return undefined;
 	}
 
 	@log()
@@ -789,170 +518,6 @@ export class ThirdPartyProviderRegistry {
 		return response;
 	}
 
-	@log()
-	@lspHandler(FetchProviderDefaultPullRequestsType)
-	async getProviderDefaultPullRequestQueries(
-		_request: FetchProviderDefaultPullRequest
-	): Promise<FetchProviderDefaultPullResponse> {
-		const response: FetchProviderDefaultPullResponse = {
-			"github*com": [
-				{
-					providerId: "github*com",
-					name: WAITING_ON_REVIEW,
-					query: `is:pr is:open review-requested:@me`,
-					hidden: false,
-				},
-				{
-					providerId: "github*com",
-					name: ASSIGNED_TO_ME,
-					query: `is:pr is:open assignee:@me`,
-					hidden: false,
-				},
-				{
-					providerId: "github*com",
-					name: CREATED_BY_ME,
-					query: `is:pr is:open author:@me`,
-					hidden: false,
-				},
-				{
-					providerId: "github*com",
-					name: RECENT,
-					query: `recent`,
-					hidden: false,
-				},
-			],
-			"github/enterprise": [
-				{
-					providerId: "github/enterprise",
-					name: WAITING_ON_REVIEW,
-					query: `is:pr is:open review-requested:@me`,
-					hidden: false,
-				},
-				{
-					providerId: "github/enterprise",
-					name: ASSIGNED_TO_ME,
-					query: `is:pr is:open assignee:@me`,
-					hidden: false,
-				},
-				{
-					providerId: "github/enterprise",
-					name: CREATED_BY_ME,
-					query: `is:pr is:open author:@me`,
-					hidden: false,
-				},
-				{
-					providerId: "github/enterprise",
-					name: RECENT,
-					query: `recent`,
-					hidden: false,
-				},
-			],
-			"gitlab*com": [
-				{
-					providerId: "gitlab*com",
-					name: WAITING_ON_REVIEW,
-					query: `state=opened&reviewer_username=@me&scope=all`,
-					hidden: false,
-				},
-				{
-					providerId: "gitlab*com",
-					name: ASSIGNED_TO_ME,
-					query: `state=opened&scope=assigned_to_me`,
-					hidden: false,
-				},
-				{
-					providerId: "gitlab*com",
-					name: CREATED_BY_ME,
-					query: `state=opened&scope=created_by_me`,
-					hidden: false,
-				},
-				{
-					providerId: "gitlab*com",
-					name: RECENT,
-					query: `state=opened&reviewer_username=@me&scope=all,state=opened&scope=assigned_to_me,state=opened&scope=created_by_me`,
-					hidden: false,
-				},
-			],
-			"gitlab/enterprise": [
-				{
-					providerId: "gitlab/enterprise",
-					name: ASSIGNED_TO_ME,
-					query: `state=opened&scope=assigned_to_me`,
-					hidden: false,
-				},
-				{
-					providerId: "gitlab/enterprise",
-					name: CREATED_BY_ME,
-					query: `state=opened&scope=created_by_me`,
-					hidden: false,
-				},
-				{
-					providerId: "gitlab/enterprise",
-					name: RECENT,
-					query: `state=opened&reviewer_username=@me&scope=all,state=opened&scope=assigned_to_me,state=opened&scope=created_by_me`,
-					hidden: false,
-				},
-			],
-			"bitbucket*org": [
-				//https://api.bitbucket.org//2.0/
-				{
-					providerId: "bitbucket*org",
-					name: "Waiting on my Review",
-					query: `with_default_reviewer=true&state=OPEN`,
-					hidden: false,
-				},
-				{
-					providerId: "bitbucket*org",
-					name: "Created by Me",
-					query: `state=OPEN`,
-					hidden: false,
-				},
-				{
-					providerId: "bitbucket*org",
-					name: "Recent",
-					query: `recent=true&state=OPEN&state=MERGED&state=DECLINED&state=SUPERSEDED&pagelen=5`,
-					hidden: false,
-				},
-			],
-		};
-		try {
-			const user = await SessionContainer.instance().users.getMe();
-			const providers = await this.getConnectedPullRequestProviders(user!);
-			const gitlabEnterprise = providers?.find(_ => _.getConfig().id === "gitlab/enterprise");
-			if (gitlabEnterprise) {
-				const version = await (gitlabEnterprise as any as GitLabEnterpriseProvider).getVersion();
-				if (version && version.version && semver.lt(version.version, "13.8.0")) {
-					// if doesn't support reviewers, change the first query
-					response["gitlab/enterprise"][0] = {
-						providerId: "gitlab/enterprise",
-						name: "All Open MRs",
-						query: `state:opened scope:all`,
-						hidden: false,
-					};
-				}
-			}
-		} catch (ex) {
-			Logger.warn("getProviderDefaultPullRequestQueries", {
-				error: ex,
-			});
-		}
-		return response;
-	}
-
-	getPullRequestProvider(
-		provider: ThirdPartyProvider
-	): ThirdPartyIssueProvider & ThirdPartyProviderSupportsViewingPullRequests {
-		const pullRequestProvider = provider as ThirdPartyIssueProvider;
-		if (
-			pullRequestProvider == null ||
-			typeof pullRequestProvider.supportsViewingPullRequests !== "function" ||
-			!pullRequestProvider.supportsViewingPullRequests()
-		) {
-			throw new Error(`Provider(${provider.name}) doesn't support pull requests`);
-		}
-		return pullRequestProvider;
-	}
-
 	getProviders(): ThirdPartyProvider[];
 	getProviders<T extends ThirdPartyProvider>(predicate: (p: ThirdPartyProvider) => p is T): T[];
 	getProviders(predicate?: (p: ThirdPartyProvider) => boolean) {
@@ -974,45 +539,5 @@ export class ThirdPartyProviderRegistry {
 		return this.getProviders(
 			(p): p is T => p.isConnected(user) && (predicate == null || predicate(p))
 		);
-	}
-
-	providerSupportsPullRequests(providerId?: string) {
-		try {
-			if (!providerId) return false;
-			const providers = this.getProviders().filter(
-				(_: ThirdPartyProvider) => _.getConfig().id === providerId
-			);
-			if (!providers || !providers.length) return false;
-			return this.getPullRequestProvider(providers[0]);
-		} catch {
-			return false;
-		}
-	}
-
-	/**
-	 * Given a user, return if there are any providers connected
-	 * that support PullRequest creation
-	 *
-	 * @param user
-	 */
-	async getConnectedPullRequestProviders(
-		user: CSMe
-	): Promise<(ThirdPartyProvider & ThirdPartyProviderSupportsPullRequests)[]> {
-		const connectedProviders = this.getConnectedProviders(
-			user,
-			(p): p is ThirdPartyProvider & ThirdPartyProviderSupportsPullRequests => {
-				const thirdPartyProvider = p as ThirdPartyProvider;
-				const name = thirdPartyProvider.getConfig().name;
-				return (
-					name === "github" ||
-					name === "gitlab" ||
-					name === "github_enterprise" ||
-					name === "gitlab_enterprise" ||
-					name === "bitbucket" ||
-					name === "bitbucket_server"
-				);
-			}
-		);
-		return connectedProviders;
 	}
 }

@@ -60,7 +60,6 @@ import { isEmpty as _isEmpty } from "lodash-es";
 import Container from "./Container";
 import {
 	EditorRevealRangeRequestType,
-	HandlePullRequestDirectivesNotificationType,
 	HostDidChangeActiveEditorNotificationType,
 	HostDidChangeConfigNotificationType,
 	HostDidChangeEditorSelectionNotificationType,
@@ -75,7 +74,6 @@ import {
 	ShowCodeErrorNotificationType,
 	ShowCodemarkNotificationType,
 	ShowProgressIndicatorType,
-	ShowPullRequestNotificationType,
 	ShowReviewNotificationType,
 	ShowStreamNotificationType,
 	ViewMethodLevelTelemetryNotificationType,
@@ -102,7 +100,6 @@ import { CodemarksState } from "./store/codemarks/types";
 import { errorOccurred, offline, online } from "./store/connectivity/actions";
 import {
 	blur,
-	clearCurrentPullRequest,
 	closeAllPanels,
 	focus,
 	goToSignup,
@@ -110,7 +107,6 @@ import {
 	setCurrentCodemark,
 	setCurrentMethodLevelTelemetry,
 	setCurrentObservabilityAnomaly,
-	setCurrentPullRequest,
 	setCurrentReview,
 	setCurrentStream,
 	setCurrentTransactionSpan,
@@ -126,8 +122,6 @@ import {
 } from "./store/editorContext/actions";
 import { EditorContextState } from "./store/editorContext/types";
 import { updatePreferences } from "./store/preferences/actions";
-import { handleDirectives } from "./store/providerPullRequests/slice";
-import { openPullRequestByUrl } from "./store/providerPullRequests/thunks";
 import { configureProvider, updateProviders } from "./store/providers/actions";
 import { getReview } from "./store/reviews/reducer";
 import { setMaintenanceMode } from "./store/session/actions";
@@ -440,7 +434,6 @@ function listenForEvents(store) {
 		if (!review) {
 			await store.dispatch(fetchReview(e.reviewId));
 		}
-		store.dispatch(clearCurrentPullRequest());
 		store.dispatch(setCurrentReview(e.reviewId, { openFirstDiff: e.openFirstDiff }));
 	});
 
@@ -450,28 +443,8 @@ function listenForEvents(store) {
 		if (!codeError) {
 			await store.dispatch(fetchCodeError(e.codeErrorId));
 		}
-		store.dispatch(clearCurrentPullRequest());
-		store.dispatch(setCurrentCodeError(e.codeErrorId));
-	});
 
-	api.on(ShowPullRequestNotificationType, async e => {
-		store.dispatch(setCurrentReview());
-		if (e.url) {
-			store.dispatch(openPullRequestByUrl({ url: e.url, options: { source: e.source } }));
-		} else {
-			// if comment id is present, details view (its where the comment view is nested)
-			// if no comment id, set to sidebar-diffs view (ie coming from toast notification)
-			store.dispatch(
-				setCurrentPullRequest(
-					e.providerId,
-					e.id,
-					e.commentId || "",
-					e.source || "",
-					e.commentId ? "details" : "sidebar-diffs",
-					"-2"
-				)
-			);
-		}
+		store.dispatch(setCurrentCodeError(e.codeErrorId));
 	});
 
 	api.on(HostDidReceiveRequestNotificationType, async e => {
@@ -854,21 +827,6 @@ function listenForEvents(store) {
 				}
 				break;
 			}
-			case RouteControllerType.PullRequest: {
-				switch (route.action) {
-					case "open": {
-						store.dispatch(closeAllPanels());
-						store.dispatch(
-							openPullRequestByUrl({
-								url: route.query.url,
-								options: { checkoutBranch: route.query.checkoutBranch },
-							})
-						);
-						break;
-					}
-				}
-				break;
-			}
 			case RouteControllerType.StartWork: {
 				switch (route.action) {
 					case "open": {
@@ -981,16 +939,6 @@ function listenForEvents(store) {
 
 	api.on(ShowProgressIndicatorType, params => {
 		store.dispatch(setBootstrapped(!params.progressStatus));
-	});
-
-	api.on(HandlePullRequestDirectivesNotificationType, params => {
-		store.dispatch(
-			handleDirectives({
-				id: params.pullRequest.id,
-				providerId: params.pullRequest.providerId,
-				data: params.directives.directives,
-			})
-		);
 	});
 
 	api.on(OpenEditorViewNotificationType, params => {

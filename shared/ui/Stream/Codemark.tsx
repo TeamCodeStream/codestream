@@ -37,7 +37,6 @@ import {
 	repositionCodemark,
 	setCurrentCodeError,
 	setCurrentCodemark,
-	setCurrentPullRequest,
 	setCurrentReview,
 } from "../store/context/actions";
 import { addDocumentMarker } from "../store/documentMarkers/actions";
@@ -111,7 +110,6 @@ interface DispatchProps {
 	addDocumentMarker: typeof addDocumentMarker;
 	addCodemarks: typeof addCodemarks;
 	setCurrentReview: typeof setCurrentReview;
-	setCurrentPullRequest: typeof setCurrentPullRequest;
 	setCurrentCodeError: typeof setCurrentCodeError;
 }
 
@@ -1724,9 +1722,6 @@ export class Codemark extends React.Component<Props, State> {
 						range: marker.range,
 						preserveFocus: true,
 					});
-					if (providerId && externalContent.externalId) {
-						this.props.setCurrentPullRequest(providerId!, externalContent.externalId);
-					}
 				}}
 				onMouseEnter={this.handleMouseEnterCodemark}
 				onMouseLeave={this.handleMouseLeaveCodemark}
@@ -1755,11 +1750,7 @@ export class Codemark extends React.Component<Props, State> {
 								style={{ position: "absolute", top: "5px", right: "5px" }}
 								onClick={this.handleMenuClick}
 							></div> */}
-						{externalContent.diffHunk && this.state.showDiffHunk && marker?.file && (
-							<PRCodeCommentPatch>
-								<PullRequestPatch patch={externalContent.diffHunk} filename={marker?.file} />
-							</PRCodeCommentPatch>
-						)}
+
 						<MarkdownText text={marker?.summary || ""} inline={true} />
 						{!selected && this.renderPinnedReplies()}
 						{!selected && this.renderDetailIcons(marker)}
@@ -1778,21 +1769,6 @@ export class Codemark extends React.Component<Props, State> {
 									>
 										<Icon name="diff" className="margin-right" />
 										{this.state.showDiffHunk ? "Hide" : "Show"} Diff
-									</span>
-								)}
-								{providerId && externalContent.externalId && (
-									<span
-										style={{ marginRight: "10px" }}
-										onClick={() =>
-											this.props.setCurrentPullRequest(
-												providerId!,
-												externalContent.externalId!,
-												externalContent.externalChildId
-											)
-										}
-									>
-										<Icon name="pull-request" className="margin-right" />
-										View Pull Request
 									</span>
 								)}
 
@@ -1887,13 +1863,6 @@ export class Codemark extends React.Component<Props, State> {
 						range: marker.range,
 						preserveFocus: true,
 					});
-					if (providerId && externalContent.externalId) {
-						this.props.setCurrentPullRequest(
-							providerId!,
-							externalContent.externalId,
-							externalContent.externalChildId
-						);
-					}
 				}}
 				onMouseEnter={this.handleMouseEnterCodemark}
 				onMouseLeave={this.handleMouseLeaveCodemark}
@@ -2212,7 +2181,6 @@ export default connect(
 		addCodemarks,
 		createPost,
 		setCurrentReview,
-		setCurrentPullRequest,
 		setCurrentCodeError,
 		currentUserIsAdminSelector,
 	}

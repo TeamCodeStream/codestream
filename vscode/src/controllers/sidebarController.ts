@@ -477,49 +477,6 @@ export class SidebarController implements Disposable {
 	}
 
 	@log()
-	async openPullRequest(
-		providerId: string,
-		pullRequestId: string,
-		commentId?: string
-	): Promise<void> {
-		if (!this.visible) {
-			await this.show();
-		}
-
-		if (!this._sidebar) {
-			// it's possible that the webview is closing...
-			return;
-		}
-
-		// TODO: Change this to be a request vs a notification
-		this._sidebar!.notify(ShowPullRequestNotificationType, {
-			providerId,
-			id: pullRequestId,
-			commentId: commentId
-		});
-	}
-
-	@log()
-	async openPullRequestByUrl(url: string, source?: string): Promise<void> {
-		if (!this.visible) {
-			await this.show();
-		}
-
-		if (!this._sidebar) {
-			// it's possible that the webview is closing...
-			return;
-		}
-
-		// TODO: Change this to be a request vs a notification
-		this._sidebar!.notify(ShowPullRequestNotificationType, {
-			providerId: "",
-			id: "",
-			url: url,
-			source: source
-		});
-	}
-
-	@log()
 	async viewMethodLevelTelemetry(args: any): Promise<void> {
 		if (this.visible) {
 			await this._sidebar!.show();

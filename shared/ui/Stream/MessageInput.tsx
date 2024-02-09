@@ -26,7 +26,6 @@ import {
 import { getTeamMembers, getTeamTagsArray, getUsernames } from "../store/users/reducer";
 import { MarkdownText } from "./MarkdownText";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
-import { getProviderPullRequestCollaborators } from "../store/providerPullRequests/slice";
 import Tooltip from "./Tooltip";
 import { HostApi } from "../webview-api";
 import {
@@ -103,20 +102,13 @@ export const MessageInput = (props: MessageInputProps) => {
 		const currentTeam = state.teams[state.context.currentTeamId];
 
 		const currentPullRequest = state.context.currentPullRequest;
-		let teammates: CSUser[] = [];
-		let collaborators: Collaborator[] = [];
-		if (currentPullRequest) {
-			// TODO complete different type with id, username, avatar - why was it assigned to teammates?
-			collaborators = getProviderPullRequestCollaborators(state) ?? [];
-		} else {
-			teammates = getTeamMembers(state);
-		}
+		let teammates: CSUser[] = getTeamMembers(state);
 
 		return {
 			currentTeam,
 			currentUserId: state.session.userId!,
 			teammates,
-			collaborators,
+
 			codemarks: codemarkSelectors.getTypeFilteredCodemarks(state) || [],
 			isInVscode: state.ide.name === "VSC",
 			teamTags: props.withTags ? getTeamTagsArray(state) : emptyArray,
@@ -389,9 +381,8 @@ export const MessageInput = (props: MessageInputProps) => {
 		} else if (currentPopup === "emojis") {
 			toInsert = id + ":\u00A0";
 		} else {
-			const user =
-				derivedState.teammates.find(t => t.id === id) ??
-				derivedState.collaborators.find(t => t.id === id);
+			const user = derivedState.teammates.find(t => t.id === id);
+
 			if (!user) return;
 			toInsert = user.username + "\u00A0";
 		}

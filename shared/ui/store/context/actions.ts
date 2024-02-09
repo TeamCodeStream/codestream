@@ -49,27 +49,12 @@ export const closeModal = () => {
 	return action(ContextActionsType.CloseModal);
 };
 
-export const closePrDetailModal =
-	(providerId: string, id: string, groupIndex?: string | undefined) => dispatch => {
-		dispatch(closeModal());
-		dispatch(openPanel(WebviewPanels.Sidebar));
-		dispatch(setCurrentCodemark());
-		dispatch(setCurrentReview());
-		dispatch(setCurrentCodeError());
-		dispatch(setCurrentPullRequest(providerId, id, "", "", "sidebar-diffs", groupIndex));
-		dispatch(clearCurrentErrorsInboxOptions());
-		dispatch(clearCurrentInstrumentationOptions());
-		dispatch(clearWantNewRelicOptions());
-		dispatch(setCurrentMethodLevelTelemetry(undefined));
-	};
-
 export const closeAllPanels = () => dispatch => {
 	dispatch(closeModal());
 	dispatch(openPanel(WebviewPanels.Sidebar));
 	dispatch(setCurrentCodemark());
 	dispatch(setCurrentReview());
 	dispatch(setCurrentCodeError());
-	dispatch(clearCurrentPullRequest());
 	dispatch(clearCurrentErrorsInboxOptions());
 	dispatch(clearCurrentInstrumentationOptions());
 	dispatch(clearWantNewRelicOptions());
@@ -81,7 +66,6 @@ export const closeAllModals = () => dispatch => {
 	dispatch(setCurrentCodemark());
 	dispatch(setCurrentReview());
 	dispatch(setCurrentCodeError());
-	dispatch(clearCurrentPullRequest());
 	dispatch(clearCurrentErrorsInboxOptions());
 	dispatch(clearCurrentInstrumentationOptions());
 	dispatch(clearWantNewRelicOptions());
@@ -207,33 +191,6 @@ export const setCurrentCodeError =
 export const setCurrentRepo = (id?: string, path?: string) =>
 	action(ContextActionsType.SetCurrentRepo, { id, path });
 
-export const _setCreatePullRequest = (reviewId?: string) =>
-	action(ContextActionsType.SetCreatePullRequest, { reviewId });
-
-export const setCreatePullRequest = (reviewId?: string) => dispatch => {
-	// Previously viewed PR/MR still in react state (even after restart) - make sure to clear it so that
-	// PullRequestsFilesChanged.tsx doesn't try to load an existing PR
-	dispatch(clearCurrentPullRequest());
-	return dispatch(_setCreatePullRequest(reviewId));
-};
-
-export const setCurrentPullRequest = (
-	providerId: string,
-	id: string,
-	commentId?: string,
-	source?: string,
-	view?: "details" | "sidebar-diffs",
-	groupIndex?: string | undefined
-) =>
-	action(ContextActionsType.SetCurrentPullRequest, {
-		providerId,
-		id,
-		commentId,
-		source,
-		view,
-		groupIndex,
-	});
-
 export const setCurrentOrganizationInvite = (name: string, id: string, host?: any, _type?: any) =>
 	action(ContextActionsType.SetCurrentOrganizationInvite, {
 		name,
@@ -248,17 +205,6 @@ export const setCurrentErrorsInboxOptions = (
 	url?: string
 ) => action(ContextActionsType.SetCurrentErrorsInboxOptions, { stack, customAttributes, url });
 
-export const setCurrentPullRequestNeedsRefresh = (
-	needsRefresh: boolean,
-	providerId: string,
-	pullRequestId: string
-) =>
-	action(ContextActionsType.SetCurrentPullRequestNeedsRefresh, {
-		needsRefresh,
-		providerId,
-		pullRequestId,
-	});
-
 export const setCurrentInstrumentationOptions = (options?: any) =>
 	action(ContextActionsType.SetCurrentInstrumentationOptions, { options });
 
@@ -272,9 +218,6 @@ export const setWantNewRelicOptions = (
 	projects?: { path: string; name?: string; version?: string }[]
 ) => action(ContextActionsType.SetWantNewRelicOptions, { projectType, repoId, path, projects });
 
-export const setNewPullRequestOptions = (options?: { branch: NewPullRequestBranch }) =>
-	action(ContextActionsType.SetNewPullRequestOptions, { options });
-
 export const clearCurrentErrorsInboxOptions = () =>
 	action(ContextActionsType.SetCurrentErrorsInboxOptions, {});
 
@@ -287,22 +230,10 @@ export const clearCurrentPixieDynamicLoggingOptions = () =>
 export const clearWantNewRelicOptions = () =>
 	action(ContextActionsType.SetClearNewRelicOptions, {});
 
-export const clearCurrentPullRequest = () =>
-	action(ContextActionsType.SetCurrentPullRequest, {
-		providerId: "",
-		id: "",
-		commentId: "",
-		source: "",
-		view: undefined,
-	});
-
 export const setOnboardStep = (step: number) => action(ContextActionsType.SetOnboardStep, { step });
 
 export const setStartWorkCard = (card: any) =>
 	action(ContextActionsType.SetStartWorkCard, { card });
-
-export const setCurrentPullRequestAndBranch = (prId?: string) =>
-	action(ContextActionsType.SetCurrentPullRequestAndBranch, { prId });
 
 export const setProfileUser = (userId?: string) =>
 	action(ContextActionsType.SetProfileUser, userId);

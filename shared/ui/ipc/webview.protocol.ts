@@ -46,21 +46,6 @@ export const ShowCodeErrorNotificationType = new NotificationType<ShowCodeErrorN
 );
 
 // TODO: This should be a request to the webview -- not a notification
-export interface ShowPullRequestwNotification {
-	providerId: string;
-	id: string;
-	commentId?: string;
-	/* Either a providerId && id are used, OR a url */
-	url?: string;
-	source?: string;
-}
-
-export const ShowPullRequestNotificationType = new NotificationType<
-	ShowPullRequestwNotification,
-	void
->(`${IpcRoutes.Webview}/pullRequest/show`);
-
-// TODO: This should be a request to the webview -- not a notification
 export interface ShowStreamNotification {
 	streamId: string;
 	threadId?: string;

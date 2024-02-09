@@ -1,16 +1,11 @@
 "use strict";
 
-import { FetchThirdPartyPullRequestResponse } from "@codestream/protocols/agent";
 import { CSRemote, CSRepository } from "@codestream/protocols/api";
 import { describe, expect, it } from "@jest/globals";
-
-import { BitbucketProvider } from "../../../src/providers/bitbucket";
-import { BitbucketServerProvider } from "../../../src/providers/bitbucketServer";
 import { GitHubProvider } from "../../../src/providers/github";
 import { GitHubEnterpriseProvider } from "../../../src/providers/githubEnterprise";
 import { GitLabProvider } from "../../../src/providers/gitlab";
 import { GitLabEnterpriseProvider } from "../../../src/providers/gitlabEnterprise";
-import { ThirdPartyIssueProvider } from "../../../src/providers/provider";
 
 interface RepoStub extends Omit<Partial<CSRepository>, "remotes"> {
 	remotes: RemoteStub[];
@@ -19,47 +14,8 @@ interface RemoteStub extends Partial<CSRemote> {}
 function stubRepos(repo: RepoStub[]): CSRepository[] {
 	return repo as CSRepository[];
 }
-function stubConversations(
-	ob: Partial<FetchThirdPartyPullRequestResponse>
-): FetchThirdPartyPullRequestResponse {
-	return ob as FetchThirdPartyPullRequestResponse;
-}
 
 describe("provider", () => {
-	it("supportsViewingPullRequests", async () => {
-		[
-			GitHubProvider,
-			GitHubEnterpriseProvider,
-			GitLabProvider,
-			GitLabEnterpriseProvider,
-			BitbucketProvider,
-		].forEach(Provider => {
-			const provider = new Provider({} as any, Provider as any);
-			expect(ThirdPartyIssueProvider.supportsViewingPullRequests(provider)).toEqual(true);
-		});
-	});
-
-	it("does not supportsViewingPullRequests", async () => {
-		[BitbucketServerProvider].forEach(Provider => {
-			const provider = new Provider({} as any, Provider as any);
-			expect(ThirdPartyIssueProvider.supportsViewingPullRequests(provider)).toEqual(false);
-		});
-	});
-
-	it("supportsCreatingPullRequests", () => {
-		[
-			GitHubProvider,
-			GitHubEnterpriseProvider,
-			GitLabProvider,
-			GitLabEnterpriseProvider,
-			BitbucketProvider,
-			BitbucketServerProvider,
-		].forEach(Provider => {
-			const provider = new Provider({} as any, Provider as any);
-			expect(ThirdPartyIssueProvider.supportsCreatingPullRequests(provider)).toEqual(true);
-		});
-	});
-
 	it("gh getProviderRepo url found match", async () => {
 		const repos = stubRepos([
 			{

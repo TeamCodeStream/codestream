@@ -1,30 +1,22 @@
 import {
 	DocumentMarker,
-	DocumentMarkerExternalContent,
 	FetchAssignableUsersAutocompleteRequest,
 	FetchAssignableUsersResponse,
-	GetMyPullRequestsRequest,
 } from "@codestream/protocols/agent";
 import { CSProviderInfos, CSRepository } from "@codestream/protocols/api";
 import { TernarySearchTree } from "@codestream/utils/system/searchTree";
-
 import { ReportSuppressedMessages } from "../agentError";
-import { SessionContainer } from "../container";
 import { Logger } from "../logger";
 import { log } from "../system/decorators/log";
 import {
-	ProviderCreatePullRequestRequest,
 	ProviderVersion,
-	PullRequestComment,
 	ThirdPartyIssueProvider,
-	ThirdPartyProviderSupportsCreatingPullRequests,
 	ThirdPartyProviderSupportsIssues,
-	ThirdPartyProviderSupportsViewingPullRequests,
 } from "./provider";
 import { ThirdPartyProviderBase } from "./thirdPartyProviderBase";
 
 export abstract class ThirdPartyIssueProviderBase<
-		TProviderInfo extends CSProviderInfos = CSProviderInfos
+		TProviderInfo extends CSProviderInfos = CSProviderInfos,
 	>
 	extends ThirdPartyProviderBase<TProviderInfo>
 	implements ThirdPartyIssueProvider
@@ -40,75 +32,6 @@ export abstract class ThirdPartyIssueProviderBase<
 
 	supportsIssues(): this is ThirdPartyIssueProvider & ThirdPartyProviderSupportsIssues {
 		return ThirdPartyIssueProvider.supportsIssues(this);
-	}
-
-	supportsViewingPullRequests(): this is ThirdPartyIssueProvider &
-		ThirdPartyProviderSupportsViewingPullRequests {
-		return ThirdPartyIssueProvider.supportsViewingPullRequests(this);
-	}
-
-	supportsCreatingPullRequests(): this is ThirdPartyIssueProvider &
-		ThirdPartyProviderSupportsCreatingPullRequests {
-		return ThirdPartyIssueProvider.supportsCreatingPullRequests(this);
-	}
-
-	protected createDescription(request: ProviderCreatePullRequestRequest): string | undefined {
-		if (
-			!request ||
-			request.description == null ||
-			!request.metadata ||
-			(!request.metadata.reviewPermalink && !request.metadata.addresses)
-		) {
-			return request.description;
-		}
-
-		if (request.metadata.reviewPermalink) {
-			request.description += `\n\n\n[Changes reviewed on CodeStream](${
-				request.metadata.reviewPermalink
-			}?src=${encodeURIComponent(this.displayName)})`;
-			if (request.metadata.reviewers) {
-				request.description += ` by ${request.metadata.reviewers?.map(_ => _.name)?.join(", ")}`;
-			}
-			if (request.metadata.approvedAt) {
-				request.description += ` on ${new Date(request.metadata.approvedAt).toLocaleDateString(
-					"en-US",
-					{ year: "numeric", month: "short", day: "numeric" }
-				)}`;
-			}
-		}
-		if (request.metadata.addresses) {
-			let addressesText = "\n\n**This PR Addresses:**  \n";
-			let foundOneWithUrl = false;
-			request.metadata.addresses.forEach(issue => {
-				addressesText += `[${issue.title}](${issue.url})  \n`;
-				if (issue.url) foundOneWithUrl = true;
-			});
-			if (foundOneWithUrl) request.description += addressesText;
-		}
-		const codeStreamLink = `https://codestream.com/?utm_source=cs&utm_medium=pr&utm_campaign=${encodeURI(
-			request.providerId
-		)}`;
-		let createdFrom = "";
-		switch (request.ideName) {
-			case "VSC":
-				createdFrom = "from VS Code";
-				break;
-			case "JETBRAINS":
-				createdFrom = "from JetBrains";
-				break;
-			case "VS":
-				createdFrom = "from Visual Studio";
-				break;
-			case "ATOM":
-				createdFrom = "from Atom";
-				break;
-		}
-		let codeStreamAttribution = `Created ${createdFrom} using [CodeStream](${codeStreamLink})`;
-		if (!["bitbucket*org", "bitbucket/server"].includes(request.providerId)) {
-			codeStreamAttribution = `<sup> ${codeStreamAttribution}</sup>`;
-		}
-		request.description += `\n\n${codeStreamAttribution}`;
-		return request.description;
 	}
 
 	async getProviderRepo(request: {
@@ -128,15 +51,16 @@ export abstract class ThirdPartyIssueProviderBase<
 			const repoUrl = request.repoUrl;
 			const repos = request.repos;
 
-			const matchingRepos = repos?.filter((_: CSRepository) =>
-				_?.remotes.some(
-					r =>
-						r?.normalizedUrl &&
-						r?.normalizedUrl.length > 2 &&
-						r?.normalizedUrl.match(/([a-zA-Z0-9]+)/) &&
-						(repoUrl?.includes(r?.normalizedUrl?.toLowerCase() + "/") ||
-							repoUrl?.endsWith(r?.normalizedUrl?.toLowerCase()))
-				)
+			const matchingRepos = repos?.filter(
+				(_: CSRepository) =>
+					_?.remotes.some(
+						r =>
+							r?.normalizedUrl &&
+							r?.normalizedUrl.length > 2 &&
+							r?.normalizedUrl.match(/([a-zA-Z0-9]+)/) &&
+							(repoUrl?.includes(r?.normalizedUrl?.toLowerCase() + "/") ||
+								repoUrl?.endsWith(r?.normalizedUrl?.toLowerCase()))
+					)
 			);
 
 			if (matchingRepos.length === 1) {
@@ -218,12 +142,6 @@ export abstract class ThirdPartyIssueProviderBase<
 
 	protected async isPRCreationApiCompatible(): Promise<boolean> {
 		return true;
-	}
-
-	protected getPRExternalContent(
-		comment: PullRequestComment
-	): DocumentMarkerExternalContent | undefined {
-		return undefined;
 	}
 
 	protected _isSuppressedException(ex: any): ReportSuppressedMessages | undefined {
@@ -368,34 +286,6 @@ export abstract class ThirdPartyIssueProviderBase<
 		return filesInOrder;
 	}
 
-	/**
-	 * Repos that are opened in the editor
-	 * @returns array of owner/repo strings
-	 */
-	protected async getOpenedRepos(): Promise<string[]> {
-		const repos: string[] = [];
-		const { scm, providerRegistry } = SessionContainer.instance();
-		const reposResponse = await scm.getRepos({ inEditorOnly: true, includeProviders: true });
-		if (!reposResponse.repositories || !reposResponse.repositories.length) return repos;
-
-		for (const repo of reposResponse.repositories) {
-			if (!repo.remotes) continue;
-
-			for (const remote of repo.remotes) {
-				const urlToTest = remote.webUrl;
-				const results = await providerRegistry.queryThirdParty({ url: urlToTest });
-				if (results && results.providerId === this.providerConfig.id) {
-					const ownerData = this.getOwnerFromRemote(urlToTest);
-					if (ownerData) {
-						repos.push(`${ownerData.owner}/${ownerData.name}`);
-					}
-				}
-			}
-		}
-
-		return repos;
-	}
-
 	protected async getVersion(): Promise<ProviderVersion> {
 		this._version = this.DEFAULT_VERSION;
 		return this._version;
@@ -462,9 +352,5 @@ export abstract class ThirdPartyIssueProviderBase<
 					}
 					return Promise.reject(error);
 			  });
-	}
-
-	isValidGetMyPullRequest(request: GetMyPullRequestsRequest): boolean {
-		return !(!request.prQueries || !request.prQueries.length || request.prQueries.length === 0);
 	}
 }

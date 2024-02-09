@@ -24,12 +24,6 @@ import {
 	FetchThirdPartyRepoMatchToFossaRequest,
 	FetchThirdPartyRepoMatchToFossaResponse,
 	FetchThirdPartyCodeAnalyzersRequest,
-	FetchThirdPartyPullRequestCommitsRequest,
-	FetchThirdPartyPullRequestCommitsResponse,
-	FetchThirdPartyPullRequestRequest,
-	FetchThirdPartyPullRequestResponse,
-	GetMyPullRequestsRequest,
-	GetMyPullRequestsResponse,
 	IssueParams,
 	MoveThirdPartyCardRequest,
 	MoveThirdPartyCardResponse,
@@ -46,7 +40,7 @@ import { CSMe, CSProviderInfos } from "@codestream/protocols/api";
 import { Response } from "undici";
 
 import { SessionContainer } from "../container";
-import { GitRemote, GitRemoteLike, GitRepository } from "../git/gitService";
+import { GitRemote, GitRepository } from "../git/gitService";
 import { Logger } from "../logger";
 
 export const providerDisplayNamesByNameKey = new Map<string, string>([
@@ -78,7 +72,7 @@ export interface ThirdPartyProviderSupportsIssues {
 	getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse>;
 
 	getCardWorkflow(
-		request: FetchThirdPartyCardWorkflowRequest,
+		request: FetchThirdPartyCardWorkflowRequest
 	): Promise<FetchThirdPartyCardWorkflowResponse>;
 
 	moveCard(request: MoveThirdPartyCardRequest): Promise<MoveThirdPartyCardResponse>;
@@ -86,7 +80,7 @@ export interface ThirdPartyProviderSupportsIssues {
 	getAssignableUsers(request: FetchAssignableUsersRequest): Promise<FetchAssignableUsersResponse>;
 
 	getAssignableUsersAutocomplete(
-		request: FetchAssignableUsersAutocompleteRequest,
+		request: FetchAssignableUsersAutocompleteRequest
 	): Promise<FetchAssignableUsersResponse>;
 
 	createCard(request: CreateThirdPartyCardRequest): Promise<CreateThirdPartyCardResponse>;
@@ -103,41 +97,6 @@ export interface ThirdPartyProviderSupportsStatus {
 	updateStatus(request: UpdateThirdPartyStatusRequest): Promise<UpdateThirdPartyStatusResponse>;
 }
 
-export interface ThirdPartyProviderSupportsPullRequests {
-	getRepoInfo(request: ProviderGetRepoInfoRequest): Promise<ProviderGetRepoInfoResponse>;
-
-	getIsMatchingRemotePredicate(): (remoteLike: GitRemoteLike) => boolean;
-
-	getRemotePaths(repo: GitRepository, _projectsByRemotePath: any): any;
-	getOwnerFromRemote(remote: string): { owner: string; name: string };
-	getPullRequestsContainigSha(
-		repoIdentifier: { owner: string; name: string }[],
-		sha: string,
-	): Promise<any[]>;
-}
-
-export interface ThirdPartyProviderSupportsCreatingPullRequests
-	extends ThirdPartyProviderSupportsPullRequests {
-	createPullRequest(
-		request: ProviderCreatePullRequestRequest,
-	): Promise<ProviderCreatePullRequestResponse | undefined>;
-}
-
-export interface ThirdPartyProviderSupportsViewingPullRequests
-	extends ThirdPartyProviderSupportsPullRequests {
-	getPullRequest(
-		request: FetchThirdPartyPullRequestRequest,
-	): Promise<FetchThirdPartyPullRequestResponse>;
-
-	getPullRequestCommits(
-		request: FetchThirdPartyPullRequestCommitsRequest,
-	): Promise<FetchThirdPartyPullRequestCommitsResponse>;
-
-	getMyPullRequests(
-		request: GetMyPullRequestsRequest,
-	): Promise<GetMyPullRequestsResponse[][] | undefined>;
-}
-
 export interface ThirdPartyProviderSupportsBuilds {
 	fetchBuilds(request: FetchThirdPartyBuildsRequest): Promise<FetchThirdPartyBuildsResponse>;
 }
@@ -145,22 +104,22 @@ export interface ThirdPartyProviderSupportsBuilds {
 export interface ThirdPartyProviderSupportsCodeAnalyzers {
 	fetchLicenseDependencies(
 		request: FetchThirdPartyCodeAnalyzersRequest,
-		params: IssueParams,
+		params: IssueParams
 	): Promise<FetchThirdPartyLicenseDependenciesResponse>;
 
 	fetchVulnerabilities(
 		request: FetchThirdPartyCodeAnalyzersRequest,
-		params: IssueParams,
+		params: IssueParams
 	): Promise<FetchThirdPartyVulnerabilitiesResponse>;
 
 	fetchIsRepoMatch(
-		request: FetchThirdPartyRepoMatchToFossaRequest,
+		request: FetchThirdPartyRepoMatchToFossaRequest
 	): Promise<FetchThirdPartyRepoMatchToFossaResponse>;
 }
 
 export namespace ThirdPartyIssueProvider {
 	export function supportsIssues(
-		provider: ThirdPartyProvider,
+		provider: ThirdPartyProvider
 	): provider is ThirdPartyProvider & ThirdPartyProviderSupportsIssues {
 		return (
 			(provider as any).getBoards !== undefined &&
@@ -168,29 +127,17 @@ export namespace ThirdPartyIssueProvider {
 			(provider as any).createCard !== undefined
 		);
 	}
-
-	export function supportsViewingPullRequests(
-		provider: ThirdPartyProvider,
-	): provider is ThirdPartyProvider & ThirdPartyProviderSupportsPullRequests {
-		return (provider as any).getMyPullRequests !== undefined;
-	}
-
-	export function supportsCreatingPullRequests(
-		provider: ThirdPartyProvider,
-	): provider is ThirdPartyProvider & ThirdPartyProviderSupportsPullRequests {
-		return (provider as any).createPullRequest !== undefined;
-	}
 }
 
 export namespace ThirdPartyPostProvider {
 	export function supportsSharing(
-		provider: ThirdPartyPostProvider,
+		provider: ThirdPartyPostProvider
 	): provider is ThirdPartyPostProvider & ThirdPartyProviderSupportsPosts {
 		return (provider as any).createPost !== undefined;
 	}
 
 	export function supportsStatus(
-		provider: ThirdPartyProvider,
+		provider: ThirdPartyProvider
 	): provider is ThirdPartyProvider & ThirdPartyProviderSupportsStatus {
 		return (provider as any).updateStatus !== undefined;
 	}
@@ -198,7 +145,7 @@ export namespace ThirdPartyPostProvider {
 
 export namespace ThirdPartyBuildProvider {
 	export function supportsBuilds(
-		provider: ThirdPartyBuildProvider,
+		provider: ThirdPartyBuildProvider
 	): provider is ThirdPartyBuildProvider & ThirdPartyProviderSupportsBuilds {
 		return (provider as any).fetchBuilds !== undefined;
 	}
@@ -206,7 +153,7 @@ export namespace ThirdPartyBuildProvider {
 
 export namespace ThirdPartyCodeAnalyzerProvider {
 	export function supportsCodeAnalysis(
-		provider: ThirdPartyCodeAnalyzerProvider,
+		provider: ThirdPartyCodeAnalyzerProvider
 	): provider is ThirdPartyCodeAnalyzerProvider & ThirdPartyProviderSupportsCodeAnalyzers {
 		return (
 			(provider as any).fetchIsRepoMatch !== undefined &&
@@ -253,12 +200,6 @@ export interface ThirdPartyProvider {
 
 export interface ThirdPartyIssueProvider extends ThirdPartyProvider {
 	supportsIssues(): this is ThirdPartyIssueProvider & ThirdPartyProviderSupportsIssues;
-
-	supportsViewingPullRequests(): this is ThirdPartyIssueProvider &
-		ThirdPartyProviderSupportsViewingPullRequests;
-
-	supportsCreatingPullRequests(): this is ThirdPartyIssueProvider &
-		ThirdPartyProviderSupportsCreatingPullRequests;
 }
 
 export interface ThirdPartyPostProvider extends ThirdPartyProvider {
@@ -290,7 +231,7 @@ interface RefreshableProviderInfo {
 }
 
 export function isRefreshable<TProviderInfo extends CSProviderInfos>(
-	providerInfo: TProviderInfo,
+	providerInfo: TProviderInfo
 ): providerInfo is TProviderInfo & RefreshableProviderInfo {
 	return typeof (providerInfo as any).expiresAt === "number";
 }
@@ -336,40 +277,10 @@ export interface ProviderVersion {
 	isLowestSupportedVersion?: boolean;
 }
 
-export interface PullRequestComment {
-	author: {
-		id: string;
-		nickname: string;
-		username?: string;
-	};
-	createdAt: number;
-	id: string;
-	path: string;
-	pullRequest: {
-		id: number;
-		externalId?: string;
-		title?: string;
-		url: string;
-		isOpen: boolean;
-		targetBranch: string;
-		sourceBranch: string;
-	};
-	text: string;
-	code: string;
-	url: string;
-
-	commit: string;
-	originalCommit?: string;
-	line: number;
-	originalLine?: number;
-	diffHunk?: string;
-	outdated?: boolean;
-}
-
 export async function getOpenedRepos<R>(
 	predicate: (remote: GitRemote) => boolean,
 	queryFn: (path: string) => Promise<ApiResponse<R>>,
-	remoteRepos: Map<string, R>,
+	remoteRepos: Map<string, R>
 ): Promise<Map<string, R>> {
 	const openRepos = new Map<string, R>();
 
@@ -407,7 +318,7 @@ export async function getOpenedRepos<R>(
 export async function getRemotePaths<R extends { path: string }>(
 	repo: GitRepository | undefined,
 	predicate: (remote: GitRemote) => boolean,
-	remoteRepos: Map<string, R>,
+	remoteRepos: Map<string, R>
 ): Promise<string[] | undefined> {
 	try {
 		if (repo === undefined) return undefined;
@@ -427,101 +338,4 @@ export async function getRemotePaths<R extends { path: string }>(
 	} catch (ex) {
 		return undefined;
 	}
-}
-
-export interface ProviderGetRepoInfoRequest {
-	providerId: string;
-	remote: string;
-}
-
-export interface ProviderPullRequestInfo {
-	id: string;
-	url: string;
-	nameWithOwner?: string;
-	baseRefName: string;
-	headRefName: string;
-}
-
-export interface ProviderGetRepoInfoResponse {
-	/**
-	 * id of the repository from the provider
-	 */
-	id?: string;
-	/**
-	 * in github.com/TeamCodeStream/codestream this is TeamCodeStream/codestream
-	 */
-	nameWithOwner?: string;
-	/**
-	 * in github.com/TeamCodeStream/codestream this is TeamCodeStream
-	 */
-	owner?: string;
-	/**
-	 * in github.com/TeamCodeStream/codestream this is codestream
-	 */
-	name?: string;
-	/**
-	 * is this repo forked
-	 */
-	isFork?: boolean;
-	/**
-	 * defaultBranch: main, master, something else
-	 */
-	defaultBranch?: string;
-	/**
-	 * currently open pull requests
-	 */
-	pullRequests?: ProviderPullRequestInfo[];
-
-	error?: { message?: string; type: string };
-	// used for some providers
-	key?: string;
-}
-
-export interface ProviderCreatePullRequestRequest {
-	/** CodeStream providerId, aka github*com, gitlab*com, etc. */
-	providerId: string;
-	/** certain providers require their internal repo Id */
-	providerRepositoryId?: string;
-	/** is the repo a fork? */
-	isFork?: boolean;
-	/** to look up the repo ID on the provider  */
-	remote: string;
-	/** PR title */
-	title: string;
-	/** PR description (optional) */
-	description?: string;
-	/** base branch name, or the branch that will accept the PR */
-	baseRefName: string;
-	/** in github.com/TeamCodeStream/codestream this is TeamCodeStream/codestream */
-	baseRefRepoNameWithOwner?: string;
-	/** head branch name, or the branch you have been working on and want to merge somewhere */
-	headRefName: string;
-	/** in github.com/TeamCodeStream/codestream this is TeamCodeStream, some providers, like GitHub need this for forks */
-	headRefRepoOwner?: string;
-	/** in github.com/TeamCodeStream/codestream this is TeamCodeStream/codestream */
-	headRefRepoNameWithOwner?: string;
-	/** additional data */
-	metadata: {
-		reviewPermalink?: string;
-		reviewers?: { name: string }[];
-		approvedAt?: number;
-		addresses?: { title: string; url: string }[];
-	};
-	/**  name of the user's IDE */
-	ideName?: string;
-}
-
-export interface ProviderCreatePullRequestResponse {
-	url?: string;
-	title?: string;
-	id?: string;
-	error?: { message?: string; type: string };
-}
-
-export interface RepoPullRequestProvider {
-	repo: GitRepository;
-	providerId: string;
-	providerName: string;
-	provider: ThirdPartyProvider & ThirdPartyProviderSupportsPullRequests;
-	remotes: GitRemote[];
 }

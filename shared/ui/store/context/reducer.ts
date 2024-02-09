@@ -149,26 +149,6 @@ export function reduceContext(
 						  }
 						: undefined,
 			};
-		case ContextActionsType.SetCreatePullRequest:
-			return { ...state, createPullRequestReviewId: action.payload.reviewId };
-		case ContextActionsType.SetCurrentPullRequest:
-			return {
-				...state,
-				currentPullRequest:
-					action.payload.providerId && action.payload.id
-						? {
-								providerId: action.payload.providerId,
-								id: action.payload.id,
-								commentId: action.payload.commentId,
-								source: action.payload.source,
-								view: action.payload.view,
-								previousView: state?.currentPullRequest?.view,
-								// @ts-ignore
-								groupIndex: action.payload?.groupIndex,
-						  }
-						: undefined,
-				pullRequestCheckoutBranch: false,
-			};
 
 		case ContextActionsType.SetCurrentOrganizationInvite:
 			return {
@@ -180,28 +160,11 @@ export function reduceContext(
 					_type: action.payload?._type,
 				},
 			};
-		case ContextActionsType.SetCurrentPullRequestAndBranch:
-			return {
-				...state,
-				currentPullRequestId: action.payload.prId,
-				pullRequestCheckoutBranch: true,
-			};
-		case ContextActionsType.SetNewPullRequestOptions: {
-			return {
-				...state,
-				newPullRequestOptions: action.payload.options,
-			};
-		}
+
 		case ContextActionsType.SetCurrentErrorsInboxOptions: {
 			return {
 				...state,
 				errorsInboxOptions: action.payload,
-			};
-		}
-		case ContextActionsType.SetCurrentPullRequestNeedsRefresh: {
-			return {
-				...state,
-				currentPullRequestNeedsRefresh: action.payload,
 			};
 		}
 		case ContextActionsType.SetCurrentInstrumentationOptions: {

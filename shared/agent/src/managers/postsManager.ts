@@ -1,6 +1,5 @@
 "use strict";
 import * as fs from "fs";
-import * as path from "path";
 
 import { ParsedDiff } from "diff";
 import { groupBy, last, orderBy } from "lodash";
@@ -29,7 +28,6 @@ import {
 import {
 	CodeDelimiterStyles,
 	CodemarkPlus,
-	CodeStreamDiffUriData,
 	CreateCodeErrorRequest,
 	CreateCodemarkRequest,
 	CreatePassthroughCodemarkResponse,
@@ -103,9 +101,7 @@ import { Marker, MarkerLocation } from "../api/extensions";
 import { Container, SessionContainer } from "../container";
 import { EMPTY_TREE_SHA } from "../git/gitService";
 import { GitCommit } from "../git/models/commit";
-import * as gitUtils from "../git/utils";
 import { Logger } from "../logger";
-import { Directives } from "../providers/directives";
 import { providerDisplayNamesByNameKey } from "../providers/provider";
 import { Arrays, debug, log, lsp, lspHandler, Strings } from "../system";
 import * as csUri from "../system/uri";
@@ -1006,238 +1002,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			request.textDocuments.length &&
 			csUri.Uris.isCodeStreamDiffUri(request.textDocuments[0].uri)
 		) {
-			const { providerRegistry, git, repos } = SessionContainer.instance();
-			const uri = request.textDocuments[0].uri;
-			const parsedUri = csUri.Uris.fromCodeStreamDiffUri<CodeStreamDiffUriData>(uri);
-			if (!parsedUri) throw new Error(`Could not parse uri ${request.textDocuments[0].uri}`);
-			let providerId;
-			if (parsedUri.context && parsedUri.context.pullRequest) {
-				providerId = parsedUri.context.pullRequest.providerId;
-				if (!providerRegistry.providerSupportsPullRequests(providerId)) {
-					throw new Error(`UnsupportedProvider ${providerId}`);
-				}
-			} else {
-				throw new Error(`missing context for uri ${uri}`);
-			}
-
-			if (providerId === "bitbucket*org") {
-				const result: Promise<Directives> = await providerRegistry.executeMethod({
-					method: "createCommitComment",
-					providerId: parsedUri.context.pullRequest.providerId,
-					params: {
-						pullRequestId: parsedUri.context.pullRequest.id,
-						text: request.attributes.text,
-						path: parsedUri.path,
-						startLine: request.attributes.codeBlocks[0].range.start.line + 1,
-					},
-				});
-				return {
-					isPassThrough: true,
-					pullRequest: parsedUri.context.pullRequest,
-					success: result != null,
-					directives: result,
-				};
-			} else {
-				// get the git repo, so we can use the repo root
-				const gitRepo = await git.getRepositoryById(parsedUri.repoId);
-				// lines are 1-based on GH, and come in as 0based
-				const range = request.attributes.codeBlocks[0].range;
-				const startLine = range.start.line + 1;
-				const end = range.end;
-				let endLine = end.line + 1;
-				if (endLine === startLine + 1 && end.character === 0) {
-					// treat triple-clicked "single line" PR comments where the cursor
-					// moves to the next line as truly single line comments
-					endLine = startLine;
-				}
-
-				let diff;
-				if (parsedUri.previousFilePath && parsedUri.previousFilePath !== parsedUri.path) {
-					// file was renamed
-					diff = await git.getDiffBetweenCommitsAndFiles(
-						parsedUri.leftSha,
-						parsedUri.rightSha,
-						gitRepo?.path || "",
-						parsedUri.previousFilePath,
-						parsedUri.path,
-						true
-					);
-				} else {
-					// get the diff hunk between the two shas
-					diff = await git.getDiffBetweenCommits(
-						parsedUri.leftSha,
-						parsedUri.rightSha,
-						path.join(gitRepo ? gitRepo.path : "", parsedUri.path),
-						true
-					);
-				}
-
-				if (!diff) {
-					const errorMessage = `Could not find diff for leftSha=${parsedUri.leftSha} rightSha=${parsedUri.rightSha} path=${parsedUri.path} previousFilePath=${parsedUri.previousFilePath}`;
-					Logger.warn(errorMessage);
-					throw new Error(errorMessage);
-				}
-
-				const startHunk = diff.hunks.find(
-					_ => startLine >= _.newStart && startLine < _.newStart + _.newLines
-				);
-				const endHunk = diff.hunks.find(
-					_ => endLine >= _.newStart && endLine < _.newStart + _.newLines
-				);
-
-				let fileWithUrl;
-				const codeBlock = request.attributes.codeBlocks[0];
-				const repo = await repos.getById(parsedUri.repoId);
-				let remoteList: string[] | undefined;
-				if (repo && repo.remotes && repo.remotes.length) {
-					// if we have a list of remotes from the marker / repo (a.k.a. server)... use that
-					remoteList = repo.remotes.map(_ => _.normalizedUrl);
-				}
-				let remoteUrl;
-				if (remoteList) {
-					for (const remote of remoteList) {
-						remoteUrl = Marker.getRemoteCodeUrl(
-							remote,
-							parsedUri.rightSha,
-							codeBlock.scm?.file!,
-							startLine,
-							endLine
-						);
-
-						if (remoteUrl !== undefined) {
-							break;
-						}
-					}
-				}
-
-				if (remoteUrl) {
-					fileWithUrl = `[${codeBlock.scm?.file}](${remoteUrl.url})`;
-				} else {
-					fileWithUrl = codeBlock.scm?.file;
-				}
-
-				let result: Promise<Directives>;
-				// only fall in here if we don't have a start OR we have a range and we don't have both
-				if ((startLine !== endLine && (!startHunk || !endHunk)) || !startHunk) {
-					// if we couldn't find a hunk, we're going to go down the path of using
-					// a "code fence" aka ``` for showing the code comment
-					Logger.warn(
-						`Could not find hunk for startLine=${startLine} or endLine=${endLine} for ${JSON.stringify(
-							parsedUri.context
-						)}`
-					);
-
-					result = await providerRegistry.executeMethod({
-						method: "addComment",
-						providerId: parsedUri.context.pullRequest.providerId,
-						params: {
-							subjectId: parsedUri.context.pullRequest.id,
-							text: `${request.attributes.text || ""}\n\n\`\`\`\n${codeBlock.contents}\n\`\`\`
-								\n${fileWithUrl} (Line${startLine === endLine ? ` ${startLine}` : `s ${startLine}-${endLine}`})`,
-						},
-					});
-					return {
-						isPassThrough: true,
-						pullRequest: parsedUri.context.pullRequest,
-						success: result != null,
-						directives: result,
-					};
-				}
-
-				const { lineWithMetadata } = gitUtils.translateLineToPosition(
-					{
-						startLine,
-						startHunk,
-					},
-					{
-						endLine,
-						endHunk,
-					},
-					diff
-				);
-
-				if (request.isProviderReview) {
-					if (lineWithMetadata) {
-						if (
-							parsedUri.context.pullRequest.providerId &&
-							(parsedUri.context.pullRequest.providerId === "github*com" ||
-								parsedUri.context.pullRequest.providerId === "github/enterprise")
-						) {
-							result = await providerRegistry.executeMethod({
-								method: "createPullRequestReviewThread",
-								providerId: parsedUri.context.pullRequest.providerId,
-								params: {
-									pullRequestId: parsedUri.context.pullRequest.id,
-									// pullRequestReviewId will be looked up
-									text: request.attributes.text || "",
-									leftSha: parsedUri.leftSha,
-									sha: parsedUri.rightSha,
-									filePath: parsedUri.path,
-									startLine: startLine,
-									endLine: endLine,
-									position: lineWithMetadata.position,
-									side: parsedUri.side,
-								},
-							});
-						} else {
-							result = await providerRegistry.executeMethod({
-								method: "createPullRequestReviewComment",
-								providerId: parsedUri.context.pullRequest.providerId,
-								params: {
-									pullRequestId: parsedUri.context.pullRequest.id,
-									// pullRequestReviewId will be looked up
-									text: request.attributes.text || "",
-									leftSha: parsedUri.leftSha,
-									sha: parsedUri.rightSha,
-									filePath: parsedUri.path,
-									startLine: startLine,
-									endLine: endLine,
-									position: lineWithMetadata.position,
-								},
-							});
-						}
-					} else {
-						throw new Error("Failed to create review comment");
-					}
-				} else {
-					let calculatedEndLine;
-					const startingHunkEnd = startHunk.newStart + startHunk.newLines;
-					if (endLine >= startingHunkEnd) {
-						calculatedEndLine = startingHunkEnd - 1;
-					} else {
-						calculatedEndLine = endHunk ? endLine : undefined;
-					}
-					// is a single comment against a commit
-					result = (await providerRegistry.executeMethod({
-						method: "createCommitComment",
-						providerId: parsedUri.context.pullRequest.providerId,
-						params: {
-							pullRequestId: parsedUri.context.pullRequest.id,
-							leftSha: parsedUri.leftSha,
-							sha: parsedUri.rightSha,
-							text: request.attributes.text || "",
-							path: parsedUri.path,
-							startLine: startLine,
-							endLine: calculatedEndLine,
-							// legacy servers will need this
-							position: lineWithMetadata?.position,
-							metadata: {
-								contents: codeBlock.contents,
-								fileWithUrl: fileWithUrl,
-								startLine: startLine,
-								endLine: endLine,
-							},
-						},
-					})) as Promise<Directives>;
-				}
-
-				return {
-					isPassThrough: true,
-					pullRequest: parsedUri.context.pullRequest,
-					success: result != null,
-					directives: result,
-				};
-			}
+			//not supported
 		}
 		let codemark: CodemarkPlus | undefined;
 

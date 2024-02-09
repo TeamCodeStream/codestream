@@ -18,7 +18,6 @@ import { openPanel } from "./actions";
 import Icon from "./Icon";
 import Menu from "./Menu";
 import { AVAILABLE_PANES } from "./Sidebar";
-import { EMPTY_STATUS } from "./StartWork";
 
 const RegionSubtext = styled.div`
 	font-size: smaller;
@@ -100,7 +99,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			company: state.companies[team.companyId] || {},
 			team,
 			currentUserId: state.session.userId,
-			currentUserStatus: (user.status && user.status[teamId]) || EMPTY_STATUS,
+			currentUserStatus: (user.status && user.status[teamId]) || {},
 			currentUserEmail: user.email,
 			pluginVersion: state.pluginVersion,
 			xraySetting: team.settings ? team.settings.xray : "",

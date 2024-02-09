@@ -7,14 +7,8 @@ import {
 } from "@codestream/protocols/api";
 import { sortBy } from "lodash";
 import { WorkspaceFolder } from "vscode-languageserver";
-
 import { SessionContainer } from "../../container";
-import { Logger } from "../../logger";
-import {
-	RepoPullRequestProvider,
-	ThirdPartyProvider,
-	ThirdPartyProviderSupportsPullRequests,
-} from "../../providers/provider";
+import { ThirdPartyProvider } from "../../providers/provider";
 import { GitRemote } from "./models";
 
 export class GitRepository {
@@ -109,70 +103,6 @@ export class GitRepository {
 
 	getDefaultRemoteBranchReferences() {
 		return this._defaultRemoteBranchReferencesPromise;
-	}
-
-	/**
-	 * Given a CS user, and a list of pull request providers, try to figure out if the remote
-	 * for this repo has a connected PR provider
-	 *
-	 * @param {CSMe} [user]
-	 * @param {((ThirdPartyProvider & ThirdPartyProviderSupportsPullRequests)[])} [connectedProviders]
-	 * @return {*}
-	 * @memberof GitRepository
-	 */
-	async getPullRequestProvider(
-		user?: CSMe,
-		connectedProviders?: (ThirdPartyProvider & ThirdPartyProviderSupportsPullRequests)[]
-	): Promise<RepoPullRequestProvider | undefined> {
-		try {
-			if (!user) {
-				Logger.warn("getPullRequestProvider no CSMe user");
-				return undefined;
-			}
-			const { providerRegistry, session } = SessionContainer.instance();
-			const remotes = await this.getRemotes();
-
-			if (!connectedProviders) {
-				Logger.debug("getPullRequestProvider no connectedProviders, getting");
-				connectedProviders = await providerRegistry.getConnectedPullRequestProviders(user);
-			}
-
-			const projectsByRemotePath = new Map((remotes || []).map(obj => [obj.path, obj]));
-			if (!connectedProviders) {
-				return undefined;
-			}
-			for (const provider of connectedProviders) {
-				try {
-					const remotePaths = await provider.getRemotePaths(this, projectsByRemotePath);
-					if (remotePaths && remotePaths.length) {
-						const providerId = provider.getConfig().id;
-						const isProviderConnected = await this.isProviderConnected(
-							providerId,
-							provider,
-							user,
-							session.teamId
-						);
-						if (isProviderConnected) {
-							Logger.debug(
-								`getPullRequestProvider found connected provider (${providerId}) for teamId=${session.teamId}`
-							);
-							return {
-								repo: this,
-								providerId: providerId,
-								providerName: provider.name,
-								provider: provider,
-								remotes: remotes.filter(_ => remotePaths.includes(_.path)),
-							};
-						}
-					}
-				} catch (ex) {
-					Logger.warn(ex);
-				}
-			}
-		} catch (ex) {
-			Logger.error(ex);
-		}
-		return undefined;
 	}
 
 	async isProviderConnected(

@@ -56,9 +56,67 @@ import { RepositoryAssociator } from "./CodeError/RepositoryAssociator";
 import { BigTitle, Header, Meta } from "./Codemark/BaseCodemark";
 import Dismissable from "./Dismissable";
 import Icon from "./Icon";
-import { ClearModal, ComposeArea, Step, Subtext, Tip } from "./ReviewNav";
 import ScrollBox from "./ScrollBox";
 import { WarningBox } from "./WarningBox";
+
+export const ClearModal = styled.div`
+	position: absolute;
+	z-index: 51;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+`;
+export const ComposeArea = styled.div<{ side: "right" | "left" }>`
+	width: 35px;
+	height: 100%;
+	position: fixed;
+	left: ${props => (props.side === "right" ? "-36px" : "auto")};
+	right: ${props => (props.side === "left" ? "-36px" : "auto")};
+	top: 0;
+	transition: left 0.1s;
+	// background: var(--base-background-color);
+	// border-right: 1px solid var(--base-border-color);
+	background: var(--button-background-color);
+	&.pulse {
+		left: ${props => (props.side === "right" ? "0" : "auto")};
+		right: ${props => (props.side === "left" ? "0" : "auto")};
+		z-index: 5;
+	}
+`;
+export const Step = styled.div`
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	font-size: 20px;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	margin: 0 10px 10px 0;
+	font-weight: bold;
+
+	background: var(--button-background-color);
+	color: var(--button-foreground-color);
+	// background: var(--text-color-highlight);
+	// color: var(--base-background-color);
+`;
+export const Subtext = styled.div`
+	padding-top: 5px;
+	font-size: smaller;
+	color: var(--text-color-subtle);
+`;
+export const Tip = styled.div`
+	display: flex;
+	button {
+		margin-top: 10px;
+		float: right;
+	}
+	b {
+		display: block;
+		clear: both;
+	}
+`;
 
 const NavHeader = styled.div`
 	// flex-grow: 0;

@@ -75,7 +75,6 @@ import { MessageInput, AttachmentField } from "../MessageInput";
 import { Modal } from "../Modal";
 import { RepliesToPost } from "../Posts/RepliesToPost";
 import { AddReactionIcon, Reactions } from "../Reactions";
-import { RepoMetadata } from "../Review";
 import { SharingModal } from "../SharingModal";
 import Timestamp from "../Timestamp";
 import Tooltip from "../Tooltip";
@@ -84,6 +83,12 @@ import { isFeatureEnabled } from "../../store/apiVersioning/reducer";
 import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
 import { isEmpty } from "lodash-es";
 import { getNrCapability } from "@codestream/webview/store/nrCapabilities/thunks";
+
+export interface RepoMetadata {
+	repoName: string;
+	ref?: string;
+	branch?: string;
+}
 
 interface SimpleError {
 	/**

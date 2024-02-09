@@ -8,44 +8,14 @@ import { URI } from "vscode-uri";
 
 import { GitRemoteLike } from "git/gitService";
 import { toRepoName } from "../git/utils";
-import { Logger } from "../logger";
-import { log, lspProvider } from "../system";
-import {
-	getRemotePaths,
-	ProviderCreatePullRequestRequest,
-	ProviderCreatePullRequestResponse,
-	ProviderGetRepoInfoResponse,
-	ProviderPullRequestInfo,
-	PullRequestComment,
-} from "./provider";
+import { lspProvider } from "../system";
+import { getRemotePaths } from "./provider";
 import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 
 interface BitbucketServerRepo {
 	id: string;
 	name: string;
 	path: string;
-}
-
-interface BitbucketPullRequest {
-	id: number;
-	title: string;
-	state: string;
-	destination: {
-		branch: {
-			name: string;
-		};
-	};
-	source: {
-		branch: {
-			name: string;
-		};
-	};
-	links: {
-		html: { href: string };
-		comments: {
-			href: string;
-		};
-	};
 }
 
 /**
@@ -74,27 +44,6 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 		return {
 			Authorization: `Bearer ${this.accessToken}`,
 			"Content-Type": "application/json",
-		};
-	}
-
-	protected getPRExternalContent(comment: PullRequestComment) {
-		return {
-			provider: {
-				name: this.displayName,
-				icon: this.name,
-				id: this.providerConfig.id,
-			},
-			subhead: `#${comment.pullRequest.id}`,
-			actions: [
-				{
-					label: "Open Comment",
-					uri: comment.url,
-				},
-				{
-					label: `Open Merge Request #${comment.pullRequest.id}`,
-					uri: comment.pullRequest.url,
-				},
-			],
 		};
 	}
 
@@ -166,141 +115,6 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 			owner,
 			name,
 		};
-	}
-
-	async createPullRequest(
-		request: ProviderCreatePullRequestRequest
-	): Promise<ProviderCreatePullRequestResponse | undefined> {
-		void (await this.ensureConnected());
-
-		try {
-			const repoInfo = await this.getRepoInfo({ remote: request.remote });
-			if (repoInfo && repoInfo.error) {
-				return {
-					error: repoInfo.error,
-				};
-			}
-			const { owner, name } = this.getOwnerFromRemote(request.remote);
-
-			let createPullRequestResponse;
-			if (request.isFork) {
-				const split = request.baseRefRepoNameWithOwner!.split("/");
-				createPullRequestResponse = await this.post<
-					BitbucketServerCreatePullRequestRequest,
-					BitbucketServerCreatePullRequestResponse
-				>(`/projects/${split[0]}/repos/${split[1]}/pull-requests`, {
-					fromRef: {
-						id: request.headRefName,
-						repository: {
-							project: {
-								key: repoInfo.key!,
-							},
-							slug: name,
-						},
-					},
-					toRef: {
-						id: request.baseRefName,
-						repository: {
-							project: {
-								key: split[0]!,
-							},
-							slug: split[1],
-						},
-					},
-					title: request.title,
-					description: this.createDescription(request),
-				});
-			} else {
-				createPullRequestResponse = await this.post<
-					BitbucketServerCreatePullRequestRequest,
-					BitbucketServerCreatePullRequestResponse
-				>(`/projects/${owner}/repos/${name}/pull-requests`, {
-					fromRef: {
-						id: request.headRefName,
-						repository: {
-							project: {
-								key: repoInfo.key!,
-							},
-							slug: name,
-						},
-					},
-					toRef: {
-						id: request.baseRefName,
-						repository: {
-							project: {
-								key: repoInfo.key!,
-							},
-							slug: name,
-						},
-					},
-					title: request.title,
-					description: this.createDescription(request),
-				});
-			}
-			const title = `#${createPullRequestResponse.body.id} ${createPullRequestResponse.body.title}`;
-			return {
-				url:
-					createPullRequestResponse.body.links.self &&
-					createPullRequestResponse.body.links.self.length
-						? createPullRequestResponse.body.links.self[0].href
-						: undefined,
-				title: title,
-			};
-		} catch (ex) {
-			Logger.error(ex, `${this.displayName}: createPullRequest`, {
-				remote: request.remote,
-				head: request.headRefName,
-				base: request.baseRefName,
-			});
-
-			return {
-				error: {
-					type: "PROVIDER",
-					message: `${this.displayName}: ${ex.message}`,
-				},
-			};
-		}
-	}
-
-	@log()
-	async getRepoInfo(request: { remote: string }): Promise<ProviderGetRepoInfoResponse> {
-		try {
-			const { owner, name } = this.getOwnerFromRemote(request.remote);
-			const repoResponse = await this.get<BitbucketServerRepo>(`/projects/${owner}/repos/${name}`);
-			const defaultBranchResponse = await this.get<BitbucketServerBranch>(
-				`/projects/${owner}/repos/${name}/branches/default`
-			);
-
-			const defaultBranchName = defaultBranchResponse
-				? defaultBranchResponse.body.displayId
-				: undefined;
-
-			const pullRequestResponse = await this.get<any>(
-				`/projects/${owner}/repos/${name}/pull-requests?state=OPEN`
-			);
-			let pullRequests: ProviderPullRequestInfo[] = [];
-			if (pullRequestResponse && pullRequestResponse.body && pullRequestResponse.body.values) {
-				pullRequests = pullRequestResponse.body.values.map((_: any) => {
-					return {
-						id: _.id,
-						url: _.links!.self[0]!.href,
-						baseRefName: _.toRef.displayId,
-						headRefName: _.fromRef.displayId,
-					};
-				});
-			}
-			return {
-				owner,
-				name,
-				id: repoResponse.body.id,
-				isFork: repoResponse.body.origin != null,
-				key: repoResponse.body.project.key,
-				defaultBranch: defaultBranchName,
-				pullRequests: pullRequests,
-			};
-		} catch (ex) {
-			return this.handleProviderError(ex, request);
-		}
 	}
 
 	async getForkedRepos(request: { remote: string }): Promise<ProviderGetForkedReposResponse> {
@@ -375,36 +189,6 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 		const configDomain = baseUrl ? URI.parse(baseUrl).authority : "";
 		return (r: GitRemoteLike) => configDomain !== "" && r.domain === configDomain;
 	}
-}
-
-interface BitbucketServerCreatePullRequestRequest {
-	fromRef: {
-		id: string;
-		repository: {
-			project: {
-				key: string;
-			};
-			slug: string;
-		};
-	};
-	toRef: {
-		id: string;
-		repository: {
-			project: {
-				key: string;
-			};
-			slug: string;
-		};
-	};
-	title: string;
-	description?: string;
-}
-
-interface BitbucketServerCreatePullRequestResponse {
-	id: string;
-	links: { self: { href: string }[] };
-	number: number;
-	title: string;
 }
 
 interface BitbucketServerBranch {

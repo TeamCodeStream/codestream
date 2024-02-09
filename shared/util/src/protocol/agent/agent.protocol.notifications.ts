@@ -1,6 +1,6 @@
 "use strict";
 import { NotificationType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
-import { CodeStreamEnvironmentInfo, GetMyPullRequestsResponse } from "./agent.protocol";
+import { CodeStreamEnvironmentInfo } from "./agent.protocol";
 import { LoginSuccessResponse, TokenLoginRequest } from "./agent.protocol.auth";
 import { CodemarkPlus } from "./agent.protocol.codemarks";
 import { ThirdPartyProviders } from "./agent.protocol.providers";
@@ -138,16 +138,6 @@ export interface PreferencesChangedNotification {
 	data: CSMePreferences;
 }
 
-export interface PullRequestsChangedData {
-	queryName: string;
-	pullRequest: GetMyPullRequestsResponse;
-}
-
-export interface PullRequestsChangedNotification {
-	type: ChangeDataType.PullRequests;
-	data: PullRequestsChangedData[];
-}
-
 export interface RepositoriesChangedNotification {
 	type: ChangeDataType.Repositories;
 	data: CSRepository[];
@@ -246,7 +236,6 @@ export type DidChangeDataNotification =
 	| MarkersChangedNotification
 	| PostsChangedNotification
 	| PreferencesChangedNotification
-	| PullRequestsChangedNotification
 	| RepositoriesChangedNotification
 	| ReviewsChangedNotification
 	| CodeErrorsChangedNotification
