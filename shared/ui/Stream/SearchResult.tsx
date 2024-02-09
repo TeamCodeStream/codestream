@@ -130,15 +130,14 @@ export default function SearchResult(props: Props) {
 	});
 
 	const selectResult = () => {
-		const session = store.getState().session;
-		const users = store.getState().users;
-		const currentUser = session.userId || users[session.userId!];
+		const { users, session } = store.getState();
+		const currentUser = session.userId || users[session.userId!].id;
 		HostApi.instance.track("codestream/codemarks/codemark displayed", {
 			meta_data: `codemark_location: search`,
 			meta_data_2: `codemark_type: ${
 				icon === "issue" ? "issue" : icon === "comment" ? "comment" : ""
 			}`,
-			meta_data_3: `following: ${(result?.followerIds || []).includes(currentUser.toString())}`,
+			meta_data_3: `following: ${(result?.followerIds || []).includes(currentUser)}`,
 			event_type: "modal_display",
 		});
 		if (isCSReview(result)) dispatch(setCurrentReview(result.id));
