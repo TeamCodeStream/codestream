@@ -142,6 +142,7 @@ export const APMLogSearchPanel = (props: {
 	ide?: { name?: IdeNames };
 }) => {
 	const [fieldDefinitions, setFieldDefinitions] = useState<LogFieldDefinition[]>([]);
+	const [isInitializing, setIsInitializing] = useState<boolean>();
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [query, setQuery] = useState<string>("");
 	const [hasSearched, setHasSearched] = useState<boolean>(false);
@@ -165,6 +166,7 @@ export const APMLogSearchPanel = (props: {
 	const trimmedListHeight: number = (height ?? 0) - (height ?? 0) * 0.08;
 
 	useDidMount(() => {
+		setIsInitializing(true);
 		const defaultOption: SelectedOption = {
 			value: "30 MINUTES AGO",
 			label: "30 Minutes Ago",
@@ -215,6 +217,9 @@ export const APMLogSearchPanel = (props: {
 
 				fetchFieldDefinitions(entityAccount.entityGuid);
 				fetchLogs(entityAccount.entityGuid, props.suppliedQuery);
+			})
+			.finally(() => {
+				setIsInitializing(false);
 			});
 	});
 
@@ -610,19 +615,24 @@ export const APMLogSearchPanel = (props: {
 							TODO: Skeleton loader? Couldn't get it to work when I tried
 						)} */}
 
-					{!logError && !isLoading && results && totalItems > 0 && fieldDefinitions && (
-						<>
-							{ListHeader()}
-							<TableWindow
-								itemData={formatRowResults()}
-								itemCount={results.length}
-								height={trimmedListHeight}
-								width={"100%"}
-							/>
-						</>
-					)}
+					{!logError &&
+						!isLoading &&
+						results &&
+						totalItems > 0 &&
+						fieldDefinitions &&
+						!isInitializing && (
+							<>
+								{ListHeader()}
+								<TableWindow
+									itemData={formatRowResults()}
+									itemCount={results.length}
+									height={trimmedListHeight}
+									width={"100%"}
+								/>
+							</>
+						)}
 
-					{!logError && !totalItems && !isLoading && !hasSearched && (
+					{!logError && !totalItems && !isLoading && !hasSearched && !isInitializing && (
 						<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
 							<span data-testid="default-message">
 								Enter search criteria above, or just click Query to see recent logs.
@@ -630,7 +640,7 @@ export const APMLogSearchPanel = (props: {
 						</div>
 					)}
 
-					{!logError && !totalItems && !isLoading && hasSearched && (
+					{!logError && !totalItems && !isLoading && hasSearched && !isInitializing && (
 						<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
 							<h4>No logs found during this time range</h4>
 							<span>
