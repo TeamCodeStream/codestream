@@ -151,7 +151,7 @@ export const ActivityPanel = () => {
 		} else if (!repoSettings.length) return _activity;
 
 		const filtered = _activity.map(_ => {
-			const streams = derivedState.postsByStreamId[_.record.streamId];
+			const streams = derivedState.postsByStreamId[_.record.streamId] ?? [];
 			const post = streams[_.record.postId];
 			if (post) {
 				if (post.mentionedUserIds?.includes(derivedState.currentUserId!)) {
