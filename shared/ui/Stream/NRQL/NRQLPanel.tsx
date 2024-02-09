@@ -27,6 +27,7 @@ import { NRQLResultsLine } from "./NRQLResultsLine";
 import { NRQLResultsTable } from "./NRQLResultsTable";
 import { NRQLVisualizationDropdown } from "./NRQLVisualizationDropdown";
 import { RecentQueries } from "./RecentQueries";
+import { PanelHeaderTitleWithLink } from "../PanelHeaderTitleWithLink";
 
 const QueryWrapper = styled.div`
 	width: 100%;
@@ -301,7 +302,15 @@ export const NRQLPanel = (props: {
 	return (
 		<>
 			<div id="modal-root"></div>
-			<PanelHeader title="Query Your Data">
+			<PanelHeader
+				title={
+					<PanelHeaderTitleWithLink
+						text="Save and share queries with `.nrql` files"
+						href={`https://docs.newrelic.com/docs/codestream/observability/query-builder/#nrql-files`}
+						title="Query Your Data"
+					/>
+				}
+			>
 				<QueryWrapper>
 					<div className="search-input">
 						<div style={{ marginBottom: "10px" }}>

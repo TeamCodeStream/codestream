@@ -24,7 +24,7 @@ import Icon from "../Icon";
 import { Link } from "../Link";
 import { TableWindow } from "../TableWindow";
 import { APMLogRow } from "./APMLogRow";
-
+import { PanelHeaderTitleWithLink } from "../PanelHeaderTitleWithLink";
 interface SelectedOption {
 	value: string;
 	label: string;
@@ -484,7 +484,15 @@ export const APMLogSearchPanel = (props: {
 
 	return (
 		<>
-			<PanelHeader title="Logs">
+			<PanelHeader
+				title={
+					<PanelHeaderTitleWithLink
+						text="Learn how to search for specific log lines in your code"
+						href={`https://docs.newrelic.com/docs/codestream/observability/log-search/#context-menu`}
+						title="Logs"
+					/>
+				}
+			>
 				<LogFilterBarContainer>
 					<div className="log-filter-bar-row">
 						<div className="log-filter-bar-service">
