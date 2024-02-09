@@ -349,7 +349,6 @@ export const Observability = React.memo((props: Props) => {
 	const [currentEntityAccounts, setCurrentEntityAccounts] = useState<EntityAccount[] | undefined>(
 		[]
 	);
-	const [allEntityAccounts, setAllEntityAccounts] = useState<EntityAccount[]>([]);
 	const [currentObsRepo, setCurrentObsRepo] = useState<ObservabilityRepo | undefined>();
 	const [recentIssues, setRecentIssues] = useState<GetIssuesResponse | undefined>();
 	const [recentIssuesError, setRecentIssuesError] = useState<string>();
@@ -1075,7 +1074,6 @@ export const Observability = React.memo((props: Props) => {
 			return or.entityAccounts;
 		});
 		dispatch(setEntityAccounts(entityAccounts));
-		setAllEntityAccounts(entityAccounts);
 	}, [observabilityRepos]);
 
 	useEffect(() => {
@@ -1402,7 +1400,6 @@ export const Observability = React.memo((props: Props) => {
 																													panel: "logs",
 																													title: "Logs",
 																													entityGuid: ea.entityGuid,
-																													entityAccounts: allEntityAccounts,
 																													entryPoint: "tree_view",
 																													ide: {
 																														name: derivedState.ideName,

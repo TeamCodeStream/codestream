@@ -663,7 +663,6 @@ export class Commands implements Disposable {
 				// UI can get the accountId based on the entityGuid (parsed)
 				accountId: undefined,
 				entityGuid: currentEntityGuid!,
-				entityAccounts: [],
 				panel: "nrql",
 				title: "NRQL",
 				query: nrqlQuery,
@@ -700,9 +699,25 @@ export class Commands implements Disposable {
 				"We were unable to determine the search criteria from your selection or line of code.",
 				"Dismiss"
 			);
-		} else {
-			await Container.sidebar.logSearch({ query: searchTerm, entryPoint: "context_menu" });
+			return;
 		}
+
+		const currentRepoId = Container.session.user?.preferences?.currentO11yRepoId;
+		const currentEntityGuid = currentRepoId
+			? (Container.session?.user?.preferences?.activeO11y?.[currentRepoId] as string)
+			: undefined;
+
+		Container.panel.initializeOrShowEditor({
+			panelLocation: ViewColumn.Active,
+			entityGuid: currentEntityGuid!,
+			panel: "logs",
+			title: "Logs",
+			query: searchTerm,
+			entryPoint: "context_menu",
+			ide: {
+				name: "VSC"
+			}
+		});
 	}
 
 	private extractStringsFromLine(document: TextDocument, lineNumber: number): string {

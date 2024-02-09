@@ -376,7 +376,6 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 							panel: "whatsnew",
 							title: "What's New",
 							entryPoint: "profile",
-							entityAccounts: [],
 							ide: {
 								name: derivedState.ide.name,
 							},

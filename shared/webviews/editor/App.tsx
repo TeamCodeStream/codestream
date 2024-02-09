@@ -23,7 +23,6 @@ export function App() {
 				<ModalRoot />
 				{codestreamProps.panel === "logs" && (
 					<APMLogSearchPanel
-						entityAccounts={codestreamProps.entityAccounts!}
 						entityGuid={codestreamProps.entityGuid}
 						suppliedQuery={codestreamProps.query}
 						entryPoint={codestreamProps.entryPoint}

@@ -2,7 +2,6 @@ import {
 	ApiVersionCompatibility,
 	Capabilities,
 	CodeStreamEnvironmentInfo,
-	EntityAccount,
 	ThirdPartyProviders,
 	Unreads,
 	VersionCompatibility,
@@ -321,9 +320,6 @@ export enum ViewColumn {
 export interface OpenEditorViewNotification {
 	panel: "logs" | "nrql" | "whatsnew";
 	title: string;
-	accountId?: number;
-
-	entityAccounts: EntityAccount[];
 	entryPoint: // logs
 	| "global_nav"
 		| "context_menu"
@@ -335,14 +331,15 @@ export interface OpenEditorViewNotification {
 		// other
 		| "notification"
 		| "profile";
+	ide: {
+		name?: "VSC" | "VS" | "JETBRAINS";
+	};
 
+	accountId?: number;
 	panelLocation?: ViewColumn;
 	entityGuid?: string;
 	query?: string;
 	hash?: string;
-	ide: {
-		name?: "VSC" | "VS" | "JETBRAINS";
-	};
 }
 
 export const OpenEditorViewNotificationType = new NotificationType<

@@ -3,9 +3,9 @@
  */
 
 import {
-	EntityAccount,
 	GetLogFieldDefinitionsResponse,
 	GetLogsResponse,
+	GetObservabilityReposResponse,
 } from "@codestream/protocols/agent";
 import { createTheme } from "@codestream/webview/src/themes";
 import { APMLogSearchPanel } from "@codestream/webview/Stream/APMLogging/APMLogSearchPanel";
@@ -22,8 +22,6 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
 }));
 
 jest.mock("@codestream/webview/webview-api");
-let mockTrack;
-
 jest.mock("react-resize-detector", () => ({
 	useResizeDetector: jest.fn().mockImplementation(() => ({
 		ref: null,
@@ -32,9 +30,18 @@ jest.mock("react-resize-detector", () => ({
 	})),
 }));
 
+let mockTrack = jest.fn();
+
 describe("APM Logging Panel UI", () => {
+	const ENTITY_GUID = "test-entity-guid";
+	const ACCOUNT_ID = 1;
+	const ENTRY_POINT = "test";
+
+	afterEach(() => {
+		jest.clearAllMocks();
+	});
+
 	beforeEach(() => {
-		mockTrack = jest.fn();
 		const MockedHostApi = HostApi as any;
 
 		const mockHostApi = {
@@ -56,9 +63,38 @@ describe("APM Logging Panel UI", () => {
 				if (a.method === "codestream/newrelic/logs/search") {
 					return {
 						logs: [{ timestamp: 1707336638905 }, { message: "test log record" }, { level: "info" }],
-						accountId: 1,
+						accountId: ACCOUNT_ID,
 					} as GetLogsResponse;
 				}
+				if (a.method === "codestream/newrelic/repos") {
+					return {
+						repos: [
+							{
+								repoId: "",
+								repoName: "",
+								repoRemote: "",
+								hasCodeLevelMetricSpanData: false,
+								entityAccounts: [
+									{
+										accountId: ACCOUNT_ID,
+										accountName: "Administration",
+										entityGuid: ENTITY_GUID,
+										entityName: "Test Entity",
+										entityType: "APM_APPLICATION_ENTITY",
+										domain: "apm",
+										tags: [
+											{
+												key: "",
+												values: [""],
+											},
+										],
+									},
+								],
+							},
+						],
+					} as GetObservabilityReposResponse;
+				}
+
 				return true;
 			},
 		};
@@ -74,7 +110,6 @@ describe("APM Logging Panel UI", () => {
 
 	it("should render using basic required fields", async () => {
 		const props = {
-			entityAccounts: [],
 			entryPoint: "test",
 		};
 
@@ -102,21 +137,7 @@ describe("APM Logging Panel UI", () => {
 	});
 
 	it("should render and execute search without supplying query", async () => {
-		const ENTITY_GUID = "test-entity-guid";
-		const ACCOUNT_ID = 1;
-		const ENTRY_POINT = "test";
-
 		const props = {
-			entityAccounts: [
-				{
-					accountId: ACCOUNT_ID,
-					accountName: "Administration",
-					entityGuid: ENTITY_GUID,
-					entityName: "Test Entity",
-					entityType: "APM_APPLICATION_ENTITY",
-					domain: "apm",
-				} as EntityAccount,
-			],
 			entryPoint: ENTRY_POINT,
 			entityGuid: ENTITY_GUID,
 		};

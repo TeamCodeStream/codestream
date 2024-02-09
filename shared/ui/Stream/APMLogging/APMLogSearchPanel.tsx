@@ -3,6 +3,8 @@ import {
 	GetLogFieldDefinitionsRequestType,
 	GetLoggingEntitiesRequestType,
 	GetLogsRequestType,
+	GetObservabilityReposRequestType,
+	GetObservabilityReposResponse,
 	GetSurroundingLogsRequestType,
 	isNRErrorResponse,
 	LogFieldDefinition,
@@ -134,13 +136,11 @@ const Option = (props: OptionProps) => {
 };
 
 export const APMLogSearchPanel = (props: {
-	entityAccounts: EntityAccount[];
 	entryPoint: string;
 	entityGuid?: string;
 	suppliedQuery?: string;
 	ide?: { name?: IdeNames };
 }) => {
-	const [hasEntityGuid, setHasEntityGuid] = useState<boolean>();
 	const [fieldDefinitions, setFieldDefinitions] = useState<LogFieldDefinition[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [query, setQuery] = useState<string>("");
@@ -188,27 +188,34 @@ export const APMLogSearchPanel = (props: {
 			setQuery(props.suppliedQuery);
 		}
 
-		const entityAccount = props.entityAccounts.find(ea => ea.entityGuid === props.entityGuid);
+		let entityAccounts: EntityAccount[] = [];
 
-		if (entityAccount) {
-			trackOpenTelemetry(props.entryPoint, entityAccount.entityGuid, entityAccount.accountId);
-		} else {
-			// its possible a race condition could get us here and the entity guid passed in doesn't match any in the list
-			// allow it, so the user can still use the panel - it just won't have a default selection/query/execution.
-			trackOpenTelemetry(props.entryPoint);
-			return;
-		}
+		HostApi.instance
+			.send(GetObservabilityReposRequestType, { force: true })
+			.then((_: GetObservabilityReposResponse) => {
+				entityAccounts = _.repos?.flatMap(r => r.entityAccounts) ?? [];
 
-		handleSelectDropdownOption({
-			value: entityAccount.entityGuid,
-			label: entityAccount.entityName,
-			accountName: entityAccount.accountName,
-			entityType: entityAccount.entityTypeDescription,
-		});
+				const entityAccount = entityAccounts.find(ea => ea.entityGuid === props.entityGuid);
 
-		setHasEntityGuid(true);
-		fetchFieldDefinitions(entityAccount.entityGuid);
-		fetchLogs(entityAccount.entityGuid, props.suppliedQuery);
+				if (entityAccount) {
+					trackOpenTelemetry(props.entryPoint, entityAccount.entityGuid, entityAccount.accountId);
+				} else {
+					// its possible a race condition could get us here and the entity guid passed in doesn't match any in the list
+					// allow it, so the user can still use the panel - it just won't have a default selection/query/execution.
+					trackOpenTelemetry(props.entryPoint);
+					return;
+				}
+
+				handleSelectDropdownOption({
+					value: entityAccount.entityGuid,
+					label: entityAccount.entityName,
+					accountName: entityAccount.accountName,
+					entityType: entityAccount.entityTypeDescription,
+				});
+
+				fetchFieldDefinitions(entityAccount.entityGuid);
+				fetchLogs(entityAccount.entityGuid, props.suppliedQuery);
+			});
 	});
 
 	const handleSelectDropdownOption = entityAccount => {

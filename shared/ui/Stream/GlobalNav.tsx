@@ -108,7 +108,6 @@ export function GlobalNav() {
 			entryPoint: "global_nav",
 			accountId: parseId(derivedState.currentEntityGuid || "")?.accountId,
 			entityGuid: derivedState.currentEntityGuid!,
-			entityAccounts: derivedState.entityAccounts,
 			ide: {
 				name: derivedState.ideName,
 			},
@@ -120,7 +119,6 @@ export function GlobalNav() {
 			panel: "logs",
 			title: "Logs",
 			entryPoint: "global_nav",
-			entityAccounts: derivedState.entityAccounts,
 			entityGuid: derivedState.currentEntityGuid,
 			ide: {
 				name: derivedState.ideName,

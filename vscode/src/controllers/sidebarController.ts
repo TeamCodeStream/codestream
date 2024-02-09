@@ -543,7 +543,6 @@ export class SidebarController implements Disposable {
 		this._sidebar!.notify(OpenEditorViewNotificationType, {
 			panel: "whatsnew",
 			title: "Whats New",
-			entityAccounts: [],
 			entryPoint: "notification",
 			ide: {
 				name: "VSC"
