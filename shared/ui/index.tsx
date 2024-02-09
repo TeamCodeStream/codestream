@@ -140,6 +140,8 @@ import translations from "./translations/en";
 import { parseProtocol } from "./utilities/urls";
 import { HostApi } from "./webview-api";
 import { parseId } from "./utilities/newRelic";
+import { SessionState } from "./store/session/types";
+import { UsersState } from "./store/users/types";
 
 // import translationsEs from "./translations/es";
 
@@ -417,10 +419,14 @@ function listenForEvents(store) {
 			codemarks,
 			context,
 			editorContext,
+			session,
+			users,
 		}: {
 			codemarks: CodemarksState;
 			context: ContextState;
 			editorContext: EditorContextState;
+			session: SessionState;
+			users: UsersState;
 		} = store.getState();
 
 		if (Object.keys(codemarks).length === 0) {
@@ -428,7 +434,17 @@ function listenForEvents(store) {
 			codemarks = store.getState().codemarks;
 		}
 
+		const currentUser = session.userId || users[session.userId!];
+
 		const codemark = getCodemark(codemarks, e.codemarkId);
+		HostApi.instance.track("codestream/codemarks/codemark displayed", {
+			meta_data: `codemark_location: source_file`,
+			meta_data_2: `codemark_type: ${
+				codemark?.type === "issue" ? "issue" : codemark?.type === "comment" ? "comment" : ""
+			}`,
+			meta_data_3: `following: ${(codemark?.followerIds || []).includes(currentUser.toString())}`,
+			event_type: "modal_display",
+		});
 		if (codemark == null) return;
 
 		store.dispatch(setCurrentCodemark(codemark.id));
