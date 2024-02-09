@@ -21,7 +21,6 @@ const initialState: ContextState = {
 	currentOrganizationInvite: undefined,
 	currentPullRequest: undefined,
 	pullRequestCheckoutBranch: false,
-	newPullRequestOptions: undefined,
 	isRepositioning: false,
 	issueProvider: undefined,
 	threadId: undefined,

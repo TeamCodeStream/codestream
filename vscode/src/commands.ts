@@ -20,7 +20,6 @@ import {
 import { SymbolLocator } from "providers/symbolLocator";
 
 import { Editor } from "./extensions/editor";
-import { openUrl } from "./urlHandler";
 import { SessionSignedOutReason } from "./api/session";
 import * as TokenManager from "./api/tokenManager";
 import { SaveTokenReason } from "./api/tokenManager";
@@ -78,10 +77,6 @@ export interface NewCodemarkCommandArgs {
 }
 
 export interface NewReviewCommandArgs {
-	source?: string;
-}
-
-export interface NewPullRequestCommandArgs {
 	source?: string;
 }
 
@@ -404,11 +399,6 @@ export class Commands implements Disposable {
 		return this.newCodemarkRequest(CodemarkType.Link, args);
 	}
 
-	@command("newPullRequest", { showErrorMessage: "Unable to create Pull Request" })
-	newPullRequest(args?: NewPullRequestCommandArgs) {
-		return this.newPullRequestRequest(args);
-	}
-
 	@command("copyPermalink", { showErrorMessage: "Unable to copy permalink" })
 	async copyPermalink(_args?: NewCodemarkCommandArgs) {
 		const editor = window.activeTextEditor;
@@ -714,13 +704,6 @@ export class Commands implements Disposable {
 
 	private async newReviewRequest(args: NewCodemarkCommandArgs = {}) {
 		await Container.sidebar.newReviewRequest(
-			window.activeTextEditor,
-			args.source || "Context Menu"
-		);
-	}
-
-	private async newPullRequestRequest(args: NewPullRequestCommandArgs = {}) {
-		await Container.sidebar.newPullRequestRequest(
 			window.activeTextEditor,
 			args.source || "Context Menu"
 		);

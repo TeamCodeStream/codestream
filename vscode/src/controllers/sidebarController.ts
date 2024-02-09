@@ -60,8 +60,6 @@ import {
 	LocalFilesCloseDiffRequestType,
 	LogoutRequestType,
 	NewCodemarkNotificationType,
-	NewPullRequestBranch,
-	NewPullRequestNotificationType,
 	NewReviewNotificationType,
 	OpenUrlRequestType,
 	RefreshEditorsCodeLensRequestType,
@@ -77,7 +75,6 @@ import {
 	ShowNextChangedFileRequestType,
 	ShowPreviousChangedFileNotificationType,
 	ShowPreviousChangedFileRequestType,
-	ShowPullRequestNotificationType,
 	ShowReviewNotificationType,
 	SidebarLocation,
 	StartWorkNotificationType,
@@ -390,32 +387,6 @@ export class SidebarController implements Disposable {
 			range: editor ? Editor.toSerializableRange(editor.selection) : undefined,
 			source: source,
 			includeLatestCommit: includeLatestCommit
-		});
-	}
-
-	@log()
-	async newPullRequestRequest(
-		editor: TextEditor | undefined = this._lastEditor,
-		source: string,
-		branch?: NewPullRequestBranch
-	): Promise<void> {
-		if (this.visible) {
-			await this._sidebar!.show();
-		} else {
-			await this.show();
-		}
-
-		if (!this._sidebar) {
-			// it's possible that the webview is closing...
-			return;
-		}
-
-		// TODO: Change this to be a request vs a notification
-		this._sidebar!.notify(NewPullRequestNotificationType, {
-			uri: editor ? editor.document.uri.toString() : undefined,
-			range: editor ? Editor.toSerializableRange(editor.selection) : undefined,
-			source: source,
-			branch: branch
 		});
 	}
 

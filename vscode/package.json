@@ -390,8 +390,6 @@
 		"webview:watch": "tsx esbuild.ts --watch --config-name sidebar"
 	},
 	"dependencies": {
-		"date-fns": "1.30.1",
-		"eol": "0.9.1",
 		"https-proxy-agent": "3.0.1",
 		"lodash": "4.17.21",
 		"node-abort-controller": "3.0.1",

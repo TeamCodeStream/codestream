@@ -6,10 +6,7 @@ import {
 } from "@codestream/protocols/agent";
 import { CodemarkType, WebviewPanels } from "@codestream/protocols/api";
 
-import {
-	HostDidReceiveRequestNotificationType,
-	NewPullRequestBranch,
-} from "@codestream/protocols/webview";
+import { HostDidReceiveRequestNotificationType } from "@codestream/protocols/webview";
 import { HostApi } from "@codestream/webview/webview-api";
 import { logError } from "../../logger";
 import { setUserPreference } from "../../Stream/actions";

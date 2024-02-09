@@ -2,8 +2,6 @@ import { EnvironmentHost, GetFileScmInfoResponse } from "@codestream/protocols/a
 import { CSEligibleJoinCompany, WebviewPanels } from "@codestream/protocols/api";
 import { Position, Range } from "vscode-languageserver-types";
 
-import { NewPullRequestBranch } from "./webview.protocol";
-
 export const MaxRangeValue = 2147483647;
 
 export interface EditorMargins {
@@ -148,7 +146,6 @@ export interface WebviewContext {
 	currentCodeErrorId?: string;
 	currentCodeErrorData?: CodeErrorData;
 	createPullRequestReviewId?: string;
-	createPullRequestOptions?: NewPullRequestBranch;
 	currentPullRequest?: PullRequest | undefined;
 	profileUserId?: string;
 	currentMarkerId?: string;

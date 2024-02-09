@@ -6,7 +6,6 @@ import {
 } from "@codestream/protocols/agent";
 import { CodemarkType } from "@codestream/protocols/api";
 
-import { NewPullRequestBranch } from "@codestream/protocols/webview";
 import { WebviewContext, WebviewModals } from "@codestream/webview/ipc/webview.protocol.common";
 import { WebviewPanels } from "@codestream/protocols/api";
 import { AnyObject } from "@codestream/webview/utils";
@@ -122,7 +121,6 @@ export interface ContextState extends WebviewContext {
 	composeCodemarkActive: CodemarkType | undefined;
 	currentOrganizationInvite?: any;
 	pullRequestCheckoutBranch: boolean;
-	newPullRequestOptions?: { branch: NewPullRequestBranch };
 	currentInstrumentation?: any;
 	currentPixieDynamicLoggingOptions?: {
 		functionName: string;

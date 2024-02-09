@@ -8,7 +8,6 @@ import {
 	DidRefreshAccessTokenNotification,
 	DidChangeDataNotification,
 	DidChangeDocumentMarkersNotification,
-	DidChangePullRequestCommentsNotification,
 	isLoginFailResponse,
 	LoginSuccessResponse,
 	AgentOpenUrlRequest,
@@ -54,7 +53,6 @@ import {
 	SessionChangedEventType,
 	SessionStatusChangedEvent,
 	TextDocumentMarkersChangedEvent,
-	PullRequestCommentsChangedEvent,
 	UnreadsChangedEvent,
 	ReviewsChangedEvent,
 	PreferencesChangedEvent
@@ -114,11 +112,6 @@ export class CodeStreamSession implements Disposable {
 		return this._onDidChangeTextDocumentMarkers.event;
 	}
 
-	private _onDidChangePullRequestComments = new EventEmitter<PullRequestCommentsChangedEvent>();
-	get onDidChangePullRequestComments(): Event<PullRequestCommentsChangedEvent> {
-		return this._onDidChangePullRequestComments.event;
-	}
-
 	private _onDidChangePosts = new EventEmitter<PostsChangedEvent>();
 	get onDidChangePosts(): Event<PostsChangedEvent> {
 		return this._onDidChangePosts.event;
@@ -159,8 +152,6 @@ export class CodeStreamSession implements Disposable {
 		250,
 		{ maxWait: 1000 }
 	);
-
-	private fireDidChangePullRequests = createMergableDebouncedEvent(this._onDidChangePullRequests);
 
 	private _onDidChangeCodelenses = new EventEmitter<void>();
 	get onDidChangeCodelenses(): Event<void> {
@@ -296,10 +287,6 @@ export class CodeStreamSession implements Disposable {
 
 	private onCodelensesChanged() {
 		this._onDidChangeCodelenses.fire(undefined);
-	}
-
-	private onPullRequestCommentsChanged(_e: DidChangePullRequestCommentsNotification) {
-		this._onDidChangePullRequestComments.fire(new PullRequestCommentsChangedEvent(this));
 	}
 
 	private onDataChanged(e: DidChangeDataNotification) {
@@ -800,7 +787,6 @@ export class CodeStreamSession implements Disposable {
 				}
 			),
 			Container.agent.onDidChangeDocumentMarkers(this.onDocumentMarkersChanged, this),
-			Container.agent.onDidChangePullRequestComments(this.onPullRequestCommentsChanged, this),
 			Container.agent.onDidChangeData(this.onDataChanged, this)
 		);
 
