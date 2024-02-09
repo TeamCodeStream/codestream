@@ -9,11 +9,13 @@ interface StatesToDisplay {
 	[key: string]: string;
 }
 const STATES_TO_DISPLAY_STRINGS: StatesToDisplay = {
-	table: "Table",
-	billboard: "Billboard",
-	line: "Line",
-	json: "JSON",
+	area: "Area",
 	bar: "Bar",
+	billboard: "Billboard",
+	json: "JSON",
+	line: "Line",
+	pie: "Pie",
+	table: "Table",
 };
 
 const StyledDropdownContainer = styled.div`

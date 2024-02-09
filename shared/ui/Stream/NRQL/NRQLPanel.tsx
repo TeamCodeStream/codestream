@@ -20,10 +20,12 @@ import Button from "../Button";
 import { fuzzyTimeAgoinWords } from "../Timestamp";
 import ExportResults from "./ExportResults";
 import { NRQLEditor } from "./NRQLEditor";
+import { NRQLResultsArea } from "./NRQLResultsArea";
 import { NRQLResultsBar } from "./NRQLResultsBar";
 import { NRQLResultsBillboard } from "./NRQLResultsBillboard";
 import { NRQLResultsJSON } from "./NRQLResultsJSON";
 import { NRQLResultsLine } from "./NRQLResultsLine";
+import { NRQLResultsPie } from "./NRQLResultsPie";
 import { NRQLResultsTable } from "./NRQLResultsTable";
 import { NRQLVisualizationDropdown } from "./NRQLVisualizationDropdown";
 import { RecentQueries } from "./RecentQueries";
@@ -219,8 +221,12 @@ export const NRQLPanel = (props: {
 		options: { isRecent: boolean } = { isRecent: false }
 	) => {
 		try {
+			if (!accountId) {
+				handleError("Please provide an account");
+				return;
+			}
 			if (!nrqlQuery) {
-				handleError("Please provide a query to execute");
+				handleError("Please provide a query to run");
 				return;
 			}
 
@@ -237,9 +243,7 @@ export const NRQLPanel = (props: {
 			});
 
 			if (!response) {
-				handleError(
-					"An unexpected error occurred while fetching log information; please contact support."
-				);
+				handleError("An unexpected error occurred while running query; please contact support.");
 				return;
 			}
 
@@ -365,7 +369,7 @@ export const NRQLPanel = (props: {
 												nrqlEditorRef.current!.setValue(value);
 											}
 											setUserQuery(value!);
-											executeNRQL((newAccount?.value || selectedAccount?.value)!, value!, {
+											executeNRQL((newAccount?.value || accountId)!, value!, {
 												isRecent: true,
 											});
 										}}
@@ -383,7 +387,7 @@ export const NRQLPanel = (props: {
 								}}
 								onSubmit={e => {
 									setUserQuery(e.value!);
-									executeNRQL(selectedAccount?.value!, e.value!);
+									executeNRQL(accountId, e.value!);
 								}}
 								ref={nrqlEditorRef}
 							/>
@@ -403,7 +407,7 @@ export const NRQLPanel = (props: {
 								<Button
 									data-testid="run"
 									style={{ padding: "0 10px" }}
-									onClick={() => executeNRQL(selectedAccount?.value!, userQuery)}
+									onClick={() => executeNRQL(accountId, userQuery)}
 									loading={isLoading}
 								>
 									Run
@@ -437,39 +441,25 @@ export const NRQLPanel = (props: {
 						</SinceContainer>
 					)}
 					<div>
-						{!nrqlError &&
-							!isLoading &&
-							results &&
-							results.length > 0 &&
-							resultsTypeGuess.selected === "table" && (
-								<NRQLResultsTable
-									width={width || "100%"}
-									height={trimmedHeight}
-									results={results}
-								/>
-							)}
-						{!nrqlError &&
-							!isLoading &&
-							results &&
-							results.length > 0 &&
-							resultsTypeGuess.selected === "billboard" && (
-								<NRQLResultsBillboard results={results} eventType={eventType} />
-							)}
-						{!nrqlError &&
-							!isLoading &&
-							results &&
-							results.length > 0 &&
-							resultsTypeGuess.selected === "line" && <NRQLResultsLine results={results} />}
-						{!nrqlError &&
-							!isLoading &&
-							results &&
-							results.length > 0 &&
-							resultsTypeGuess.selected === "json" && <NRQLResultsJSON results={results} />}
-						{!nrqlError &&
-							!isLoading &&
-							results &&
-							results.length > 0 &&
-							resultsTypeGuess.selected === "bar" && <NRQLResultsBar results={results} />}
+						{!nrqlError && !isLoading && results && results.length > 0 && (
+							<>
+								{resultsTypeGuess.selected === "table" && (
+									<NRQLResultsTable
+										width={width || "100%"}
+										height={trimmedHeight}
+										results={results}
+									/>
+								)}
+								{resultsTypeGuess.selected === "billboard" && (
+									<NRQLResultsBillboard results={results} eventType={eventType} />
+								)}
+								{resultsTypeGuess.selected === "area" && <NRQLResultsArea results={results} />}
+								{resultsTypeGuess.selected === "line" && <NRQLResultsLine results={results} />}
+								{resultsTypeGuess.selected === "json" && <NRQLResultsJSON results={results} />}
+								{resultsTypeGuess.selected === "bar" && <NRQLResultsBar results={results} />}
+								{resultsTypeGuess.selected === "pie" && <NRQLResultsPie results={results} />}
+							</>
+						)}
 						{noResults && <div style={{ textAlign: "center" }}>No results found</div>}
 						{nrqlError && (
 							<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>

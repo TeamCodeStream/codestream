@@ -47,6 +47,12 @@ export interface HttpErrorResponse {
 	};
 }
 
+export interface ResponseMetadata {
+	facet?: string;
+	eventType: string;
+	rawSince: string;
+}
+
 function isHttpErrorResponse(ex: unknown): ex is HttpErrorResponse {
 	const httpErrorResponse = ex as HttpErrorResponse;
 	return (
@@ -574,10 +580,7 @@ export class NewRelicGraphqlClient implements Disposable {
 	): Promise<{
 		results: T[];
 		rawResponse: {
-			metadata: {
-				eventType: string;
-				rawSince: string;
-			};
+			metadata: ResponseMetadata;
 		};
 	}> {
 		const query = `query Nrql($accountId:Int!) {

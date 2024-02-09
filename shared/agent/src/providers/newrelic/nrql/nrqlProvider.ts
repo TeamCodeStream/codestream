@@ -26,7 +26,7 @@ import { gate } from "../../../system/decorators/gate";
 import { log } from "../../../system/decorators/log";
 import { lsp, lspHandler } from "../../../system/decorators/lsp";
 import { ContextLogger } from "../../contextLogger";
-import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
+import { NewRelicGraphqlClient, ResponseMetadata } from "../newRelicGraphqlClient";
 import { mapNRErrorResponse, parseId } from "../utils";
 import { nrItemsToDocSelector, nrqlFunctions, nrqlKeywords, nrqlOperators } from "./constants";
 
@@ -74,7 +74,11 @@ export class NrNRQLProvider {
 				results: response.results,
 				eventType: response?.rawResponse?.metadata?.eventType,
 				since: response?.rawResponse?.metadata?.rawSince,
-				resultsTypeGuess: this.getResultsType(query, response.results) as ResultsTypeGuess,
+				resultsTypeGuess: this.getResultsType(
+					query,
+					response.results,
+					response?.rawResponse?.metadata
+				) as ResultsTypeGuess,
 			};
 		} catch (ex) {
 			ContextLogger.warn("executeNRQL failure", {
@@ -396,8 +400,8 @@ export class NrNRQLProvider {
 		return 0;
 	}
 
-	private getResultsType(query: string, results: any[]) {
-		const ALL_RESULT_TYPES = ["table", "json", "billboard", "line", "bar"];
+	private getResultsType(query: string, results: any[], metadata: ResponseMetadata) {
+		const ALL_RESULT_TYPES = ["table", "json", "billboard", "line", "bar", "area", "pie"];
 		if (!results || !results.length) return { selected: "table", enabled: ALL_RESULT_TYPES };
 
 		if (results.length === 1) {
@@ -416,6 +420,10 @@ export class NrNRQLProvider {
 			}
 		}
 
+		if (metadata?.facet) {
+			return { selected: "bar", enabled: ["bar", "json", "pie", "json"] };
+		}
+
 		query = query.toUpperCase();
 		if (query.indexOf("TIMESERIES") > -1) {
 			const dataKeys = Object.keys(results[0] || {}).filter(
@@ -430,10 +438,7 @@ export class NrNRQLProvider {
 				return { selected: "json", enabled: ["json"] };
 			}
 			// easy timeseries data like a TIMESERIES of a count
-			return { selected: "line", enabled: ["table", "json", "line", "bar"] };
-		}
-		if (query.indexOf("FACET") > -1) {
-			return { selected: "json", enabled: ["json"] }; // should be "bar"??
+			return { selected: "line", enabled: ["table", "json", "line", "bar", "area"] };
 		}
 		return { selected: "table", enabled: ["table", "json"] };
 	}
