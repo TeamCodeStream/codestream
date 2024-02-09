@@ -5,7 +5,7 @@ import styled from "styled-components";
 
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { HeadshotName } from "../src/components/HeadshotName";
-import { CodeStreamState } from "../store";
+import { CodeStreamState, store } from "../store";
 import { setCurrentCodemark, setCurrentReview } from "../store/context/actions";
 import * as userSelectors from "../store/users/reducer";
 import Icon from "./Icon";
@@ -15,6 +15,7 @@ import { ChangesetFileList } from "./Review/ChangesetFileList";
 import Tag from "./Tag";
 import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
+import { HostApi } from "../webview-api";
 
 const RootTR = styled.tr`
 	margin: 0;
@@ -129,6 +130,17 @@ export default function SearchResult(props: Props) {
 	});
 
 	const selectResult = () => {
+		const session = store.getState().session;
+		const users = store.getState().users;
+		const currentUser = session.userId || users[session.userId!];
+		HostApi.instance.track("codestream/codemarks/codemark displayed", {
+			meta_data: `codemark_location: search`,
+			meta_data_2: `codemark_type: ${
+				icon === "issue" ? "issue" : icon === "comment" ? "comment" : ""
+			}`,
+			meta_data_3: `following: ${(result?.followerIds || []).includes(currentUser.toString())}`,
+			event_type: "modal_display",
+		});
 		if (isCSReview(result)) dispatch(setCurrentReview(result.id));
 		else dispatch(setCurrentCodemark(result.id));
 	};
