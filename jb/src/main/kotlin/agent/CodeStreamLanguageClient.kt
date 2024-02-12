@@ -265,6 +265,11 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
         project.sessionService?.didChangeCodelenses()
     }
 
+    @JsonNotification("codestream/whatsNew")
+    fun whatsNew(notification: WhatsNewNotification){
+        project.notificationComponent?.whatsNew(notification.title)
+    }
+
     override fun workspaceFolders(): CompletableFuture<MutableList<WorkspaceFolder>> {
         val folders = project.workspaceFolders.toMutableList()
         logger.info("Workspace folders: ${folders.joinToString()}")
@@ -388,6 +393,8 @@ class FilterNamespacesResponse(val filteredNamespaces: List<String>)
 class ResolveStackTracePathsRequest(val paths: List<String?>?, val language: String?)
 
 class ResolveStackTracePathsResponse(val resolvedPaths: List<String?>)
+
+class WhatsNewNotification(val title: String)
 
 enum class ApiVersionCompatibility {
     @SerializedName("apiCompatible")

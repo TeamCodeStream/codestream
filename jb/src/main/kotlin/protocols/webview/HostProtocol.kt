@@ -108,7 +108,7 @@ class EditorOpenNotification(
     val title: String,
     val panel: String,
     val hash: String?,
-    val entityGuid: String
+    val entityGuid: String?
 )
 
 class EditorRangeHighlightRequest(

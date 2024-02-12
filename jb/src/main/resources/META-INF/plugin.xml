@@ -86,6 +86,8 @@
         <fileEditorProvider implementation="com.codestream.webview.WebViewEditorProvider"/>
         <iconProvider implementation="com.codestream.webview.WebViewEditorIconProvider"/>
         <editorTabTitleProvider implementation="com.codestream.webview.WebViewEditorTabTitleProvider"/>
+
+        <notificationGroup id="codestream.notifications" displayType="BALLOON" isLogByDefault="false" />
     </extensions>
 
     <project-components>

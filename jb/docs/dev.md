@@ -36,7 +36,8 @@ export PATH="$JAVA_HOME/bin:$PATH"
 >
 > If you utilize JetBrains Toolbox for managing the installation of their IDEs / utilities, then your installation path will be available by clicking 'Settings' next to the application in JetBrains Toolbox. By default, it will look similar to:
 >
-> `/Users/<your home dir>/Library/Application Support/JetBrains/Toolbox/apps/IDEA-U/ch-0/231.8109.175`
+> `/Users/<your home dir>/Library/Application Support/JetBrains/Toolbox/apps/IDEA-U/ch-0/231.8109.175/`
+> `~/Applications/IntelliJ IDEA Ultimate.app/`
 
 The Jetbrains JVM is required to run tests and build the plugin. The project is preconfigured to use a
 JVM Runtime called jbr-17. You need to setup this JMV yourself by going to 
