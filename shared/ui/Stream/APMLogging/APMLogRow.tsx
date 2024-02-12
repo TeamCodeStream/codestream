@@ -44,6 +44,8 @@ const MessageData = styled.div`
 
 const RowContainer = styled.div`
 	display: flex;
+	padding: 1em;
+	border-right: 1px solid var(--base-border-color);
 `;
 
 const ShowMoreContainer = styled.div`
@@ -106,14 +108,13 @@ export const APMLogRow = (props: {
 	entityGuid?: string;
 	logRowData: LogResult;
 	showMore?: boolean;
-	updateData: Function;
+	updateExpandedContent: Function;
+	updateShowSurrounding: Function;
+	isShowSurrounding: string;
 	index: number;
 	expandedContent: any;
 }) => {
-	const [isExpanded, setIsExpanded] = useState(false);
-
 	const [isHovered, setIsHovered] = useState(false);
-
 	const handleMouseEnter = () => {
 		setIsHovered(true);
 	};
@@ -176,7 +177,15 @@ export const APMLogRow = (props: {
 			updatedJsx = undefined;
 		}
 
-		props.updateData(props.index, updatedJsx);
+		props.updateExpandedContent(props.index, updatedJsx);
+	};
+
+	const handleClickShowSurrounding = () => {
+		props.updateShowSurrounding(props.index);
+	};
+
+	const handleClickCloseSurrounding = () => {
+		props.updateShowSurrounding(props.index);
 	};
 
 	return (
@@ -197,22 +206,32 @@ export const APMLogRow = (props: {
 					</Tooltip>
 					<Timestamp time={props.timestamp} expandedTime={true} />
 				</TimestampData>
-				{!props.expandedContent && (
-					<MessageData>
-						{props.message}
-						{isHovered && (
-							<span style={{ cursor: "pointer", position: "absolute", top: 12, right: 10 }}>
-								<Icon
-									onClick={handleClickExpand}
-									name="resize-vertical"
-									style={{ cursor: "pointer" }}
-									title="Show Surrounding"
-								/>{" "}
-							</span>
-						)}
-					</MessageData>
-				)}
+				{!props.expandedContent && <MessageData>{props.message}</MessageData>}
 				{props.expandedContent && <MessageData>{props.expandedContent}</MessageData>}
+				{isHovered && props.isShowSurrounding !== "true" && (
+					<span
+						style={{ cursor: "pointer", position: "absolute", top: 12, right: 10, zIndex: 9999 }}
+					>
+						<Icon
+							onClick={handleClickShowSurrounding}
+							name="resize-vertical"
+							style={{ cursor: "pointer" }}
+							title="Show Surrounding"
+						/>
+					</span>
+				)}
+				{props.isShowSurrounding === "true" && (
+					<span
+						style={{ cursor: "pointer", position: "absolute", top: 12, right: 10, zIndex: 9999 }}
+					>
+						<Icon
+							onClick={handleClickCloseSurrounding}
+							name="x"
+							style={{ cursor: "pointer" }}
+							title="Close"
+						/>
+					</span>
+				)}
 			</RowContainer>
 		</>
 	);

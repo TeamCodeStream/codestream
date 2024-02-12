@@ -28,6 +28,8 @@ import { TableWindow } from "../TableWindow";
 import { APMLogRow } from "./APMLogRow";
 import { PanelHeaderTitleWithLink } from "../PanelHeaderTitleWithLink";
 import { Disposable } from "@codestream/webview/utils";
+import { isUndefined as _isUndefined } from "lodash";
+
 interface SelectedOption {
 	value: string;
 	label: string;
@@ -157,6 +159,9 @@ export const APMLogSearchPanel = (props: {
 	const [results, setResults] = useState<LogResult[]>([]);
 	const [severityAttribute, setSeverityAttribute] = useState<string>();
 	const [messageAttribute, setMessageAttribute] = useState<string>();
+	const [currentShowSurroundingIndex, setCurrentShowSurroundingIndex] = useState<
+		number | undefined
+	>(undefined);
 	const [displayColumns, setDisplayColumns] = useState<string[]>([]);
 	const [beforeLogs, setBeforeLogs] = useState<LogResult[]>([]);
 	const [afterLogs, setAfterLogs] = useState<LogResult[]>([]);
@@ -476,10 +481,31 @@ export const APMLogSearchPanel = (props: {
 		);
 	};
 
-	const updateResults = (index, updatedJsx) => {
+	const updateExpandedContent = (index, updatedJsx) => {
 		const newResults = [...results];
 		newResults[index] = { ...newResults[index], expandedContent: updatedJsx };
 		setResults(newResults);
+	};
+
+	const updateShowSurrounding = index => {
+		const newResults = [...results];
+
+		if (index === currentShowSurroundingIndex) {
+			newResults[index] = { ...newResults[index], isShowSurrounding: "false" };
+			setResults(newResults);
+			setCurrentShowSurroundingIndex(undefined);
+		} else {
+			if (!_isUndefined(currentShowSurroundingIndex)) {
+				newResults[currentShowSurroundingIndex] = {
+					...newResults[currentShowSurroundingIndex],
+					isShowSurrounding: "false",
+				};
+			}
+
+			newResults[index] = { ...newResults[index], isShowSurrounding: "true" };
+			setResults(newResults);
+			setCurrentShowSurroundingIndex(index);
+		}
 	};
 
 	const formatRowResults = () => {
@@ -495,6 +521,7 @@ export const APMLogSearchPanel = (props: {
 				const severity = severityAttribute ? r[severityAttribute] : "";
 				const showMore = r?.showMore ? true : false;
 				const expandedContent = r?.expandedContent ?? undefined;
+				const isShowSurrounding = r?.isShowSurrounding ?? false;
 				const entityGuid = selectedEntityAccount?.value;
 				const accountId = parseId(entityGuid);
 
@@ -508,7 +535,9 @@ export const APMLogSearchPanel = (props: {
 						entityGuid={entityGuid}
 						logRowData={r}
 						showMore={showMore}
-						updateData={updateResults}
+						isShowSurrounding={isShowSurrounding}
+						updateExpandedContent={updateExpandedContent}
+						updateShowSurrounding={updateShowSurrounding}
 						expandedContent={expandedContent}
 					/>
 				);
