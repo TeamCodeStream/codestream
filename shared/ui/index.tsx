@@ -145,6 +145,10 @@ import { UsersState } from "./store/users/types";
 
 // import translationsEs from "./translations/es";
 
+export interface SourceOptions {
+	source: "source_file" | "activity_feed" | "search" | "related_list";
+}
+
 export function setupCommunication(host: { postMessage: (message: any) => void }) {
 	Object.defineProperty(window, "acquireCodestreamHost", {
 		value() {
@@ -427,6 +431,7 @@ function listenForEvents(store) {
 			editorContext: EditorContextState;
 			session: SessionState;
 			users: UsersState;
+			source: SourceOptions;
 		} = store.getState();
 
 		if (Object.keys(codemarks).length === 0) {
@@ -435,10 +440,11 @@ function listenForEvents(store) {
 		}
 
 		const currentUser = session.userId || users[session.userId!];
+		const sourceLocation = e.source;
 
 		const codemark = getCodemark(codemarks, e.codemarkId);
 		HostApi.instance.track("codestream/codemarks/codemark displayed", {
-			meta_data: `codemark_location: source_file`,
+			meta_data: `codemark_location: ${sourceLocation}`,
 			meta_data_2: `codemark_type: ${
 				codemark?.type === "issue" ? "issue" : codemark?.type === "comment" ? "comment" : ""
 			}`,

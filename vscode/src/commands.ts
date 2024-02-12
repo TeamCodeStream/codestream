@@ -89,6 +89,7 @@ export interface OpenCodemarkCommandArgs {
 	codemarkId: string;
 	onlyWhenVisible?: boolean;
 	sourceUri?: Uri;
+	source?: string;
 }
 
 export interface OpenPullRequestCommandArgs {
@@ -507,7 +508,7 @@ export class Commands implements Disposable {
 		if (args === undefined) return;
 
 		const { codemarkId: _codemarkId, ...options } = args;
-		return Container.sidebar.openCodemark(args.codemarkId, options);
+		return Container.sidebar.openCodemark(args.codemarkId, { source: "source_file", ...options });
 	}
 
 	@command("openPullRequest", { showErrorMessage: "Unable to open pull request" })

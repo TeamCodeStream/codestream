@@ -19,6 +19,7 @@ export * from "./webview.protocol.common";
 export interface ShowCodemarkNotification {
 	codemarkId: string;
 	sourceUri?: string;
+	source?: string;
 }
 
 export const ShowCodemarkNotificationType = new NotificationType<ShowCodemarkNotification, void>(
@@ -65,6 +66,7 @@ export interface ShowStreamNotification {
 	streamId: string;
 	threadId?: string;
 	codemarkId?: string;
+	source?: string;
 }
 
 export const ShowStreamNotificationType = new NotificationType<ShowStreamNotification, void>(

@@ -432,7 +432,7 @@ export class SidebarController implements Disposable {
 	@log()
 	async openCodemark(
 		codemarkId: string,
-		options: { onlyWhenVisible?: boolean; sourceUri?: Uri } = {}
+		options: { source?: string; onlyWhenVisible?: boolean; sourceUri?: Uri } = {}
 	): Promise<void> {
 		if (!this.visible) {
 			if (options.onlyWhenVisible) return;
@@ -448,6 +448,7 @@ export class SidebarController implements Disposable {
 		// TODO: Change this to be a request vs a notification
 		this._sidebar!.notify(ShowCodemarkNotificationType, {
 			codemarkId: codemarkId,
+			source: "source_file",
 			sourceUri: options.sourceUri && options.sourceUri.toString()
 		});
 	}
