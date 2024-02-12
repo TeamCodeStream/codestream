@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import styled from "styled-components";
 import Timestamp from "../Timestamp";
 import Icon from "@codestream/webview/Stream/Icon";
@@ -52,6 +52,14 @@ const ShowMoreContainer = styled.div`
 	display: flex;
 	align-items: center;
 	justify-content: center;
+`;
+
+const ShowSurroundingHeader = styled.div`
+	background-color: var(--button-background-color);
+	color: var(--text-color-highlight);
+	padding: 0.5em;
+	display: flex;
+	justify-content: space-between;
 `;
 
 const DetailViewTable = styled.div`
@@ -114,6 +122,8 @@ export const APMLogRow = (props: {
 	index: number;
 	expandedContent: any;
 }) => {
+	const elementRef = useRef(null);
+
 	const [isHovered, setIsHovered] = useState(false);
 	const handleMouseEnter = () => {
 		setIsHovered(true);
@@ -190,49 +200,85 @@ export const APMLogRow = (props: {
 
 	return (
 		<>
-			<RowContainer onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-				<TimestampData>
-					<Icon
-						onClick={handleClickExpand}
-						name={props.expandedContent ? "chevron-down-thin" : "chevron-right-thin"}
-						style={{ cursor: "pointer", marginRight: "2px" }}
-					/>
-					<Tooltip content={props?.severity?.toLowerCase()} delay={0.5}>
-						<LogSeverity
+			{props.isShowSurrounding === "true" && (
+				<>
+					<ShowSurroundingHeader>
+						<span style={{ marginRight: "4px" }}> Selected Log</span>
+						<span style={{ cursor: "pointer" }}>
+							<Icon
+								onClick={handleClickCloseSurrounding}
+								name="x"
+								style={{ cursor: "pointer" }}
+								title="Close"
+							/>
+						</span>
+					</ShowSurroundingHeader>
+
+					<RowContainer
+						style={{ backgroundColor: "var(--app-background-color-hover" }}
+						onMouseEnter={handleMouseEnter}
+						onMouseLeave={handleMouseLeave}
+					>
+						<TimestampData>
+							<Icon
+								onClick={handleClickExpand}
+								name={props.expandedContent ? "chevron-down-thin" : "chevron-right-thin"}
+								style={{ cursor: "pointer", marginRight: "2px" }}
+							/>
+							<Tooltip content={props?.severity?.toLowerCase()} delay={0.5}>
+								<LogSeverity
+									style={{
+										backgroundColor:
+											logSeverityToColor[props?.severity?.toLowerCase()] || "#0c74df",
+									}}
+								/>
+							</Tooltip>
+							<Timestamp time={props.timestamp} expandedTime={true} />
+						</TimestampData>
+						<MessageData>{props.expandedContent || props.message}</MessageData>
+					</RowContainer>
+				</>
+			)}
+
+			{props.isShowSurrounding !== "true" && (
+				<RowContainer onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+					<TimestampData>
+						<Icon
+							onClick={handleClickExpand}
+							name={props.expandedContent ? "chevron-down-thin" : "chevron-right-thin"}
+							style={{ cursor: "pointer", marginRight: "2px" }}
+						/>
+						<Tooltip content={props?.severity?.toLowerCase()} delay={0.5}>
+							<LogSeverity
+								style={{
+									backgroundColor: logSeverityToColor[props?.severity?.toLowerCase()] || "#0c74df",
+								}}
+							/>
+						</Tooltip>
+						<Timestamp time={props.timestamp} expandedTime={true} />
+					</TimestampData>
+					<MessageData>{props.expandedContent || props.message}</MessageData>
+
+					{isHovered && (
+						<span
 							style={{
-								backgroundColor: logSeverityToColor[props?.severity?.toLowerCase()] || "#0c74df",
+								cursor: "pointer",
+								position: "absolute",
+								top: 10,
+								right: 10,
+								zIndex: 9999,
 							}}
-						/>
-					</Tooltip>
-					<Timestamp time={props.timestamp} expandedTime={true} />
-				</TimestampData>
-				{!props.expandedContent && <MessageData>{props.message}</MessageData>}
-				{props.expandedContent && <MessageData>{props.expandedContent}</MessageData>}
-				{isHovered && props.isShowSurrounding !== "true" && (
-					<span
-						style={{ cursor: "pointer", position: "absolute", top: 12, right: 10, zIndex: 9999 }}
-					>
-						<Icon
-							onClick={handleClickShowSurrounding}
-							name="resize-vertical"
-							style={{ cursor: "pointer" }}
-							title="Show Surrounding"
-						/>
-					</span>
-				)}
-				{props.isShowSurrounding === "true" && (
-					<span
-						style={{ cursor: "pointer", position: "absolute", top: 12, right: 10, zIndex: 9999 }}
-					>
-						<Icon
-							onClick={handleClickCloseSurrounding}
-							name="x"
-							style={{ cursor: "pointer" }}
-							title="Close"
-						/>
-					</span>
-				)}
-			</RowContainer>
+						>
+							<Icon
+								onClick={handleClickShowSurrounding}
+								name="resize-vertical-rounded"
+								style={{ cursor: "pointer" }}
+								title="Show Surrounding"
+							/>
+						</span>
+					)}
+				</RowContainer>
+			)}
 		</>
 	);
 };
