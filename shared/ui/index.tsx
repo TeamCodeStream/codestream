@@ -439,7 +439,7 @@ function listenForEvents(store) {
 			codemarks = store.getState().codemarks;
 		}
 
-		const currentUser = session.userId || users[session.userId!];
+		const currentUser = session.userId || users[session.userId!].id;
 		const sourceLocation = e.source;
 
 		const codemark = getCodemark(codemarks, e.codemarkId);
