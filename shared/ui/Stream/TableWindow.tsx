@@ -68,7 +68,6 @@ const Row = ({ data, index, setSize, windowWidth }) => {
 	}, [setSize, index, windowWidth]);
 
 	const StyledRow = styled.div`
-		padding: 1em;
 		box-sizing: border-box;
 		border-left: 1px solid var(--base-border-color);
 		border-right: 1px solid var(--base-border-color);
