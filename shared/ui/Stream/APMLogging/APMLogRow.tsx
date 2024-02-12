@@ -62,6 +62,21 @@ const ShowSurroundingHeader = styled.div`
 	justify-content: space-between;
 `;
 
+const ActionContainer = styled.div`
+	display: flex;
+	border: 1px solid var(--base-border-color);
+	border-radius: 4px;
+	padding: 0.4em;
+`;
+
+const HoverContainer = styled.div`
+	cursor: pointer;
+	position: absolute;
+	top: 4px;
+	right: 6px;
+	background-color: var(--app-background-color-hover);
+`;
+
 const DetailViewTable = styled.div`
 	width: 100%;
 	display: flex;
@@ -198,6 +213,12 @@ export const APMLogRow = (props: {
 		props.updateShowSurrounding(props.index);
 	};
 
+	const handkeClickCopyJson = () => {
+		if (props.logRowData) {
+			copy(JSON.stringify(props.logRowData, null, 2));
+		}
+	};
+
 	return (
 		<>
 			{props.isShowSurrounding === "true" && (
@@ -260,22 +281,30 @@ export const APMLogRow = (props: {
 					<MessageData>{props.expandedContent || props.message}</MessageData>
 
 					{isHovered && (
-						<span
-							style={{
-								cursor: "pointer",
-								position: "absolute",
-								top: 10,
-								right: 10,
-								zIndex: 9999,
-							}}
-						>
-							<Icon
-								onClick={handleClickShowSurrounding}
-								name="resize-vertical-rounded"
-								style={{ cursor: "pointer" }}
-								title="Show Surrounding"
-							/>
-						</span>
+						<HoverContainer>
+							<ActionContainer>
+								<div style={{ marginRight: "8px" }}>
+									<Icon
+										onClick={handkeClickCopyJson}
+										name="copy"
+										style={{ cursor: "pointer" }}
+										title="Copy JSON"
+										delay={1}
+										className="clickable"
+									/>
+								</div>
+								<div>
+									<Icon
+										onClick={handleClickShowSurrounding}
+										name="resize-vertical-rounded"
+										style={{ cursor: "pointer" }}
+										title="Show Surrounding"
+										delay={1}
+										className="clickable"
+									/>
+								</div>
+							</ActionContainer>
+						</HoverContainer>
 					)}
 				</RowContainer>
 			)}
