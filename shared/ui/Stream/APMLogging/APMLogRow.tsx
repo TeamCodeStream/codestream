@@ -75,6 +75,7 @@ const HoverContainer = styled.div`
 	top: 4px;
 	right: 6px;
 	background-color: var(--app-background-color-hover);
+	box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 `;
 
 const DetailViewTable = styled.div`
