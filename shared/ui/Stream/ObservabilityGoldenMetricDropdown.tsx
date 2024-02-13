@@ -122,6 +122,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 				title="View on New Relic"
 				placement="bottomLeft"
 				delay={1}
+				style={{ padding: "5px 0 0 0" }}
 				onClick={e => {
 					e.preventDefault();
 					e.stopPropagation();
