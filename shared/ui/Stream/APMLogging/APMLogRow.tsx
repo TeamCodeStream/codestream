@@ -208,11 +208,11 @@ export const APMLogRow = (props: {
 	};
 
 	const handleClickShowSurrounding = () => {
-		props.updateShowSurrounding(props.index);
+		props.updateShowSurrounding(props.index, "show");
 	};
 
 	const handleClickCloseSurrounding = () => {
-		props.updateShowSurrounding(props.index);
+		props.updateShowSurrounding(props.index, "reset");
 	};
 
 	const handkeClickCopyJson = () => {
