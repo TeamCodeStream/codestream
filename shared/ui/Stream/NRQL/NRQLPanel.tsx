@@ -102,7 +102,7 @@ const ResizeEditorContainer = styled.div`
 `;
 
 const CodeText = styled.span`
-	font-family: "Courier New", Courier, monospace;
+	font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
 	color: var(--text-color);
 `;
 
