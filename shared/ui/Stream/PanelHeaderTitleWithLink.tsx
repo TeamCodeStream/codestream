@@ -4,8 +4,8 @@ import Icon from "./Icon";
 
 interface HeaderTitleProps {
 	href: string;
-	text: string;
-	title: string;
+	text: string | JSX.Element;
+	title: string | JSX.Element;
 }
 
 export const PanelHeaderTitleWithLink: React.FC<HeaderTitleProps> = ({ title, href, text }) => {
