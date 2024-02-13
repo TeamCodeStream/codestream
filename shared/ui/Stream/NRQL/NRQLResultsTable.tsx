@@ -55,13 +55,23 @@ export const NRQLResultsTable = (props: {
 		);
 	};
 
-	const calculateColumnWidth = value => {
-		return typeof value === "number"
-			? Math.min(MAX_COL_WIDTH, Math.max(MIN_COL_WIDTH, String(value).length + 150))
-			: typeof value === "string"
-			? Math.min(MAX_COL_WIDTH, Math.max(MIN_COL_WIDTH, value.length + 150))
-			: MIN_COL_WIDTH;
+	const calculateColumnWidth = (value: string): number => {
+		return stringLengthInPixels(value);
 	};
+
+	const stringLengthInPixels: (str: string) => number = (function () {
+		const ctx = document.createElement("canvas").getContext("2d");
+		if (ctx) {
+			ctx.font = "13px monospace";
+			return function (str: string) {
+				const stringLengthInPixels = Math.round(ctx.measureText(str).width) + 20;
+				return Math.min(MAX_COL_WIDTH, Math.max(MIN_COL_WIDTH, stringLengthInPixels));
+			};
+		}
+		return function (str: string) {
+			return MIN_COL_WIDTH;
+		};
+	})();
 
 	const calculateRowHeights = rowCalcData => {
 		return rowCalcData.map(([index, longestLength, columnWidthValue]) => {
@@ -88,9 +98,9 @@ export const NRQLResultsTable = (props: {
 		});
 	};
 
-	const calculateColumnWidths = firstRowResults => {
+	const calculateColumnWidths = (firstRowResults: { [key: string]: string | number }) => {
 		return Object.entries(firstRowResults).map(([key, value]) => {
-			return calculateColumnWidth(value);
+			return calculateColumnWidth(value as string); // asserting value as string
 		});
 	};
 
