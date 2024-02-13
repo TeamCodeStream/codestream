@@ -1,12 +1,30 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { Range } from "vscode-languageserver-types";
-import { CodeStreamState } from "../store";
-import { PanelHeader } from "../src/components/PanelHeader";
-import { CurrentTransactionSpan } from "../store/context/types";
+import {
+	Bar,
+	BarChart,
+	CartesianGrid,
+	Legend,
+	Line,
+	LineChart,
+	ResponsiveContainer,
+	Tooltip as ReTooltip,
+	XAxis,
+	YAxis,
+} from "recharts";
+import { MetaLabel } from "./Codemark/BaseCodemark";
 import CancelButton from "./CancelButton";
-import { closePanel, setCurrentTransactionSpan } from "../store/context/actions";
-import { HostApi } from "../webview-api";
+import { DelayedRender } from "../Container/DelayedRender";
+import { LoadingMessage } from "../src/components/LoadingMessage";
+import { PanelHeader } from "../src/components/PanelHeader";
+import { CodeStreamState } from "@codestream/webview/store";
+import { CurrentTransactionSpan } from "@codestream/webview/store/context/types";
+import {
+	closeAllPanels,
+	setCurrentTransactionSpan,
+} from "@codestream/webview/store/context/actions";
+import { HostApi } from "@codestream/webview/webview-api";
 import {
 	GetObservabilityErrorGroupMetadataRequestType,
 	GetRepoFileFromAbsolutePathRequestType,
@@ -23,22 +41,7 @@ import {
 	EditorRevealSymbolRequestType,
 	EditorSelectRangeRequestType,
 } from "@codestream/protocols/webview";
-import { MetaLabel } from "./Codemark/BaseCodemark";
-import {
-	Bar,
-	BarChart,
-	CartesianGrid,
-	Legend,
-	Line,
-	LineChart,
-	ResponsiveContainer,
-	Tooltip as ReTooltip,
-	XAxis,
-	YAxis,
-} from "recharts";
-import { DelayedRender } from "../Container/DelayedRender";
-import { LoadingMessage } from "../src/components/LoadingMessage";
-import { useDidMount } from "../utilities/hooks";
+import { useAppDispatch, useDidMount } from "@codestream/webview/utilities/hooks";
 import { CSRepository } from "@codestream/protocols/api";
 
 const COLOR_LINE_1 = "#8884d8";
@@ -220,7 +223,7 @@ export const TransactionSpanPanel = () => {
 			currentTransactionSpan: state.context.currentTransactionSpan as CurrentTransactionSpan,
 		};
 	});
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const [loading, setLoading] = useState(false);
 	const [chartData, setChartData] = useState<GetSpanChartDataResponse | undefined>(undefined);
 	const [fetchError, setFetchError] = useState<string | undefined>(undefined);
@@ -345,7 +348,7 @@ export const TransactionSpanPanel = () => {
 			<CancelButton
 				onClick={() => {
 					dispatch(setCurrentTransactionSpan(undefined));
-					dispatch(closePanel());
+					dispatch(closeAllPanels());
 				}}
 			/>
 			<div
