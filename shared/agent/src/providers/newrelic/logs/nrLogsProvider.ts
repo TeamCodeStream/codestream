@@ -208,15 +208,22 @@ export class NrLogsProvider {
 
 			const parsedId = parseId(entityGuid)!;
 
-			const queryWhere = `WHERE entity.guid = '${entityGuid}' AND messageId != '${messageId}`;
+			const ONE_SECOND = 1000;
+			const ONE_MINUTE = ONE_SECOND * 60;
+			const TEN_MINUTES = ONE_MINUTE * 10;
+
+			const beforeTime = since - TEN_MINUTES;
+			const afterTime = since + TEN_MINUTES;
+
+			const queryWhere = `WHERE entity.guid = '${entityGuid}' AND messageId != '${messageId}'`;
 			const queryOrder = `ORDER BY timestamp ASC`;
 
-			const beforeQuerySince = `SINCE ${since} - 10 MINUTES`;
+			const beforeQuerySince = `SINCE ${beforeTime}`;
 			const beforeQueryUntil = `UNTIL ${since}`;
 			const beforeQuery = `SELECT * FROM Log ${queryWhere} ${beforeQuerySince} ${beforeQueryUntil} ${queryOrder}`;
 
 			const afterQuerySince = `SINCE ${since}`;
-			const afterQueryUntil = `UNTIL ${since} + 10 MINUTES`;
+			const afterQueryUntil = `UNTIL ${afterTime}`;
 			const afterQuery = `SELECT * FROM Log ${queryWhere} ${afterQuerySince} ${afterQueryUntil} ${queryOrder}`;
 
 			ContextLogger.log(`getSurroundingLogs beforeQuery: ${beforeQuery}`);
