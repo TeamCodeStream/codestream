@@ -28,7 +28,7 @@ import { TableWindow } from "../TableWindow";
 import { APMLogRow } from "./APMLogRow";
 import { PanelHeaderTitleWithLink } from "../PanelHeaderTitleWithLink";
 import { Disposable } from "@codestream/webview/utils";
-import { isUndefined as _isUndefined } from "lodash";
+import { isEmpty as _isEmpty, isUndefined as _isUndefined } from "lodash";
 
 interface SelectedOption {
 	value: string;
@@ -162,6 +162,7 @@ export const APMLogSearchPanel = (props: {
 	const [currentShowSurroundingIndex, setCurrentShowSurroundingIndex] = useState<
 		number | undefined
 	>(undefined);
+	const [queriedWithNonEmptyString, setQueriedWithNonEmptyString] = useState<boolean>(false);
 	const [displayColumns, setDisplayColumns] = useState<string[]>([]);
 	const [beforeLogs, setBeforeLogs] = useState<LogResult[]>([]);
 	const [afterLogs, setAfterLogs] = useState<LogResult[]>([]);
@@ -378,6 +379,8 @@ export const APMLogSearchPanel = (props: {
 				},
 			});
 
+			setQueriedWithNonEmptyString(!_isEmpty(filterText));
+
 			if (!response) {
 				handleError(
 					"An unexpected error occurred while fetching log information; please contact support."
@@ -539,6 +542,7 @@ export const APMLogSearchPanel = (props: {
 						updateExpandedContent={updateExpandedContent}
 						updateShowSurrounding={updateShowSurrounding}
 						expandedContent={expandedContent}
+						enableShowSurrounding={queriedWithNonEmptyString}
 					/>
 				);
 			});

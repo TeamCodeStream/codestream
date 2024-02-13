@@ -137,6 +137,7 @@ export const APMLogRow = (props: {
 	isShowSurrounding: string;
 	index: number;
 	expandedContent: any;
+	enableShowSurrounding: boolean;
 }) => {
 	const elementRef = useRef(null);
 
@@ -284,7 +285,7 @@ export const APMLogRow = (props: {
 					{isHovered && (
 						<HoverContainer>
 							<ActionContainer>
-								<div style={{ marginRight: "8px" }}>
+								<div>
 									<Icon
 										onClick={handkeClickCopyJson}
 										name="copy"
@@ -294,16 +295,18 @@ export const APMLogRow = (props: {
 										className="clickable"
 									/>
 								</div>
-								<div>
-									<Icon
-										onClick={handleClickShowSurrounding}
-										name="resize-vertical-rounded"
-										style={{ cursor: "pointer" }}
-										title="Show Surrounding"
-										delay={1}
-										className="clickable"
-									/>
-								</div>
+								{props.enableShowSurrounding && (
+									<div style={{ marginLeft: "8px" }}>
+										<Icon
+											onClick={handleClickShowSurrounding}
+											name="resize-vertical-rounded"
+											style={{ cursor: "pointer" }}
+											title="Show Surrounding"
+											delay={1}
+											className="clickable"
+										/>
+									</div>
+								)}
 							</ActionContainer>
 						</HoverContainer>
 					)}
