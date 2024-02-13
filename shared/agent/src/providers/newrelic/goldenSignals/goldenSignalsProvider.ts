@@ -193,30 +193,34 @@ export class GoldenSignalsProvider {
 
 				const errorRatePercentageChange =
 					previousMetrics.errorRate > 0
-						? `${Math.round(
+						? Math.round(
 								((currentMetrics.errorRate - previousMetrics.errorRate) /
 									previousMetrics.errorRate) *
 									100
-						  )}`
+						  )
 						: undefined;
 				const responseTimePercentageChange =
 					previousMetrics.responseTimeMs > 0
-						? `${Math.round(
+						? Math.round(
 								((currentMetrics.responseTimeMs - previousMetrics.responseTimeMs) /
 									previousMetrics.responseTimeMs) *
 									100
-						  )}`
+						  )
 						: undefined;
 
 				return {
 					errorRateData: {
 						percentChange:
-							Number(errorRatePercentageChange) >= 0 ? errorRatePercentageChange : undefined,
+							errorRatePercentageChange && errorRatePercentageChange >= 0
+								? errorRatePercentageChange
+								: undefined,
 						permalinkUrl: deployListUrl,
 					},
 					responseTimeData: {
 						percentChange:
-							Number(responseTimePercentageChange) >= 0 ? responseTimePercentageChange : undefined,
+							responseTimePercentageChange && responseTimePercentageChange >= 0
+								? responseTimePercentageChange
+								: undefined,
 						permalinkUrl: deployListUrl,
 					},
 				};

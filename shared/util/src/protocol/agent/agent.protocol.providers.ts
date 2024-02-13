@@ -2404,11 +2404,11 @@ export interface EntityGoldenMetrics {
 	}[];
 	pillsData?: {
 		errorRateData?: {
-			percentChange: string;
+			percentChange: number;
 			permalinkUrl: string;
 		};
 		responseTimeData?: {
-			percentChange: string;
+			percentChange: number;
 			permalinkUrl: string;
 		};
 	};
