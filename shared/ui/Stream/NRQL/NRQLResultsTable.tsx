@@ -104,7 +104,7 @@ export const NRQLResultsTable = (props: {
 
 	const calculateColumnWidths = (firstRowResults: { [key: string]: string | number }) => {
 		return Object.entries(firstRowResults).map(([key, value]) => {
-			return calculateColumnWidth(value as string); // asserting value as string
+			return calculateColumnWidth(value as string);
 		});
 	};
 
