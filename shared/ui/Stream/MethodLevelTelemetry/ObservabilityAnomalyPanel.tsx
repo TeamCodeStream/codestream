@@ -343,7 +343,9 @@ export const ObservabilityAnomalyPanel = () => {
 			);
 		}
 
-		return <span>{derivedState.currentObservabilityAnomaly.name}</span>;
+		return (
+			<span data-testid={`anomaly-title`}>{derivedState.currentObservabilityAnomaly.name}</span>
+		);
 	};
 
 	return (
@@ -449,7 +451,7 @@ export const ObservabilityAnomalyPanel = () => {
 										</DataRow>
 									)}
 									{derivedState.currentObservabilityAnomalyEntityName && (
-										<DataRow>
+										<DataRow data-testid={`service-label`}>
 											<DataLabel>Service:</DataLabel>
 											<DataValue>{derivedState.currentObservabilityAnomalyEntityName}</DataValue>
 										</DataRow>
@@ -476,8 +478,15 @@ export const ObservabilityAnomalyPanel = () => {
 															key={"chart-" + index}
 															style={{ marginLeft: "0px", marginBottom: "20px" }}
 														>
-															<MetaLabel>{title}</MetaLabel>
-															<div style={{ color: "red" }}>{redHeaderText}</div>
+															<MetaLabel data-testid={`anomaly-transaction-title-index-${index}`}>
+																{title}
+															</MetaLabel>
+															<div
+																data-testid={`anomaly-transaction-redcolor-index-${index}`}
+																style={{ color: "red" }}
+															>
+																{redHeaderText}
+															</div>
 															<ResponsiveContainer width="100%" height={300} debounce={1}>
 																<LineChart
 																	width={500}

@@ -195,6 +195,7 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 													style={{ paddingTop: "2px", paddingLeft: "0px" }}
 													className="subtle"
 													name="anomaly"
+													data-testid={`anomaly-index-${index}`}
 												/>
 											</TransactionIconSpan>
 											<Tooltip title={tooltipContent(anomaly)} placement="topRight" delay={1}>
