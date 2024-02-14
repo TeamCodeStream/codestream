@@ -295,6 +295,13 @@ export function reduceContext(
 			};
 		}
 
+		case ContextActionsType.SetCurrentEntityGuid: {
+			return {
+				...state,
+				currentEntityGuid: action.payload.entityGuid,
+			};
+		}
+
 		case "RESET":
 			return {
 				...initialState,

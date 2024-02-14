@@ -5,7 +5,7 @@ import {
 } from "@codestream/protocols/webview";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import cx from "classnames";
-import React from "react";
+import React, { useCallback } from "react";
 import { WebviewPanels } from "@codestream/protocols/api";
 import { HeadshotName } from "../src/components/HeadshotName";
 import { CodeStreamState } from "../store";
@@ -29,7 +29,7 @@ const sum = (total, num) => total + Math.round(num);
 export function GlobalNav() {
 	const dispatch = useAppDispatch();
 	const derivedState = useAppSelector((state: CodeStreamState) => {
-		const { users, umis, preferences } = state;
+		const { users, umis } = state;
 		const user = users[state.session.userId!];
 		const eligibleJoinCompanies = user?.eligibleJoinCompanies;
 		let inviteCount: number = 0;
@@ -40,7 +40,6 @@ export function GlobalNav() {
 				}
 			});
 		}
-		const currentRepoId = user?.preferences?.currentO11yRepoId;
 
 		return {
 			currentUserId: state.session.userId,
@@ -54,10 +53,7 @@ export function GlobalNav() {
 			currentPullRequestId: state.context.currentPullRequest
 				? state.context.currentPullRequest.id
 				: undefined,
-			currentEntityGuid: currentRepoId
-				? (user?.preferences?.activeO11y?.[currentRepoId] as string)
-				: undefined,
-			entityAccounts: state.context.entityAccounts || [],
+			currentEntityGuid: state.context.currentEntityGuid,
 			eligibleJoinCompanies,
 			inviteCount,
 			isVsCode: state.ide.name === "VSC",
@@ -101,7 +97,7 @@ export function GlobalNav() {
 		setPlusMenuOpen(plusMenuOpen ? undefined : event.target.closest("label"));
 	};
 
-	const launchNrqlEditor = () => {
+	const launchNrqlEditor = useCallback(() => {
 		HostApi.instance.notify(OpenEditorViewNotificationType, {
 			panel: "nrql",
 			title: "NRQL",
@@ -112,9 +108,9 @@ export function GlobalNav() {
 				name: derivedState.ideName,
 			},
 		});
-	};
+	}, [derivedState.currentEntityGuid]);
 
-	const launchLogSearch = () => {
+	const launchLogSearch = useCallback(() => {
 		HostApi.instance.notify(OpenEditorViewNotificationType, {
 			panel: "logs",
 			title: "Logs",
@@ -124,7 +120,7 @@ export function GlobalNav() {
 				name: derivedState.ideName,
 			},
 		});
-	};
+	}, [derivedState.currentEntityGuid]);
 
 	const go = panel => {
 		close();
@@ -327,6 +323,7 @@ export function GlobalNav() {
 		totalUnread,
 		totalMentions,
 		derivedState.composeCodemarkActive,
+		derivedState.currentEntityGuid,
 		currentReviewId,
 		currentCodeErrorId,
 		currentPullRequestId,

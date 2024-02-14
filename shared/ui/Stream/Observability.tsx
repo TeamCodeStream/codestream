@@ -34,7 +34,11 @@ import {
 	ObservabilityLoadingServiceEntity,
 } from "@codestream/webview/Stream/ObservabilityLoading";
 import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
-import { setEntityAccounts, setRefreshAnomalies } from "../store/context/actions";
+import {
+	setCurrentEntityGuid,
+	setEntityAccounts,
+	setRefreshAnomalies,
+} from "../store/context/actions";
 
 import { HealthIcon } from "@codestream/webview/src/components/HealthIcon";
 import {
@@ -372,6 +376,7 @@ export const Observability = React.memo((props: Props) => {
 	};
 
 	function setExpandedEntityUserPref(repoId: string, entityGuid: string | undefined) {
+		dispatch(setCurrentEntityGuid(entityGuid!));
 		dispatch(setUserPreference({ prefPath: ["activeO11y", repoId], value: entityGuid }));
 	}
 

@@ -146,6 +146,9 @@ export const setCurrentMethodLevelTelemetry = (data: any) =>
 export const setEntityAccounts = (entityAccounts: EntityAccount[]) =>
 	action(ContextActionsType.SetEntityAccounts, { entityAccounts });
 
+export const setCurrentEntityGuid = (entityGuid: string) =>
+	action(ContextActionsType.SetCurrentEntityGuid, { entityGuid });
+
 export const setCurrentObservabilityAnomaly = (
 	anomaly?: ObservabilityAnomaly,
 	entityGuid?: string,

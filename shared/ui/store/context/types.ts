@@ -66,6 +66,7 @@ export enum ContextActionsType {
 	SetEntityAccounts = "@context/SetEntityAccounts",
 	SetCurrentTransactionSpan = "@context/SetCurrentTransactionSpan",
 	SetCurrentAPMLoggingSearchContext = "@context/SetCurrentObservabilityLogSearchContext",
+	SetCurrentEntityGuid = "@context/SetCurrentEntityGuid",
 }
 
 /**
@@ -147,6 +148,8 @@ export interface ContextState extends WebviewContext {
 	entityAccounts?: EntityAccount[];
 
 	selectedRegion?: string;
+
+	currentEntityGuid?: string;
 }
 
 export type ChatProviderAccess = "strict" | "permissive";
