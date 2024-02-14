@@ -308,9 +308,7 @@ export function CodeErrorNav(props: Props) {
 		}
 
 		setIsLoading(true);
-		dispatch(fetchErrorGroup(derivedState.codeError)).then(_ => {
-			// setIsLoading(false);
-		});
+		dispatch(fetchErrorGroup(derivedState.codeError)).then(_ => {});
 	}, [derivedState.codeError, derivedState.isConnectedToNewRelic, errorGroup]);
 
 	const onConnected = async (
@@ -460,8 +458,6 @@ export function CodeErrorNav(props: Props) {
 					}
 				}
 
-				let repoName;
-
 				if (targetRemote) {
 					// we have a remote, try to find a repo.
 					const normalizationResponse = (await HostApi.instance.send(NormalizeUrlRequestType, {
@@ -511,7 +507,6 @@ export function CodeErrorNav(props: Props) {
 						return;
 					}
 					repoId = reposResponse.repos[0].id!;
-					repoName = reposResponse.repos[0].name!;
 				}
 				if (!repoId) {
 					// no targetRemote, try to get a repo from existing stackTrace
