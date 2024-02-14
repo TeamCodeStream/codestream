@@ -37,6 +37,11 @@ export const NRQLResultsTable = (props: {
 		const rowArray = Object.values(gridData.resultsWithHeaders[rowIndex]);
 		const value = rowArray[columnIndex];
 
+		//@TODO - for later use, columnName will be "timestamp" or "name", etc.
+		// const columnNames = Object.keys(gridData.resultsWithHeaders[rowIndex]);
+		// const columnName = columnNames[columnIndex];
+		// console.warn("columnName", columnName);
+
 		return (
 			<div
 				style={{
@@ -75,10 +80,9 @@ export const NRQLResultsTable = (props: {
 
 	const calculateRowHeights = rowCalcData => {
 		return rowCalcData.map(([index, longestLength, columnWidthValue]) => {
-			let lengthOfString = longestLength * 11;
+			let lengthOfString = longestLength * 8;
 			const numLines = Math.ceil(lengthOfString / columnWidthValue);
-			//@TODO, make this value dynamic
-			const lineHeight = 22;
+			const lineHeight = 26;
 			const totalHeight = numLines * lineHeight;
 			return totalHeight;
 		});
