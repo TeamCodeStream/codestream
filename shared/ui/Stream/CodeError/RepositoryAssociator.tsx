@@ -56,6 +56,7 @@ export function RepositoryAssociator(props: {
 	onCancelled: Function;
 	isLoadingCallback?: Function;
 	isLoadingParent?: boolean;
+	noSingleItemDropdownSkip?: boolean;
 }) {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const codeError = state.context.currentCodeErrorId
@@ -127,7 +128,7 @@ export function RepositoryAssociator(props: {
 					// instead of "repo not found" error
 					filteredResults = results;
 				}
-				if (filteredResults.length === 1) {
+				if (filteredResults.length === 1 && !props.noSingleItemDropdownSkip) {
 					setSelected(filteredResults[0]);
 					setSkipRender(true);
 					//no dropdown required, just go to error and auto select the single result

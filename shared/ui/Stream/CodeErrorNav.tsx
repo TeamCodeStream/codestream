@@ -453,7 +453,7 @@ export function CodeErrorNav(props: Props) {
 						const entityName = codeError?.objectInfo?.entityName || "";
 						setRepoAssociationError({
 							title: "Which Repository?",
-							description: `Select the repository that the ${entityName} service is associated with so that we can take you to the code. If the repository doesn't appear in the list, open it in your IDE."`,
+							description: `Select the repository that the ${entityName} service is associated with so that we can take you to the code. If the repository doesn't appear in the list, open it in your IDE.`,
 						});
 
 						return;
@@ -825,6 +825,7 @@ export function CodeErrorNav(props: Props) {
 				}}
 				isLoadingCallback={setIsLoading}
 				isLoadingParent={isLoading}
+				noSingleItemDropdownSkip={false}
 				onSubmit={(r, skipTracking: boolean = false) => {
 					setIsLoading(true);
 					return new Promise((resolve, reject) => {
@@ -853,6 +854,7 @@ export function CodeErrorNav(props: Props) {
 				}}
 				isLoadingCallback={setIsLoading}
 				isLoadingParent={isLoading}
+				noSingleItemDropdownSkip={true}
 				onSubmit={r => {
 					return new Promise((resolve, reject) => {
 						const payload = {
