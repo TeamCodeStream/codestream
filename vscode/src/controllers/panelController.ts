@@ -9,7 +9,6 @@ import { CodeStreamSession, SessionStatus, SessionStatusChangedEvent } from "../
 import { Logger } from "../logger";
 import { CodeStreamWebviewPanel } from "webviews/webviewPanel";
 import { EditorController } from "./editorController";
-import { randomUUID } from "crypto";
 
 interface PanelInitialization {
 	panel: CodeStreamWebviewPanel;
@@ -57,8 +56,7 @@ export class PanelController implements Disposable {
 			editorKey = `${e.panel}-${e.entityGuid}`;
 
 			if (e.query) {
-				// hack until I can figure out how to funnel a search term into an already open logs window.
-				editorKey = `${editorKey}-${randomUUID()}`;
+				editorKey = `${editorKey}-SEARCH`;
 			}
 		}
 
