@@ -6,7 +6,11 @@ import {
 	ResultsTypeGuess,
 	isNRErrorResponse,
 } from "@codestream/protocols/agent";
-import { IdeNames, OpenEditorViewNotificationType } from "@codestream/protocols/webview";
+import {
+	BrowserEngines,
+	IdeNames,
+	OpenEditorViewNotificationType,
+} from "@codestream/protocols/webview";
 import { parseId } from "@codestream/webview/utilities/newRelic";
 import { Disposable } from "@codestream/webview/utils";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -127,9 +131,13 @@ export const NRQLPanel = (props: {
 	entryPoint: string;
 	entityGuid?: string;
 	query?: string;
-	ide?: { name?: IdeNames };
+	ide?: { name?: IdeNames; browserEngine?: BrowserEngines };
 }) => {
-	const supports = { export: props.ide?.name === "VSC" };
+	const supports = {
+		export: props.ide?.name === "VSC",
+		// default to true! currently JsBrowser works!
+		enhancedEditor: true, // !props.ide || props?.ide?.browserEngine !== "JxBrowser",
+	};
 
 	const initialAccountId = props.accountId
 		? props.accountId
@@ -406,6 +414,7 @@ export const NRQLPanel = (props: {
 									setUserQuery(e.value!);
 									executeNRQL(accountId, e.value!);
 								}}
+								useEnhancedEditor={supports.enhancedEditor}
 								ref={nrqlEditorRef}
 							/>
 						</ResizeEditorContainer>

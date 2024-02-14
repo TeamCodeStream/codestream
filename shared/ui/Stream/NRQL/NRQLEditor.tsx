@@ -1,14 +1,13 @@
+import { isDarkTheme } from "@codestream/webview/src/themes";
 import { HostApi } from "@codestream/webview/webview-api";
 import { Monaco } from "@monaco-editor/react";
-import React, { useContext, useRef } from "react";
+import type monaco from "monaco-editor";
+import React, { useContext, useRef, useState } from "react";
+import { ThemeContext } from "styled-components";
 import {
 	GetNRQLCompletionItemsType,
 	GetNRQLConstantsRequestType,
 } from "../../../util/src/protocol/agent/agent.protocol.providers";
-import { isDarkTheme } from "@codestream/webview/src/themes";
-import type monaco from "monaco-editor";
-import { ThemeContext } from "styled-components";
-// transient dependency
 import { MonacoEditor } from "./MonacoEditor";
 
 export const NRQLEditor = React.forwardRef(
@@ -21,20 +20,54 @@ export const NRQLEditor = React.forwardRef(
 			onSubmit?: (e: { value: string | undefined }) => void;
 			setValue?: (e: { value: string | undefined }) => void;
 			isReadonly?: boolean;
+			// if false, editor will fallback to a simple <textarea>, true & undefined are the same
+			useEnhancedEditor?: boolean;
 		},
 		ref
 	) => {
+		let monacoRef = useRef<any>(null);
+		let editorRef = useRef<any>(null);
+		const [textAreaValue, setTextAreaValue] = useState<string>(props.defaultValue || "");
 		// Expose the ref and various functions to the parent component
 		React.useImperativeHandle(ref, () => ({
 			setValue: value => {
-				editorRef.current && editorRef.current.setValue(value);
+				if (editorRef.current) {
+					editorRef.current.setValue(value);
+				} else {
+					setTextAreaValue(value);
+				}
 			},
 		}));
 
+		if (props.useEnhancedEditor === false) {
+			return (
+				<textarea
+					style={{ height: "120px", width: "100%" }}
+					disabled={props.isReadonly}
+					className={props.className}
+					value={textAreaValue}
+					onKeyDown={
+						props.onSubmit
+							? event => {
+									if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+										props.onSubmit && props.onSubmit({ value: textAreaValue });
+									}
+							  }
+							: undefined
+					}
+					onChange={e => {
+						const value = e.target.value;
+						setTextAreaValue(value);
+						if (props.onChange) {
+							props.onChange({ value: value });
+						}
+					}}
+				></textarea>
+			);
+		}
+
 		const themeContext = useContext(ThemeContext);
 		const theme = isDarkTheme(themeContext) ? "vs-dark" : "light";
-		let monacoRef = useRef<any>(null);
-		let editorRef = useRef<any>(null);
 
 		const handleEditorDidMount = async (
 			editor: monaco.editor.IStandaloneCodeEditor,

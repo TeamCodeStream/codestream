@@ -29,6 +29,7 @@ export interface Collaborator {
 }
 
 export type IdeNames = "VSC" | "VS" | "JETBRAINS";
+export type BrowserEngines = "JCEF" | "JxBrowser" | "DotNetBrowser";
 
 export interface BootstrapInHostResponse {
 	capabilities: Capabilities;
@@ -330,10 +331,11 @@ export interface OpenEditorViewNotification {
 		| "nrql_file"
 		// other
 		| "notification"
+		| "golden_metrics"
 		| "profile";
 	ide: {
-		name?: "VSC" | "VS" | "JETBRAINS";
-		browserEngine?: "JCEF" | "JxBrowser" | "DotNetBrowser" | undefined;
+		name?: IdeNames;
+		browserEngine?: BrowserEngines;
 	};
 
 	accountId?: number;
