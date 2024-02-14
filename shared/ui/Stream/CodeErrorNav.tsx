@@ -441,7 +441,6 @@ export function CodeErrorNav(props: Props) {
 					targetRemote = errorGroupResult?.errorGroup?.entity?.relatedRepos[0]?.url!;
 				} else if (
 					// Attempt to set remote from codeError object as long as we know there is a repo associated
-
 					codeError?.objectInfo?.remote &&
 					!_isEmpty(derivedState.currentCodeErrorData.relatedRepos)
 				) {
@@ -451,9 +450,10 @@ export function CodeErrorNav(props: Props) {
 				// Kick off repo association screen
 				if (!targetRemote) {
 					if (derivedState.isConnectedToNewRelic) {
+						const entityName = codeError?.objectInfo?.entityName || "";
 						setRepoAssociationError({
 							title: "Which Repository?",
-							description: `Select the repository that this error is associated with so that we can take you to the code. If the repository doesn't appear in the list, open it in your IDE.`,
+							description: `Select the repository that the ${entityName} service is associated with so that we can take you to the code. If the repository doesn't appear in the list, open it in your IDE."`,
 						});
 
 						return;
@@ -520,56 +520,6 @@ export function CodeErrorNav(props: Props) {
 							? codeError.stackTraces[0].repoId
 							: "";
 				}
-
-				// eric do assign here if entity has no repo association yet.
-				// I think below will work, but have to know if entity has associated repo.
-
-				// const payload = {
-				// 	url: targetRemote, //r.remote,
-				// 	name: repoName, //r.name,
-				// 	entityId: pendingEntityId,
-				// 	errorGroupGuid: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
-				// 	parseableAccountId: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
-				// };
-
-				// dispatch(api("assignRepository", payload)).then(_ => {
-				// 	setIsLoading(true);
-				// 	if (_?.directives) {
-				// 		console.log("assignRepository", {
-				// 			directives: _?.directives,
-				// 		});
-				// 		setRepoAssociationError(undefined);
-
-				// 		let remoteForOnConnected;
-				// 		let repoFromAssignDirective = _.directives.find(
-				// 			_ => _.type === "assignRepository"
-				// 		).data;
-				// 		if (repoFromAssignDirective.repo?.relatedRepos?.length > 0) {
-				// 			remoteForOnConnected = repoFromAssignDirective.repo?.relatedRepos[0]?.url;
-				// 		} else {
-				// 			remoteForOnConnected = repoFromAssignDirective?.repo?.urls[0];
-				// 		}
-
-				// 		onConnected(undefined, remoteForOnConnected);
-				// 	} else {
-				// 		console.log("Could not find directive", {
-				// 			payload: payload,
-				// 		});
-				// 		const title = "Failed to associate repository";
-				// 		const description = _?.error;
-				// 		setError({
-				// 			title,
-				// 			description,
-				// 		});
-				// 		logError(`${title}, description: ${description}`, {
-				// 			url: targetRemote,
-				// 			name: repoName,
-				// 			entityId: pendingEntityId,
-				// 			errorGroupGuid: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
-				// 			parseableAccountId: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
-				// 		});
-				// 	}
-				// });
 
 				// YUCK
 				const stack =
