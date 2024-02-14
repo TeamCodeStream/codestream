@@ -11,7 +11,7 @@ import {
 	LogResult,
 	TelemetryData,
 } from "@codestream/protocols/agent";
-import { IdeNames } from "@codestream/protocols/webview";
+import { IdeNames, OpenEditorViewNotificationType } from "@codestream/protocols/webview";
 import { parseId } from "@codestream/webview/utilities/newRelic";
 import React, { useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
@@ -27,6 +27,7 @@ import { Link } from "../Link";
 import { TableWindow } from "../TableWindow";
 import { APMLogRow } from "./APMLogRow";
 import { PanelHeaderTitleWithLink } from "../PanelHeaderTitleWithLink";
+import { Disposable } from "@codestream/webview/utils";
 interface SelectedOption {
 	value: string;
 	label: string;
@@ -164,9 +165,21 @@ export const APMLogSearchPanel = (props: {
 	const [logError, setLogError] = useState<string | undefined>("");
 	const { height, ref } = useResizeDetector();
 	const trimmedListHeight: number = (height ?? 0) - (height ?? 0) * 0.08;
+	const disposables: Disposable[] = [];
 
 	useDidMount(() => {
 		setIsInitializing(true);
+
+		disposables.push(
+			// only utilized for code searches so we can re-use search windows
+			HostApi.instance.on(OpenEditorViewNotificationType, e => {
+				if (e.query && e.query !== query) {
+					setQuery(e.query!);
+					fetchLogs(e.entityGuid, e.query);
+				}
+			})
+		);
+
 		const defaultOption: SelectedOption = {
 			value: "30 MINUTES AGO",
 			label: "30 Minutes Ago",
@@ -226,6 +239,10 @@ export const APMLogSearchPanel = (props: {
 			.finally(() => {
 				setIsInitializing(false);
 			});
+
+		return () => {
+			disposables && disposables.forEach(_ => _.dispose());
+		};
 	});
 
 	const handleSelectDropdownOption = entityAccount => {
