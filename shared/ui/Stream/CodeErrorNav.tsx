@@ -309,7 +309,7 @@ export function CodeErrorNav(props: Props) {
 
 		setIsLoading(true);
 		dispatch(fetchErrorGroup(derivedState.codeError)).then(_ => {
-			setIsLoading(false);
+			// setIsLoading(false);
 		});
 	}, [derivedState.codeError, derivedState.isConnectedToNewRelic, errorGroup]);
 
