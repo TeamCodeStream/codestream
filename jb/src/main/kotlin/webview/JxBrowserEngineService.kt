@@ -78,6 +78,13 @@ class JxBrowserEngineService : Disposable {
                         if (it.urlRequest().resourceType() == ResourceType.IMAGE
                             || it.urlRequest().url().startsWith("file://")
                             || it.urlRequest().url().contains("/dns-query")
+                            || it.urlRequest().url().equals("https://cdn.jsdelivr.net/npm/monaco-editor@0.43.0/min/vs/loader.js")
+                            || it.urlRequest().url().equals("https://cdn.jsdelivr.net/npm/monaco-editor@0.43.0/min/vs/editor/editor.main.js")
+                            || it.urlRequest().url().equals("https://cdn.jsdelivr.net/npm/monaco-editor@0.43.0/min/vs/editor/editor.main.css")
+                            || it.urlRequest().url().equals("https://cdn.jsdelivr.net/npm/monaco-editor@0.43.0/min/vs/editor/editor.main.nls.js")
+                            || it.urlRequest().url().equals("https://cdn.jsdelivr.net/npm/monaco-editor@0.43.0/min/vs/base/worker/workerMain.js")
+                            || it.urlRequest().url().equals("https://cdn.jsdelivr.net/npm/monaco-editor@0.43.0/min/vs/base/common/worker/simpleWorker.nls.js")
+                            || it.urlRequest().url().equals("https://cdn.jsdelivr.net/npm/monaco-editor@0.43.0/min/vs/base/browser/ui/codicons/codicon/codicon.ttf")
                         ) {
                             BeforeUrlRequestCallback.Response.proceed()
                         } else {
