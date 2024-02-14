@@ -59,6 +59,7 @@ import Icon from "./Icon";
 import { ClearModal, ComposeArea, Step, Subtext, Tip } from "./ReviewNav";
 import ScrollBox from "./ScrollBox";
 import { WarningBox } from "./WarningBox";
+import { isEmpty as _isEmpty } from "lodash";
 
 const NavHeader = styled.div`
 	// flex-grow: 0;
@@ -435,11 +436,19 @@ export function CodeErrorNav(props: Props) {
 					return;
 				}
 
+				// Set target remote if entity is associated with one repo
 				if (errorGroupResult?.errorGroup?.entity?.relatedRepos?.length === 1 && !multipleRepos) {
 					targetRemote = errorGroupResult?.errorGroup?.entity?.relatedRepos[0]?.url!;
-				} else if (codeError?.objectInfo?.remote) {
+				} else if (
+					// Attempt to set remote from codeError object as long as we know there is a repo associated
+
+					codeError?.objectInfo?.remote &&
+					!_isEmpty(derivedState.currentCodeErrorData.relatedRepos)
+				) {
 					targetRemote = codeError?.objectInfo?.remote;
 				}
+
+				// Kick off repo association screen
 				if (!targetRemote) {
 					if (derivedState.isConnectedToNewRelic) {
 						setRepoAssociationError({
@@ -450,6 +459,8 @@ export function CodeErrorNav(props: Props) {
 						return;
 					}
 				}
+
+				let repoName;
 
 				if (targetRemote) {
 					// we have a remote, try to find a repo.
@@ -500,6 +511,7 @@ export function CodeErrorNav(props: Props) {
 						return;
 					}
 					repoId = reposResponse.repos[0].id!;
+					repoName = reposResponse.repos[0].name!;
 				}
 				if (!repoId) {
 					// no targetRemote, try to get a repo from existing stackTrace
@@ -508,6 +520,57 @@ export function CodeErrorNav(props: Props) {
 							? codeError.stackTraces[0].repoId
 							: "";
 				}
+
+				// eric do assign here if entity has no repo association yet.
+				// I think below will work, but have to know if entity has associated repo.
+
+				// const payload = {
+				// 	url: targetRemote, //r.remote,
+				// 	name: repoName, //r.name,
+				// 	entityId: pendingEntityId,
+				// 	errorGroupGuid: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
+				// 	parseableAccountId: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
+				// };
+
+				// dispatch(api("assignRepository", payload)).then(_ => {
+				// 	setIsLoading(true);
+				// 	if (_?.directives) {
+				// 		console.log("assignRepository", {
+				// 			directives: _?.directives,
+				// 		});
+				// 		setRepoAssociationError(undefined);
+
+				// 		let remoteForOnConnected;
+				// 		let repoFromAssignDirective = _.directives.find(
+				// 			_ => _.type === "assignRepository"
+				// 		).data;
+				// 		if (repoFromAssignDirective.repo?.relatedRepos?.length > 0) {
+				// 			remoteForOnConnected = repoFromAssignDirective.repo?.relatedRepos[0]?.url;
+				// 		} else {
+				// 			remoteForOnConnected = repoFromAssignDirective?.repo?.urls[0];
+				// 		}
+
+				// 		onConnected(undefined, remoteForOnConnected);
+				// 	} else {
+				// 		console.log("Could not find directive", {
+				// 			payload: payload,
+				// 		});
+				// 		const title = "Failed to associate repository";
+				// 		const description = _?.error;
+				// 		setError({
+				// 			title,
+				// 			description,
+				// 		});
+				// 		logError(`${title}, description: ${description}`, {
+				// 			url: targetRemote,
+				// 			name: repoName,
+				// 			entityId: pendingEntityId,
+				// 			errorGroupGuid: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
+				// 			parseableAccountId: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
+				// 		});
+				// 	}
+				// });
+
 				// YUCK
 				const stack =
 					errorGroupResult?.errorGroup?.errorTrace?.stackTrace?.map(_ => _.formatted) ||
