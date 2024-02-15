@@ -125,7 +125,7 @@ const Root = connect(mapStateToProps)(props => {
 		return (
 			<RoadBlock title="Session Expired">
 				<div>
-					<p>You CodeStream session has expired. Please login again.</p>
+					<p>Your CodeStream session has expired. Please login again.</p>
 					<Button
 						onClick={e => {
 							e.preventDefault();
