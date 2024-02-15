@@ -2456,7 +2456,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		this._refreshNRTokenPromise = new Promise((resolve, reject) => {
 			const url = "/no-auth/provider-refresh/newrelic";
 			this.put<{ refreshToken: string }, CSNewRelicProviderInfo>(url, {
-				refreshToken: refreshToken,
+				refreshToken: refreshToken /*+ "x"*/, // uncomment to test roadblock
 			})
 				.then(response => {
 					if (response.accessToken) {

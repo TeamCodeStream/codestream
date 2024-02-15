@@ -283,6 +283,7 @@ export class NewRelicGraphqlClient implements Disposable {
 		let triedRefresh = false;
 		while (!resp) {
 			try {
+				//throw new Error("oops"); // uncomment to test roadblock
 				resp = await client.request<T>(query, variables);
 				// fetchCore will have retried 3 times by now
 			} catch (ex) {
