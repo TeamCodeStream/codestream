@@ -1366,9 +1366,9 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 							try {
 								// console.debug(`===--- symbol useEffect calling jumpToStackLine`);
 								const stackLine = stackInfo.lines[jumpLocation];
-								if (stackLine.fileRelativePath && stackInfo.repoId) {
-									console.log("setCurrentNrAiFile", stackLine.fileRelativePath);
-									props.setCurrentNrAiFile(stackLine.fileRelativePath);
+								if (stackLine.fileFullPath && stackInfo.repoId) {
+									console.log("setCurrentNrAiFile", stackLine.fileFullPath);
+									props.setCurrentNrAiFile(stackLine.fileFullPath);
 									// Open actual file for NRAI - no ref param
 									dispatch(jumpToStackLine(jumpLocation, stackLine, stackInfo.repoId, undefined));
 								} else {

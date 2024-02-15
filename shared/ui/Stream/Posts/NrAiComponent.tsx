@@ -15,6 +15,7 @@ import { NrAiCodeBlockLoading, NrAiLoading } from "./NrAiLoading";
 import { DiffEditor } from "@monaco-editor/react";
 import { isDarkTheme } from "@codestream/webview/src/themes";
 import { HostApi } from "@codestream/webview/webview-api";
+import { URI } from "vscode-uri";
 
 export const DiffSection = styled.div`
 	margin: 10px 0;
@@ -48,7 +49,6 @@ function Markdown(props: { text: string }) {
 export function NrAiComponent(props: NrAiComponentProps) {
 	// console.debug("NrAiComponent", props);
 	const dispatch = useAppDispatch();
-	const textEditorUri = useAppSelector(state => state.editorContext.textEditorUri);
 	const isGrokLoading = useAppSelector(isGrokStreamLoading);
 	const hasIntro = useMemo(
 		() => props.post.parts?.intro && props.post.parts.intro.length > 0,
@@ -94,10 +94,11 @@ export function NrAiComponent(props: NrAiComponentProps) {
 	}, [props.post.parts?.codeFix]);
 
 	const applyFix = async () => {
-		if (!textEditorUri || !props.functionToEdit?.symbol || !normalizedCodeFix) {
-			console.error("No textEditorUri symbol or codeBlock");
+		if (!props.file || !props.functionToEdit?.symbol || !normalizedCodeFix) {
+			console.error("No file symbol or codeBlock");
 			return;
 		}
+		const targetUri = URI.file(props.file).toString(true);
 		HostApi.instance.track("codestream/errors/grok_fix applied", {
 			entity_guid: props.errorGroup.entityGuid,
 			account_id: props.errorGroup.accountId,
@@ -111,7 +112,7 @@ export function NrAiComponent(props: NrAiComponentProps) {
 			const normalizedCodeFixWithoutTrailingLinefeed = normalizedCodeFix.replace(/\r?\n$/, "");
 			await dispatch(
 				replaceSymbol(
-					textEditorUri,
+					targetUri,
 					props.functionToEdit.symbol,
 					normalizedCodeFixWithoutTrailingLinefeed,
 					props.functionToEdit.namespace
