@@ -424,12 +424,13 @@ export function CodeErrorNav(props: Props) {
 				}
 
 				targetRemote = newRemote || remote;
+				const entityName =
+					codeError?.objectInfo?.entityName || errorGroup?.entityName || "selected";
+
 				if (multipleRepos && !targetRemote && derivedState.isConnectedToNewRelic) {
 					setMultiRepoDetectedError({
 						title: "Select a Repository",
-						description: `The ${
-							errorGroup ? errorGroup.entityName + " " : "selected "
-						}stack trace is associated with multiple repositories. Please select the one required for investigating this error.`,
+						description: `The ${entityName} service is associated with multiple repositories. Please select one to continue.`,
 					});
 					return;
 				}
@@ -448,7 +449,6 @@ export function CodeErrorNav(props: Props) {
 				// Kick off repo association screen
 				if (!targetRemote) {
 					if (derivedState.isConnectedToNewRelic) {
-						const entityName = codeError?.objectInfo?.entityName || "";
 						setRepoAssociationError({
 							title: "Which Repository?",
 							description: `Select the repository that the ${entityName} service is associated with so that we can take you to the code. If the repository doesn't appear in the list, open it in your IDE.`,
