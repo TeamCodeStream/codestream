@@ -7,7 +7,6 @@ import {
 	GetEntityCountRequestType,
 	GetObservabilityAnomaliesRequestType,
 	GetObservabilityErrorAssignmentsRequestType,
-	GetObservabilityErrorsRequestType,
 	GetObservabilityReposRequestType,
 	GetObservabilityReposResponse,
 	GetServiceLevelObjectivesRequestType,
@@ -49,7 +48,7 @@ import {
 } from "@codestream/protocols/webview";
 import { SecurityIssuesWrapper } from "@codestream/webview/Stream/SecurityIssuesWrapper";
 import { ObservabilityServiceLevelObjectives } from "@codestream/webview/Stream/ObservabilityServiceLevelObjectives";
-import { WebviewPanels } from "@codestream/protocols/api";
+import { WebviewPanels, CLMSettings, DEFAULT_CLM_SETTINGS } from "@codestream/protocols/api";
 import { Button } from "../src/components/Button";
 import {
 	NoContent,
@@ -86,12 +85,12 @@ import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
 import { WarningBox } from "./WarningBox";
 import { ObservabilityAnomaliesWrapper } from "@codestream/webview/Stream/ObservabilityAnomaliesWrapper";
-import { CLMSettings, DEFAULT_CLM_SETTINGS } from "@codestream/protocols/api";
 import { throwIfError } from "@codestream/webview/store/common";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { ObservabilityAlertViolations } from "./ObservabilityAlertViolations";
 import { parseId } from "../utilities/newRelic";
 import { bootstrapNrCapabilities } from "../store/nrCapabilities/thunks";
+import { doGetObservabilityErrors } from "@codestream/webview/store/codeErrors/thunks";
 
 interface Props {
 	paneState: PaneState;
@@ -175,6 +174,7 @@ const SubtleRight = styled.time`
 	color: var(--text-color-subtle);
 	font-weight: normal;
 	padding-left: 5px;
+
 	&.no-padding {
 		padding-left: 0;
 	}
@@ -431,10 +431,13 @@ export const Observability = React.memo((props: Props) => {
 		if (currentRepoId) {
 			setLoadingObservabilityErrors(true);
 			try {
-				const response = await HostApi.instance.send(GetObservabilityErrorsRequestType, {
-					filters: buildFilters([currentRepoId]),
-					timeWindow: derivedState.recentErrorsTimeWindow,
-				});
+				console.log("**** doGetObservabilityErrors");
+				const response = await dispatch(
+					doGetObservabilityErrors({
+						filters: buildFilters([currentRepoId]),
+						timeWindow: derivedState.recentErrorsTimeWindow,
+					})
+				).unwrap();
 
 				if (isNRErrorResponse(response.error)) {
 					setObservabilityErrorsError(response.error.error.message ?? response.error.error.type);
@@ -757,10 +760,13 @@ export const Observability = React.memo((props: Props) => {
 		setLoadingPane(expandedEntity);
 
 		try {
-			const response = await HostApi.instance.send(GetObservabilityErrorsRequestType, {
-				filters: [{ repoId: repoId, entityGuid: entityGuid }],
-				timeWindow: derivedState.recentErrorsTimeWindow,
-			});
+			console.log("*** getObservabilityErrors2");
+			const response = await dispatch(
+				doGetObservabilityErrors({
+					filters: [{ repoId: repoId, entityGuid: entityGuid }],
+					timeWindow: derivedState.recentErrorsTimeWindow,
+				})
+			).unwrap();
 			if (isNRErrorResponse(response.error)) {
 				setObservabilityErrorsError(response.error.error.message ?? response.error.error.type);
 			} else {

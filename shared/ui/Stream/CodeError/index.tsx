@@ -1020,7 +1020,7 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 				key: "refresh",
 				action: async () => {
 					setIsLoading(true);
-					await dispatch(fetchErrorGroup(props.codeError));
+					await dispatch(fetchErrorGroup({ codeError: props.codeError }));
 					setIsLoading(false);
 				},
 			});
@@ -1303,7 +1303,12 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 		if (stackInfo && stackInfo.lines[lineIndex] && stackInfo.lines[lineIndex].line !== undefined) {
 			setCurrentSelectedLineIndex(lineIndex);
 			dispatch(
-				jumpToStackLine(lineIndex, stackInfo.lines[lineIndex], stackInfo.repoId!, stackInfo.sha)
+				jumpToStackLine({
+					lineIndex,
+					stackLine: stackInfo.lines[lineIndex],
+					repoId: stackInfo.repoId!,
+					ref: stackInfo.sha,
+				})
 			);
 		}
 	};
@@ -1356,7 +1361,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 							// TODO handle the case where the code has changed since the error was created - can't use streaming patch from openai
 							// TODO or store diff / startLineNo in the codeError?
 							setMethodCopyState("IN_PROGRESS");
-							await dispatch(copySymbolFromIde(line, stackInfo.repoId, undefined));
+							await dispatch(copySymbolFromIde({ stackLine: line, repoId: stackInfo.repoId }));
 						} catch (ex) {
 							console.warn("symbol useEffect copySymbolFromIde failed", ex);
 							setMethodCopyState("FAILED"); // setFunctionToEditFailed would have been set in preceeding copySymbolFromIde
@@ -1370,7 +1375,13 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 									console.log("setCurrentNrAiFile", stackLine.fileFullPath);
 									props.setCurrentNrAiFile(stackLine.fileFullPath);
 									// Open actual file for NRAI - no ref param
-									dispatch(jumpToStackLine(jumpLocation, stackLine, stackInfo.repoId, undefined));
+									dispatch(
+										jumpToStackLine({
+											lineIndex: jumpLocation,
+											stackLine,
+											repoId: stackInfo.repoId,
+										})
+									);
 								} else {
 									console.warn(
 										"nrai jumpToStackLine missing fileRelativePath, or repoId",

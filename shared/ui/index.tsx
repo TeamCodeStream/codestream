@@ -681,16 +681,20 @@ function listenForEvents(store) {
 						)) as GetObservabilityErrorGroupMetadataResponse;
 
 						store.dispatch(
-							openErrorGroup(definedQuery.query.errorGroupGuid, definedQuery.query.occurrenceId, {
-								...definedQuery.query,
-								// cache the sessionStart here in case the IDE is restarted
-								sessionStart: state.context.sessionStart,
-								relatedRepos: response?.relatedRepos,
-								pendingEntityId: definedQuery.query.entityId,
-								pendingErrorGroupGuid: definedQuery.query.errorGroupGuid,
-								openType: "Open in IDE Flow",
-								environment: definedQuery.query.env,
-								stackSourceMap: response?.stackSourceMap,
+							openErrorGroup({
+								errorGroupGuid: definedQuery.query.errorGroupGuid,
+								occurrenceId: definedQuery.query.occurrenceId,
+								data: {
+									...definedQuery.query,
+									// cache the sessionStart here in case the IDE is restarted
+									sessionStart: state.context.sessionStart,
+									relatedRepos: response?.relatedRepos,
+									pendingEntityId: definedQuery.query.entityId,
+									pendingErrorGroupGuid: definedQuery.query.errorGroupGuid,
+									openType: "Open in IDE Flow",
+									environment: definedQuery.query.env,
+									stackSourceMap: response?.stackSourceMap,
+								},
 							})
 						);
 						break;

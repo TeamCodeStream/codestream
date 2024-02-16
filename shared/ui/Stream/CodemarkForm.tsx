@@ -21,10 +21,11 @@ import {
 	CSStream,
 	CSUser,
 	StreamType,
+	WebviewPanels,
 } from "@codestream/protocols/api";
 import cx from "classnames";
 import { prettyPrintOne } from "code-prettify";
-import * as paths from "path-browserify";
+import paths from "path-browserify";
 import React, { SyntheticEvent } from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
@@ -37,7 +38,6 @@ import {
 	EditorHighlightRangeRequestType,
 	EditorSelectRangeRequestType,
 } from "@codestream/protocols/webview";
-import { WebviewPanels } from "@codestream/protocols/api";
 import { Checkbox } from "../src/components/Checkbox";
 import { CSText } from "../src/components/CSText";
 import { PanelHeader } from "../src/components/PanelHeader";

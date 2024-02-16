@@ -111,12 +111,12 @@ export function NrAiComponent(props: NrAiComponentProps) {
 			// remove trailing linefeed on normalizedCodeFix
 			const normalizedCodeFixWithoutTrailingLinefeed = normalizedCodeFix.replace(/\r?\n$/, "");
 			await dispatch(
-				replaceSymbol(
-					targetUri,
-					props.functionToEdit.symbol,
-					normalizedCodeFixWithoutTrailingLinefeed,
-					props.functionToEdit.namespace
-				)
+				replaceSymbol({
+					uri: targetUri,
+					symbol: props.functionToEdit.symbol,
+					codeBlock: normalizedCodeFixWithoutTrailingLinefeed,
+					namespace: props.functionToEdit.namespace,
+				})
 			);
 		} catch (e) {
 			console.error("Error applying fix", e);

@@ -14,13 +14,13 @@ import { CSCodeError, CSStackTraceInfo } from "@codestream/protocols/api";
 
 import {
 	addCodeErrors,
-	bootstrapCodeErrors,
 	fetchCodeError,
 	PENDING_CODE_ERROR_ID_PREFIX,
 	resetNrAi,
 } from "@codestream/webview/store/codeErrors/actions";
 import {
 	api,
+	bootstrapCodeErrors,
 	fetchErrorGroup,
 	openErrorGroup,
 	resolveStackTrace,
@@ -308,7 +308,7 @@ export function CodeErrorNav(props: Props) {
 		}
 
 		setIsLoading(true);
-		dispatch(fetchErrorGroup(derivedState.codeError)).then(_ => {});
+		dispatch(fetchErrorGroup({ codeError: derivedState.codeError }));
 	}, [derivedState.codeError, derivedState.isConnectedToNewRelic, errorGroup]);
 
 	const onConnected = async (
@@ -333,7 +333,11 @@ export function CodeErrorNav(props: Props) {
 			// in which case we need to circle back and "reopen" it again
 			dispatch(closeAllPanels());
 			return dispatch(
-				openErrorGroup(pendingErrorGroupGuid!, occurrenceId, derivedState.currentCodeErrorData)
+				openErrorGroup({
+					errorGroupGuid: pendingErrorGroupGuid!,
+					occurrenceId: occurrenceId,
+					data: derivedState.currentCodeErrorData,
+				})
 			);
 		} else if (pendingErrorGroupGuid) {
 			errorGroupGuidToUse = pendingErrorGroupGuid;
@@ -542,7 +546,7 @@ export function CodeErrorNav(props: Props) {
 						stackSourceMap: derivedState.currentCodeErrorData.stackSourceMap,
 						domain: derivedState.currentCodeErrorData?.domain,
 					};
-					stackInfo = await dispatch(resolveStackTrace(request));
+					stackInfo = await dispatch(resolveStackTrace(request)).unwrap();
 				}
 			}
 
@@ -602,18 +606,18 @@ export function CodeErrorNav(props: Props) {
 					await dispatch(
 						updateCodeError({
 							...derivedState.codeError,
-							accountId: errorGroupResult.accountId,
-							title: errorGroupResult.errorGroup?.title || "",
-							text: errorGroupResult.errorGroup?.message || undefined,
+							// accountId: errorGroupResult.accountId,
+							// title: errorGroupResult.errorGroup?.title || "",
+							// text: errorGroupResult.errorGroup?.message || undefined,
 							// storing the permanently parsed stack info
 							stackTraces: actualStackInfo,
-							objectInfo: {
-								repoId: repoId,
-								remote: targetRemote,
-								accountId: errorGroupResult.accountId.toString(),
-								entityId: errorGroupResult?.errorGroup?.entityGuid || "",
-								entityName: errorGroupResult?.errorGroup?.entityName || "",
-							},
+							// objectInfo: {
+							// 	repoId: repoId,
+							// 	remote: targetRemote,
+							// 	accountId: errorGroupResult.accountId.toString(),
+							// 	entityId: errorGroupResult?.errorGroup?.entityGuid || "",
+							// 	entityName: errorGroupResult?.errorGroup?.entityName || "",
+							// },
 						})
 					);
 				}

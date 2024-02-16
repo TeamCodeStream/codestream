@@ -131,18 +131,22 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 														{ errorGroupGuid: err.errorGroupGuid }
 													)) as GetObservabilityErrorGroupMetadataResponse;
 													await dispatch(
-														openErrorGroup(err.errorGroupGuid, err.occurrenceId, {
-															multipleRepos: response?.relatedRepos?.length > 1,
-															relatedRepos: response?.relatedRepos || undefined,
-															timestamp: err.lastOccurrence,
-															sessionStart: derivedState.sessionStart,
-															pendingEntityId: response?.entityId || err.entityId,
-															occurrenceId: response?.occurrenceId || err.occurrenceId,
-															pendingErrorGroupGuid: err.errorGroupGuid,
-															openType: "Observability Section",
-															remote: err?.remote || undefined,
-															stackSourceMap: response?.stackSourceMap,
-															domain: props?.domain,
+														openErrorGroup({
+															errorGroupGuid: err.errorGroupGuid,
+															occurrenceId: err.occurrenceId,
+															data: {
+																multipleRepos: response?.relatedRepos?.length > 1,
+																relatedRepos: response?.relatedRepos || undefined,
+																timestamp: err.lastOccurrence,
+																sessionStart: derivedState.sessionStart,
+																pendingEntityId: response?.entityId || err.entityId,
+																occurrenceId: response?.occurrenceId || err.occurrenceId,
+																pendingErrorGroupGuid: err.errorGroupGuid,
+																openType: "Observability Section",
+																remote: err?.remote || undefined,
+																stackSourceMap: response?.stackSourceMap,
+																domain: props?.domain,
+															},
 														})
 													);
 												} catch (ex) {

@@ -3,7 +3,6 @@ import {
 	CodeBlock,
 	CSAsyncGrokError,
 	DeleteCodeErrorRequestType,
-	FetchCodeErrorsRequestType,
 	GetCodeErrorRequestType,
 } from "@codestream/protocols/agent";
 import { CSCodeError, CSStackTraceInfo } from "@codestream/protocols/api";
@@ -16,11 +15,6 @@ export const reset = () => action("RESET");
 
 export const _bootstrapCodeErrors = (codeErrors: CSCodeError[]) =>
 	action(CodeErrorsActionsTypes.Bootstrap, codeErrors);
-
-export const bootstrapCodeErrors = () => async dispatch => {
-	const { codeErrors } = await HostApi.instance.send(FetchCodeErrorsRequestType, {});
-	dispatch(_bootstrapCodeErrors(codeErrors));
-};
 
 export const addCodeErrors = (codeErrors: CSCodeError[]) =>
 	action(CodeErrorsActionsTypes.AddCodeErrors, codeErrors);

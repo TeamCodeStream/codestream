@@ -93,17 +93,21 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 												)) as GetObservabilityErrorGroupMetadataResponse;
 												if (response) {
 													await dispatch(
-														openErrorGroup(_.errorGroupGuid, response.occurrenceId, {
-															multipleRepos: response?.relatedRepos?.length > 1,
-															relatedRepos: response?.relatedRepos,
-															sessionStart: derivedState.sessionStart,
-															pendingEntityId: response.entityId,
+														openErrorGroup({
+															errorGroupGuid: _.errorGroupGuid,
 															occurrenceId: response.occurrenceId,
-															pendingErrorGroupGuid: _.errorGroupGuid,
-															openType: "Observability Section",
-															remote: _?.remote || undefined,
-															stackSourceMap: response?.stackSourceMap,
-															domain: props.domain,
+															data: {
+																multipleRepos: response?.relatedRepos?.length > 1,
+																relatedRepos: response?.relatedRepos,
+																sessionStart: derivedState.sessionStart,
+																pendingEntityId: response.entityId,
+																occurrenceId: response.occurrenceId,
+																pendingErrorGroupGuid: _.errorGroupGuid,
+																openType: "Observability Section",
+																remote: _?.remote || undefined,
+																stackSourceMap: response?.stackSourceMap,
+																domain: props.domain,
+															},
 														})
 													);
 												} else {

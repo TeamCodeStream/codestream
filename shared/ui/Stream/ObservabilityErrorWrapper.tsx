@@ -7,11 +7,16 @@ import { ObservabilityErrorDropdown } from "./ObservabilityErrorDropdown";
 import { CodeStreamState } from "@codestream/webview/store";
 import { setUserPreference } from "./actions";
 import { useAppSelector, useAppDispatch } from "../utilities/hooks";
+import {
+	ObservabilityErrorCore,
+	ObservabilityRepo,
+	ObservabilityRepoError,
+} from "@codestream/protocols/agent";
 
 interface Props {
-	observabilityErrors: any;
-	observabilityRepo: any;
-	observabilityAssignments: any;
+	observabilityErrors: ObservabilityRepoError[];
+	observabilityRepo: ObservabilityRepo;
+	observabilityAssignments: ObservabilityErrorCore[];
 	entityGuid: string;
 	noAccess?: string;
 	errorMsg?: string;
