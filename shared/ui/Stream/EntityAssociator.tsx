@@ -1,6 +1,5 @@
 import {
 	EntityAccount,
-	EntityType,
 	GetObservabilityEntitiesRequestType,
 	WarningOrError,
 } from "@codestream/protocols/agent";
@@ -66,32 +65,32 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 	const [warningOrErrors, setWarningOrErrors] = useState<WarningOrError[] | undefined>(undefined);
 
 	async function loadEntities(search: string, _loadedOptions, additional?: AdditionalType) {
+		const { servicesToExcludeFromSearch } = props;
+
 		const result = await HostApi.instance.send(GetObservabilityEntitiesRequestType, {
 			searchCharacters: search,
 			nextCursor: additional?.nextCursor,
 		});
-		const options = result.entities.map(e => {
-			const typeLabel = (t: EntityType) => {
-				switch (t) {
-					case "BROWSER_APPLICATION_ENTITY":
-						return "Browser";
-					case "MOBILE_APPLICATION_ENTITY":
-						return "Mobile";
-					case "THIRD_PARTY_SERVICE_ENTITY":
-						return "OTEL";
-					case "INFRASTRUCTURE_AWS_LAMBDA_FUNCTION_ENTITY":
-						return "Lambda";
-					default:
-						return "APM";
-				}
-			};
-			return {
-				label: e.name,
-				value: e.guid,
-				sublabel: e.account,
-				labelAppend: typeLabel(e.entityType),
-			};
-		});
+
+		let options = result.entities.map(({ name, guid, account, entityType }) => ({
+			label: name,
+			value: guid,
+			sublabel: account,
+			labelAppend:
+				{
+					BROWSER_APPLICATION_ENTITY: "Browser",
+					MOBILE_APPLICATION_ENTITY: "Mobile",
+					THIRD_PARTY_SERVICE_ENTITY: "OTEL",
+					INFRASTRUCTURE_AWS_LAMBDA_FUNCTION_ENTITY: "Lambda",
+				}[entityType] || "APM",
+		}));
+
+		if (servicesToExcludeFromSearch?.length) {
+			options = options.filter(
+				option => !servicesToExcludeFromSearch.some(exclude => exclude.entityGuid === option.value)
+			);
+		}
+
 		return {
 			options,
 			hasMore: !!result.nextCursor,
