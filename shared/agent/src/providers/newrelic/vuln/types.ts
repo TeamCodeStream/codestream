@@ -11,7 +11,7 @@ export type VersionDetails = {
 export type VulnerableLibrary = {
 	name: string;
 	language?: string;
-	includedVersions: Array<VersionDetails>;
+	includedVersions?: Array<VersionDetails>;
 	suggestedVersion?: VersionDetails;
 };
 
