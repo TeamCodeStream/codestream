@@ -49,6 +49,6 @@
 		"jest-teamcity": "1.11.0",
 		"set-interval-async": "3.0.3",
 		"ts-jest": "29.1.2",
-		"undici": "5.28.2"
+		"undici": "5.28.3"
 	}
 }
