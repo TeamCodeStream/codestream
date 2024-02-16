@@ -1,5 +1,6 @@
 import {
 	EntityAccount,
+	EntityType,
 	GetObservabilityEntitiesRequestType,
 	WarningOrError,
 } from "@codestream/protocols/agent";
@@ -15,6 +16,7 @@ import { Button } from "../src/components/Button";
 import { NoContent } from "../src/components/Pane";
 import { useAppDispatch } from "../utilities/hooks";
 import { WarningBox } from "./WarningBox";
+import { isEmpty as _isEmpty } from "lodash";
 
 interface EntityAssociatorProps {
 	title?: string;
@@ -72,22 +74,35 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 			nextCursor: additional?.nextCursor,
 		});
 
-		let options = result.entities.map(({ name, guid, account, entityType }) => ({
-			label: name,
-			value: guid,
-			sublabel: account,
-			labelAppend:
-				{
-					BROWSER_APPLICATION_ENTITY: "Browser",
-					MOBILE_APPLICATION_ENTITY: "Mobile",
-					THIRD_PARTY_SERVICE_ENTITY: "OTEL",
-					INFRASTRUCTURE_AWS_LAMBDA_FUNCTION_ENTITY: "Lambda",
-				}[entityType] || "APM",
-		}));
+		let options = result.entities.map(e => {
+			const typeLabel = (t: EntityType) => {
+				switch (t) {
+					case "BROWSER_APPLICATION_ENTITY":
+						return "Browser";
+					case "MOBILE_APPLICATION_ENTITY":
+						return "Mobile";
+					case "THIRD_PARTY_SERVICE_ENTITY":
+						return "OTEL";
+					case "INFRASTRUCTURE_AWS_LAMBDA_FUNCTION_ENTITY":
+						return "Lambda";
+					default:
+						return "APM";
+				}
+			};
+			return {
+				label: e.name,
+				value: e.guid,
+				sublabel: e.account,
+				labelAppend: typeLabel(e.entityType),
+			};
+		});
 
-		if (servicesToExcludeFromSearch?.length) {
+		if (servicesToExcludeFromSearch && !_isEmpty(servicesToExcludeFromSearch)) {
 			options = options.filter(
-				option => !servicesToExcludeFromSearch.some(exclude => exclude.entityGuid === option.value)
+				option =>
+					!servicesToExcludeFromSearch.some(exclude => {
+						return exclude.entityGuid === option.value;
+					})
 			);
 		}
 
