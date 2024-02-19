@@ -52,6 +52,8 @@ let nrColumnsByAccountByCollectionName: NrColumnsByAccountByCollectionName = {};
 
 @lsp
 export class NrNRQLProvider {
+	static ALL_RESULT_TYPES = ["table", "json", "billboard", "line", "bar", "area", "pie"];
+
 	constructor(private graphqlClient: NewRelicGraphqlClient) {}
 
 	@lspHandler(GetNRQLRequestType)
@@ -369,16 +371,19 @@ export class NrNRQLProvider {
 					});
 					const uniqueList = Object.values(uniqueObjects) as {
 						query: string;
-						accountIds: number[];
+						accountIds?: number[];
 						createdAt: number;
 					}[];
 					return {
 						items: uniqueList.map(_ => {
-							return {
+							const result = {
 								..._,
 								dayString: this.toDayString(_.createdAt),
 								accounts: accounts.filter(obj => (_.accountIds || []).includes(obj.id)),
 							};
+							// do not need this in the response
+							delete result.accountIds;
+							return result;
 						}),
 					};
 				}
@@ -443,9 +448,9 @@ export class NrNRQLProvider {
 		return 0;
 	}
 
-	private getResultsType(results: any[], metadata: ResponseMetadata) {
-		const ALL_RESULT_TYPES = ["table", "json", "billboard", "line", "bar", "area", "pie"];
-		if (!results || !results.length) return { selected: "table", enabled: ALL_RESULT_TYPES };
+	getResultsType(results: any[], metadata: ResponseMetadata) {
+		if (!results || !results.length)
+			return { selected: "table", enabled: NrNRQLProvider.ALL_RESULT_TYPES };
 
 		if (results.length === 1) {
 			const value = results[0];
@@ -485,7 +490,7 @@ export class NrNRQLProvider {
 			return { selected: "line", enabled: ["table", "json", "line", "area"] };
 		}
 		if (isFacet) {
-			return { selected: "bar", enabled: ["bar", "json", "pie", "table", "json"] };
+			return { selected: "bar", enabled: ["bar", "json", "pie", "table"] };
 		}
 		return { selected: "table", enabled: ["table", "json"] };
 	}

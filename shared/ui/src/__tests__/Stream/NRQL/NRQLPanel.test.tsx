@@ -40,7 +40,13 @@ const mockHostApi = {
 	send: async (a: { method: string }, b, c) => {
 		if (a.method === "codestream/newrelic/nrql/queries/recent") {
 			return {
-				items: [{ query: "SELECT * FROM FOO", accountIds: [1], createdAt: new Date().getTime() }],
+				items: [
+					{
+						query: "SELECT * FROM FOO",
+						accounts: [{ id: 1, name: "foo" }],
+						createdAt: new Date().getTime(),
+					},
+				],
 			} as GetNRQLRecentQueriesResponse;
 		}
 		if (a.method === "codestream/newrelic/accounts/all") {

@@ -2761,8 +2761,7 @@ export interface NRQLRecentQuery {
 	/**
 	 * Recent, runnable, query from the current user
 	 */
-	query: string;
-	accountIds: number[];
+	query: string;	
 	accounts: Account[];
 	createdAt: number;
 	dayString?: string;
