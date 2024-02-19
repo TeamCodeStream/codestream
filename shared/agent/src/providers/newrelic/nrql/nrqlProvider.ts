@@ -427,7 +427,7 @@ export class NrNRQLProvider {
 		const isTimeseries = metadata?.timeSeries || metadata?.contents?.timeSeries;
 		const isFacet = metadata?.facet;
 		if (isTimeseries && isFacet) {
-			// TODO stacked bar!
+			// TODO stacked bar and line and area
 			return { selected: "table", enabled: ["table", "json"] };
 		}
 
