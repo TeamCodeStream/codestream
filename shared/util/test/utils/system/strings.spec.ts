@@ -127,5 +127,5 @@ describe("strings.ts", () => {
 				"FROM ErrorTrace SELECT * WHERE error.class LIKE 'TypeError' AND error.message LIKE 'Cannot read properties of undefined (reading \\'find\\')' SINCE 1681396857577 until 1681397057577 ORDER BY timestamp DESC LIMIT 1"
 			);
 		});
-	});
+	}); 
 });

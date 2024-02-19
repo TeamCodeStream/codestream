@@ -64,7 +64,15 @@ export class NrNRQLProvider {
 		}
 
 		try {
-			const query = escapeNrql(request.query).trim();
+			const query = this.transformQuery(request.query);
+			if (!query) {
+				return {
+					results: [],
+					accountId,
+					resultsTypeGuess: { selected: "table", enabled: [] },
+				};
+			}
+
 			const response = await this.graphqlClient.runNrqlWithMetadata<any>(accountId, query, 400);
 
 			void this.saveRecentQuery(request);
@@ -96,6 +104,36 @@ export class NrNRQLProvider {
 				resultsTypeGuess: { selected: "table", enabled: [] },
 			};
 		}
+	}
+
+	/**
+ * Removes comments from the end of a string
+ * 
+ * FROM Collection
+ * SELECT foo -- that's the foo
+  WHERE queryTypes = 'bar' /* that's the bar
+  on two lines *\/
+  AND status = 'baz' // baz is here
+
+  becomes:
+
+  FROM Collection
+  SELECT foo
+  WHERE queryTypes = 'bar
+  AND status = 'baz'
+ * 
+ * @param nrql 
+ * @returns 
+ */
+	private removeNrqlComments(nrql: string) {
+		return nrql.replace(/(\-\-|\/\/|\/*\*[\s\S]*?\*\/).*$/gm, "");
+	}
+
+	transformQuery(nrql: string) {
+		let query = this.removeNrqlComments(nrql);
+		query = escapeNrql(query);
+		query = query.replace(/[\n\r]/g, " ").trim();
+		return query;
 	}
 
 	@log()

@@ -254,7 +254,7 @@ export const NRQLPanel = (props: {
 
 			const response = await HostApi.instance.send(GetNRQLRequestType, {
 				accountId,
-				query: nrqlQuery.replace(/[\n\r]/g, " "),
+				query: nrqlQuery,
 			});
 
 			if (!response) {

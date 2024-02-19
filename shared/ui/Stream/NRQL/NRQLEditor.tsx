@@ -141,6 +141,10 @@ export const NRQLEditor = React.forwardRef(
 					{ open: "[", close: "]" },
 					{ open: "(", close: ")" },
 				],
+				comments: {
+					lineComment: "--",
+					blockComment: ["/*", "*/"],
+				},
 			});
 
 			monaco.languages.setMonarchTokensProvider("nrql", {
