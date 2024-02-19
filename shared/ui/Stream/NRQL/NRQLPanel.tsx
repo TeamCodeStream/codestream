@@ -149,6 +149,7 @@ export const NRQLPanel = (props: {
 	const [results, setResults] = useState<NRQLResult[]>([]);
 	const [noResults, setNoResults] = useState<boolean>(false);
 	const [eventType, setEventType] = useState<string>();
+	const [facet, setFacet] = useState<string[] | undefined>(undefined);
 	const [since, setSince] = useState<string>();
 	const [selectedAccount, setSelectedAccount] = useState<
 		{ label: string; value: number } | undefined
@@ -249,11 +250,7 @@ export const NRQLPanel = (props: {
 			}
 
 			setIsLoading(true);
-			setNRQLError(undefined);
-			setResults([]);
-			setResultsTypeGuess({});
-			setEventType("");
-			setSince("");
+			_resetQueryCore();
 
 			const response = await HostApi.instance.send(GetNRQLRequestType, {
 				accountId,
@@ -281,13 +278,16 @@ export const NRQLPanel = (props: {
 
 				setResults(response.results);
 				setResultsTypeGuess(response.resultsTypeGuess || {});
-				setEventType(response.eventType);
-				if (response.since) {
-					if (/^[0-9]+$/.test(response.since)) {
-						setSince(fuzzyTimeAgoinWords(Number(response.since)) + " ago");
-					} else {
-						setSince(response.since.toLowerCase());
+				if (response.metadata) {
+					setEventType(response.metadata.eventType);
+					if (response.metadata.since) {
+						if (/^[0-9]+$/.test(response.metadata.since)) {
+							setSince(fuzzyTimeAgoinWords(Number(response.metadata.since)) + " ago");
+						} else {
+							setSince(response.metadata.since.toLowerCase());
+						}
 					}
+					setFacet(response.metadata.facet);
 				}
 				setShouldRefetchRecentQueriesTimestamp(new Date().getTime());
 			}
@@ -298,16 +298,20 @@ export const NRQLPanel = (props: {
 		}
 	};
 
-	const resetQuery = () => {
-		nrqlEditorRef.current!.setValue(DEFAULT_QUERY);
-		setUserQuery(DEFAULT_QUERY);
-
+	const _resetQueryCore = () => {
 		setNRQLError(undefined);
 		setResults([]);
 		setResultsTypeGuess({});
 		setEventType("");
 		setSince("");
 		setNoResults(false);
+	};
+
+	const resetQuery = () => {
+		nrqlEditorRef.current!.setValue(DEFAULT_QUERY);
+		setUserQuery(DEFAULT_QUERY);
+
+		_resetQueryCore();
 	};
 
 	const formatSelectedAccount = (account: Account) => {
@@ -482,8 +486,12 @@ export const NRQLPanel = (props: {
 								{resultsTypeGuess.selected === "area" && <NRQLResultsArea results={results} />}
 								{resultsTypeGuess.selected === "line" && <NRQLResultsLine results={results} />}
 								{resultsTypeGuess.selected === "json" && <NRQLResultsJSON results={results} />}
-								{resultsTypeGuess.selected === "bar" && <NRQLResultsBar results={results} />}
-								{resultsTypeGuess.selected === "pie" && <NRQLResultsPie results={results} />}
+								{resultsTypeGuess.selected === "bar" && (
+									<NRQLResultsBar results={results} facet={facet!} />
+								)}
+								{resultsTypeGuess.selected === "pie" && (
+									<NRQLResultsPie results={results} facet={facet!} />
+								)}
 							</>
 						)}
 						{noResults && <div style={{ textAlign: "center" }}>No results found</div>}

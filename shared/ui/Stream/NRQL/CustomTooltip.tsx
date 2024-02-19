@@ -5,6 +5,7 @@ type CustomTooltipProps = {
 	active?: boolean;
 	payload?: Array<any>;
 	label?: any;
+	facet: string[];
 };
 
 const StyledCustomTooltipWrapper = styled.div`
@@ -17,12 +18,19 @@ const StyledCustomTooltipWrapper = styled.div`
 	}
 `;
 
-const _customTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+export const CustomTooltip = ({ active, payload, label, facet }: CustomTooltipProps) => {
 	if (active && payload && payload.length) {
+		let facetName;
+		if (facet.length === 1) {
+			facetName = payload[0].payload[facet[0]];
+		} else {
+			facetName = payload[0].payload["facet"].join(", ");
+		}
+
 		return (
 			<StyledCustomTooltipWrapper>
 				<div className="tooltip--custom">
-					<p>{payload[0].payload.facet}</p>
+					<p>{facetName}</p>
 					<p>Value: {payload[0].value}</p>
 				</div>
 			</StyledCustomTooltipWrapper>
@@ -31,5 +39,3 @@ const _customTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 
 	return null;
 };
-
-export const CustomTooltip = styled(_customTooltip)``;

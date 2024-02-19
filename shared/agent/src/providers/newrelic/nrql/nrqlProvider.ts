@@ -69,11 +69,17 @@ export class NrNRQLProvider {
 
 			void this.saveRecentQuery(request);
 
+			const facet = response?.rawResponse?.metadata?.facet;
 			return {
 				accountId,
 				results: response.results,
-				eventType: response?.rawResponse?.metadata?.eventType,
-				since: response?.rawResponse?.metadata?.rawSince,
+
+				metadata: {
+					eventType: response?.rawResponse?.metadata?.eventType,
+					since: response?.rawResponse?.metadata?.rawSince,
+					// facet is an array or string, normalize to array
+					facet: facet ? (Array.isArray(facet) ? facet : [facet]) : undefined,
+				},
 				resultsTypeGuess: this.getResultsType(
 					response.results,
 					response?.rawResponse?.metadata

@@ -15,7 +15,16 @@ const formatXAxisTime = time => {
 	return new Date(time).toLocaleTimeString();
 };
 
-export const NRQLResultsLine = (props: { results: NRQLResult[] }) => {
+interface Props {
+	results: NRQLResult[];
+	/**
+	 * the name of the facets (aka name, path, foo, bar). Not the property facet returned from the results,
+	 * but the facet in the metadata that points to the name of the faceted property/ies
+	 */
+	facet?: string[];
+}
+
+export const NRQLResultsLine = (props: Props) => {
 	const result = props.results ? props.results[0] : undefined;
 	const dataKeys = Object.keys(result || {}).filter(
 		_ => _ !== "beginTimeSeconds" && _ !== "endTimeSeconds"

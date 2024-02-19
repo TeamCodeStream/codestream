@@ -13,7 +13,15 @@ const BillboardValue = styled.div`
 	line-height: 1;
 `;
 
-export const NRQLResultsBillboard = (props: { results: NRQLResult[]; eventType?: string }) => {
+interface Props {
+	results: NRQLResult[];
+	/**
+	 * Name of the collection
+	 */
+	eventType?: string;
+}
+
+export const NRQLResultsBillboard = (props: Props) => {
 	let firstResult = props.results[0];
 	let onlyKey = Object.keys(firstResult)[0];
 	const value = firstResult[onlyKey];

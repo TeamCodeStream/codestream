@@ -15,7 +15,11 @@ const formatXAxisTime = time => {
 	return new Date(time).toLocaleTimeString();
 };
 
-export const NRQLResultsArea = (props: { results: NRQLResult[] }) => {
+interface Props {
+	results: NRQLResult[];
+}
+
+export const NRQLResultsArea = (props: Props) => {
 	const result = props.results ? props.results[0] : undefined;
 	const dataKeys = Object.keys(result || {}).filter(
 		_ => _ !== "beginTimeSeconds" && _ !== "endTimeSeconds"

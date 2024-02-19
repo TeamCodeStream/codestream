@@ -14,11 +14,13 @@ const cellStyle = {
 	fontFamily: "'Courier New', Courier, monospace",
 };
 
-export const NRQLResultsTable = (props: {
+interface Props {
 	results: NRQLResult[];
 	width: number | string;
 	height: number | string;
-}) => {
+}
+
+export const NRQLResultsTable = (props: Props) => {
 	const hasKey = (obj, key) => {
 		return obj.hasOwnProperty(key);
 	};

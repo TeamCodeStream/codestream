@@ -4,7 +4,40 @@ import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recha
 import { Colors, ColorsHash } from "./utils";
 import { CustomTooltip } from "./CustomTooltip";
 
-export const NRQLResultsPie = (props: { results: NRQLResult[] }) => {
+interface Props {
+	results: NRQLResult[];
+	/**
+	 * the name of the facet (aka name, path, foo, bar). Not the property facet returned from the results,
+	 * but the facet in the metadata that points to the name of the faceted property/ies
+	 */
+	facet: string[];
+}
+
+const truncate = (str: string, max: number) => {
+	// can't bundle import { truncate } from "@codestream/utils/system/string"; ??????
+
+	if (!str) return str;
+	if (str.length >= max) return `${str.substring(0, max - 1)}${"\u2026"}`;
+	return str;
+};
+
+const CustomLegend = ({ payload, facet }: { payload?: any[]; facet: string[] }) => (
+	<ul className="custom-legend">
+		{payload!.map((entry, index) => {
+			const k = facet.length === 1 ? entry.payload[facet[0]] : entry.payload["facet"].join(", ");
+			const key = truncate(k, 40);
+			return (
+				<li key={`custom-legend--item-${index}`}>
+					<span className="dot" style={{ color: entry.color }} title={k}>
+						{key} {" - "} {entry.payload.value}
+					</span>
+				</li>
+			);
+		})}
+	</ul>
+);
+
+export const NRQLResultsPie = (props: Props) => {
 	const [showLegend, setShowLegend] = useState(false);
 
 	useEffect(() => {
@@ -20,7 +53,7 @@ export const NRQLResultsPie = (props: { results: NRQLResult[] }) => {
 
 	const result = props.results ? props.results[0] : undefined;
 	const dataKeys = Object.keys(result || {}).filter(
-		_ => _ !== "beginTimeSeconds" && _ !== "endTimeSeconds"
+		_ => _ !== "beginTimeSeconds" && _ !== "endTimeSeconds" && _ !== "facet"
 	);
 	return (
 		<div className="histogram-chart">
@@ -29,7 +62,7 @@ export const NRQLResultsPie = (props: { results: NRQLResult[] }) => {
 					<PieChart width={500} height={400}>
 						<Pie
 							data={props.results}
-							dataKey="count" // Specify the data key to determine pie slices
+							dataKey={dataKeys[0]} // Specify the data key to determine pie slices
 							cx="50%" // Set the x-coordinate of the center of the pie
 							cy="50%" // Set the y-coordinate of the center of the pie
 							outerRadius={80} // Specify the outer radius of the pie
@@ -37,14 +70,15 @@ export const NRQLResultsPie = (props: { results: NRQLResult[] }) => {
 							label // Enable labels on the pie slices
 						>
 							{/* Render labels */}
-							{dataKeys.map((_, index) => {
+							{props.results.map((_, index) => {
 								const color = ColorsHash[index % Colors.length];
 								return <Cell key={index} fill={color} />;
 							})}
 						</Pie>
-						<Tooltip content={<CustomTooltip />} />
+						<Tooltip content={<CustomTooltip facet={props.facet} />} />
 						{showLegend && (
 							<Legend
+								content={<CustomLegend facet={props.facet} />}
 								fontSize={10}
 								align="right"
 								verticalAlign="middle"

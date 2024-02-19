@@ -2675,8 +2675,11 @@ export interface NRQLResult {
 export interface GetNRQLResponse {
 	results?: NRQLResult[];
 	accountId: number;
-	eventType?: string;
-	since?: string;
+	metadata?: {
+		facet?: string[];
+		eventType?: string;
+		since?: string;
+	};
 	error?: NRErrorResponse;
 	resultsTypeGuess?: ResultsTypeGuess;
 }

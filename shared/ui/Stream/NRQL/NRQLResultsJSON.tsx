@@ -4,7 +4,11 @@ import { MonacoEditor } from "./MonacoEditor";
 import { isDarkTheme } from "@codestream/webview/src/themes";
 import { ThemeContext } from "styled-components";
 
-export const NRQLResultsJSON = (props: { results: NRQLResult[] }) => {
+interface Props {
+	results: NRQLResult[];
+}
+
+export const NRQLResultsJSON = (props: Props) => {
 	const themeContext = useContext(ThemeContext);
 	const monacoRef = useRef<any>(null);
 
