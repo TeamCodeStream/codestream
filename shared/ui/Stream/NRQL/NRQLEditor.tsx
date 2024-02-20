@@ -10,6 +10,10 @@ import {
 } from "../../../util/src/protocol/agent/agent.protocol.providers";
 import { MonacoEditor } from "./MonacoEditor";
 
+export interface NRQLEditorApi {
+	setValue: (value: string) => void;
+}
+
 export const NRQLEditor = React.forwardRef(
 	(
 		props: {
@@ -29,15 +33,19 @@ export const NRQLEditor = React.forwardRef(
 		let editorRef = useRef<any>(null);
 		const [textAreaValue, setTextAreaValue] = useState<string>(props.defaultValue || "");
 		// Expose the ref and various functions to the parent component
-		React.useImperativeHandle(ref, () => ({
-			setValue: value => {
-				if (editorRef.current) {
-					editorRef.current.setValue(value);
-				} else {
-					setTextAreaValue(value);
-				}
-			},
-		}));
+		React.useImperativeHandle(
+			ref,
+			() =>
+				({
+					setValue: value => {
+						if (editorRef.current) {
+							editorRef.current.setValue(value);
+						} else {
+							setTextAreaValue(value);
+						}
+					},
+				}) as NRQLEditorApi
+		);
 
 		if (props.useEnhancedEditor === false) {
 			return (

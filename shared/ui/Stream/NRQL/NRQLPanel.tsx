@@ -23,7 +23,7 @@ import { HostApi } from "../../webview-api";
 import Button from "../Button";
 import { fuzzyTimeAgoinWords } from "../Timestamp";
 import ExportResults from "./ExportResults";
-import { NRQLEditor } from "./NRQLEditor";
+import { NRQLEditorApi, NRQLEditor } from "./NRQLEditor";
 import { NRQLResultsArea } from "./NRQLResultsArea";
 import { NRQLResultsBar } from "./NRQLResultsBar";
 import { NRQLResultsBillboard } from "./NRQLResultsBillboard";
@@ -163,7 +163,7 @@ export const NRQLPanel = (props: {
 	const [shouldRefetchRecentQueriesTimestamp, setShouldRefetchRecentQueriesTimestamp] = useState<
 		number | undefined
 	>(undefined);
-	const nrqlEditorRef = useRef<any>(null);
+	const nrqlEditorRef = useRef<NRQLEditorApi>(null);
 	const { height: editorHeight, ref: editorRef } = useResizeDetector();
 	const { width, height, ref } = useResizeDetector();
 	const trimmedHeight: number = (height ?? 0) - (height ?? 0) * 0.05;
@@ -177,20 +177,26 @@ export const NRQLPanel = (props: {
 	}, [selectedAccount]);
 
 	useEffect(() => {
+		disposables.push(
+			HostApi.instance.on(OpenEditorViewNotificationType, e => {
+				if (!nrqlEditorRef?.current) return;
+
+				const value = e.query || "";
+				nrqlEditorRef.current!.setValue(value);
+				setUserQuery(value);
+				executeNRQL(accountId, value);
+			})
+		);
+		return () => {
+			disposables && disposables.forEach(_ => _.dispose());
+		};
+	}, [accountId]);
+
+	useEffect(() => {
 		HostApi.instance.track("codestream/nrql/webview opened", {
 			event_type: "click",
 			meta_data: `entry_point: ${props.entryPoint}`,
 		});
-
-		disposables.push(
-			HostApi.instance.on(OpenEditorViewNotificationType, e => {
-				if (nrqlEditorRef?.current) {
-					nrqlEditorRef.current!.setValue(e.query);
-					setUserQuery(e.query!);
-					executeNRQL(accountId, e.query!);
-				}
-			})
-		);
 
 		accountsPromise = HostApi.instance
 			.send(GetAllAccountsRequestType, {})
@@ -220,9 +226,6 @@ export const NRQLPanel = (props: {
 			.catch(ex => {
 				handleError(ex?.message || "Error fetching accounts");
 			});
-		return () => {
-			disposables && disposables.forEach(_ => _.dispose());
-		};
 	}, []);
 
 	const handleError = (message: string) => {
