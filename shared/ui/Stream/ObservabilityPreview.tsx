@@ -96,23 +96,10 @@ export const ObservabilityPreview = React.memo((props: Props) => {
 					}}
 				>
 					<Icon name="chevron-down-thin" />
-					<StyledSpan>Code-Level Metrics</StyledSpan>
-				</div>
-				<div
-					style={{
-						padding: "2px 10px 2px 40px",
-					}}
-				>
-					<Icon name="chevron-right-thin" />
-					<StyledSpan>Error Rate Increase</StyledSpan>
-				</div>
-				<div
-					style={{
-						padding: "2px 10px 2px 40px",
-					}}
-				>
-					<Icon name="chevron-down-thin" />
-					<StyledSpan>Average Duration Increase</StyledSpan>
+
+					<StyledSpan>Transaction Performance</StyledSpan>
+
+					<Icon name="alert" style={{ color: "rgb(188,20,24)" }} className="alert" delay={1} />
 				</div>
 				<div
 					style={{
@@ -122,11 +109,12 @@ export const ObservabilityPreview = React.memo((props: Props) => {
 					}}
 				>
 					<div>
-						<StyledSpan>api.client.CatFactClient/fetchCatfact</StyledSpan>
+						<Icon className="anomaly" name="anomaly"></Icon>
+						<StyledSpan>WebTransactionn/ ...chase/confirmation.jsp</StyledSpan>
 					</div>
 					<div className="icons">
 						<span style={{ color: "red" }} className={"details"}>
-							+72%
+							+35.06%
 						</span>
 					</div>
 				</div>
@@ -138,26 +126,28 @@ export const ObservabilityPreview = React.memo((props: Props) => {
 					}}
 				>
 					<div>
-						<StyledSpan>clm.PetFactController/getPetFacts</StyledSpan>
+						<Icon className="anomaly" name="anomaly"></Icon>
+						<StyledSpan>WebTransaction/JSP/browse/phone.jsp</StyledSpan>
 					</div>
 					<div className="icons">
 						<span style={{ color: "red" }} className={"details"}>
-							+66%
+							+22.59%
 						</span>
 					</div>
 				</div>
 				<div
 					style={{
-						padding: "2px 20px 2px 50px",
+						padding: "2px 20px 2px 60px",
 						display: "flex",
 						justifyContent: "space-between",
 					}}
 				>
 					<div>
-						<StyledSpan>clm.clmController/dbMethod</StyledSpan>
+						<Icon className="anomaly" name="anomaly"></Icon>
+						<StyledSpan>Java/ ...rowsePhoneAction/browsePhone</StyledSpan>
 					</div>
 					<div style={{ color: "red" }} className="icons">
-						<span className={"details"}>+54%</span>
+						<span className={"details"}>+34.41%</span>
 					</div>
 				</div>
 				<div
@@ -166,7 +156,18 @@ export const ObservabilityPreview = React.memo((props: Props) => {
 					}}
 				>
 					<Icon name="chevron-right-thin" />
+					<StyledSpan>Errors</StyledSpan>
+				</div>
+				<div
+					style={{
+						padding: "2px 10px 2px 30px",
+					}}
+				>
+					<Icon name="chevron-right-thin" />
 					<StyledSpan>Vulnerabilities</StyledSpan>
+					<Icon name="alert" style={{ color: "rgb(188,20,24)" }} className="alert" delay={1} />
+					<> critical and high</>
+					<Icon align="bottom-right" name="chevron-down-thin" />
 				</div>
 				<div
 					style={{
@@ -181,8 +182,8 @@ export const ObservabilityPreview = React.memo((props: Props) => {
 						padding: "2px 10px 2px 30px",
 					}}
 				>
-					<Icon name="chevron-right-thin" />
-					<StyledSpan>Errors</StyledSpan>
+					<Icon name="file-lines" />
+					<StyledSpan>View Logs</StyledSpan>
 				</div>
 			</Container>
 		</>
