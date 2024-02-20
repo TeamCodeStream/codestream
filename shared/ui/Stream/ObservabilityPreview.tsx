@@ -166,8 +166,8 @@ export const ObservabilityPreview = React.memo((props: Props) => {
 					<Icon name="chevron-right-thin" />
 					<StyledSpan>Vulnerabilities</StyledSpan>
 					<Icon name="alert" style={{ color: "rgb(188,20,24)" }} className="alert" delay={1} />
-					<> critical and high</>
-					<Icon align="bottom-right" name="chevron-down-thin" />
+					<> critical and high </>
+					<Icon name="chevron-down-thin" />
 				</div>
 				<div
 					style={{
