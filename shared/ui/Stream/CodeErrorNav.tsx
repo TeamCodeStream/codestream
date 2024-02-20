@@ -438,9 +438,6 @@ export function CodeErrorNav(props: Props) {
 				}
 
 				// Set target remote if entity is associated with one repo
-
-				// BUG HERE, if multiple repos is undefined, I don't think that !multipleRepos turns truth
-
 				if (errorGroupResult?.errorGroup?.entity?.relatedRepos?.length === 1 && !multipleRepos) {
 					targetRemote = errorGroupResult?.errorGroup?.entity?.relatedRepos[0]?.url!;
 					``;
@@ -452,8 +449,6 @@ export function CodeErrorNav(props: Props) {
 				) {
 					targetRemote = codeError?.objectInfo?.remote;
 				}
-
-				console.warn("eric onConnected pass, targetRepm");
 
 				// Kick off repo association screen
 				if (!targetRemote) {
