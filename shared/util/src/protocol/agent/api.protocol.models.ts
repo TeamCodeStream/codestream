@@ -393,7 +393,7 @@ export interface CSCodeError extends CSEntity {
 	resolvedAt?: number;
 	objectId?: string;
 	objectType?: "errorGroup";
-	objectInfo?: { [key: string]: string };
+	objectInfo?: { [key: string]: string | boolean };
 	accountId?: number;
 }
 

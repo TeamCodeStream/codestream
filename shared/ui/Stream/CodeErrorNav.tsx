@@ -244,7 +244,7 @@ export function CodeErrorNav(props: Props) {
 			dispatch(closeAllPanels());
 			return;
 		}
-
+		console.warn("eric currentCodeErrorId", derivedState.currentCodeErrorId);
 		if (pendingErrorGroupGuid) {
 			onConnected(undefined);
 		} else {
@@ -350,7 +350,9 @@ export function CodeErrorNav(props: Props) {
 				occurrenceIdToUse = existingStackTrace.occurrenceId;
 				refToUse = existingStackTrace.sha;
 			}
-			entityIdToUse = codeError?.objectInfo?.entityId;
+			if (typeof codeError?.objectInfo?.entityId === "string") {
+				entityIdToUse = codeError?.objectInfo?.entityId;
+			}
 		}
 		if (!errorGroupGuidToUse) {
 			console.error("missing error group guid");
@@ -436,15 +438,22 @@ export function CodeErrorNav(props: Props) {
 				}
 
 				// Set target remote if entity is associated with one repo
+
+				// BUG HERE, if multiple repos is undefined, I don't think that !multipleRepos turns truth
+
 				if (errorGroupResult?.errorGroup?.entity?.relatedRepos?.length === 1 && !multipleRepos) {
 					targetRemote = errorGroupResult?.errorGroup?.entity?.relatedRepos[0]?.url!;
+					``;
 				} else if (
 					// Attempt to set remote from codeError object as long as we know there is a repo associated
 					codeError?.objectInfo?.remote &&
-					!_isEmpty(derivedState.currentCodeErrorData.relatedRepos)
+					(!_isEmpty(derivedState.currentCodeErrorData.relatedRepos) ||
+						codeError?.objectInfo?.hasRelatedRepos)
 				) {
 					targetRemote = codeError?.objectInfo?.remote;
 				}
+
+				console.warn("eric onConnected pass, targetRepm");
 
 				// Kick off repo association screen
 				if (!targetRemote) {
@@ -588,6 +597,7 @@ export function CodeErrorNav(props: Props) {
 									accountId: errorGroupResult.accountId.toString(),
 									entityId: errorGroupResult?.errorGroup?.entityGuid || "",
 									entityName: errorGroupResult?.errorGroup?.entityName || "",
+									hasRelatedRepos: !_isEmpty(derivedState.currentCodeErrorData.relatedRepos),
 								},
 							},
 						])
