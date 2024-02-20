@@ -48,16 +48,13 @@
 		{
 			"type": "node",
 			"request": "launch",
-			"runtimeExecutable": "node",
+			"runtimeExecutable": "npx",
 			"name": "Run UnitTests for File",
-			"program": "${workspaceFolder}/node_modules/.bin/mochapack",
+			"program": "jest",
 			"args": ["${file}"],
 			"cwd": "${workspaceFolder}/",
 			"console": "integratedTerminal",
-			"internalConsoleOptions": "neverOpen",
-			"env": {
-				"TS_NODE_COMPILER_OPTIONS": "{ \"module\": \"commonjs\", \"types\": [\"node\"] }"
-			}
+			"internalConsoleOptions": "neverOpen"
 		},
 		{
 			"type": "node",

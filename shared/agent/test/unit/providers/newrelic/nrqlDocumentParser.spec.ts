@@ -115,4 +115,42 @@ SELECT foo from Log where appName = 'bar'
 			},
 		]);
 	});
+
+	it("should handle embedded comments", () => {
+		const content = `FROM Transaction
+SELECT name /* that's the bar
+on a new line */
+WHERE name is not null // baz is here`;
+		const results = new NrqlDocumentParser().parse(content);
+		expect(results.length).toStrictEqual(1);
+		expect(results).toStrictEqual([
+			{
+				invalid: false,
+				text: content,
+				range: {
+					start: 0,
+					end: 100,
+				},
+			},
+		]);
+	});
+
+	it("should handle embedded comments", () => {
+		const content = `/*
+FROM Transaction SELECT name WHERE name is not null 
+*/`;
+		const results = new NrqlDocumentParser().parse(content);
+		expect(results.length).toStrictEqual(1);
+		expect(results).toStrictEqual([
+			{
+				invalid: false,
+				text: `FROM Transaction SELECT name WHERE name is not null 
+`,
+				range: {
+					start: 3,
+					end: 55,
+				},
+			},
+		]);
+	});
 });
