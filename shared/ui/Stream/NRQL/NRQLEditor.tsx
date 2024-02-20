@@ -24,8 +24,8 @@ export const NRQLEditor = React.forwardRef(
 			onSubmit?: (e: { value: string | undefined }) => void;
 			setValue?: (e: { value: string | undefined }) => void;
 			isReadonly?: boolean;
-			// if false, editor will fallback to a simple <textarea>, true & undefined are the same
-			useEnhancedEditor?: boolean;
+			// if true, editor will fallback to a simple <textarea>
+			useSimpleEditor?: boolean;
 		},
 		ref
 	) => {
@@ -47,7 +47,7 @@ export const NRQLEditor = React.forwardRef(
 				}) as NRQLEditorApi
 		);
 
-		if (props.useEnhancedEditor === false) {
+		if (props.useSimpleEditor) {
 			return (
 				<textarea
 					style={{ height: "120px", width: "100%" }}

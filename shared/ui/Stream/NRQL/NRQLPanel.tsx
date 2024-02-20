@@ -421,7 +421,7 @@ export const NRQLPanel = (props: {
 									setUserQuery(e.value!);
 									executeNRQL(accountId, e.value!);
 								}}
-								useEnhancedEditor={supports.enhancedEditor}
+								useSimpleEditor={!supports.enhancedEditor}
 								ref={nrqlEditorRef}
 							/>
 						</ResizeEditorContainer>
