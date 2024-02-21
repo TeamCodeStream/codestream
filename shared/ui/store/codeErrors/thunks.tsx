@@ -1,27 +1,14 @@
 import {
 	CodeBlock,
-	CreateShareableCodeErrorRequestType,
 	CSAsyncGrokError,
 	CSGrokStream,
 	DidResolveStackTraceLineNotification,
-	ExecuteThirdPartyTypedType,
-	FetchCodeErrorsRequestType,
 	GetNewRelicErrorGroupRequest,
-	GetNewRelicErrorGroupRequestType,
 	GetObservabilityErrorsRequest,
-	GetObservabilityErrorsRequestType,
-	ResolveStackTracePositionRequestType,
 	ResolveStackTraceRequest,
-	ResolveStackTraceRequestType,
 	UpdateCodeErrorRequest,
-	UpdateCodeErrorRequestType,
 } from "@codestream/protocols/agent";
 import { CSCodeError, CSStackTraceLine } from "@codestream/protocols/api";
-import {
-	EditorCopySymbolType,
-	EditorReplaceSymbolType,
-	EditorRevealRangeRequestType,
-} from "@codestream/protocols/webview";
 import { clearResolvedFlag } from "@codestream/utils/api/codeErrorCleanup";
 import { logError } from "@codestream/webview/logger";
 import { CodeStreamState } from "@codestream/webview/store";
@@ -56,10 +43,28 @@ import { addStreams } from "@codestream/webview/store/streams/actions";
 import { createPostAndCodeError, deletePost } from "@codestream/webview/Stream/actions";
 import { highlightRange } from "@codestream/webview/Stream/api-functions";
 import { confirmPopup } from "@codestream/webview/Stream/Confirm";
-import { HostApi } from "@codestream/webview/webview-api";
 import React from "react";
 import { Position, Range } from "vscode-languageserver-types";
 import { URI } from "vscode-uri";
+import { CodeErrorsApi } from "@codestream/webview/store/codeErrors/api/CodeErrorsApi";
+import { CodeErrorsApiImpl } from "@codestream/webview/store/codeErrors/api/CodeErrorsApiImpl";
+import { CodeErrorsIDEApi } from "@codestream/webview/store/codeErrors/api/CodeErrorsIDEApi";
+import { CodeErrorsIDEApiImpl } from "@codestream/webview/store/codeErrors/api/CodeErrorsIDEApiImpl";
+import { CodeErrorsApiDemo } from "@codestream/webview/store/codeErrors/api/CodeErrorsApiDemo";
+import { CodeErrorsIDEApiDemo } from "@codestream/webview/store/codeErrors/api/CodeErrorsIDEApiDemo";
+
+let codeErrorsApi: CodeErrorsApi = new CodeErrorsApiImpl();
+let codeErrorsIDEApi: CodeErrorsIDEApi = new CodeErrorsIDEApiImpl();
+
+export function setApiDemoMode(demoMode: boolean) {
+	if (demoMode) {
+		codeErrorsApi = new CodeErrorsApiDemo();
+		codeErrorsIDEApi = new CodeErrorsIDEApiDemo();
+	} else {
+		codeErrorsApi = new CodeErrorsApiImpl();
+		codeErrorsIDEApi = new CodeErrorsIDEApiImpl();
+	}
+}
 
 export const updateCodeErrors =
 	(codeErrors: CSCodeError[]) => async (dispatch, getState: () => CodeStreamState) => {
@@ -108,32 +113,31 @@ export interface CreateCodeErrorError {
 	message?: string;
 }
 
-export const createCodeError =
-	(attributes: NewCodeErrorAttributes) => async (dispatch, getState: () => CodeStreamState) => {
-		// console.debug("createCodeError", attributes);
-		try {
-			const response = await HostApi.instance.send(CreateShareableCodeErrorRequestType, {
-				attributes,
-				entryPoint: attributes.entryPoint,
-				addedUsers: attributes.addedUsers,
-				replyPost: attributes.replyPost,
-				codeBlock: attributes.codeBlock,
-				language: attributes.language,
-				analyze: attributes.analyze,
-				reinitialize: attributes.reinitialize,
-				parentPostId: attributes.parentPostId,
-			});
-			if (response.codeError) {
-				dispatch(addCodeErrors([response.codeError]));
-				dispatch(addStreams([response.stream]));
-				dispatch(addPosts([response.post]));
-			}
-			return response;
-		} catch (error) {
-			logError("Error creating a code error", { message: error.toString() });
-			throw { reason: "create", message: error.toString() } as CreateCodeErrorError;
+export const createCodeError = (attributes: NewCodeErrorAttributes) => async dispatch => {
+	// console.debug("createCodeError", attributes);
+	try {
+		const response = await codeErrorsApi.createShareableCodeError({
+			attributes,
+			entryPoint: attributes.entryPoint,
+			addedUsers: attributes.addedUsers,
+			replyPost: attributes.replyPost,
+			codeBlock: attributes.codeBlock,
+			language: attributes.language,
+			analyze: attributes.analyze,
+			reinitialize: attributes.reinitialize,
+			parentPostId: attributes.parentPostId,
+		});
+		if (response.codeError) {
+			dispatch(addCodeErrors([response.codeError]));
+			dispatch(addStreams([response.stream]));
+			dispatch(addPosts([response.post]));
 		}
-	};
+		return response;
+	} catch (error) {
+		logError("Error creating a code error", { message: error.toString() });
+		throw { reason: "create", message: error.toString() } as CreateCodeErrorError;
+	}
+};
 
 export const setProviderError =
 	(providerId: string, errorGroupGuid: string, error?: { message: string }) => dispatch => {
@@ -257,7 +261,7 @@ export const bootstrapCodeErrors = createAppAsyncThunk(
 	"codeErrors/bootstrapCodeErrors",
 	async (_, { dispatch }) => {
 		console.log("*** bootstrapCodeErrors thudunk");
-		const { codeErrors } = await HostApi.instance.send(FetchCodeErrorsRequestType, {});
+		const { codeErrors } = await codeErrorsApi.fetchCodeErrors({});
 		dispatch(_bootstrapCodeErrors(codeErrors));
 	}
 );
@@ -318,7 +322,7 @@ export const openErrorGroup = createAppAsyncThunk(
 		}
 
 		if (message) {
-			HostApi.instance.track("codestream/errors/error_group_roadblock displayed", {
+      codeErrorsApi.track("codestream/errors/error_group_roadblock displayed", {
 				meta_data: `error_group_id: ${errorGroupGuid}`,
 				event_type: "response",
 			});
@@ -501,11 +505,10 @@ export const api =
 			// 	params.metadata = currentPullRequest.metadata;
 			// }
 
-			const response = (await HostApi.instance.send(new ExecuteThirdPartyTypedType<T, R>(), {
-				method: method,
+			const response = await codeErrorsApi.executeThirdPartyTyped(method, {
 				providerId: "newrelic*com",
 				params: params,
-			})) as any;
+			});
 			// if (response && (!options || (options && !options.preventClearError))) {
 			// 	dispatch(clearProviderError(params.errorGroupGuid, pullRequestId));
 			// }
@@ -572,7 +575,7 @@ export const replaceSymbol = createAppAsyncThunk(
 	"codeErrors/replaceSymbol", // action type
 	async ({ uri, symbol, codeBlock, namespace }: ReplaceSymbolParameters) => {
 		console.log("*** replaceSymbol thudunk");
-		await HostApi.instance.send(EditorReplaceSymbolType, {
+		await codeErrorsIDEApi.editorReplaceSymbol({
 			uri,
 			symbolName: symbol,
 			codeBlock,
@@ -596,7 +599,7 @@ export const copySymbolFromIde = createAppAsyncThunk(
 		}
 		const currentPosition =
 			ref && repoId && stackLine.fileRelativePath
-				? await HostApi.instance.send(ResolveStackTracePositionRequestType, {
+				? await codeErrorsApi.resolveStackTracePosition({
 						ref,
 						repoId,
 						filePath: stackLine.fileRelativePath,
@@ -618,7 +621,7 @@ export const copySymbolFromIde = createAppAsyncThunk(
 
 		// console.debug("===--- copySymbolFromIde lookupPath: ", lookupPath);
 
-		const symbolDetails = await HostApi.instance.send(EditorCopySymbolType, {
+		const symbolDetails = await codeErrorsIDEApi.editorCopySymbol({
 			uri: lookupPath,
 			namespace: stackLine.namespace,
 			symbolName: stackLine.method,
@@ -665,7 +668,7 @@ export const jumpToStackLine = createAppAsyncThunk(
 			console.error(`Unable to jump to stack trace line: missing fileRelativePath`);
 			return;
 		}
-		const currentPosition = await HostApi.instance.send(ResolveStackTracePositionRequestType, {
+		const currentPosition = await codeErrorsApi.resolveStackTracePosition({
 			ref,
 			repoId,
 			filePath: stackLine.fileRelativePath!,
@@ -689,7 +692,7 @@ export const jumpToStackLine = createAppAsyncThunk(
 			range.end.character = 2147483647;
 		}
 
-		const revealResponse = await HostApi.instance.send(EditorRevealRangeRequestType, {
+		const revealResponse = await codeErrorsIDEApi.editorRevealRange({
 			uri: path!,
 			preserveFocus: true,
 			range,
@@ -710,7 +713,7 @@ export const updateCodeError = createAppAsyncThunk(
 	"codeErrors/updateCodeError",
 	async (request: UpdateCodeErrorRequest, { dispatch }) => {
 		console.log("*** updateCodeError dathunk");
-		const response = await HostApi.instance.send(UpdateCodeErrorRequestType, request);
+		const response = await codeErrorsApi.updateCodeErrors(request);
 		if (response?.codeError) {
 			dispatch(updateCodeErrors([response.codeError]));
 		}
@@ -721,7 +724,7 @@ export const fetchNewRelicErrorGroup = createAppAsyncThunk(
 	"codeErrors/fetchNewRelicErrorGroup",
 	async (request: GetNewRelicErrorGroupRequest) => {
 		console.log("*** fetchNewRelicErrorGroup dathunk");
-		return HostApi.instance.send(GetNewRelicErrorGroupRequestType, request);
+		return codeErrorsApi.getNewRelicErrorGroup(request);
 	}
 );
 
@@ -743,7 +746,7 @@ export const resolveStackTrace = createAppAsyncThunk(
 	"codeErrors/resolveStackTrace",
 	async (request: ResolveStackTraceRequest) => {
 		console.log("*** resolveStackTrace dathunk");
-		return HostApi.instance.send(ResolveStackTraceRequestType, request);
+		return codeErrorsApi.resolveStackTrace(request);
 	}
 );
 
@@ -785,6 +788,6 @@ export const doGetObservabilityErrors = createAppAsyncThunk(
 	"codeErrors/getObservabilityErrors",
 	async (request: GetObservabilityErrorsRequest) => {
 		console.log("***  doGetObservabilityErrors dathunk");
-		return await HostApi.instance.send(GetObservabilityErrorsRequestType, request);
+		return await codeErrorsApi.getObservabilityErrors(request);
 	}
 );

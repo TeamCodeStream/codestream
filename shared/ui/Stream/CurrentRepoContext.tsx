@@ -132,7 +132,7 @@ export const CurrentRepoContext = React.memo((props: Props) => {
 	return (
 		<CurrentRepoContainer isHeaderText={props.isHeaderText ? true : false}>
 			<Icon style={{ transform: "scale(0.7)", display: "inline-block" }} name="repo" />{" "}
-			<span style={{ margin: props.isHeaderText ? "1px 2px 0px 0px" : "0" }}>
+			<span className="repo-name" style={{ margin: props.isHeaderText ? "1px 2px 0px 0px" : "0" }}>
 				{currentRepoName}
 			</span>
 			{props.isHeaderText && (

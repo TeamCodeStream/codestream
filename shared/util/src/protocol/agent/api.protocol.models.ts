@@ -383,8 +383,8 @@ export interface CSCodeError extends CSEntity {
 	teamId: string;
 	streamId: string;
 	postId: string;
-	fileStreamIds: string[];
-	status: CSCodeErrorStatus;
+	fileStreamIds?: string[];
+	status?: CSCodeErrorStatus;
 	numReplies: number;
 	lastActivityAt: number;
 	followerIds?: string[];
