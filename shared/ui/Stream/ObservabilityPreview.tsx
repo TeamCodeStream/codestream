@@ -110,7 +110,7 @@ export const ObservabilityPreview = React.memo((props: Props) => {
 				>
 					<div>
 						<Icon className="anomaly" name="anomaly"></Icon>
-						<StyledSpan>WebTransactionn/ ...chase/confirmation.jsp</StyledSpan>
+						<StyledSpan>WebTransaction/ ...chase/confirmation.jsp</StyledSpan>
 					</div>
 					<div className="icons">
 						<span style={{ color: "red" }} className={"details"}>
