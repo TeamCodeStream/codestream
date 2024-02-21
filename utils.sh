@@ -1,5 +1,31 @@
 #!/usr/bin/env bash
 
+function check_commands() {
+
+  # Check for jq
+  if ! command -v jq >/dev/null; then
+    echo "jq could not be found"
+    echo "Please install it using Homebrew: brew install jq"
+    exit 1
+  fi
+
+  # Check for Node.js, npm and npx
+  if command -v node >/dev/null && command -v npm >/dev/null && command -v npx >/dev/null; then
+    version=$(node -v)
+    if [[ $version != "v18.15.0" ]]; then
+      echo "Incorrect version of Node.js $version. Please use v18.15.0."
+      echo "If you don't have it, please install it using nvm which you can install with 'brew install nvm' and then 'nvm install 18.15.0'"
+      exit 1
+    fi
+  else
+    echo "Node.js, npm, or npx was not found"
+    echo "Please install Node.js v18.15.0: Install nvm using Homebrew with 'brew install nvm' and then use nvm to install Node.js with 'nvm install 18.15.0'"
+    exit 1
+  fi
+}
+
+check_commands
+
 dirs=("vs" "vscode" "jb" "shared/ui" "shared/agent" "shared/util" "shared/build")
 
 pushd () {
@@ -10,26 +36,42 @@ popd () {
     command popd "$@" > /dev/null
 }
 
+function format_number() {
+    # Using node.js to format number with thousands separators
+    number=$(node -e "console.log(parseInt('$1').toLocaleString('en-US'))")
+    echo "$number"
+}
+
 function compile_all () {
   fails=()
+  total_elapsed=0
   for dir in "${dirs[@]}"; do
       pushd "$dir" || continue
       printf "\n%s: " "$dir"
+      start_time=$(node -e "console.log(Date.now())")
       npx tsc --noEmit
-      if [ $? -ne 0 ]; then
-        echo "🚨$dir: typescript fail"
+      exit_status=$?
+      end_time=$(node -e "console.log(Date.now())")
+      elapsed_time_ms=$((end_time - start_time)) # calculating elapsed time in ms
+      total_elapsed=$((total_elapsed + elapsed_time_ms))  # in ms
+      if [ $exit_status -ne 0 ]; then
+        echo "🚨 $dir: typescript fail"
         fails+=("$dir")
       else
-        echo "✅  passed"
+        # Format elapsed time in ms with comma as thousands separator
+        formatted_elapsed_time_ms=$(format_number "$elapsed_time_ms")
+        printf "✅  passed in %s ms\n" "$formatted_elapsed_time_ms"  # showing milli-seconds
       fi
       popd
-    done
-    if [ ${#fails[@]} -ne 0 ]; then
-      printf -v joined '%s, ' "${fails[@]}"
-      printf "\n🚨 Failed projects: "
-      echo "${joined%, }"
-    fi
-
+  done
+  if [ ${#fails[@]} -ne 0 ]; then
+    printf -v joined '%s, ' "${fails[@]}"
+    printf "\n🚨 Summary of failed projects: "
+    echo "${joined%, }"
+  fi
+  # Format total elapsed time in ms with comma as thousands separator
+  formatted_total_elapsed_ms=$(format_number "$total_elapsed")
+  printf "\nTotal compilation time: %s ms\n" "$formatted_total_elapsed_ms"  # showing milli-seconds
 }
 
 function test () {
@@ -74,16 +116,16 @@ function explain_version () {
 
 function clean () {
   cleanFiles=(
-    "jb/node_modules" 
-    "vscode/node_modules" 
-    "vs/node_modules" 
-    "shared/agent/node_modules" 
-    "shared/ui/node_modules" 
+    "jb/node_modules"
+    "vscode/node_modules"
+    "vs/node_modules"
+    "shared/agent/node_modules"
+    "shared/ui/node_modules"
     "shared/util/node_modules"
-    "shared/agent/dist" 
-    "vscode/dist" 
+    "shared/agent/dist"
+    "vscode/dist"
     "vs/src/resources/agent"
-    "vs/src/CodeStream.VisualStudio.Vsix.x86/agent" 
+    "vs/src/CodeStream.VisualStudio.Vsix.x86/agent"
     "vs/src/CodeStream.VisualStudio.Vsix.x64/agent"
     "vs/src/resources/webview"
   )
