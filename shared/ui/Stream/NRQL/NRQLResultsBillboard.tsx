@@ -13,6 +13,10 @@ const BillboardValue = styled.div`
 	line-height: 1;
 `;
 
+const BillboardValueType = styled.div`
+	font-size: 8vw;
+`;
+
 interface Props {
 	results: NRQLResult[];
 	/**
@@ -52,7 +56,12 @@ export const NRQLResultsBillboard = (props: Props) => {
 			<BillboardValue title={value}>
 				{typeof value === "number" ? formatLargeNumber(value) : value}
 			</BillboardValue>
-			{props.eventType && <div>{props.eventType.replace(/_/g, " ")}</div>}
+			{props.eventType && (
+				<BillboardValueType>
+					{props.eventType.replace(/_/g, " ")}
+					{typeof value === "number" && value > 1 && <>s</>}
+				</BillboardValueType>
+			)}
 		</BillboardValueWrapper>
 	);
 };
