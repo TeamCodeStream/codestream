@@ -1,14 +1,14 @@
 import React from "react";
 import styled from "styled-components";
 
-type CustomTooltipProps = {
+type FacetTooltipProps = {
 	active?: boolean;
 	payload?: Array<any>;
 	label?: any;
 	facet: string[];
 };
 
-const StyledCustomTooltipWrapper = styled.div`
+const StyledFacetTooltipWrapper = styled.div`
 	.tooltip--custom {
 		background: var(--base-background-color);
 		border: 1px solid var(--base-border-color);
@@ -18,7 +18,7 @@ const StyledCustomTooltipWrapper = styled.div`
 	}
 `;
 
-export const CustomTooltip = ({ active, payload, label, facet }: CustomTooltipProps) => {
+export const FacetTooltip = ({ active, payload, label, facet }: FacetTooltipProps) => {
 	if (active && payload && payload.length) {
 		let facetName;
 		if (facet.length === 1) {
@@ -28,12 +28,12 @@ export const CustomTooltip = ({ active, payload, label, facet }: CustomTooltipPr
 		}
 
 		return (
-			<StyledCustomTooltipWrapper>
+			<StyledFacetTooltipWrapper>
 				<div className="tooltip--custom">
 					<p>{facetName}</p>
 					<p>Value: {payload[0].value}</p>
 				</div>
-			</StyledCustomTooltipWrapper>
+			</StyledFacetTooltipWrapper>
 		);
 	}
 

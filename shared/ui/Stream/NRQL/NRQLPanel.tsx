@@ -487,7 +487,9 @@ export const NRQLPanel = (props: {
 									<NRQLResultsBillboard results={results} eventType={eventType} />
 								)}
 								{resultsTypeGuess.selected === "area" && <NRQLResultsArea results={results} />}
-								{resultsTypeGuess.selected === "line" && <NRQLResultsLine results={results} />}
+								{resultsTypeGuess.selected === "line" && (
+									<NRQLResultsLine eventType={eventType} results={results} facet={facet!} />
+								)}
 								{resultsTypeGuess.selected === "json" && <NRQLResultsJSON results={results} />}
 								{resultsTypeGuess.selected === "bar" && (
 									<NRQLResultsBar results={results} facet={facet!} />

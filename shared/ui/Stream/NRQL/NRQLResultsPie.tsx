@@ -2,7 +2,7 @@ import { NRQLResult } from "@codestream/protocols/agent";
 import React, { useEffect, useState } from "react";
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Colors, ColorsHash } from "./utils";
-import { CustomTooltip } from "./CustomTooltip";
+import { FacetTooltip } from "./FacetTooltip";
 
 interface Props {
 	results: NRQLResult[];
@@ -75,7 +75,7 @@ export const NRQLResultsPie = (props: Props) => {
 								return <Cell key={index} fill={color} />;
 							})}
 						</Pie>
-						<Tooltip content={<CustomTooltip facet={props.facet} />} />
+						<Tooltip content={<FacetTooltip facet={props.facet} />} />
 						{showLegend && (
 							<Legend
 								content={<CustomLegend facet={props.facet} />}

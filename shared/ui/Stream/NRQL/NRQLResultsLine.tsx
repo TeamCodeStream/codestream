@@ -5,15 +5,20 @@ import {
 	LineChart,
 	CartesianGrid,
 	ResponsiveContainer,
+	Tooltip as ReTooltip,
 	XAxis,
 	YAxis,
 	Legend,
 } from "recharts";
 import { ColorsHash, Colors } from "./utils";
+import { EventTypeTooltip } from "./EventTypeTooltip";
+import { EventTypeLegend } from "./EventTypeLegend";
 
 const formatXAxisTime = time => {
 	return new Date(time).toLocaleTimeString();
 };
+
+const LEFT_MARGIN_ADJUST_VALUE = 25;
 
 interface Props {
 	results: NRQLResult[];
@@ -22,6 +27,7 @@ interface Props {
 	 * but the facet in the metadata that points to the name of the faceted property/ies
 	 */
 	facet?: string[];
+	eventType?: string;
 }
 
 export const NRQLResultsLine = (props: Props) => {
@@ -30,7 +36,7 @@ export const NRQLResultsLine = (props: Props) => {
 		_ => _ !== "beginTimeSeconds" && _ !== "endTimeSeconds"
 	);
 	return (
-		<div className="histogram-chart">
+		<div style={{ marginLeft: `-${LEFT_MARGIN_ADJUST_VALUE}px` }} className="histogram-chart">
 			<div style={{ marginLeft: "0px", marginBottom: "20px" }}>
 				<ResponsiveContainer width="100%" height={300} debounce={1}>
 					<LineChart
@@ -53,12 +59,15 @@ export const NRQLResultsLine = (props: Props) => {
 						/>
 
 						<YAxis tick={{ fontSize: 11 }} />
-
+						<ReTooltip content={<EventTypeTooltip eventType={props.eventType || "count"} />} />
 						{dataKeys.map((_, index) => {
 							const color = ColorsHash[index % Colors.length];
 							return <Line dataKey={_} stroke={color} fill={color} dot={false} />;
 						})}
-						<Legend align="center" fontSize={10} />
+						<Legend
+							wrapperStyle={{ margin: "15px" }}
+							content={<EventTypeLegend eventType={props.eventType} />}
+						/>
 					</LineChart>
 				</ResponsiveContainer>
 			</div>

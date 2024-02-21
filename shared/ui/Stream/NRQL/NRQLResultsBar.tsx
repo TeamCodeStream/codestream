@@ -2,7 +2,7 @@ import React from "react";
 import { NRQLResult } from "@codestream/protocols/agent";
 import { CartesianGrid, ResponsiveContainer, YAxis, BarChart, Bar, Cell, Tooltip } from "recharts";
 import { Colors } from "./utils";
-import { CustomTooltip } from "./CustomTooltip";
+import { FacetTooltip } from "./FacetTooltip";
 
 interface Props {
 	results: NRQLResult[];
@@ -40,7 +40,7 @@ export const NRQLResultsBar = (props: Props) => {
 					>
 						<CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
 						<YAxis tick={{ fontSize: 11 }} />
-						<Tooltip content={<CustomTooltip facet={props.facet} />} />
+						<Tooltip content={<FacetTooltip facet={props.facet} />} />
 						<Bar dataKey={keyName} fill="#8884d8">
 							{results.map((entry, index) => (
 								<Cell
