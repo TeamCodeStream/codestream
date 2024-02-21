@@ -491,8 +491,6 @@ export abstract class ThirdPartyProviderBase<
 					}
 				}
 
-				[resp, retryCount] = await fetchCore(0, absoluteUrl, init);
-
 				if (resp.ok) {
 					traceResult = `${this.displayName}: Completed ${method} ${url}`;
 					if (options?.useRawResponse || resp.status === 204) {
