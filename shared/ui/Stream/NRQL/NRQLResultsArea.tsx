@@ -13,6 +13,7 @@ import {
 import { ColorsHash, Colors } from "./utils";
 import { EventTypeTooltip } from "./EventTypeTooltip";
 import { EventTypeLegend } from "./EventTypeLegend";
+import { LEFT_MARGIN_ADJUST_VALUE } from "./NRQLResultsLine";
 
 const formatXAxisTime = time => {
 	return new Date(time).toLocaleTimeString();
@@ -29,7 +30,7 @@ export const NRQLResultsArea = (props: Props) => {
 		_ => _ !== "beginTimeSeconds" && _ !== "endTimeSeconds"
 	);
 	return (
-		<div className="histogram-chart">
+		<div style={{ marginLeft: `-${LEFT_MARGIN_ADJUST_VALUE}px` }} className="histogram-chart">
 			<div style={{ marginLeft: "0px", marginBottom: "20px" }}>
 				<ResponsiveContainer width="100%" height={300} debounce={1}>
 					<AreaChart

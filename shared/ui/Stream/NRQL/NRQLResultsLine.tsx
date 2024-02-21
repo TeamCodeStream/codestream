@@ -18,7 +18,7 @@ const formatXAxisTime = time => {
 	return new Date(time).toLocaleTimeString();
 };
 
-const LEFT_MARGIN_ADJUST_VALUE = 25;
+export const LEFT_MARGIN_ADJUST_VALUE = 25;
 
 interface Props {
 	results: NRQLResult[];
