@@ -4,7 +4,6 @@
 		"esModuleInterop": true,
 		"experimentalDecorators": true,
 		"forceConsistentCasingInFileNames": true,
-		"incremental": true,
 		"module": "esnext",
 		"moduleResolution": "node",
 		"noFallthroughCasesInSwitch": true,
@@ -16,7 +15,6 @@
 		"sourceMap": true,
 		"strict": true,
 		"target": "es2017",
-		"tsBuildInfoFile": ".tsbuildinfo",
 		"useUnknownInCatchVariables": false,
 		"resolveJsonModule": true
 	}

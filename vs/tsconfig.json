@@ -5,6 +5,7 @@
 		"jsx": "react",
 		"lib": ["es2019", "dom", "dom.iterable"],
 		"noImplicitAny": false,
+		"incremental": true,
 		"module": "esnext",
 		"moduleResolution": "node",
 		"noEmit": true,
@@ -18,6 +19,7 @@
 		},
 		"rootDir": "../",
 		"target": "es2017",
+		"tsBuildInfoFile": ".tsbuildinfo",
 		"resolveJsonModule": false
 	},
 	"include": ["src/CodeStream.VisualStudio.Shared/UI/WebViews/*.ts", "../shared/util/src/**/*", "../shared/build/src/**/*"]

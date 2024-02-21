@@ -36,7 +36,7 @@ export const copyPlugin = (options: CopyOptions): Plugin => ({
 				const copyStuff = typeof options.onEnd === "function" ? options.onEnd() : options.onEnd;
 				await doCopy(copyStuff);
 				const elapsed = Date.now() - start;
-				console.info(`copyPlugin onEnd copied ${options.onEnd.length} sources in ${elapsed}ms`);
+				console.info(`copyPlugin done in ${elapsed}ms`);
 			}
 		});
 	}

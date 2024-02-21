@@ -5,6 +5,7 @@
 		"allowSyntheticDefaultImports": true,
 		"esModuleInterop": true,
 		"experimentalDecorators": true,
+		"incremental": true,
 		"jsx": "react",
 		"lib": ["es2019", "dom", "dom.iterable"],
 		"module": "esnext",
@@ -22,6 +23,7 @@
 		"sourceMap": true,
 		"strict": true,
 		"target": "es2017",
+		"tsBuildInfoFile": ".tsbuildinfo",
 		"useUnknownInCatchVariables": false
 	},
 	"include": ["**/*.ts", "../shared/util/src/**/*", "../shared/build/src/**/*"],

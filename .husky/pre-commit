@@ -1,8 +1,30 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+# Directory of the script
+DIR="$(realpath $(dirname -- "$0"))"
+
+# Maximum log file line count and log file location
+MAX_LOG_LINES=1000
+LOG_FILE="$DIR/_/pre-commit.log"
+
 # Skip if running in CI
 [ -n "$TEAMCITY_VERSION" ] && exit 0
+
+# Define the trap function
+cleanup() {
+    # Ensure log file does not exceed max line count.
+    tail -n $MAX_LOG_LINES $LOG_FILE > "$DIR/temp.txt"
+    mv "$DIR/temp.txt" $LOG_FILE
+}
+
+log() {
+    LOG_MSG="$(date +%Y-%m-%d\ %H:%M:%S) - $1"
+    echo "$LOG_MSG" | tee -a $LOG_FILE
+}
+
+# Place trap before cleanup task
+trap cleanup EXIT
 
 AGENT_FILES=$(git diff --cached --name-only --diff-filter=ACM "shared/agent/*")
 UI_FILES=$(git diff --cached --name-only --diff-filter=ACM "shared/ui/*")
@@ -10,32 +32,60 @@ VSCODE_FILES=$(git diff --cached --name-only --diff-filter=ACM "vscode/*")
 UTIL_FILES=$(git diff --cached --name-only --diff-filter=ACM "shared/util/*")
 VS_FILES=$(git diff --cached --name-only --diff-filter=ACM "vs/**/*.cs")
 
-if [[ -n "$AGENT_FILES" ]] || [[ -n "$UTIL_FILES" ]]; then
-    echo "Compile / Lint Agent Files"
-    pushd shared/agent
+echo ""
+
+run_and_log() {
+    log "Compiling and Linting $1 Files"
+    cd $1
+
+    set +e
     npm run verify:compile
+    COMPILE_STATUS=$?
+    set -e
+    if [ $COMPILE_STATUS -ne 0 ]; then
+        log "Compile of $1 failed"
+        exit $COMPILE_STATUS
+    fi
+    log "Compile of $1 succeeded"
+
+    set +e
     npx lint-staged --concurrent false
-    popd
+    LINT_STATUS=$?
+    set -e
+    if [ $LINT_STATUS -ne 0 ]; then
+        log "Lint of $1 failed"
+        exit $LINT_STATUS
+    fi
+    log "Lint of $1 succeeded"
+
+    cd -
+}
+
+if [ -n "$AGENT_FILES" ] || [ -n "$UTIL_FILES" ]; then
+    run_and_log "shared/agent"
 fi
 
-if [[ -n "$UI_FILES" ]] || [[ -n "$UTIL_FILES" ]]; then
-    echo "Compile / Lint UI Files"
-    pushd shared/ui
-    npm run verify:compile
-    npx lint-staged --concurrent false
-    popd
+if [ -n "$UI_FILES" ] || [ -n "$UTIL_FILES" ]; then
+    run_and_log "shared/ui"
 fi
 
-if [[ -n "$VSCODE_FILES" ]]; then
-    echo "Compile / Lint vscode Files"
-    pushd vscode
-    npm run verify:compile
-    npx lint-staged --concurrent false
-    popd
+if [ -n "$VSCODE_FILES" ]; then
+    run_and_log "vscode"
 fi
 
-if [[ -n "$VS_FILES" ]]; then
-    pushd vs/src
+if [ -n "$VS_FILES" ]; then
+    cd vs/src
+    log "Compiling and Linting VS Files"
+
+    set +e
     dotnet csharpier .
-    popd
+    COMPILE_STATUS=$?
+    set -e
+    if [ $COMPILE_STATUS -ne 0 ]; then
+        log "Compile of VS Files failed"
+        exit $COMPILE_STATUS
+    fi
+    log "Compile of VS Files succeeded"
+
+    cd -
 fi

@@ -126,7 +126,7 @@
 		"@typescript-eslint/parser": "6.19.1",
 		"cross-env": "5.2.0",
 		"cross-os": "1.5.0",
-		"esbuild": "0.19.8",
+		"esbuild": "0.20.1",
 		"esbuild-plugin-ignore": "1.1.1",
 		"eslint": "8.56.0",
 		"eslint-filtered-fix": "0.3.0",
@@ -145,7 +145,7 @@
 		"randomstring": "1.2.2",
 		"rimraf": "3.0.2",
 		"ts-jest": "29.1.2",
-		"tsx": "4.7.0",
+		"tsx": "4.7.1",
 		"typescript": "5.3.3"
 	},
 	"lint-staged": {

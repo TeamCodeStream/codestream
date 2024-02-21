@@ -6,6 +6,7 @@
 		"esModuleInterop": true,
 		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
+		"incremental": true,
 		"lib": ["ES2020"],
 		"module": "commonjs",
 		"moduleResolution": "node",

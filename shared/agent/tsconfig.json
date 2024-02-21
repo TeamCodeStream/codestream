@@ -11,7 +11,8 @@
 			"@codestream/protocols/agent": ["../../util/src/protocol/agent/agent.protocol.ts"],
 			"@codestream/protocols/api": ["../../util/src/protocol/agent/api.protocol.ts"]
 		},
-		"target": "es2017"
+		"target": "es2017",
+		"tsBuildInfoFile": ".tsbuildinfo"
 	},
 	"exclude": ["node_modules"],
 	"include": ["src/**/*.ts", "test/unit/**/*.ts", "../shared/util/src/**/*"]

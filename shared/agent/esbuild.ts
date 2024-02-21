@@ -1,7 +1,6 @@
 import * as path from "path";
 import * as os from "os";
 import * as fs from "fs-extra";
-import * as crypto from "crypto";
 
 import graphqlLoaderPlugin from "@luckycatfactory/esbuild-graphql-loader";
 import { BuildOptions } from "esbuild";
@@ -11,9 +10,8 @@ import { Args, commonEsbuildOptions, processArgs, startEsbuild } from "../build/
 import { nativeNodeModulesPlugin } from "../build/src/nativeNodeModulesPlugin";
 import { statsPlugin } from "../build/src/statsPlugin";
 import { promisify } from "util";
-import { readFileSync, rmSync } from "fs";
-
-let packageLockSha: string | undefined;
+import { existsSync, rmSync } from "fs";
+import { symlinkSync } from "node:fs";
 
 const exec = promisify(require("child_process").exec);
 
@@ -31,53 +29,30 @@ function getDepsRoot(watchMode: boolean): string {
 	return prodDepsDir;
 }
 
-function calculatePackageLockSha(): string {
-	const packageLock = readFileSync(path.join(__dirname, "package-lock.json"));
-	const hash = crypto.createHash("sha1");
-	hash.update(packageLock);
-	return hash.digest("hex");
-}
-
 function getPostBuildCopy(args: Args): CopyStuff[] {
-	const currentPackageLockSha = calculatePackageLockSha();
-	let result: CopyStuff[];
 	const nodeModulesDest = path.join(outputDir, "node_modules");
-	if (packageLockSha !== currentPackageLockSha) {
-		console.log(
-			`package-lock.json has changed. Removing ${nodeModulesDest} and copying new dependencies`
-		);
-		if (args.watchMode) {
-			console.log(`Removing ${nodeModulesDest}`);
-			rmSync(nodeModulesDest, { recursive: true });
-		}
-		result = [
-			{
-				from: "node_modules/opn/**/xdg-open",
-				to: outputDir,
-			},
-			{
-				from: path.join(getDepsRoot(args.watchMode), "node_modules/**"),
-				to: nodeModulesDest,
-				options: { ignore: ["**/@newrelic/security-agent/**"] }, // Path too long for windows
-			},
-			{
-				from: path.join(__dirname, "../../WhatsNew.*"),
-				to: outputDir,
-			},
-		];
-	} else {
-		result = [
-			{
-				from: "node_modules/opn/**/xdg-open",
-				to: outputDir,
-			},
-			{
-				from: path.join(__dirname, "../../WhatsNew.*"),
-				to: outputDir,
-			},
-		];
+	if (existsSync(nodeModulesDest)) {
+		rmSync(nodeModulesDest, { recursive: true });
 	}
-	packageLockSha = currentPackageLockSha;
+	const result: CopyStuff[] = [
+		{
+			from: "node_modules/opn/**/xdg-open",
+			to: outputDir,
+		},
+		{
+			from: path.join(__dirname, "../../WhatsNew.*"),
+			to: outputDir,
+		},
+	];
+	if (!args.watchMode) {
+		result.push({
+			from: path.join(getDepsRoot(args.watchMode), "node_modules/**"),
+			to: nodeModulesDest,
+			options: { ignore: ["**/@newrelic/security-agent/**"] }, // Path too long for windows
+		});
+	} else {
+		symlinkSync(path.join(getDepsRoot(args.watchMode), "node_modules"), nodeModulesDest);
+	}
 	return result;
 }
 
@@ -96,7 +71,7 @@ async function installProdDeps(tmpDir: string) {
 	if (stderr || error) {
 		console.error(`stdout: ${stdout}\nstderr: ${stderr}\n ${error?.message}`);
 		if (error) {
-			throw new Error("Unable to npm i --production");
+			throw new Error("Unable to npm i --omit=dev");
 		}
 	}
 	// Remove this bizarre extra file that shows up only on linux only for --omit=dev that breaks vcse package
