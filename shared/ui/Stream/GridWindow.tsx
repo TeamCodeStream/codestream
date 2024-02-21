@@ -81,7 +81,6 @@ function useInnerElementType(Cell, columnWidth, rowHeight) {
 							height: rowHeight(0),
 							position: "sticky",
 							top: 0,
-							// left: 0,
 							zIndex: 4,
 							backgroundColor: "var(--app-background-color-hover)",
 						},
@@ -137,9 +136,6 @@ function useInnerElementType(Cell, columnWidth, rowHeight) {
 								width,
 								height,
 								backgroundColor: "var(--app-background-color)",
-								// position: "sticky",
-								// left: 0,
-								// zIndex: 2,
 							},
 						})
 					);

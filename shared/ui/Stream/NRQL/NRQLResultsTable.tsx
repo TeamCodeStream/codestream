@@ -7,7 +7,6 @@ const MAX_COL_WIDTH = 400;
 const MIN_ROW_HEIGHT = 100;
 
 const cellStyle = {
-	wordBreak: "break-word",
 	padding: "4px",
 	borderRight: "1px solid var(--base-border-color)",
 	borderBottom: "1px solid var(--base-border-color)",
@@ -55,9 +54,16 @@ export const NRQLResultsTable = (props: Props) => {
 					borderTop: rowIndex === 0 ? "1px solid var(--base-border-color)" : "none",
 					color: rowIndex === 0 ? "var(--text-color-highlight)" : "default",
 					fontWeight: rowIndex === 0 ? "bold" : "default",
+					wordBreak: rowIndex === 0 ? "break-word" : "normal",
 				}}
 			>
-				{value}
+				{rowIndex !== 0 ? (
+					<div style={{ display: "flex", alignItems: "center", height: "100%" }}>
+						<div style={{ wordBreak: rowIndex === 0 ? "normal" : "break-word" }}>{value}</div>
+					</div>
+				) : (
+					<div>{value}</div>
+				)}
 			</div>
 		);
 	};
@@ -82,9 +88,9 @@ export const NRQLResultsTable = (props: Props) => {
 
 	const calculateRowHeights = rowCalcData => {
 		return rowCalcData.map(([index, longestLength, columnWidthValue]) => {
-			let lengthOfString = longestLength * 8;
+			let lengthOfString = longestLength * 9;
 			const numLines = Math.ceil(lengthOfString / columnWidthValue);
-			const lineHeight = 26;
+			const lineHeight = 28;
 			const totalHeight = numLines * lineHeight;
 			return totalHeight;
 		});
