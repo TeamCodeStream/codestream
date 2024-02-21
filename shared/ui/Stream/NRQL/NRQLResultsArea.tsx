@@ -6,10 +6,13 @@ import {
 	XAxis,
 	YAxis,
 	Legend,
+	Tooltip as ReTooltip,
 	AreaChart,
 	Area,
 } from "recharts";
 import { ColorsHash, Colors } from "./utils";
+import { EventTypeTooltip } from "./EventTypeTooltip";
+import { EventTypeLegend } from "./EventTypeLegend";
 
 const formatXAxisTime = time => {
 	return new Date(time).toLocaleTimeString();
@@ -17,6 +20,7 @@ const formatXAxisTime = time => {
 
 interface Props {
 	results: NRQLResult[];
+	eventType?: string;
 }
 
 export const NRQLResultsArea = (props: Props) => {
@@ -40,20 +44,26 @@ export const NRQLResultsArea = (props: Props) => {
 						}}
 					>
 						<CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-
 						<XAxis
 							tick={{ fontSize: 11 }}
 							dataKey="endTimeSeconds"
 							tickFormatter={formatXAxisTime}
 						/>
-
 						<YAxis tick={{ fontSize: 11 }} />
+						<ReTooltip
+							content={
+								<EventTypeTooltip eventType={props.eventType || "count"} timeRangeDisplay={true} />
+							}
+						/>
 
 						{dataKeys.map((_, index) => {
 							const color = ColorsHash[index % Colors.length];
 							return <Area dataKey={_} stroke={color} fill={color} />;
 						})}
-						<Legend align="center" fontSize={10} />
+						<Legend
+							wrapperStyle={{ margin: "15px" }}
+							content={<EventTypeLegend eventType={props.eventType} />}
+						/>
 					</AreaChart>
 				</ResponsiveContainer>
 			</div>

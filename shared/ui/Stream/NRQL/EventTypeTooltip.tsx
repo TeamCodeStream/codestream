@@ -6,12 +6,9 @@ interface EventTypeTooltipProps {
 	active?: boolean;
 	payload?: any[];
 	label?: string;
+	timeRangeDisplay?: boolean;
 	eventType: string;
 }
-
-const formatXAxisTime = time => {
-	return new Date(time).toLocaleTimeString();
-};
 
 interface ContainerProps {
 	colorSubtle: string;
@@ -56,7 +53,10 @@ export const EventTypeTooltip: React.FC<EventTypeTooltipProps> = ({
 	payload,
 	label,
 	eventType,
+	timeRangeDisplay,
 }) => {
+	const formatXAxisTime = time => new Date(time).toLocaleTimeString();
+
 	const computedStyle = getComputedStyle(document.body);
 	const colorSubtle = computedStyle.getPropertyValue("--text-color-subtle").trim();
 	const colorBackgroundHover = computedStyle
@@ -64,23 +64,39 @@ export const EventTypeTooltip: React.FC<EventTypeTooltipProps> = ({
 		.trim();
 
 	if (active && payload && payload.length && label) {
-		const dataValue = payload[0].value;
-		const dataTime = payload[0].payload.endTimeSeconds;
-		const formattedTime = formatXAxisTime(dataTime);
-		const bulletColor = payload[0]?.color || "black";
+		const {
+			value: dataValue,
+			payload: { beginTimeSeconds, endTimeSeconds },
+			color: bulletColor = "black",
+		} = payload[0];
+		const formattedStart = formatXAxisTime(beginTimeSeconds);
+		const formattedTime = formatXAxisTime(endTimeSeconds);
 
-		return (
-			<Container colorSubtle={colorSubtle} colorBackgroundHover={colorBackgroundHover}>
-				<div>{formattedTime}</div>
-				<EventTypeValueContainer>
-					<EventType>
-						<Bullet bulletColor={bulletColor} />
-						{eventType}
-					</EventType>
-					<Value>{dataValue}</Value>
-				</EventTypeValueContainer>
-			</Container>
-		);
+		if (!timeRangeDisplay) {
+			return (
+				<Container colorSubtle={colorSubtle} colorBackgroundHover={colorBackgroundHover}>
+					<div>{formattedTime}</div>
+					<EventTypeValueContainer>
+						<EventType>
+							<Bullet bulletColor={bulletColor} />
+							{eventType}s
+						</EventType>
+						<Value>{dataValue}</Value>
+					</EventTypeValueContainer>
+				</Container>
+			);
+		}
+
+		if (timeRangeDisplay) {
+			return (
+				<Container colorSubtle={colorSubtle} colorBackgroundHover={colorBackgroundHover}>
+					<div>{eventType}s</div>
+					<div>
+						{dataValue} from {formattedStart} to {formattedTime}
+					</div>
+				</Container>
+			);
+		}
 	}
 	return null;
 };
