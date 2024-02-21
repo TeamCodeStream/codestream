@@ -2,24 +2,24 @@ import { ResolveStackTraceResponse } from "@codestream/protocols/agent";
 
 export const resolveStackTraceResponse: ResolveStackTraceResponse = {
 	resolvedStackInfo: {
-		text: "TypeError: Cannot read properties of undefined (reading 'get')\n    at /app/src/data/usersRepository.js:56:23\n    at Array.reduce (<anonymous>)\n    at countUsersByState (/app/src/data/usersRepository.js:55:19)\n    at userStateReport (/app/src/data/usersRepository.js:62:10)\n    at fetchUserStateReport (/app/src/controllers/usersController.js:11:16)\n    at runInContextCb (/app/node_modules/newrelic/lib/shim/shim.js:1322:22)\n    at AsyncLocalStorage.run (node:async_hooks:330:14)\n    at AsyncLocalContextManager.runInContext (/app/node_modules/newrelic/lib/context-manager/async-local-context-manager.js:65:36)\n    at WebFrameworkShim.applySegment (/app/node_modules/newrelic/lib/shim/shim.js:1312:25)\n    at _applyRecorderSegment (/app/node_modules/newrelic/lib/shim/shim.js:954:20)",
+		text: "TypeError: Cannot read properties of undefined (reading 'get')\n    at /app/src/data/usersRepository.js:51:23\n    at Array.reduce (<anonymous>)\n    at countUsersByState (/app/src/data/usersRepository.js:50:19)\n    at userStateReport (/app/src/data/usersRepository.js:57:10)\n    at fetchUserStateReport (/app/src/controllers/usersController.js:11:16)\n    at runInContextCb (/app/node_modules/newrelic/lib/shim/shim.js:1324:22)\n    at AsyncLocalStorage.run (node:async_hooks:346:14)\n    at AsyncLocalContextManager.runInContext (/app/node_modules/newrelic/lib/context-manager/async-local-context-manager.js:65:36)\n    at WebFrameworkShim.applySegment (/app/node_modules/newrelic/lib/shim/shim.js:1314:25)\n    at _applyRecorderSegment (/app/node_modules/newrelic/lib/shim/shim.js:956:20)",
 		lines: [],
 		language: "javascript",
 		header: "TypeError: Cannot read properties of undefined (reading 'get')",
 		error: "Cannot read properties of undefined (reading 'get')",
 		repoId: "653af0a540cfc303405ca056",
-		sha: "release-4",
-		occurrenceId: "cd39a37f-d01c-11ee-894b-068eae1a6a25_0_1831",
+		sha: "release-22",
+		occurrenceId: "9bef4b5d-d0fb-11ee-91b3-faf14c8b1a88_38244_40016",
 	},
 	parsedStackInfo: {
-		text: "TypeError: Cannot read properties of undefined (reading 'get')\n    at /app/src/data/usersRepository.js:56:23\n    at Array.reduce (<anonymous>)\n    at countUsersByState (/app/src/data/usersRepository.js:55:19)\n    at userStateReport (/app/src/data/usersRepository.js:62:10)\n    at fetchUserStateReport (/app/src/controllers/usersController.js:11:16)\n    at runInContextCb (/app/node_modules/newrelic/lib/shim/shim.js:1322:22)\n    at AsyncLocalStorage.run (node:async_hooks:330:14)\n    at AsyncLocalContextManager.runInContext (/app/node_modules/newrelic/lib/context-manager/async-local-context-manager.js:65:36)\n    at WebFrameworkShim.applySegment (/app/node_modules/newrelic/lib/shim/shim.js:1312:25)\n    at _applyRecorderSegment (/app/node_modules/newrelic/lib/shim/shim.js:954:20)",
+		text: "TypeError: Cannot read properties of undefined (reading 'get')\n    at /app/src/data/usersRepository.js:51:23\n    at Array.reduce (<anonymous>)\n    at countUsersByState (/app/src/data/usersRepository.js:50:19)\n    at userStateReport (/app/src/data/usersRepository.js:57:10)\n    at fetchUserStateReport (/app/src/controllers/usersController.js:11:16)\n    at runInContextCb (/app/node_modules/newrelic/lib/shim/shim.js:1324:22)\n    at AsyncLocalStorage.run (node:async_hooks:346:14)\n    at AsyncLocalContextManager.runInContext (/app/node_modules/newrelic/lib/context-manager/async-local-context-manager.js:65:36)\n    at WebFrameworkShim.applySegment (/app/node_modules/newrelic/lib/shim/shim.js:1314:25)\n    at _applyRecorderSegment (/app/node_modules/newrelic/lib/shim/shim.js:956:20)",
 		lines: [
 			{
 				fileFullPath: "/app/src/data/usersRepository.js",
 				method: "<unknown>",
 				fullMethod: "<unknown>",
 				arguments: [],
-				line: 56,
+				line: 51,
 				column: 23,
 			},
 			{
@@ -34,7 +34,7 @@ export const resolveStackTraceResponse: ResolveStackTraceResponse = {
 				method: "countUsersByState",
 				fullMethod: "countUsersByState",
 				arguments: [],
-				line: 55,
+				line: 50,
 				column: 19,
 			},
 			{
@@ -42,7 +42,7 @@ export const resolveStackTraceResponse: ResolveStackTraceResponse = {
 				method: "userStateReport",
 				fullMethod: "userStateReport",
 				arguments: [],
-				line: 62,
+				line: 57,
 				column: 10,
 			},
 			{
@@ -58,7 +58,7 @@ export const resolveStackTraceResponse: ResolveStackTraceResponse = {
 				method: "runInContextCb",
 				fullMethod: "runInContextCb",
 				arguments: [],
-				line: 1322,
+				line: 1324,
 				column: 22,
 			},
 			{
@@ -67,7 +67,7 @@ export const resolveStackTraceResponse: ResolveStackTraceResponse = {
 				namespace: "AsyncLocalStorage",
 				fullMethod: "AsyncLocalStorage.run",
 				arguments: [],
-				line: 330,
+				line: 346,
 				column: 14,
 			},
 			{
@@ -86,7 +86,7 @@ export const resolveStackTraceResponse: ResolveStackTraceResponse = {
 				namespace: "WebFrameworkShim",
 				fullMethod: "WebFrameworkShim.applySegment",
 				arguments: [],
-				line: 1312,
+				line: 1314,
 				column: 25,
 			},
 			{
@@ -94,7 +94,7 @@ export const resolveStackTraceResponse: ResolveStackTraceResponse = {
 				method: "_applyRecorderSegment",
 				fullMethod: "_applyRecorderSegment",
 				arguments: [],
-				line: 954,
+				line: 956,
 				column: 20,
 			},
 		],
@@ -102,7 +102,7 @@ export const resolveStackTraceResponse: ResolveStackTraceResponse = {
 		header: "TypeError: Cannot read properties of undefined (reading 'get')",
 		error: "Cannot read properties of undefined (reading 'get')",
 		repoId: "653af0a540cfc303405ca056",
-		sha: "release-4",
-		occurrenceId: "cd39a37f-d01c-11ee-894b-068eae1a6a25_0_1831",
+		sha: "release-22",
+		occurrenceId: "9bef4b5d-d0fb-11ee-91b3-faf14c8b1a88_38244_40016",
 	},
 };

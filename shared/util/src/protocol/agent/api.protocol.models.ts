@@ -420,7 +420,7 @@ export interface CSPost extends CSEntity {
 	text: string;
 	parts?: PostParts;
 	seqNum: number | string;
-	hasBeenEdited: boolean;
+	hasBeenEdited?: boolean;
 	mentionedUserIds?: string[];
 	origin?: "email" | "slack" | "msteams" | "editor";
 	reactions?: { [key: string]: string[] };
@@ -431,6 +431,8 @@ export interface CSPost extends CSEntity {
 	sharedTo?: ShareTarget[];
 	codeErrorId?: string;
 	forGrok?: boolean;
+	language?: string;
+	analyze?: boolean;
 }
 
 export interface CSRemote {
@@ -458,7 +460,7 @@ export enum ChannelServiceType {
 }
 
 export interface CSBaseStream extends CSEntity {
-	isArchived: boolean;
+	isArchived?: boolean;
 	privacy: "public" | "private";
 	sortId: string;
 	teamId: string;

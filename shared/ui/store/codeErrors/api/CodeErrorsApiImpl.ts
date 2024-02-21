@@ -32,23 +32,27 @@ export class CodeErrorsApiImpl implements CodeErrorsApi {
 	async createShareableCodeError(
 		request: CreateShareableCodeErrorRequest
 	): Promise<CreateShareableCodeErrorResponse> {
-		return HostApi.instance.send(CreateShareableCodeErrorRequestType, request);
+		const result = await HostApi.instance.send(CreateShareableCodeErrorRequestType, request);
+		return result;
 	}
 
 	async fetchCodeErrors(request: FetchCodeErrorsRequest): Promise<FetchCodeErrorsResponse> {
-		return HostApi.instance.send(FetchCodeErrorsRequestType, request);
+		const result = await HostApi.instance.send(FetchCodeErrorsRequestType, request);
+		return result;
 	}
 
 	async getNewRelicErrorGroup(
 		request: GetNewRelicErrorGroupRequest
 	): Promise<GetNewRelicErrorGroupResponse> {
-		return HostApi.instance.send(GetNewRelicErrorGroupRequestType, request);
+		const result = await HostApi.instance.send(GetNewRelicErrorGroupRequestType, request);
+		return result;
 	}
 
 	async getObservabilityErrors(
 		request: GetObservabilityErrorsRequest
 	): Promise<GetObservabilityErrorsResponse> {
-		return HostApi.instance.send(GetObservabilityErrorsRequestType, request);
+		const result = await HostApi.instance.send(GetObservabilityErrorsRequestType, request);
+		return result;
 	}
 
 	async resolveStackTrace(request: ResolveStackTraceRequest): Promise<ResolveStackTraceResponse> {
@@ -64,7 +68,8 @@ export class CodeErrorsApiImpl implements CodeErrorsApi {
 	}
 
 	async updateCodeErrors(request: UpdateCodeErrorRequest): Promise<UpdateCodeErrorResponse> {
-		return HostApi.instance.send(UpdateCodeErrorRequestType, request);
+		const result = await HostApi.instance.send(UpdateCodeErrorRequestType, request);
+		return result;
 	}
 
 	async executeThirdPartyTyped<T, R>(method: string, params: any): Promise<any> {
@@ -76,6 +81,7 @@ export class CodeErrorsApiImpl implements CodeErrorsApi {
 	}
 
 	async track(eventName: TelemetryEventName, properties?: TelemetryData): Promise<void> {
-		return HostApi.instance.track(eventName, properties);
+		const result = await HostApi.instance.track(eventName, properties);
+		return result;
 	}
 }
