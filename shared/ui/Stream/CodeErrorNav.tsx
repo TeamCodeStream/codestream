@@ -244,7 +244,7 @@ export function CodeErrorNav(props: Props) {
 			dispatch(closeAllPanels());
 			return;
 		}
-		console.warn("eric currentCodeErrorId", derivedState.currentCodeErrorId);
+
 		if (pendingErrorGroupGuid) {
 			onConnected(undefined);
 		} else {
@@ -440,7 +440,6 @@ export function CodeErrorNav(props: Props) {
 				// Set target remote if entity is associated with one repo
 				if (errorGroupResult?.errorGroup?.entity?.relatedRepos?.length === 1 && !multipleRepos) {
 					targetRemote = errorGroupResult?.errorGroup?.entity?.relatedRepos[0]?.url!;
-					``;
 				} else if (
 					// Attempt to set remote from codeError object as long as we know there is a repo associated
 					codeError?.objectInfo?.remote &&
