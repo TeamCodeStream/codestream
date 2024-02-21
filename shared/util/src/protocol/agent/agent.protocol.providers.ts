@@ -2469,42 +2469,13 @@ export interface RelatedEntityByRepositoryGuidsResult {
 	};
 }
 
-export type VulnerabilityStatus =
-	| "ASSIGNED"
-	| "NEW"
-	| "MITIGATED"
-	| "REMEDIATED"
-	| "IGNORED"
-	| "NO_LONGER_DETECTED";
-
 export const riskSeverityList = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN", "INFO"] as const;
 
 export type RiskSeverity = (typeof riskSeverityList)[number];
 
-export const criticalityList = ["CRITICAL", "HIGH", "MODERATE", "LOW"] as const;
+export const severityList = ["CRITICAL", "HIGH", "MODERATE", "LOW"] as const;
 
-export type CriticalityType = (typeof criticalityList)[number];
-
-// /v1/issues/ response
-// https://source.datanerd.us/incubator/nrsec-workflow-api/blob/dacb63f32aa836a4b90f6345a83e0ae95f7d3463/src/main/java/com/newrelic/nrsecworkflowapi/api/SecurityIssueSummary.java
-export type SecurityIssueSummary = {
-	issueId: string;
-	title: string;
-	sources: Array<string>;
-	issueType: string;
-	severity: RiskSeverity;
-	status: VulnerabilityStatus;
-	entityCount: number;
-	issueCount: number;
-	assignedCount: number;
-	uniqueUserCount: number;
-	assignedUsers: Array<number>;
-	accountId?: number;
-	firstSeen: string;
-	lastSeen: string;
-};
-
-export type SecurityIssueSummaryResponse = Array<SecurityIssueSummary>;
+export type SeverityType = (typeof severityList)[number];
 
 export type GetLibraryDetailsRequest = {
 	entityGuid: string;
@@ -2513,16 +2484,14 @@ export type GetLibraryDetailsRequest = {
 	rows?: number | "all";
 };
 
-export type Vuln = {
-	remediation: Array<string>;
-	issueId: string; // cve
+export type Vulnerability = {
+	cveId: string;
 	title: string;
 	url: string;
-	source: string;
 	vector: string;
 	description: string;
 	score: number;
-	criticality: CriticalityType;
+	severity: SeverityType;
 };
 
 export type LibraryDetails = {
@@ -2530,9 +2499,9 @@ export type LibraryDetails = {
 	version: string;
 	suggestedVersion?: string;
 	highestScore: number;
-	highestCriticality: CriticalityType;
+	highestSeverity: SeverityType;
 	language?: string;
-	vulns: Array<Vuln>;
+	vulnerabilities: Array<Vulnerability>;
 };
 
 export type GetLibraryDetailsResponse = {

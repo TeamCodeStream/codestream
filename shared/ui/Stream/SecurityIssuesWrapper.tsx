@@ -1,11 +1,11 @@
 import {
-	CriticalityType,
+	SeverityType,
 	ERROR_VM_NOT_SETUP,
 	GetLibraryDetailsType,
 	LibraryDetails,
 	RiskSeverity,
 	riskSeverityList,
-	Vuln,
+	Vulnerability,
 } from "@codestream/protocols/agent";
 import { isEmpty, lowerCase } from "lodash-es";
 import React, { useEffect, useState } from "react";
@@ -92,7 +92,7 @@ const severityColorMap: Record<RiskSeverity, string> = {
 	UNKNOWN: "#ee8608",
 };
 
-function criticalityToRiskSeverity(riskSeverity: CriticalityType): RiskSeverity {
+function criticalityToRiskSeverity(riskSeverity: SeverityType): RiskSeverity {
 	switch (riskSeverity) {
 		case "CRITICAL":
 			return "CRITICAL";
@@ -100,8 +100,6 @@ function criticalityToRiskSeverity(riskSeverity: CriticalityType): RiskSeverity 
 			return "HIGH";
 		case "MODERATE":
 			return "MEDIUM";
-		case "LOW":
-			return "LOW";
 		default:
 			return "LOW";
 	}
@@ -133,13 +131,13 @@ function Additional(props: { onClick: () => void; additional?: number }) {
 	) : null;
 }
 
-function VulnView(props: {
+function VulnerabilityView(props: {
 	accountId: number;
 	entityGuid: string;
-	vuln: Vuln;
+	vulnerability: Vulnerability;
 	onClose: () => void;
 }) {
-	const { vuln } = props;
+	const { vulnerability: vuln } = props;
 	HostApi.instance.track("codestream/vulnerability clicked", {
 		entity_guid: props.entityGuid,
 		account_id: props.accountId,
@@ -169,19 +167,13 @@ function VulnView(props: {
 						</CardTitle>
 						<div style={{ margin: "10px 0" }}>
 							<div>
-								<b>Fix version(s): </b>
-								{vuln.remediation.join(", ")}
+								<b>Severity: </b>
+								{vuln.severity}
 							</div>
 							<div>
-								<b>Criticality: </b>
-								{vuln.criticality}
+								<b>CVE Id: </b> {vuln.cveId}
 							</div>
-							<div>
-								<b>Issue Id: </b> {vuln.issueId}
-							</div>
-							<div>
-								<b>Source: </b> {vuln.source}
-							</div>
+
 							<div>
 								<b>CVSS score: </b> {vuln.score}
 							</div>
@@ -199,7 +191,11 @@ function VulnView(props: {
 	);
 }
 
-function VulnRow(props: { accountId: number; entityGuid: string; vuln: Vuln }) {
+function VulnerabilityRow(props: {
+	accountId: number;
+	entityGuid: string;
+	vulnerability: Vulnerability;
+}) {
 	const [expanded, setExpanded] = useState<boolean>(false);
 
 	return (
@@ -214,8 +210,8 @@ function VulnRow(props: { accountId: number; entityGuid: string; vuln: Vuln }) {
 				<div>
 					<Icon style={{ transform: "scale(0.9)" }} name="lock" />
 				</div>
-				<div>{props.vuln.title}</div>
-				<Severity severity={criticalityToRiskSeverity(props.vuln.criticality)} />
+				<div>{props.vulnerability.title}</div>
+				<Severity severity={criticalityToRiskSeverity(props.vulnerability.severity)} />
 			</Row>
 			{expanded && (
 				<Modal
@@ -224,8 +220,8 @@ function VulnRow(props: { accountId: number; entityGuid: string; vuln: Vuln }) {
 						setExpanded(false);
 					}}
 				>
-					<VulnView
-						vuln={props.vuln}
+					<VulnerabilityView
+						vulnerability={props.vulnerability}
 						accountId={props.accountId}
 						entityGuid={props.entityGuid}
 						onClose={() => setExpanded(false)}
@@ -240,8 +236,8 @@ function LibraryRow(props: { accountId: number; entityGuid: string; library: Lib
 	const [expanded, setExpanded] = useState<boolean>(false);
 	const { library } = props;
 	const subtleText = library.suggestedVersion
-		? `${library.version} -> ${library.suggestedVersion} (${library.vulns.length})`
-		: `${library.version} (${library.vulns.length})`;
+		? `${library.version} -> ${library.suggestedVersion} (${library.vulnerabilities.length})`
+		: `${library.version} (${library.vulnerabilities.length})`;
 	const tooltipText = library.suggestedVersion
 		? `Recommended fix: upgrade ${library.version} to ${library.suggestedVersion}`
 		: undefined;
@@ -265,11 +261,15 @@ function LibraryRow(props: { accountId: number; entityGuid: string; library: Lib
 						<span className="subtle">{subtleText}</span>
 					</Tooltip>
 				</div>
-				<Severity severity={criticalityToRiskSeverity(library.highestCriticality)} />
+				<Severity severity={criticalityToRiskSeverity(library.highestSeverity)} />
 			</Row>
 			{expanded &&
-				library.vulns.map(vuln => (
-					<VulnRow accountId={props.accountId} entityGuid={props.entityGuid} vuln={vuln} />
+				library.vulnerabilities.map(vuln => (
+					<VulnerabilityRow
+						accountId={props.accountId}
+						entityGuid={props.entityGuid}
+						vulnerability={vuln}
+					/>
 				))}
 		</>
 	);

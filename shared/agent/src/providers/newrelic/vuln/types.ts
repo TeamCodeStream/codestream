@@ -1,4 +1,4 @@
-import { CriticalityType } from "@codestream/protocols/agent";
+import { SeverityType } from "@codestream/protocols/agent";
 
 export type VersionDetails = {
 	version?: string;
@@ -6,6 +6,8 @@ export type VersionDetails = {
 	highVulnerabilities: number;
 	otherVulnerabilities: number;
 	vulnerabilities: Array<VulnerabililityDetails>;
+	score: number;
+	allVulnerabilities: number;
 };
 
 export type VulnerableLibrary = {
@@ -21,27 +23,25 @@ export type EntityLibraries = {
 };
 
 export type VulnerabililityDetails = {
-	cve: string;
-	artifact: string;
-	url: string;
+	cveId: string;
 	title: string;
 	description: string;
+	url: string;
 	score: number;
 	vector: string;
-	coordinate: string;
-	source?: string;
-	cveJson: string;
+	packages: VulnerabilityPackage[];
+	updatedAt: number;
+	vulnDisclosedAt: number;
+	cve: string; //looks unused atm, keeping for reference
 	language: string;
-	criticality: CriticalityType;
-	packages: {
-		remediation: string;
-		artifact: string;
-		language: string;
-		severity: string; // TODO use same enum?
-		versions: string;
-	}[];
-	versions: Array<Array<string>>;
-	remediation: Array<string>;
+};
+
+export type VulnerabilityPackage = {
+	remediation: string;
+	artifact: string;
+	language: string;
+	severity: SeverityType;
+	versions: string;
 };
 
 export type Vulnerabilities = {
