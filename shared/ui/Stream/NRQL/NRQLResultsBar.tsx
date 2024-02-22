@@ -55,7 +55,7 @@ export const NRQLResultsBar = (props: Props) => {
 							radius={[5, 5, 5, 5]}
 							barSize={10}
 							label={renderCustomLabel}
-							isAnimationActive={false}
+							isAnimationActive={true}
 							background={{
 								fill: "var(--app-background-color-hover)",
 								radius: 5,
