@@ -25,6 +25,7 @@ export const NRQLResultsBar = (props: Props) => {
 	return (
 		<div className="histogram-chart">
 			<div style={{ height: "700px", overflowY: "auto" }}>
+				{/* @TODO  use resize-detector height */}
 				<ResponsiveContainer width="100%" height={props.results.length * 55} debounce={1}>
 					<BarChart
 						width={500}

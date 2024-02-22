@@ -32,7 +32,7 @@ export const NRQLResultsArea = (props: Props) => {
 	return (
 		<div style={{ marginLeft: `-${LEFT_MARGIN_ADJUST_VALUE}px` }} className="histogram-chart">
 			<div style={{ marginLeft: "0px", marginBottom: "20px" }}>
-				<ResponsiveContainer width="100%" height={300} debounce={1}>
+				<ResponsiveContainer width="100%" height={500} debounce={1}>
 					<AreaChart
 						width={500}
 						height={300}
