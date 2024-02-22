@@ -2,7 +2,6 @@ import React from "react";
 import { NRQLResult } from "@codestream/protocols/agent";
 import { ResponsiveContainer, YAxis, XAxis, BarChart, Bar, Cell, ReferenceLine } from "recharts";
 import { Colors } from "./utils";
-import { LEFT_MARGIN_ADJUST_VALUE } from "./NRQLResultsLine";
 
 interface Props {
 	results: NRQLResult[];
@@ -24,7 +23,7 @@ export const NRQLResultsBar = (props: Props) => {
 			: "count") || "count";
 
 	return (
-		<div style={{ marginLeft: `-${LEFT_MARGIN_ADJUST_VALUE}px` }} className="histogram-chart">
+		<div className="histogram-chart">
 			<div style={{ height: "700px", overflowY: "auto" }}>
 				<ResponsiveContainer width="100%" height={props.results.length * 55} debounce={1}>
 					<BarChart
@@ -34,14 +33,14 @@ export const NRQLResultsBar = (props: Props) => {
 						layout="vertical"
 						margin={{
 							top: 20,
-							right: 30,
-							left: 30,
+							right: 0,
+							left: 20,
 							bottom: 5,
 						}}
 						barCategoryGap={20}
 						barGap={5}
 					>
-						<XAxis hide type="number" tick={{ fontSize: 11 }} domain={[0, "dataMax + 30"]} />{" "}
+						<XAxis hide type="number" tick={{ fontSize: 11 }} domain={[0, "dataMax"]} />{" "}
 						{/* Adjust domain */}
 						<YAxis
 							dataKey={keyName}
@@ -57,7 +56,10 @@ export const NRQLResultsBar = (props: Props) => {
 							barSize={10}
 							label={renderCustomLabel}
 							isAnimationActive={false}
-							background={{ fill: "var(--app-background-color-hover)" }}
+							background={{
+								fill: "var(--app-background-color-hover)",
+								radius: 5,
+							}}
 						>
 							{props.results.map((entry, index) => (
 								<Cell
@@ -81,7 +83,7 @@ const renderCustomLabel = props => {
 	const { x, y, width, value, name } = props;
 
 	return (
-		<text x={30} y={y - 10} fill={`var(--text-color)`} textAnchor="left" fontSize={13}>
+		<text x={20} y={y - 10} fill={`var(--text-color)`} textAnchor="left" fontSize={13}>
 			{name}
 		</text>
 	);
