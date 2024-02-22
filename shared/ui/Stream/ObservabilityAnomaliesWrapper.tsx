@@ -43,7 +43,7 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 
-		const anomaliesDropdownIsExpanded = preferences?.anomaliesDropdownIsExpanded ?? true;
+		const anomaliesDropdownIsExpanded = preferences?.anomaliesDropdownIsExpanded ?? false;
 
 		const clmSettings = state.preferences.clmSettings || {};
 		return {

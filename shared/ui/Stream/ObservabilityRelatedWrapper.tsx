@@ -20,7 +20,7 @@ export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 
-		const relatedServicesIsExpanded = preferences?.relatedServicesIsExpanded ?? true;
+		const relatedServicesIsExpanded = preferences?.relatedServicesIsExpanded ?? false;
 
 		return {
 			relatedServicesIsExpanded,

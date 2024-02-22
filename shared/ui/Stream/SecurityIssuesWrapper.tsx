@@ -284,7 +284,7 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 
-		const securityIssuesDropdownIsExpanded = preferences?.securityIssuesDropdownIsExpanded ?? true;
+		const securityIssuesDropdownIsExpanded = preferences?.securityIssuesDropdownIsExpanded ?? false;
 
 		return {
 			securityIssuesDropdownIsExpanded,

@@ -27,7 +27,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 
-		const goldenMetricsDropdownIsExpanded = preferences?.goldenMetricsDropdownIsExpanded ?? true;
+		const goldenMetricsDropdownIsExpanded = preferences?.goldenMetricsDropdownIsExpanded ?? false;
 
 		return {
 			goldenMetricsDropdownIsExpanded,

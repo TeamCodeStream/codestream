@@ -27,7 +27,7 @@ export const ObservabilityErrorWrapper = React.memo((props: Props) => {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 
-		const errorDropdownIsExpanded = preferences?.errorDropdownIsExpanded ?? true;
+		const errorDropdownIsExpanded = preferences?.errorDropdownIsExpanded ?? false;
 
 		return {
 			errorDropdownIsExpanded,
