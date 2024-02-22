@@ -27,7 +27,6 @@ export const NRQLResultsPie = (props: Props) => {
 
 	const handleMouseEnter = index => {
 		setActiveIndex(index);
-		console.warn("eric index", index);
 	};
 
 	const handleMouseLeave = () => {

@@ -10,6 +10,7 @@ interface Props {
 	 * but the facet in the metadata that points to the name of the faceted property/ies
 	 */
 	facet: string[];
+	height: number;
 }
 
 export const NRQLResultsBar = (props: Props) => {
@@ -24,8 +25,7 @@ export const NRQLResultsBar = (props: Props) => {
 
 	return (
 		<div className="histogram-chart">
-			<div style={{ height: "700px", overflowY: "auto" }}>
-				{/* @TODO  use resize-detector height */}
+			<div style={{ height: props.height, overflowY: "auto" }}>
 				<ResponsiveContainer width="100%" height={props.results.length * 55} debounce={1}>
 					<BarChart
 						width={500}
@@ -42,7 +42,6 @@ export const NRQLResultsBar = (props: Props) => {
 						barGap={5}
 					>
 						<XAxis hide type="number" tick={{ fontSize: 11 }} domain={[0, "dataMax"]} />{" "}
-						{/* Adjust domain */}
 						<YAxis
 							dataKey={keyName}
 							type="category"
