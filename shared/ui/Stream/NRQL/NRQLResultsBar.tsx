@@ -1,6 +1,6 @@
 import React from "react";
 import { NRQLResult } from "@codestream/protocols/agent";
-import { ResponsiveContainer, YAxis, XAxis, BarChart, Bar, Cell, ReferenceLine } from "recharts";
+import { ResponsiveContainer, YAxis, XAxis, BarChart, Bar, Cell } from "recharts";
 import { Colors } from "./utils";
 
 interface Props {
@@ -72,7 +72,6 @@ export const NRQLResultsBar = (props: Props) => {
 								/>
 							))}
 						</Bar>
-						<ReferenceLine y={0} stroke="#eee" strokeWidth={2} />
 					</BarChart>
 				</ResponsiveContainer>
 			</div>
