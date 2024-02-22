@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { NRQLResult } from "@codestream/protocols/agent";
 import { GridWindow } from "../GridWindow";
 
-const MIN_COL_WIDTH = 100;
+const MIN_COL_WIDTH = 140;
 const MAX_COL_WIDTH = 400;
 const MIN_ROW_HEIGHT = 100;
 
@@ -59,10 +59,20 @@ export const NRQLResultsTable = (props: Props) => {
 			>
 				{rowIndex !== 0 ? (
 					<div style={{ display: "flex", alignItems: "center", height: "100%" }}>
-						<div style={{ wordBreak: rowIndex === 0 ? "normal" : "break-word" }}>{value}</div>
+						<div style={{ wordBreak: "break-word" }}>{value}</div>
 					</div>
 				) : (
-					<div>{value}</div>
+					<div
+						style={{
+							position: "absolute",
+							top: "50%",
+							left: 4,
+							right: 4,
+							transform: "translateY(-50%)",
+						}}
+					>
+						{value}
+					</div>
 				)}
 			</div>
 		);
@@ -90,7 +100,7 @@ export const NRQLResultsTable = (props: Props) => {
 		return rowCalcData.map(([index, longestLength, columnWidthValue]) => {
 			let lengthOfString = longestLength * 9;
 			const numLines = Math.ceil(lengthOfString / columnWidthValue);
-			const lineHeight = 28;
+			const lineHeight = 22;
 			const totalHeight = numLines * lineHeight;
 			return totalHeight;
 		});
@@ -112,7 +122,10 @@ export const NRQLResultsTable = (props: Props) => {
 
 	const calculateColumnWidths = (firstRowResults: { [key: string]: string | number }) => {
 		return Object.entries(firstRowResults).map(([key, value]) => {
-			return calculateColumnWidth(value as string);
+			const keyValue = typeof key === "string" ? key : String(key);
+			const valueString = typeof value === "string" ? value : String(value);
+			const columnToPass = keyValue.length > valueString.length ? keyValue : valueString;
+			return calculateColumnWidth(columnToPass);
 		});
 	};
 

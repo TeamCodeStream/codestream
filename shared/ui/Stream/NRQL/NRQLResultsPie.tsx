@@ -14,8 +14,6 @@ interface Props {
 }
 
 const truncate = (str: string, max: number) => {
-	// can't bundle import { truncate } from "@codestream/utils/system/string"; ??????
-
 	if (!str) return str;
 	if (str.length >= max) return `${str.substring(0, max - 1)}${"\u2026"}`;
 	return str;
