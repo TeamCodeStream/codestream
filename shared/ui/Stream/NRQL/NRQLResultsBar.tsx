@@ -1,14 +1,6 @@
 import React from "react";
 import { NRQLResult } from "@codestream/protocols/agent";
-import {
-	ResponsiveContainer,
-	YAxis,
-	XAxis,
-	BarChart,
-	Bar,
-	Cell,
-	ReferenceLine,
-} from "recharts";
+import { ResponsiveContainer, YAxis, XAxis, BarChart, Bar, Cell, ReferenceLine } from "recharts";
 import { Colors } from "./utils";
 import { LEFT_MARGIN_ADJUST_VALUE } from "./NRQLResultsLine";
 
@@ -43,11 +35,11 @@ export const NRQLResultsBar = (props: Props) => {
 						margin={{
 							top: 20,
 							right: 30,
-							left: 30, // Increase left margin to accommodate the labels
+							left: 30,
 							bottom: 5,
 						}}
-						barCategoryGap={20} // Adjust the gap between each category of bars
-						barGap={5} // Adjust the gap between bars within the same category
+						barCategoryGap={20}
+						barGap={5}
 					>
 						<XAxis hide type="number" tick={{ fontSize: 11 }} domain={[0, "dataMax + 30"]} />{" "}
 						{/* Adjust domain */}
@@ -57,14 +49,12 @@ export const NRQLResultsBar = (props: Props) => {
 							orientation="right"
 							axisLine={false}
 							tickLine={false}
-						/>{" "}
-						{/* Hide Y-axis line and tick lines */}
-						{/* <Tooltip content={<FacetTooltip facet={props.facet} />} /> */}
+						/>
 						<Bar
 							dataKey={keyName}
 							fill="#8884d8"
-							radius={[5, 5, 5, 5]} // Sets rounded corners for all corners
-							barSize={10} // Adjust the width of the bars
+							radius={[5, 5, 5, 5]}
+							barSize={10}
 							label={renderCustomLabel}
 							isAnimationActive={false}
 							background={{ fill: "var(--app-background-color-hover)" }}
