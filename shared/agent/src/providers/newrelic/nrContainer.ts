@@ -6,7 +6,7 @@ import { CompletionItem, CompletionParams } from "vscode-languageserver";
 import { CodeStreamAgent } from "../../agent";
 import { User } from "../../api/extensions";
 import { HttpClient } from "../../api/httpClient";
-import { SessionServiceContainer } from "../../container";
+import { Container, SessionServiceContainer } from "../../container";
 import { CodeStreamSession } from "../../session";
 import { Disposable } from "../../system/disposable";
 import { AnomaliesProvider } from "./anomalies/anomaliesProvider";
@@ -30,6 +30,7 @@ import { NrNRQLProvider } from "./nrql/nrqlProvider";
 import { NewRelicVulnerabilitiesProvider } from "./vuln/nrVulnerability";
 import { NrqlCompletionProvider } from "./nrql/nrqlCompletionProvider";
 import { AccountProvider } from "./account/accountProvider";
+import { EntityGuidDocumentParser } from "./entity/entityGuidDocumentParser";
 
 let nrDirectives: NrDirectives | undefined;
 let disposables: Disposable[] = [];
@@ -224,6 +225,11 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 	session.agent.connection.onCompletionResolve((item: CompletionItem) => {
 		return nrqlCompletionProvider.onCompletionResolve(item);
 	});
+
+	const entityGuidDocumentParser = new EntityGuidDocumentParser(
+		Container.instance().documents,
+		entityProvider
+	);
 }
 
 export function getNrDirectives(): NrDirectives | undefined {

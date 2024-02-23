@@ -28,6 +28,7 @@ import { Logger, TraceLevel } from "./logger";
 import { FileSystem, Strings, Versions } from "./system";
 import * as TokenManager from "./api/tokenManager";
 import { SaveTokenReason } from "./api/tokenManager";
+import { EntityEditorDecorationProvider } from "./providers/entityEditorDecorationProvider";
 
 const extension = extensions.getExtension(extensionQualifiedId);
 export const extensionVersion = extension?.packageJSON?.version ?? "1.0.0";
@@ -188,6 +189,9 @@ export async function activate(context: ExtensionContext) {
 	}
 
 	context.globalState.update(GlobalState.Version, extensionVersion);
+	context.subscriptions.push(
+		new EntityEditorDecorationProvider(Container.agent, Container.session)
+	);
 
 	Logger.log(
 		`CodeStream${editionFormat} v${formattedVersion} started \u2022 ${Strings.getDurationMilliseconds(

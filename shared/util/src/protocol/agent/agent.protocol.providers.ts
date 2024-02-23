@@ -1,5 +1,10 @@
 "use strict";
-import { CompletionItem, NotificationType, RequestType } from "vscode-languageserver-protocol";
+import {
+	CompletionItem,
+	NotificationType,
+	RequestType,
+	TextDocumentPositionParams,
+} from "vscode-languageserver-protocol";
 
 import {
 	BitbucketParticipantRole,
@@ -1596,6 +1601,49 @@ export const GetObservabilityEntitiesRequestType = new RequestType<
 	void
 >("codestream/newrelic/entities");
 
+export interface GetObservabilityEntitiesByIdRequest {
+	guids: string[];
+}
+
+export interface GetObservabilityEntitiesByIdResponse {
+	entities: Entity[];
+}
+
+export const GetObservabilityEntitiesByIdRequestType = new RequestType<
+	GetObservabilityEntitiesByIdRequest,
+	GetObservabilityEntitiesByIdResponse,
+	void,
+	void
+>("codestream/newrelic/entities/list");
+
+export interface EditorEntityGuidsRequest {
+	documentUri: string;
+}
+
+export interface EntityGuidToken {
+	guid: string;
+	range: {
+		start: number;
+		end: number;
+	};
+	markdownString?: string;
+	entity: Entity;
+	url: string;
+	metadata: {
+		found: boolean;
+	};
+}
+export interface EditorEntityGuidsResponse {
+	items: EntityGuidToken[];
+}
+
+export const GetEditorEntityGuidsRequestType = new RequestType<
+	EditorEntityGuidsRequest,
+	EditorEntityGuidsResponse,
+	void,
+	void
+>("codestream/document/parse/newrelic/entity");
+
 export interface GetAllAccountsRequest {
 	force?: boolean;
 }
@@ -2087,12 +2135,14 @@ export const EntityTypeMap = {
 };
 
 export interface Entity {
+	accountId?: number;
 	account?: {
 		name: string;
 		id: number;
 	};
 	domain?: string;
 	alertSeverity?: string;
+	goldenMetrics?: { metrics?: MethodGoldenMetrics[] };
 	guid: string;
 	name: string;
 	type?: "APPLICATION" | "REPOSITORY" | "SERVICE" | "AWSLAMBDAFUNCTION";
@@ -2751,6 +2801,7 @@ export interface GetNRQLCompletionItemsRequest {
 	 * This may refer to an entire query or a single line in a multi-line or multi-queries in a file
 	 */
 	query?: string;
+	textDocumentPosition?: TextDocumentPositionParams;
 }
 
 export interface GetNRQLCompletionItemsResponse {

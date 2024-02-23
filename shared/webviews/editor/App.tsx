@@ -5,7 +5,7 @@ import React from "../../../shared/ui/node_modules/react";
 import { APMLogSearchPanel } from "../../ui/Stream/APMLogging/APMLogSearchPanel";
 import { ModalRoot } from "../../ui/Stream/Modal";
 import { NRQLPanel } from "../../ui/Stream/NRQL/NRQLPanel";
-import {WhatsNewPanel} from "../../ui/Stream/WhatsNew";
+import { WhatsNewPanel } from "../../ui/Stream/WhatsNew";
 import { OpenEditorViewNotification } from "../../ui/ipc/host.protocol";
 import { createTheme } from "../../ui/src/themes";
 import { HostApi } from "../../ui/webview-api";
@@ -23,6 +23,8 @@ export function App() {
 				<ModalRoot />
 				{codestreamProps.panel === "logs" && (
 					<APMLogSearchPanel
+						entity={codestreamProps.entity}
+						entityTypeDescription={codestreamProps.entityTypeDescription}
 						entityGuid={codestreamProps.entityGuid}
 						suppliedQuery={codestreamProps.query}
 						entryPoint={codestreamProps.entryPoint}

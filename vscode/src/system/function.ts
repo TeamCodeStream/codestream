@@ -130,15 +130,39 @@ export namespace Functions {
 		});
 	}
 
+	/**
+	 * Options for the debounced behavior.
+	 */
 	interface DebounceOptions {
+		/**
+		 * Whether to trigger the callback function on the leading edge of the timeout.
+		 */
 		leading?: boolean;
+		/**
+		 * The maximum time in milliseconds to wait before invoking the debounced function.
+		 */
 		maxWait?: number;
+		/**
+		 * Whether to keep track of the pending state of the debounced function.
+		 */
 		track?: boolean;
+		/**
+		 * Whether to trigger the callback function on the trailing edge of the timeout.
+		 */
 		trailing?: boolean;
 	}
 
 	type AnyCallback = (...args: any[]) => any;
 
+	/**
+	 * Debounces the given callback function.
+	 *
+	 * @template T - Type of the callback function.
+	 * @param {T} fn - The callback function to debounce.
+	 * @param {number} [wait] - Optional. The number of milliseconds to wait before invoking the debounced function.
+	 * @param {DebounceOptions} [options] - Optional. Additional options for the debounce behavior.
+	 * @returns {T} - The debounced function.
+	 */
 	export function debounce<T extends AnyCallback>(fn: T, wait?: number, options?: DebounceOptions) {
 		const { track, ...opts } = { track: false, ...(options || ({} as DebounceOptions)) };
 

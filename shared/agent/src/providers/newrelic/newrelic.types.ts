@@ -9,9 +9,9 @@ import { LanguageId } from "./clm/clmManager";
 
 export interface NewRelicId {
 	accountId: number;
-	unknownAbbreviation: string;
-	entityType: string;
-	unknownGuid: string;
+	domain: string;
+	type: string;
+	identifier: string;
 }
 
 export interface MetricTimeslice {

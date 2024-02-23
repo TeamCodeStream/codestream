@@ -13,6 +13,7 @@ import {
 	TextDocument
 } from "vscode";
 import {
+	Entity,
 	FileLevelTelemetryRequestOptions,
 	MetricTimesliceNameMapping,
 	ObservabilityAnomaly
@@ -135,6 +136,22 @@ export interface ViewMethodLevelTelemetryCommandArgs
 	methodLevelTelemetryRequestOptions?: FileLevelTelemetryRequestOptions;
 	metricTimesliceNameMapping?: MetricTimesliceNameMapping;
 	anomaly?: ObservabilityAnomaly;
+}
+
+export interface ExecuteNrqlCommandArgs {
+	fileUri: Uri;
+	text: string;
+	lineNumber?: number;
+	accountId?: number;
+	entryPoint?: "nrql_file" | "entity_guid_finder";
+}
+
+export interface ExecuteLogCommandArgs {
+	entity?: Entity;
+	lineNumber?: number;
+	entityTypeDescription?: string;
+	entryPoint?: "context_menu" | "entity_guid_finder";
+	ignoreSearch?: boolean;
 }
 
 export class Commands implements Disposable {
@@ -625,21 +642,26 @@ export class Commands implements Disposable {
 	}
 
 	@command("executeNrql")
-	async executeNrql(fileUri: Uri, text: string, lineNumber?: number): Promise<void> {
-		// fileUri is passed in by both CodeLens provider and the command provider
-		// lineNumber is only passed by the CodeLens provider, which we do need.
-
-		let nrqlQuery: string | undefined = undefined;
+	async executeNrql(args: ExecuteNrqlCommandArgs | Uri): Promise<void> {
 		const editor = window.activeTextEditor;
 		if (editor === undefined) return;
+
+		if (args instanceof Uri) {
+			args = {
+				fileUri: args,
+				text: ""
+			};
+		}
+
+		let nrqlQuery: string | undefined = undefined;
 
 		if (editor.selection && !editor.selection.isEmpty) {
 			nrqlQuery = editor.document.getText(editor.selection);
 		} else {
-			if (text) {
-				nrqlQuery = text;
-			} else if (lineNumber) {
-				nrqlQuery = editor.document.lineAt(lineNumber).text;
+			if (args.text) {
+				nrqlQuery = args.text;
+			} else if (args.lineNumber) {
+				nrqlQuery = editor.document.lineAt(args.lineNumber).text;
 			}
 		}
 		if (!nrqlQuery) {
@@ -647,21 +669,23 @@ export class Commands implements Disposable {
 			await window.showErrorMessage("Please select a NRQL query to execute", "Dismiss");
 		} else {
 			const currentRepoId = Container.session.user?.preferences?.currentO11yRepoId;
-
-			const currentEntityGuid = currentRepoId
-				? (Container.session?.user?.preferences?.activeO11y?.[currentRepoId] as string)
-				: undefined;
+			let currentEntityGuid;
+			if (!args.accountId) {
+				currentEntityGuid = currentRepoId
+					? (Container.session?.user?.preferences?.activeO11y?.[currentRepoId] as string)
+					: undefined;
+			}
 
 			await Container.panel.initializeOrShowEditor({
 				panelLocation: ViewColumn.Beside,
 				// UI can get the accountId based on the entityGuid (parsed)
-				accountId: undefined,
+				accountId: args.accountId,
 				entityGuid: currentEntityGuid!,
 				panel: "nrql",
 				title: "NRQL",
 				query: nrqlQuery,
-				entryPoint: "nrql_file",
-				hash: md5(fileUri.toString()),
+				entryPoint: args.entryPoint || "nrql_file",
+				hash: args.fileUri ? md5(args.fileUri.toString()) : undefined,
 				ide: {
 					name: "VSC"
 				}
@@ -670,44 +694,58 @@ export class Commands implements Disposable {
 	}
 
 	@command("logSearch")
-	async logSearch(): Promise<void> {
+	async logSearch(args: ExecuteLogCommandArgs | Uri): Promise<void> {
 		const editor = window.activeTextEditor;
 		if (editor === undefined) return;
 
-		let searchTerm = editor.document.getText(editor.selection);
+		if (args instanceof Uri) {
+			args = {} as ExecuteLogCommandArgs;
+		}
 
-		if (!searchTerm) {
-			// cursor sitting on a line, but nothing actually highlighted
-			searchTerm = this.extractStringsFromLine(editor.document, editor.selection.start.line);
+		let searchTerm;
+		if (!args.ignoreSearch) {
+			searchTerm = editor.document.getText(editor.selection);
+
+			if (!searchTerm) {
+				// cursor sitting on a line, but nothing actually highlighted
+				searchTerm = this.extractStringsFromLine(editor.document, editor.selection.start.line);
+			} else {
+				// take highlighted section minus leading/trailing quotes & spaces.
+				searchTerm = searchTerm
+					.trim()
+					.replace(/^["'`]|["'`]$/g, "")
+					.trim();
+			}
+
+			if (!searchTerm) {
+				// notification of some sort that we couldn't find anything to search on?
+				await window.showErrorMessage(
+					"We were unable to determine the search criteria from your selection or line of code.",
+					"Dismiss"
+				);
+				return;
+			}
+		}
+
+		let currentEntityGuid: string | undefined;
+		if (args?.entity?.guid) {
+			currentEntityGuid = args.entity.guid;
 		} else {
-			// take highlighted section minus leading/trailing quotes & spaces.
-			searchTerm = searchTerm
-				.trim()
-				.replace(/^["'`]|["'`]$/g, "")
-				.trim();
+			const currentRepoId = Container.session.user?.preferences?.currentO11yRepoId;
+			currentEntityGuid = currentRepoId
+				? (Container.session?.user?.preferences?.activeO11y?.[currentRepoId] as string)
+				: undefined;
 		}
-
-		if (!searchTerm) {
-			// notification of some sort that we couldn't find anything to search on?
-			await window.showErrorMessage(
-				"We were unable to determine the search criteria from your selection or line of code.",
-				"Dismiss"
-			);
-			return;
-		}
-
-		const currentRepoId = Container.session.user?.preferences?.currentO11yRepoId;
-		const currentEntityGuid = currentRepoId
-			? (Container.session?.user?.preferences?.activeO11y?.[currentRepoId] as string)
-			: undefined;
 
 		Container.panel.initializeOrShowEditor({
 			panelLocation: ViewColumn.Active,
+			entity: args.entity,
+			entityTypeDescription: args.entityTypeDescription,
 			entityGuid: currentEntityGuid!,
 			panel: "logs",
 			title: "Logs",
 			query: searchTerm,
-			entryPoint: "context_menu",
+			entryPoint: args?.entryPoint || "context_menu",
 			ide: {
 				name: "VSC"
 			}
