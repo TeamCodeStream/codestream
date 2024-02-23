@@ -123,8 +123,8 @@ const Option = (props: OptionProps) => {
 const DEFAULT_QUERY = "FROM ";
 
 export const DEFAULT_VISUALIZATION_GUESS = {
-	selected: "table",
-	enabled: ["json", "billboard", "line", "bar", "table"],
+	selected: "",
+	enabled: [],
 };
 
 export const NRQLPanel = (props: {
@@ -281,7 +281,16 @@ export const NRQLPanel = (props: {
 				});
 
 				setResults(response.results);
-				setResultsTypeGuess(response.resultsTypeGuess || {});
+
+				if (response.resultsTypeGuess && response.resultsTypeGuess.enabled) {
+					setResultsTypeGuess({
+						selected: response.resultsTypeGuess.enabled.includes(resultsTypeGuess.selected!)
+							? resultsTypeGuess.selected
+							: response.resultsTypeGuess.selected,
+						enabled: response.resultsTypeGuess.enabled,
+					});
+				}
+
 				if (response.metadata) {
 					setEventType(response.metadata.eventType);
 					if (response.metadata.since) {
@@ -305,7 +314,6 @@ export const NRQLPanel = (props: {
 	const _resetQueryCore = () => {
 		setNRQLError(undefined);
 		setResults([]);
-		setResultsTypeGuess({});
 		setEventType("");
 		setSince("");
 		setNoResults(false);
