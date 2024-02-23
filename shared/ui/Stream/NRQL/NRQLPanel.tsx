@@ -284,8 +284,8 @@ export const NRQLPanel = (props: {
 
 				if (response.resultsTypeGuess && response.resultsTypeGuess.enabled) {
 					setResultsTypeGuess({
-						selected: response.resultsTypeGuess.enabled.includes(resultsTypeGuess.selected!)
-							? resultsTypeGuess.selected
+						selected: response.resultsTypeGuess.enabled.includes(resultsTypeGuess?.selected || "")
+							? resultsTypeGuess.selected || ""
 							: response.resultsTypeGuess.selected,
 						enabled: response.resultsTypeGuess.enabled,
 					});
