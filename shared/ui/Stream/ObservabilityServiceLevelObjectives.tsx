@@ -63,7 +63,7 @@ export const ObservabilityServiceLevelObjectives = React.memo((props: Props) => 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 
-		const serviceLevelObjectivesIsExpanded = preferences?.serviceLevelObjectivesIsExpanded ?? true;
+		const serviceLevelObjectivesIsExpanded = preferences?.serviceLevelObjectivesIsExpanded ?? false;
 
 		return {
 			serviceLevelObjectivesIsExpanded,
