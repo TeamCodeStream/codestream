@@ -55,7 +55,7 @@ export class EntityProvider implements Disposable {
 		try {
 			const apiResult = await this.graphqlClient.query(`{
 			actor {
-			  entitySearch(query: "type='APPLICATION'") {
+			  entitySearch(query: "type IN ('APPLICATION', 'SERVICE', 'AWSLAMBDAFUNCTION')") {
 				count       
 			  }
 			}
