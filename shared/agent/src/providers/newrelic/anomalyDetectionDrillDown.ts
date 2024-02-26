@@ -157,7 +157,7 @@ export class AnomalyDetectorDrillDown {
 				event_type: "state_load",
 			};
 			telemetry?.track({
-				eventName: "codestream/anomalies calculated",
+				eventName: "codestream/transaction_anomaly_async_calculation succeeded",
 				properties: event,
 			});
 		} catch (e) {

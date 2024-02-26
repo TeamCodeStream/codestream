@@ -192,7 +192,7 @@ export class AnomalyDetector {
 		try {
 			const telemetry = Container.instance().telemetry;
 			telemetry?.track({
-				eventName: "codestream/anomalies calculated",
+				eventName: "codestream/transaction_anomaly_async_calculation succeeded",
 				properties: {
 					entity_guid: this._request.entityGuid,
 					account_id: this._accountId,

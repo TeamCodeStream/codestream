@@ -123,7 +123,7 @@ export const createCodemark =
 									],
 								});
 							}
-							HostApi.instance.track("codestream/codemarks/codemark shared", {
+							HostApi.instance.track("codestream/codemarks/share succeeded", {
 								meta_data: `destination: ${
 									getConnectedProviders(getState()).find(
 										config => config.id === attributes.sharingAttributes!.providerId
@@ -341,7 +341,7 @@ export const editCodemark =
 								],
 							});
 						}
-						HostApi.instance.track("codestream/codemarks/codemark shared", {
+						HostApi.instance.track("codestream/codemarks/share succeeded", {
 							meta_data: `destination: ${
 								getConnectedProviders(getState()).find(
 									config => config.id === shareTarget.providerId

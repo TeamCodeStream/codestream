@@ -25,7 +25,7 @@ export const ExportResults = (props: { accountId?: number; results: any }) => {
 						});
 					}
 					if (handled) {
-						HostApi.instance.track("codestream/nrql/export downloaded", {
+						HostApi.instance.track("codestream/nrql/export succeeded", {
 							account_id: props.accountId,
 							event_type: "submit",
 							meta_data: `format: ${_.toLowerCase()}`,

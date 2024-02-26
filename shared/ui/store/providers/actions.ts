@@ -134,7 +134,7 @@ export const sendIssueProviderConnected =
 		const { name, host, isEnterprise } = provider;
 		const api = HostApi.instance;
 		api.send(TelemetryRequestType, {
-			eventName: "codestream/integration connected",
+			eventName: "codestream/integration/connection succeeded",
 			properties: {
 				meta_data: `service: ${name}`,
 				meta_data_2: `connection_location: ${
@@ -160,7 +160,7 @@ export const sendBuildProviderConnected =
 		const { name, host, isEnterprise } = provider;
 		const api = HostApi.instance;
 		api.send(TelemetryRequestType, {
-			eventName: "codestream/integration connected",
+			eventName: "codestream/integration/connection succeeded",
 			properties: {
 				meta_data: `service: ${name}`,
 				meta_data_2: `connection_location: ${
@@ -185,7 +185,7 @@ export const sendMessagingServiceConnected =
 		if (!provider) return;
 
 		HostApi.instance.send(TelemetryRequestType, {
-			eventName: "codestream/integration connected",
+			eventName: "codestream/integration/connection succeeded",
 			properties: {
 				meta_data: `service: ${provider.name}`,
 				meta_data_2: `connection_location: ${

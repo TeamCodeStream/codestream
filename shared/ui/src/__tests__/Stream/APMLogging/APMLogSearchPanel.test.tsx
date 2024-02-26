@@ -129,7 +129,7 @@ describe("APM Logging Panel UI", () => {
 			expect(screen.queryByTestId("query-text")).not.toHaveValue();
 
 			expect(mockTrack).toHaveBeenCalledTimes(1);
-			expect(mockTrack).toHaveBeenCalledWith("codestream/logs/webview opened", {
+			expect(mockTrack).toHaveBeenCalledWith("codestream/logs/webview displayed", {
 				event_type: "click",
 				meta_data: `entry_point: ${props.entryPoint}`,
 			});
@@ -153,13 +153,13 @@ describe("APM Logging Panel UI", () => {
 
 		await waitFor(() => {
 			expect(mockTrack).toHaveBeenCalledTimes(2);
-			expect(mockTrack).toHaveBeenCalledWith("codestream/logs/webview opened", {
+			expect(mockTrack).toHaveBeenCalledWith("codestream/logs/webview displayed", {
 				event_type: "click",
 				entity_guid: ENTITY_GUID,
 				account_id: ACCOUNT_ID,
 				meta_data: `entry_point: ${ENTRY_POINT}`,
 			});
-			expect(mockTrack).toHaveBeenCalledWith("codestream/logs searched", {
+			expect(mockTrack).toHaveBeenCalledWith("codestream/logs/search succeeded", {
 				event_type: "response",
 				entity_guid: ENTITY_GUID,
 				account_id: ACCOUNT_ID,

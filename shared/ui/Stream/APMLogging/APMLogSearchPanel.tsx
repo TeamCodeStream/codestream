@@ -414,7 +414,7 @@ export const APMLogSearchPanel = (props: {
 		accountId: number,
 		resultsReturned: boolean
 	) => {
-		HostApi.instance.track("codestream/logs searched", {
+		HostApi.instance.track("codestream/logs/search succeeded", {
 			entity_guid: `${entityGuid}`,
 			account_id: accountId,
 			event_type: "response",
@@ -436,7 +436,7 @@ export const APMLogSearchPanel = (props: {
 			payload["account_id"] = accountId;
 		}
 
-		HostApi.instance.track("codestream/logs/webview opened", payload);
+		HostApi.instance.track("codestream/logs/webview displayed", payload);
 	};
 
 	async function loadEntities(search: string, _loadedOptions, additional?: AdditionalType) {
