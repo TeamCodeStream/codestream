@@ -96,7 +96,8 @@ import {
 	WebviewIpcMessage,
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage,
-	IdeNames
+	IdeNames,
+	LogoutReason
 } from "@codestream/protocols/webview";
 import {
 	authentication,
@@ -1049,8 +1050,14 @@ export class SidebarController implements Disposable {
 			}
 			case LogoutRequestType.method: {
 				webview.onIpcRequest(LogoutRequestType, e, async (_type, _params) => {
+					let logoutReason = SessionSignedOutReason.UserSignedOutFromWebview;
+
+					if (_params.reason === LogoutReason.InvalidRefreshToken) {
+						logoutReason = SessionSignedOutReason.InvalidRefreshToken;
+					}
+
 					await Container.commands.signOut(
-						SessionSignedOutReason.UserSignedOutFromWebview,
+						logoutReason,
 						_params.newServerUrl,
 						_params.newEnvironment
 					);

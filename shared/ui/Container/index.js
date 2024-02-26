@@ -7,7 +7,12 @@ import { ThemeProvider } from "styled-components";
 
 import { errorDismissed } from "@codestream/webview/store/connectivity/actions";
 import { UnauthenticatedRoutes } from "../Authentication";
-import { ReloadWebviewRequestType, RestartRequestType } from "../ipc/webview.protocol";
+import {
+	LogoutReason,
+	LogoutRequestType,
+	ReloadWebviewRequestType,
+	RestartRequestType,
+} from "../ipc/webview.protocol";
 import { logError } from "../logger";
 import { Button } from "../src/components/Button";
 import { createTheme, darkTheme } from "../src/themes";
@@ -23,7 +28,6 @@ import RoadBlock from "../Stream/RoadBlock";
 import { SearchContextProvider } from "../Stream/SearchContextProvider";
 import { HostApi } from "../webview-api";
 import { Loading } from "./Loading";
-import { logout } from "@codestream/webview/store/session/thunks";
 
 const mapStateToProps = state => {
 	const team = state.teams[state.context.currentTeamId];
@@ -129,7 +133,9 @@ const Root = connect(mapStateToProps)(props => {
 					<Button
 						onClick={e => {
 							e.preventDefault();
-							props.dispatch(logout());
+							HostApi.instance.send(LogoutRequestType, {
+								reason: LogoutReason.InvalidRefreshToken,
+							});
 						}}
 					>
 						OK

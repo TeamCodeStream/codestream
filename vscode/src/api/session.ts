@@ -216,7 +216,6 @@ export class CodeStreamSession implements Disposable {
 			Container.agent.onDidFailLogin(() => this.setStatus(SessionStatus.SignedOut)),
 			Container.agent.onDidEncounterInvalidRefreshToken(() => {
 				Logger.log("Encountered invalid refresh token, logging out...");
-				this.logout(SessionSignedOutReason.InvalidRefreshToken);
 				this.setStatus(SessionStatus.SignedOut);
 			}),
 			Container.agent.onDidLogin(params => {
