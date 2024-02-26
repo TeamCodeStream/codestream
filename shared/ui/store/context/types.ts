@@ -203,6 +203,7 @@ export interface CurrentTransactionSpan {
 	traceId?: string;
 	spanName?: string;
 	spanHost?: string;
+	entityName?: string;
 	url?: string;
 	language?: string;
 	codeNamespace?: string;

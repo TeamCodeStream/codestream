@@ -700,6 +700,7 @@ function listenForEvents(store) {
 							spanName?: string;
 							spanHost?: string;
 							entityId?: string;
+							entityName?: string;
 							src?: string;
 							env?: string;
 							language?: string;
@@ -739,6 +740,7 @@ function listenForEvents(store) {
 								newRelicEntityGuid: definedQuery.query.entityId,
 								spanName: definedQuery.query.spanName,
 								spanHost: definedQuery.query.spanHost,
+								entityName: definedQuery.query.entityName,
 								language: definedQuery.query.language,
 								codeNamespace: definedQuery.query.namespace,
 								functionName: definedQuery.query.function,
