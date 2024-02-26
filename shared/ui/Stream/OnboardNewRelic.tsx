@@ -222,7 +222,7 @@ export const OnboardNewRelic = React.memo(function OnboardNewRelic() {
 			}
 		})();
 
-		HostApi.instance.track("codestream/instrumentation_wizard displayed", {
+		HostApi.instance.track("codestream/instrumentation_wizard/intro displayed", {
 			event_type: "modal_display",
 		});
 	});

@@ -305,7 +305,7 @@ export type TelemetryEventName =
 	| "codestream/ide selected"
 	| "codestream/ide redirect_failed"
 	| "codestream/ide_redirect page_viewed"
-	| "codestream/instrumentation_wizard displayed"
+	| "codestream/instrumentation_wizard/intro displayed"
 	| "codestream/instrumentation_wizard/start_button clicked"
 	| "codestream/instrumentation_wizard/finish displayed"
 	| "codestream/integration/connection succeeded"
@@ -329,7 +329,7 @@ export type TelemetryEventName =
 	| "codestream/toast clicked"
 	| "codestream/tracing/span displayed"
 	| "codestream/user/login failed"
-	| "codestream/user/sign_in succeeded"
+	| "codestream/user/login succeeded"
 	| "codestream/user/switch succeeded"
 	| "codestream/vulnerability clicked";
 
