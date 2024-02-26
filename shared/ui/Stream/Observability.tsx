@@ -392,7 +392,7 @@ export const Observability = React.memo((props: Props) => {
 		} catch (ex) {
 			setLoadingAssignments(false);
 			if (ex.code === ERROR_NR_INSUFFICIENT_API_KEY) {
-				HostApi.instance.track("codestream/o11y fetch_failed", {
+				HostApi.instance.track("codestream/o11y_fetch failed", {
 					meta_data: `query: GetObservabilityErrorAssignments`,
 					event_type: "response",
 				});
@@ -447,7 +447,7 @@ export const Observability = React.memo((props: Props) => {
 				}
 			} catch (err) {
 				if (err.code === ERROR_NR_INSUFFICIENT_API_KEY) {
-					HostApi.instance.track("codestream/o11y fetch_failed", {
+					HostApi.instance.track("codestream/o11y_fetch failed", {
 						meta_data: `query: GetObservabilityErrors`,
 						event_type: "response",
 					});
@@ -646,7 +646,7 @@ export const Observability = React.memo((props: Props) => {
 					observabilityRepoCount: ${observabilityRepos?.length ?? -1},
 				}`;
 			}
-			HostApi.instance.track("codestream/o11y rendered", properties);
+			HostApi.instance.track("codestream/o11y displayed", properties);
 		}
 	};
 
@@ -683,7 +683,7 @@ export const Observability = React.memo((props: Props) => {
 
 			console.debug(`o11y: NR Service Clicked`, telemetryData);
 
-			HostApi.instance.track("codestream/service rendered", telemetryData);
+			HostApi.instance.track("codestream/service displayed", telemetryData);
 			setPendingServiceClickedTelemetryCall(false);
 		} catch (ex) {
 			console.error(ex);
@@ -741,7 +741,7 @@ export const Observability = React.memo((props: Props) => {
 		} catch (ex) {
 			console.debug(`o11y: fetchObservabilityRepos nope`, ex);
 			if (ex.code === ERROR_NR_INSUFFICIENT_API_KEY) {
-				HostApi.instance.track("codestream/o11y fetch_failed", {
+				HostApi.instance.track("codestream/o11y_fetch failed", {
 					meta_data: `query: GetObservabilityRepos`,
 					event_type: "response",
 				});
@@ -1445,7 +1445,7 @@ export const Observability = React.memo((props: Props) => {
 																		`o11y: ObservabilityAddAdditionalService calling doRefresh(force)`
 																	);
 																	doRefresh(true);
-																	HostApi.instance.track("codestream/entity associated_with_repo", {
+																	HostApi.instance.track("codestream/entity_association succeeded", {
 																		entity_guid: e?.entityGuid,
 																		account_id: parseId(e?.entityGuid)?.accountId,
 																		event_type: "response",
@@ -1480,7 +1480,7 @@ export const Observability = React.memo((props: Props) => {
 																</span>
 															}
 															onSuccess={async e => {
-																HostApi.instance.track("codestream/entity associated_with_repo", {
+																HostApi.instance.track("codestream/entity_association succeeded", {
 																	entity_guid: e?.entityGuid,
 																	account_id: parseId(e?.entityGuid)?.accountId,
 																	event_type: "response",

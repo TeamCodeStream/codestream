@@ -1190,7 +1190,7 @@ export class CodeStreamSession {
 					let error = loginApiErrorMappings[ex.info.code] || LoginResult.Unknown;
 					if (error === LoginResult.ProviderConnectFailed) {
 						Container.instance().telemetry.track({
-							eventName: "codestream/user login_failed",
+							eventName: "codestream/user/login failed",
 							properties: {
 								meta_data: `error: ${ex.info && ex.info.error}`,
 								event_type: "response",

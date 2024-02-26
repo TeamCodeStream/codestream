@@ -166,7 +166,7 @@ export class NRManager {
 					properties.account_id = parsed.accountId;
 				}
 				telemetry.track({
-					eventName: "codestream/errors/error_group error_parsing_stack_trace",
+					eventName: "codestream/errors/error_parsing_stack_trace displayed",
 					properties: properties,
 				});
 			} catch (ex) {

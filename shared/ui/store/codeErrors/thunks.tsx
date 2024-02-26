@@ -280,7 +280,7 @@ export const openErrorGroup =
 		}
 
 		if (message) {
-			HostApi.instance.track("codestream/errors/error_group roadblocked", {
+			HostApi.instance.track("codestream/errors/error_group_roadblock displayed", {
 				meta_data: `error_group_id: ${errorGroupGuid}`,
 				event_type: "response",
 			});

@@ -99,7 +99,7 @@ export function NrAiComponent(props: NrAiComponentProps) {
 			return;
 		}
 		const targetUri = URI.file(props.file).toString(true);
-		HostApi.instance.track("codestream/errors/grok_fix applied", {
+		HostApi.instance.track("codestream/errors/apply_fix_button clicked", {
 			entity_guid: props.errorGroup.entityGuid,
 			account_id: props.errorGroup.accountId,
 			event_type: "click",

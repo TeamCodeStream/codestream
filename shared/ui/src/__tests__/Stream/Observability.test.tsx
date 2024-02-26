@@ -419,7 +419,7 @@ describe("Observability", () => {
 		await waitFor(() => {
 			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
 			expect(mockTrack).toHaveBeenCalledTimes(1);
-			expect(mockTrack).toHaveBeenCalledWith("codestream/o11y rendered", {
+			expect(mockTrack).toHaveBeenCalledWith("codestream/o11y displayed", {
 				meta_data: `state: services`,
 				event_type: "state_load",
 			});
@@ -448,7 +448,7 @@ describe("Observability", () => {
 		await waitFor(() => {
 			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
 			expect(mockTrack).toHaveBeenCalledTimes(1);
-			expect(mockTrack).toHaveBeenCalledWith("codestream/o11y rendered", {
+			expect(mockTrack).toHaveBeenCalledWith("codestream/o11y displayed", {
 				meta_data: `state: no_entities`,
 				event_type: "state_load",
 			});
@@ -489,7 +489,7 @@ describe("Observability", () => {
 		await waitFor(() => {
 			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
 			expect(mockTrack).toHaveBeenCalledTimes(1);
-			expect(mockTrack).toHaveBeenCalledWith("codestream/o11y rendered", {
+			expect(mockTrack).toHaveBeenCalledWith("codestream/o11y displayed", {
 				meta_data: `state: no_services`,
 				event_type: "state_load",
 				meta_data_2: `meta: {
@@ -520,7 +520,7 @@ describe("Observability", () => {
 		await waitFor(() => {
 			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
 			expect(mockTrack).toHaveBeenCalledTimes(1);
-			expect(mockTrack).toHaveBeenCalledWith("codestream/o11y rendered", {
+			expect(mockTrack).toHaveBeenCalledWith("codestream/o11y displayed", {
 				meta_data: "state: Not Connected",
 				event_type: "state_load",
 			});
@@ -565,7 +565,7 @@ describe("Observability", () => {
 
 		await waitFor(() => {
 			expect(mockTrack).toHaveBeenCalledTimes(2);
-			expect(mockTrack).toHaveBeenNthCalledWith(2, "codestream/service rendered", {
+			expect(mockTrack).toHaveBeenNthCalledWith(2, "codestream/service displayed", {
 				entity_guid: undefined,
 				account_id: undefined,
 				meta_data: `errors_listed: true`,

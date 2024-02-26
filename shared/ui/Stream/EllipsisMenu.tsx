@@ -126,7 +126,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 	const trackSwitchOrg = (isCurrentCompany, company) => {
 		const { currentUserEmail } = derivedState;
 
-		HostApi.instance.track("codestream/user switched", { event_type: "submit" });
+		HostApi.instance.track("codestream/user/switch succeeded", { event_type: "submit" });
 		// slight delay so tracking call completes
 		setTimeout(() => {
 			if (isCurrentCompany) return;
