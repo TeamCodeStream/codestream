@@ -1,5 +1,4 @@
 import React from "react";
-import { NRQLResult } from "@codestream/protocols/agent";
 import {
 	Line,
 	LineChart,
@@ -10,67 +9,141 @@ import {
 	YAxis,
 	Legend,
 } from "recharts";
+import { isEmpty as _isEmpty } from "lodash-es";
 import { ColorsHash, Colors } from "./utils";
 import { EventTypeTooltip } from "./EventTypeTooltip";
 import { EventTypeLegend } from "./EventTypeLegend";
 
-const formatXAxisTime = time => {
-	return new Date(time).toLocaleTimeString();
-};
-
 export const LEFT_MARGIN_ADJUST_VALUE = 25;
 
-interface Props {
-	results: NRQLResult[];
-	/**
-	 * the name of the facets (aka name, path, foo, bar). Not the property facet returned from the results,
-	 * but the facet in the metadata that points to the name of the faceted property/ies
-	 */
-	facet?: string[];
-	eventType?: string;
-}
+const formatXAxisTime = time => {
+	const date = new Date(time * 1000);
+	return `${date.toLocaleTimeString()}`;
+};
 
-export const NRQLResultsLine = (props: Props) => {
-	const result = props.results ? props.results[0] : undefined;
+const processResults = results => {
+	const result = results ? results[0] : undefined;
 	const dataKeys = Object.keys(result || {}).filter(
-		_ => _ !== "beginTimeSeconds" && _ !== "endTimeSeconds"
+		key => !["beginTimeSeconds", "endTimeSeconds", "facet", "name"].includes(key)
 	);
+	const uniqueFacetValues = [...new Set(results.map(obj => obj.facet))];
+	return { dataKeys, uniqueFacetValues };
+};
+
+const convertData = (results, formatXAxisTime) => {
+	return results.map(obj => ({
+		...obj,
+		endTimeSeconds: formatXAxisTime(obj.endTimeSeconds),
+	}));
+};
+
+const createNewArray = (originalArray, uniqueFacets, dataKeys) => {
+	const groupedByEndTime = {};
+
+	uniqueFacets.forEach(facet => {
+		groupedByEndTime[facet] = 0;
+	});
+
+	originalArray.forEach(obj => {
+		const endTime = obj.endTimeSeconds;
+		if (!groupedByEndTime.hasOwnProperty(endTime)) {
+			groupedByEndTime[endTime] = {};
+			uniqueFacets.forEach(facet => {
+				groupedByEndTime[endTime][facet] = 0;
+			});
+		}
+		groupedByEndTime[endTime][obj.facet] = obj[dataKeys[0]];
+	});
+
+	const newArray = Object.entries(groupedByEndTime).map(([endTime, facetValues]) => ({
+		endTimeSeconds: endTime,
+		...(facetValues as { [key: string]: number }),
+	}));
+
+	return newArray;
+};
+
+const fillNullValues = array => {
+	array.forEach((obj, i) => {
+		Object.keys(obj).forEach(key => {
+			if (key !== "endTimeSeconds" && obj[key] === null) {
+				let j = i - 1;
+				while (j >= 0 && array[j][key] === null) j--;
+				obj[key] = j >= 0 ? array[j][key] : 0;
+			}
+		});
+	});
+	return array;
+};
+
+export const NRQLResultsLine = ({ results, facet, eventType }) => {
+	if (!results || results.length === 0) return null;
+
+	const { dataKeys, uniqueFacetValues } = processResults(results);
+	const convertedData = convertData(results, formatXAxisTime);
+	const newArray = createNewArray(results, uniqueFacetValues, dataKeys);
+	const noNullNewArray = fillNullValues(newArray);
+
+	const filteredArray = noNullNewArray.filter(obj =>
+		Object.keys(obj).some(key => key !== "endTimeSeconds" && obj[key] !== undefined)
+	);
+
 	return (
 		<div style={{ marginLeft: `-${LEFT_MARGIN_ADJUST_VALUE}px` }} className="histogram-chart">
 			<div style={{ marginLeft: "0px", marginBottom: "20px" }}>
-				<ResponsiveContainer width="100%" height={500} debounce={1}>
-					<LineChart
-						width={500}
-						height={300}
-						data={props.results}
-						margin={{
-							top: 5,
-							right: 0,
-							left: 0,
-							bottom: 5,
-						}}
-					>
-						<CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-
+				{_isEmpty(facet) ? (
+					<ResponsiveContainer width="100%" height={500} debounce={1}>
+						<LineChart
+							width={500}
+							height={300}
+							data={results}
+							margin={{ top: 5, right: 0, left: 0, bottom: 5 }}
+						>
+							<CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+							<XAxis
+								tick={{ fontSize: 11 }}
+								dataKey="endTimeSeconds"
+								tickFormatter={formatXAxisTime}
+							/>
+							<YAxis tick={{ fontSize: 11 }} />
+							<ReTooltip content={<EventTypeTooltip eventType={eventType || "count"} />} />
+							{dataKeys.map((_, index) => {
+								const color = ColorsHash[index % Colors.length];
+								return <Line key={_} dataKey={_} stroke={color} fill={color} dot={false} />;
+							})}
+							<Legend
+								wrapperStyle={{ margin: "15px" }}
+								content={<EventTypeLegend eventType={eventType} />}
+							/>
+						</LineChart>
+					</ResponsiveContainer>
+				) : (
+					<LineChart width={800} height={400} data={filteredArray}>
+						<CartesianGrid strokeDasharray="3 3" />
 						<XAxis
 							tick={{ fontSize: 11 }}
 							dataKey="endTimeSeconds"
 							tickFormatter={formatXAxisTime}
 						/>
-
 						<YAxis tick={{ fontSize: 11 }} />
-						<ReTooltip content={<EventTypeTooltip eventType={props.eventType || "count"} />} />
-						{dataKeys.map((_, index) => {
-							const color = ColorsHash[index % Colors.length];
-							return <Line dataKey={_} stroke={color} fill={color} dot={false} />;
-						})}
-						<Legend
-							wrapperStyle={{ margin: "15px" }}
-							content={<EventTypeLegend eventType={props.eventType} />}
-						/>
+						<ReTooltip />
+						<Legend />
+						{Object.keys(filteredArray[0]).map((key, index) =>
+							key !== "endTimeSeconds" ? (
+								<Line
+									key={key}
+									dataKey={key}
+									stroke={ColorsHash[index % Colors.length]}
+									fill={ColorsHash[index % Colors.length]}
+									dot={false}
+								/>
+							) : null
+						)}
 					</LineChart>
-				</ResponsiveContainer>
+				)}
 			</div>
 		</div>
 	);
 };
+
+// export default NRQLResultsLine;
