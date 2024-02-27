@@ -94,8 +94,8 @@ describe("NRQL Panel UI", () => {
 			expect(screen.queryByTestId("run")).toHaveTextContent("Run");
 
 			expect(mockTrack).toHaveBeenCalledTimes(2);
-			expect(mockTrack).toHaveBeenCalledWith("codestream/nrql/webview opened", {
-				event_type: "click",
+			expect(mockTrack).toHaveBeenCalledWith("codestream/nrql/webview displayed", {
+				event_type: "modal_display",
 				meta_data: `entry_point: ${props.entryPoint}`,
 			});
 			expect(mockTrack).toHaveBeenCalledWith("codestream/nrql/query submitted", {

@@ -194,7 +194,7 @@ export const NRQLPanel = (props: {
 	}, [accountId]);
 
 	useEffect(() => {
-		HostApi.instance.track("codestream/nrql/webview opened", {
+		HostApi.instance.track("codestream/nrql/webview displayed", {
 			event_type: "click",
 			meta_data: `entry_point: ${props.entryPoint}`,
 		});

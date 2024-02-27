@@ -317,7 +317,7 @@ export type TelemetryEventName =
 	| "codestream/nrql/export succeeded"
 	| "codestream/nrql/query submitted"
 	| "codestream/nrql/visualization changed"
-	| "codestream/nrql/webview opened"
+	| "codestream/nrql/webview displayed"
 	| "codestream/o11y displayed"
 	| "codestream/o11y_fetch failed"
 	| "codestream/related_service_link clicked"
