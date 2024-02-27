@@ -145,7 +145,7 @@ export const MethodLevelTelemetryPanel = () => {
 	};
 
 	useDidMount(() => {
-		HostApi.instance.track("codestream/codelense_link clicked", {
+		HostApi.instance.track("codestream/codelense clicked", {
 			account_id: derivedState.currentMethodLevelTelemetry?.newRelicAccountId,
 			entity_guid: derivedState.currentMethodLevelTelemetry?.newRelicEntityGuid,
 			target: "codelens",
