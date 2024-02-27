@@ -42,7 +42,7 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 
 	useEffect(() => {
 		if (expanded) {
-			HostApi.instance.track("codestream/related_service clicked", {
+			HostApi.instance.track("codestream/related_service_link clicked", {
 				entity_guid: relatedEntity.guid,
 				account_id: accountId,
 				target: "related_service",

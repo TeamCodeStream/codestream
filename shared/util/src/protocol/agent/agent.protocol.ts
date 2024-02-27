@@ -292,7 +292,7 @@ export type TelemetryEventName =
 	| "codestream/codemarks/codemark displayed"
 	| "codestream/codemarks/reply created"
 	| "codestream/codemarks/slack_sharing failed"
-	| "codestream/email unsubscribed"
+	| "codestream/email_unsubscribe succeeded"
 	| "codestream/entity_association succeeded"
 	| "codestream/errors/error_group displayed"
 	| "codestream/errors/error_group_roadblock displayed"
@@ -300,10 +300,10 @@ export type TelemetryEventName =
 	| "codestream/errors/assignment succeeded"
 	| "codestream/errors/status_change succeeded"
 	| "codestream/errors/apply_fix_button clicked"
-	| "codestream/grok_response generated"
+	| "codestream/grok_response created"
 	| "codestream/grok_response failed"
 	| "codestream/ide selected"
-	| "codestream/ide redirect_failed"
+	| "codestream/ide_redirect failed"
 	| "codestream/ide_redirect page_viewed"
 	| "codestream/instrumentation_wizard/intro displayed"
 	| "codestream/instrumentation_wizard/start_button clicked"
@@ -320,7 +320,7 @@ export type TelemetryEventName =
 	| "codestream/nrql/webview opened"
 	| "codestream/o11y displayed"
 	| "codestream/o11y_fetch failed"
-	| "codestream/related_service clicked"
+	| "codestream/related_service_link clicked"
 	| "codestream/repo_association succeeded"
 	| "codestream/repo_disambiguation succeeded"
 	| "codestream/service displayed"
@@ -331,7 +331,7 @@ export type TelemetryEventName =
 	| "codestream/user/login failed"
 	| "codestream/user/login succeeded"
 	| "codestream/user/switch succeeded"
-	| "codestream/vulnerability clicked";
+	| "codestream/vulnerability_link clicked";
 
 export interface TelemetryData {
 	/** This should not be a string, empty string, or 0. null or undefined is OK */

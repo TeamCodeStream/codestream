@@ -138,7 +138,7 @@ function VulnerabilityView(props: {
 	onClose: () => void;
 }) {
 	const { vulnerability: vuln } = props;
-	HostApi.instance.track("codestream/vulnerability clicked", {
+	HostApi.instance.track("codestream/vulnerability_link clicked", {
 		entity_guid: props.entityGuid,
 		account_id: props.accountId,
 		target: "vulnerability",
