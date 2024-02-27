@@ -93,7 +93,7 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 
 		console.debug("CLM Anomaly Clicked", event);
 
-		HostApi.instance.track("codestream/anomaly clicked", event);
+		HostApi.instance.track("codestream/anomaly_link clicked", event);
 	};
 
 	const handleClick = (anomaly: ObservabilityAnomaly) => {

@@ -284,7 +284,7 @@ export const ReportBreadcrumbRequestType = new RequestType<
 
 export type TelemetryEventName =
 	| "codestream/transaction_anomaly_async_calculation succeeded"
-	| "codestream/anomaly clicked"
+	| "codestream/anomaly_link clicked"
 	| "codestream/codelense clicked"
 	| "codestream/codelenses displayed"
 	| "codestream/codemarks/codemark created"
