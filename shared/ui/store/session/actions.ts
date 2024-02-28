@@ -2,7 +2,6 @@ import {
 	ConfirmLoginCodeRequest,
 	RefreshMaintenancePollNotification,
 	TokenLoginRequest,
-	SessionTokenStatus,
 } from "@codestream/protocols/agent";
 
 import { PasswordLoginParams } from "@codestream/webview/Authentication/actions";
@@ -27,6 +26,3 @@ export const setMaintenanceMode = (
 		| RefreshMaintenancePollNotification
 		| HostDidChangeVisibilityNotification
 ) => action(SessionActionType.SetMaintenanceMode, value, meta);
-
-export const setSessionTokenStatus = (status: SessionTokenStatus) =>
-	action(SessionActionType.SetSessionTokenStatus, status);

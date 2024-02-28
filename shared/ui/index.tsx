@@ -25,7 +25,6 @@ import {
 	GetObservabilityErrorGroupMetadataRequestType,
 	GetObservabilityErrorGroupMetadataResponse,
 	CSAsyncGrokError,
-	DidChangeSessionTokenStatusNotificationType,
 } from "@codestream/protocols/agent";
 import { CodemarkType, CSCodeError, CSMe, WebviewPanels } from "@codestream/protocols/api";
 import React from "react";
@@ -121,7 +120,7 @@ import { handleDirectives } from "./store/providerPullRequests/slice";
 import { openPullRequestByUrl } from "./store/providerPullRequests/thunks";
 import { configureProvider, updateProviders } from "./store/providers/actions";
 import { getReview } from "./store/reviews/reducer";
-import { setMaintenanceMode, setSessionTokenStatus } from "./store/session/actions";
+import { setMaintenanceMode } from "./store/session/actions";
 import { updateUnreads } from "./store/unreads/actions";
 import { upgradeRecommended, upgradeRequired } from "./store/versioning/actions";
 import { fetchCodemarks, openPanel } from "./Stream/actions";
@@ -224,10 +223,6 @@ function listenForEvents(store) {
 			await store.dispatch(reset());
 			store.dispatch(setMaintenanceMode(true, e));
 		}
-	});
-
-	api.on(DidChangeSessionTokenStatusNotificationType, async e => {
-		store.dispatch(setSessionTokenStatus(e.status));
 	});
 
 	api.on(RefreshMaintenancePollNotificationType, async e => {

@@ -1,4 +1,4 @@
-import { SessionTokenStatus, WebviewErrorRequestType } from "@codestream/protocols/agent";
+import { WebviewErrorRequestType } from "@codestream/protocols/agent";
 import PropTypes from "prop-types";
 import React from "react";
 import { IntlProvider } from "react-intl";
@@ -8,8 +8,6 @@ import { ThemeProvider } from "styled-components";
 import { errorDismissed } from "@codestream/webview/store/connectivity/actions";
 import { UnauthenticatedRoutes } from "../Authentication";
 import {
-	LogoutReason,
-	LogoutRequestType,
 	ReloadWebviewRequestType,
 	RestartRequestType,
 } from "../ipc/webview.protocol";
@@ -46,7 +44,6 @@ const mapStateToProps = state => {
 		offline: state.connectivity.offline,
 		acceptedTOS: state.session.userId ? state.preferences.acceptedTOS : state.session.acceptedTOS,
 		configChangeReloadRequired: state.configs.configChangeReloadRequired,
-		sessionTokenStatus: state.session.sessionTokenStatus,
 	};
 };
 
@@ -125,25 +122,7 @@ const Root = connect(mapStateToProps)(props => {
 			</Dismissable>
 		);
 	}
-	if (props.sessionTokenStatus === SessionTokenStatus.Expired) {
-		return (
-			<RoadBlock title="Session Expired">
-				<div>
-					<p>Your CodeStream session has expired. Please login again.</p>
-					<Button
-						onClick={e => {
-							e.preventDefault();
-							HostApi.instance.send(LogoutRequestType, {
-								reason: LogoutReason.InvalidRefreshToken,
-							});
-						}}
-					>
-						OK
-					</Button>
-				</div>
-			</RoadBlock>
-		);
-	}
+
 	if (props.configChangeReloadRequired) {
 		if (props.ide === "VSC") {
 			HostApi.instance.send(RestartRequestType);

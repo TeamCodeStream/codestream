@@ -1,8 +1,4 @@
-import {
-	EnvironmentHost,
-	GetFileScmInfoResponse,
-	SessionTokenStatus,
-} from "@codestream/protocols/agent";
+import { EnvironmentHost, GetFileScmInfoResponse } from "@codestream/protocols/agent";
 import { CSEligibleJoinCompany, WebviewPanels } from "@codestream/protocols/api";
 import { Position, Range } from "vscode-languageserver-types";
 
@@ -178,7 +174,6 @@ export interface SessionState {
 	acceptedTOS?: boolean;
 	machineId?: string;
 	eligibleJoinCompanies?: CSEligibleJoinCompany[];
-	sessionTokenStatus?: SessionTokenStatus;
 }
 
 export interface EditorContext {
