@@ -14,6 +14,7 @@ import { ColorsHash, Colors } from "./utils";
 import { EventTypeTooltip } from "./EventTypeTooltip";
 import { EventTypeLegend } from "./EventTypeLegend";
 import { FacetLineTooltip } from "./FacetLineTooltip";
+import Tooltip from "../Tooltip";
 
 export const LEFT_MARGIN_ADJUST_VALUE = 25;
 
@@ -22,7 +23,7 @@ const formatXAxisTime = time => {
 	return `${date.toLocaleTimeString()}`;
 };
 
-const processResults = results => {
+const getUniqueDataKeyAndFacetValues = results => {
 	const result = results ? results[0] : undefined;
 	const dataKeys = Object.keys(result || {}).filter(
 		key => !["beginTimeSeconds", "endTimeSeconds", "facet", "name"].includes(key)
@@ -31,7 +32,7 @@ const processResults = results => {
 	return { dataKeys, uniqueFacetValues };
 };
 
-const createNewArray = (originalArray, uniqueFacets, dataKeys) => {
+const formatResultsForLineChart = (originalArray, uniqueFacets, dataKeys) => {
 	const groupedByEndTime = {};
 
 	uniqueFacets.forEach(facet => {
@@ -54,7 +55,7 @@ const createNewArray = (originalArray, uniqueFacets, dataKeys) => {
 		...(facetValues as { [key: string]: number }),
 	}));
 
-	return newArray;
+	return fillNullValues(newArray);
 };
 
 const fillNullValues = array => {
@@ -67,7 +68,9 @@ const fillNullValues = array => {
 			}
 		});
 	});
-	return array;
+	return array.filter(obj =>
+		Object.keys(obj).some(key => key !== "endTimeSeconds" && obj[key] !== undefined)
+	);
 };
 
 const truncate = (str: string, max: number) => {
@@ -81,13 +84,8 @@ export const NRQLResultsLine = ({ results, facet, eventType, height }) => {
 	const [activeDotKey, setActiveDotKey] = useState(undefined);
 	const [activeIndex, setActiveIndex] = useState(undefined);
 
-	const { dataKeys, uniqueFacetValues } = processResults(results);
-	const newArray = createNewArray(results, uniqueFacetValues, dataKeys);
-	const noNullNewArray = fillNullValues(newArray);
-
-	const filteredArray = noNullNewArray.filter(obj =>
-		Object.keys(obj).some(key => key !== "endTimeSeconds" && obj[key] !== undefined)
-	);
+	const { dataKeys, uniqueFacetValues } = getUniqueDataKeyAndFacetValues(results);
+	const resultsForLineChart = formatResultsForLineChart(results, uniqueFacetValues, dataKeys);
 
 	const customMouseOver = (key, index) => {
 		setActiveIndex(index);
@@ -123,33 +121,36 @@ export const NRQLResultsLine = ({ results, facet, eventType, height }) => {
 					const isHighlighted = activeIndex === index;
 
 					return (
-						<div
-							onMouseEnter={() => handleMouseEnter(index)}
-							onMouseLeave={handleMouseLeave}
-							key={`custom-legend--item-${index}`}
-							style={{
-								opacity: isHighlighted ? 1 : 0.7,
-								color: isHighlighted ? "var(--text-color-highlight)" : "var(--text-color)",
-								padding: "4px",
-							}}
-						>
-							<div>
-								<span
-									style={{
-										overflow: "hidden",
-										textOverflow: "ellipsis",
-										whiteSpace: "nowrap",
-										maxWidth: "180px",
-										display: "inline-block",
-									}}
-								>
-									<span className="dot" style={{ color: entry.color, marginRight: "6px" }}>
-										●
+						<Tooltip placement="top" delay={1} title={key}>
+							<div
+								onMouseEnter={() => handleMouseEnter(index)}
+								onMouseLeave={handleMouseLeave}
+								key={`custom-legend--item-${index}`}
+								style={{
+									opacity: isHighlighted ? 1 : 0.7,
+									color: isHighlighted ? "var(--text-color-highlight)" : "var(--text-color)",
+									padding: "4px",
+									cursor: "pointer",
+								}}
+							>
+								<div>
+									<span
+										style={{
+											overflow: "hidden",
+											textOverflow: "ellipsis",
+											whiteSpace: "nowrap",
+											maxWidth: "180px",
+											display: "inline-block",
+										}}
+									>
+										<span className="dot" style={{ color: entry.color, marginRight: "6px" }}>
+											●
+										</span>
+										{key}
 									</span>
-									{key}
-								</span>
+								</div>
 							</div>
-						</div>
+						</Tooltip>
 					);
 				})}
 			</div>
@@ -189,7 +190,7 @@ export const NRQLResultsLine = ({ results, facet, eventType, height }) => {
 				) : (
 					<ResponsiveContainer width="100%" height={500} debounce={1}>
 						{/* facet, multiple line chart */}
-						<LineChart width={500} height={300} data={filteredArray}>
+						<LineChart width={500} height={300} data={resultsForLineChart}>
 							<CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
 							<XAxis
 								tick={{ fontSize: 11 }}
@@ -200,7 +201,7 @@ export const NRQLResultsLine = ({ results, facet, eventType, height }) => {
 							<ReTooltip content={<FacetLineTooltip activeDotKey={activeDotKey} />} />
 							<Legend content={<FacetLineLegend />} />
 
-							{Object.keys(filteredArray[0]).map((key, index) =>
+							{Object.keys(resultsForLineChart[0]).map((key, index) =>
 								key !== "endTimeSeconds" ? (
 									<Line
 										key={key}
