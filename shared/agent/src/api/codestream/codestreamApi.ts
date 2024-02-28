@@ -65,7 +65,6 @@ import {
 	DeleteUserRequest,
 	DeleteUserResponse,
 	DidChangeDataNotificationType,
-	DidEncounterInvalidRefreshTokenNotificationType,
 	ERROR_GENERIC_USE_ERROR_MESSAGE,
 	EditPostRequest,
 	FetchCodeErrorsRequest,
@@ -2453,7 +2452,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		this._refreshNRTokenPromise = new Promise((resolve, reject) => {
 			const url = "/no-auth/provider-refresh/newrelic";
 			this.put<{ refreshToken: string }, CSNewRelicProviderInfo>(url, {
-				refreshToken,
+				refreshToken: refreshToken, //+ "x", // uncomment to test roadblock
 			})
 				.then(response => {
 					if (response.accessToken) {
@@ -2476,15 +2475,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 				})
 				.catch(ex => {
 					Logger.error(ex, cc);
-					if (ex.statusCode === 403) {
-						Logger.warn(
-							"New Relic access token refresh failed, sending DidEncounterInvalidRefreshTokenNotification..."
-						);
-						Container.instance().agent.sendNotification(
-							DidEncounterInvalidRefreshTokenNotificationType,
-							undefined
-						);
-					}
 					delete this._refreshNRTokenPromise;
 					reject(ex);
 				});

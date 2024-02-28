@@ -164,10 +164,6 @@ class AuthenticationService(val project: Project) {
         }
     }
 
-    suspend fun onDidEncounterInvalidRefreshToken() {
-        onDidLogout(DidLogoutNotification(LogoutReason.INVALID_REFRESH_TOKEN))
-    }
-
     suspend fun logout(reason: CSLogoutReason, newServerUrl: String? = null) {
         val agent = project.agentService ?: return
         val session = project.sessionService ?: return
