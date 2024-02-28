@@ -69,6 +69,7 @@ export const FacetLineTooltip: React.FC<FacetLineTooltipProps> = ({
 	if (active && payload && payload.length && label && activeDotKey) {
 		const activeDotPayload = payload.find(obj => obj.dataKey === activeDotKey);
 		const activeTime = formatXAxisTime(activeDotPayload.payload.endTimeSeconds);
+		const activeRoundedValue = Number(activeDotPayload.value.toFixed(2));
 
 		if (!timeRangeDisplay) {
 			return (
@@ -79,7 +80,7 @@ export const FacetLineTooltip: React.FC<FacetLineTooltipProps> = ({
 							<Bullet bulletColor={activeDotPayload.color} />
 							{activeDotPayload.dataKey}
 						</FacetLine>
-						<Value>{activeDotPayload.value}</Value>
+						<Value>{activeRoundedValue}</Value>
 					</FacetLineValueContainer>
 				</Container>
 			);

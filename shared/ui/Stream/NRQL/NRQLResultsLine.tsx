@@ -70,9 +70,16 @@ const fillNullValues = array => {
 	return array;
 };
 
-export const NRQLResultsLine = ({ results, facet, eventType }) => {
+const truncate = (str: string, max: number) => {
+	if (!str) return str;
+	if (str.length >= max) return `${str.substring(0, max - 1)}${"\u2026"}`;
+	return str;
+};
+
+export const NRQLResultsLine = ({ results, facet, eventType, height }) => {
 	if (!results || results.length === 0) return null;
 	const [activeDotKey, setActiveDotKey] = useState(undefined);
+	const [activeIndex, setActiveIndex] = useState(undefined);
 
 	const { dataKeys, uniqueFacetValues } = processResults(results);
 	const newArray = createNewArray(results, uniqueFacetValues, dataKeys);
@@ -82,17 +89,79 @@ export const NRQLResultsLine = ({ results, facet, eventType }) => {
 		Object.keys(obj).some(key => key !== "endTimeSeconds" && obj[key] !== undefined)
 	);
 
-	const customMouseOver = (e, key) => {
+	const customMouseOver = (e, key, index) => {
+		setActiveIndex(index);
 		setActiveDotKey(key);
 	};
 
-	const customMouseLeave = (e, key) => {
+	const customMouseLeave = (e, key, index) => {
 		setActiveDotKey(undefined);
+		setActiveIndex(undefined);
+	};
+
+	const handleMouseEnter = index => {
+		setActiveIndex(index);
+	};
+
+	const handleMouseLeave = () => {
+		setActiveIndex(undefined);
+	};
+
+	const FacetLineLegend = ({ payload }: { payload?: any[] }) => {
+		return (
+			<div
+				style={{
+					display: "flex",
+					flexWrap: "wrap",
+					flexDirection: "row", // Set to row direction
+					alignContent: "flex-start", // Align content to start of the flex container
+					paddingLeft: `40px`,
+				}}
+			>
+				{payload!.map((entry, index) => {
+					// const key = entry.dataKey;
+
+					const key = truncate(entry.dataKey, 40);
+
+					const isHighlighted = activeIndex === index;
+
+					return (
+						<div
+							onMouseEnter={() => handleMouseEnter(index)}
+							onMouseLeave={handleMouseLeave}
+							key={`custom-legend--item-${index}`}
+							style={{
+								opacity: isHighlighted ? 1 : 0.7,
+								color: isHighlighted ? "var(--text-color-highlight)" : "var(--text-color)",
+								padding: "4px",
+							}}
+						>
+							<div>
+								<span
+									style={{
+										overflow: "hidden",
+										textOverflow: "ellipsis",
+										whiteSpace: "nowrap",
+										maxWidth: "180px",
+										display: "inline-block",
+									}}
+								>
+									<span className="dot" style={{ color: entry.color, marginRight: "6px" }}>
+										●
+									</span>
+									{key}
+								</span>
+							</div>
+						</div>
+					);
+				})}
+			</div>
+		);
 	};
 
 	return (
 		<div style={{ marginLeft: `-${LEFT_MARGIN_ADJUST_VALUE}px` }} className="histogram-chart">
-			<div style={{ marginLeft: "0px", marginBottom: "20px" }}>
+			<div style={{ height: height, overflowY: "auto", overflowX: "hidden" }}>
 				{_isEmpty(facet) ? (
 					<ResponsiveContainer width="100%" height={500} debounce={1}>
 						<LineChart
@@ -120,32 +189,36 @@ export const NRQLResultsLine = ({ results, facet, eventType }) => {
 						</LineChart>
 					</ResponsiveContainer>
 				) : (
-					<LineChart width={800} height={400} data={filteredArray}>
-						<CartesianGrid strokeDasharray="3 3" />
-						<XAxis
-							tick={{ fontSize: 11 }}
-							dataKey="endTimeSeconds"
-							tickFormatter={formatXAxisTime}
-						/>
-						<YAxis tick={{ fontSize: 11 }} />
-						<ReTooltip content={<FacetLineTooltip activeDotKey={activeDotKey} />} />
-						<Legend />
-						{Object.keys(filteredArray[0]).map((key, index) =>
-							key !== "endTimeSeconds" ? (
-								<Line
-									key={key}
-									dataKey={key}
-									stroke={ColorsHash[index % Colors.length]}
-									fill={ColorsHash[index % Colors.length]}
-									dot={false}
-									activeDot={{
-										onMouseOver: e => customMouseOver(e, key),
-										onMouseLeave: e => customMouseLeave(e, key),
-									}}
-								/>
-							) : null
-						)}
-					</LineChart>
+					<ResponsiveContainer width="100%" height={500} debounce={1}>
+						<LineChart width={500} height={300} data={filteredArray}>
+							<CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+							<XAxis
+								tick={{ fontSize: 11 }}
+								dataKey="endTimeSeconds"
+								tickFormatter={formatXAxisTime}
+							/>
+							<YAxis tick={{ fontSize: 11 }} />
+							<ReTooltip content={<FacetLineTooltip activeDotKey={activeDotKey} />} />
+							<Legend content={<FacetLineLegend />} />
+
+							{Object.keys(filteredArray[0]).map((key, index) =>
+								key !== "endTimeSeconds" ? (
+									<Line
+										key={key}
+										dataKey={key}
+										stroke={ColorsHash[index % Colors.length]}
+										fill={ColorsHash[index % Colors.length]}
+										dot={false}
+										strokeOpacity={activeIndex === undefined ? 1 : activeIndex === index ? 1 : 0.5}
+										activeDot={{
+											onMouseOver: e => customMouseOver(e, key, index),
+											onMouseLeave: e => customMouseLeave(e, key, index),
+										}}
+									/>
+								) : null
+							)}
+						</LineChart>
+					</ResponsiveContainer>
 				)}
 			</div>
 		</div>

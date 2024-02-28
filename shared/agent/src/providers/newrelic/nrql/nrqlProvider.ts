@@ -471,7 +471,7 @@ export class NrNRQLProvider {
 		const isFacet = metadata?.facet;
 		if (isTimeseries && isFacet) {
 			// TODO stacked bar and line and area
-			return { selected: "table", enabled: ["table", "json", "line"] };
+			return { selected: "line", enabled: ["table", "json", "line"] };
 		}
 
 		if (isTimeseries) {

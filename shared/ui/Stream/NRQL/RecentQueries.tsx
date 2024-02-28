@@ -182,7 +182,7 @@ export const RecentQueries = (props: {
 	};
 
 	return (
-		<div style={{ width: "200px" }}>
+		<div style={{ width: "200px", marginLeft: "10px" }}>
 			<AsyncPaginate
 				id="input-recent-queries-autocomplete"
 				name="account-autocomplete"
