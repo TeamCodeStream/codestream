@@ -14,13 +14,12 @@ export class CriticalPathCalculator {
 	): Promise<CriticalPathSpan[]> {
 		const parsedId = parseId(entityGuid)!;
 
-		// entityGuid = 'WebTransaction/SpringController/api/v2/{accountId}/violation/summary/search (GET)'
 		const slowestTransactionsQuery =
 			`SELECT name, duration, traceId FROM Transaction ` +
 			`WHERE name = '${metricTimesliceNames.duration}' ` +
 			`AND traceId IN ( ` +
 			`  FROM Span SELECT uniques(traceId) WHERE entity.guid = '${entityGuid}' SINCE 30 minutes ago LIMIT MAX ` +
-			`) ORDER BY duration DESC LIMIT 10`;
+			`) ORDER BY duration DESC LIMIT 30`;
 
 		const slowestTransactions = await this.graphqlClient.runNrql<{
 			name: string;
@@ -32,8 +31,8 @@ export class CriticalPathCalculator {
 		const traceIdsClause = traceIds.join(", ");
 
 		const spansQuery =
-			`SELECT name, id, parentId, traceId, duration ` +
-			`FROM Span WHERE trace.id IN (${traceIdsClause}) LIMIT MAX`;
+			`SELECT name, id, parentId, traceId, duration * 1000 as duration ` +
+			`FROM Span WHERE trace.id IN (${traceIdsClause}) AND entity.guid = '${entityGuid}' LIMIT MAX`;
 
 		const spans = await this.graphqlClient.runNrql<{
 			name: string;
