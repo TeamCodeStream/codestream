@@ -89,12 +89,12 @@ export const NRQLResultsLine = ({ results, facet, eventType, height }) => {
 		Object.keys(obj).some(key => key !== "endTimeSeconds" && obj[key] !== undefined)
 	);
 
-	const customMouseOver = (e, key, index) => {
+	const customMouseOver = (key, index) => {
 		setActiveIndex(index);
 		setActiveDotKey(key);
 	};
 
-	const customMouseLeave = (e, key, index) => {
+	const customMouseLeave = () => {
 		setActiveDotKey(undefined);
 		setActiveIndex(undefined);
 	};
@@ -113,16 +113,13 @@ export const NRQLResultsLine = ({ results, facet, eventType, height }) => {
 				style={{
 					display: "flex",
 					flexWrap: "wrap",
-					flexDirection: "row", // Set to row direction
-					alignContent: "flex-start", // Align content to start of the flex container
+					flexDirection: "row",
+					alignContent: "flex-start",
 					paddingLeft: `40px`,
 				}}
 			>
 				{payload!.map((entry, index) => {
-					// const key = entry.dataKey;
-
 					const key = truncate(entry.dataKey, 40);
-
 					const isHighlighted = activeIndex === index;
 
 					return (
@@ -164,6 +161,7 @@ export const NRQLResultsLine = ({ results, facet, eventType, height }) => {
 			<div style={{ height: height, overflowY: "auto", overflowX: "hidden" }}>
 				{_isEmpty(facet) ? (
 					<ResponsiveContainer width="100%" height={500} debounce={1}>
+						{/* Non-facet, single line chart */}
 						<LineChart
 							width={500}
 							height={300}
@@ -190,6 +188,7 @@ export const NRQLResultsLine = ({ results, facet, eventType, height }) => {
 					</ResponsiveContainer>
 				) : (
 					<ResponsiveContainer width="100%" height={500} debounce={1}>
+						{/* facet, multiple line chart */}
 						<LineChart width={500} height={300} data={filteredArray}>
 							<CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
 							<XAxis
@@ -211,8 +210,8 @@ export const NRQLResultsLine = ({ results, facet, eventType, height }) => {
 										dot={false}
 										strokeOpacity={activeIndex === undefined ? 1 : activeIndex === index ? 1 : 0.5}
 										activeDot={{
-											onMouseOver: e => customMouseOver(e, key, index),
-											onMouseLeave: e => customMouseLeave(e, key, index),
+											onMouseOver: e => customMouseOver(key, index),
+											onMouseLeave: e => customMouseLeave(),
 										}}
 									/>
 								) : null
