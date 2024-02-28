@@ -114,7 +114,7 @@ export interface CSAsyncGrokError extends CSAsyncError {
 }
 
 export interface CSGrokStream {
-	sequence: number;
+	sequence?: number;
 	content?: {
 		content: string;
 		role: string;

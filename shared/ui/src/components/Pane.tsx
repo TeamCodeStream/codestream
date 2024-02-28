@@ -16,7 +16,7 @@ import Icon from "@codestream/webview/Stream/Icon";
 import { DragHeaderContext } from "@codestream/webview/Stream/Sidebar";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import ScrollBox from "../../Stream/ScrollBox";
-import { setApiDemoMode } from "@codestream/webview/store/codeErrors/thunks";
+import { setApiDemoMode } from "@codestream/webview/store/codeErrors/api/apiResolver";
 
 export enum PaneState {
 	Open = "open",

@@ -3,6 +3,8 @@ import {
 	CreateShareableCodeErrorResponse,
 	FetchCodeErrorsRequest,
 	FetchCodeErrorsResponse,
+	FetchPostRepliesRequest,
+	FetchPostRepliesResponse,
 	GetNewRelicErrorGroupRequest,
 	GetNewRelicErrorGroupResponse,
 	GetObservabilityErrorsRequest,
@@ -21,6 +23,8 @@ export interface CodeErrorsApi {
 	createShareableCodeError(
 		request: CreateShareableCodeErrorRequest
 	): Promise<CreateShareableCodeErrorResponse>;
+
+	fetchPostReplies(request: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse>;
 
 	fetchCodeErrors(request: FetchCodeErrorsRequest): Promise<FetchCodeErrorsResponse>;
 
@@ -43,4 +47,8 @@ export interface CodeErrorsApi {
 	executeThirdPartyTyped<T, R>(method: string, params: any): Promise<any>;
 
 	track(eventName: TelemetryEventName, properties?: TelemetryData): Promise<void>;
+
+	setCurrentRepoId(repoId: string): void;
+
+	setNrAiUserId(userId: string): void;
 }

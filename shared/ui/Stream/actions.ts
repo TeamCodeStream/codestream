@@ -17,7 +17,6 @@ import {
 	DeleteThirdPartyPostRequestType,
 	EditPostRequestType,
 	FetchCodemarksRequestType,
-	FetchPostRepliesRequestType,
 	FetchPostsRequestType,
 	FetchUsersRequestType,
 	GetPostRequestType,
@@ -96,6 +95,7 @@ import { SetUserPreferenceRequest } from "./actions.types";
 import { confirmPopup } from "./Confirm";
 import { throwIfError } from "@codestream/webview/store/common";
 import { setPostThreadsLoading } from "../store/posts/actions";
+import { codeErrorsApi } from "@codestream/webview/store/codeErrors/api/apiResolver";
 
 export {
 	openPanel,
@@ -820,10 +820,10 @@ export const createStream =
 			return response.stream;
 		} catch (error) {
 			/* TODO: Handle errors
-			handle name taken errors
-			restricted actions
-			users can't join
-			*/
+          handle name taken errors
+          restricted actions
+          users can't join
+          */
 			logError(error, { ...attributes, detail: `There was an error creating a channel` });
 			return undefined;
 		}
@@ -954,7 +954,7 @@ export const fetchThread =
 	(streamId: string, parentPostId: string) => async (dispatch, getState) => {
 		try {
 			dispatch(setPostThreadsLoading(parentPostId, true));
-			const { posts, codemarks } = await HostApi.instance.send(FetchPostRepliesRequestType, {
+			const { posts, codemarks } = await codeErrorsApi.fetchPostReplies({
 				streamId,
 				postId: parentPostId,
 			});

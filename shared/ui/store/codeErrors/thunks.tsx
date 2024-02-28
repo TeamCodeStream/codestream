@@ -46,25 +46,10 @@ import { confirmPopup } from "@codestream/webview/Stream/Confirm";
 import React from "react";
 import { Position, Range } from "vscode-languageserver-types";
 import { URI } from "vscode-uri";
-import { CodeErrorsApi } from "@codestream/webview/store/codeErrors/api/CodeErrorsApi";
-import { CodeErrorsApiImpl } from "@codestream/webview/store/codeErrors/api/CodeErrorsApiImpl";
-import { CodeErrorsIDEApi } from "@codestream/webview/store/codeErrors/api/CodeErrorsIDEApi";
-import { CodeErrorsIDEApiImpl } from "@codestream/webview/store/codeErrors/api/CodeErrorsIDEApiImpl";
-import { CodeErrorsApiDemo } from "@codestream/webview/store/codeErrors/api/CodeErrorsApiDemo";
-import { CodeErrorsIDEApiDemo } from "@codestream/webview/store/codeErrors/api/CodeErrorsIDEApiDemo";
-
-let codeErrorsApi: CodeErrorsApi = new CodeErrorsApiImpl();
-let codeErrorsIDEApi: CodeErrorsIDEApi = new CodeErrorsIDEApiImpl();
-
-export function setApiDemoMode(demoMode: boolean) {
-	if (demoMode) {
-		codeErrorsApi = new CodeErrorsApiDemo();
-		codeErrorsIDEApi = new CodeErrorsIDEApiDemo();
-	} else {
-		codeErrorsApi = new CodeErrorsApiImpl();
-		codeErrorsIDEApi = new CodeErrorsIDEApiImpl();
-	}
-}
+import {
+	codeErrorsApi,
+	codeErrorsIDEApi,
+} from "@codestream/webview/store/codeErrors/api/apiResolver";
 
 export const updateCodeErrors =
 	(codeErrors: CSCodeError[]) => async (dispatch, getState: () => CodeStreamState) => {
@@ -322,7 +307,7 @@ export const openErrorGroup = createAppAsyncThunk(
 		}
 
 		if (message) {
-      codeErrorsApi.track("codestream/errors/error_group_roadblock displayed", {
+			codeErrorsApi.track("codestream/errors/error_group_roadblock displayed", {
 				meta_data: `error_group_id: ${errorGroupGuid}`,
 				event_type: "response",
 			});

@@ -277,12 +277,13 @@ export class HostApi extends EventEmitter {
 		this.port = port;
 
 		port.onmessage = ({ data }: { data: WebviewIpcMessage }) => {
+			const dataSnapshot = structuredClone(data); // For logging
 			if (isIpcResponseMessage(data)) {
 				const pending = this.apiManager.get(data.id);
 				if (!pending) {
 					console.debug(
 						`received response from host for ${data.id}; unable to find a pending request`,
-						data
+						dataSnapshot
 					);
 
 					return;
@@ -290,7 +291,7 @@ export class HostApi extends EventEmitter {
 
 				console.debug(
 					`received response from host for ${data.id}; found pending request: ${pending.method}`,
-					data
+					dataSnapshot
 				);
 				if (data.error != null) {
 					if (!data.error.toString().includes("maintenance mode")) pending.reject(data.error);
@@ -307,7 +308,7 @@ export class HostApi extends EventEmitter {
 				return;
 			}
 
-			console.debug(`received notification ${data.method} from host`, data.params);
+			console.debug(`received notification ${data.method} from host`, dataSnapshot.params);
 			this.emit(data.method, data.params);
 		};
 	}

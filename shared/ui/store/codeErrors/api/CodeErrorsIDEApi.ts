@@ -13,4 +13,6 @@ export interface CodeErrorsIDEApi {
 	editorRevealRange(request: EditorRevealRangeRequest): Promise<EditorRevealRangeResponse>;
 
 	editorReplaceSymbol(request: EditorReplaceSymbolRequest): Promise<EditorReplaceSymbolResponse>;
+
+	setNrAiUserId(userId: string): void;
 }

@@ -50,7 +50,9 @@ export function advanceRecombinedStream(
 ) {
 	recombinedStream.lastMessageReceivedAt = Date.now();
 	recombinedStream.items = recombinedStream.items.concat(payload);
-	recombinedStream.items.sort((a, b) => a.sequence - b.sequence);
+	recombinedStream.items.sort(
+		(a, b) => (a?.sequence ?? Number.MAX_SAFE_INTEGER) - (b?.sequence ?? Number.MAX_SAFE_INTEGER)
+	);
 	recombinedStream.receivedDoneEvent = payload.find(it => it.done) !== undefined;
 	const start =
 		recombinedStream.lastContentIndex !== undefined ? recombinedStream.lastContentIndex + 1 : 0;

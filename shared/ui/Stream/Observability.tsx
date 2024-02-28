@@ -22,7 +22,7 @@ import {
 } from "@codestream/protocols/agent";
 import cx from "classnames";
 import { head as _head, isEmpty as _isEmpty, isNil as _isNil } from "lodash-es";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
 
@@ -91,6 +91,11 @@ import { ObservabilityAlertViolations } from "./ObservabilityAlertViolations";
 import { parseId } from "../utilities/newRelic";
 import { bootstrapNrCapabilities } from "../store/nrCapabilities/thunks";
 import { doGetObservabilityErrors } from "@codestream/webview/store/codeErrors/thunks";
+import {
+	setApiCurrentRepoId,
+	setApiNrAiUserId,
+} from "@codestream/webview/store/codeErrors/api/apiResolver";
+import { getNrAiUser } from "@codestream/webview/store/users/reducer";
 
 interface Props {
 	paneState: PaneState;
@@ -200,6 +205,15 @@ export const ErrorRow = (props: {
 			ideName: encodeURIComponent(state.ide.name || ""),
 		};
 	}, shallowEqual);
+
+	const nrAiUser = useAppSelector(getNrAiUser);
+
+	useMemo(() => {
+		if (nrAiUser) {
+			console.log(`***** setApiNrAiUserId ${nrAiUser.id}`);
+			setApiNrAiUserId(nrAiUser.id);
+		}
+	}, [nrAiUser]);
 
 	return (
 		<Row
@@ -429,6 +443,7 @@ export const Observability = React.memo((props: Props) => {
 
 	const getObservabilityErrors = async () => {
 		if (currentRepoId) {
+			setApiCurrentRepoId(currentRepoId);
 			setLoadingObservabilityErrors(true);
 			try {
 				console.log("**** doGetObservabilityErrors");
@@ -1451,12 +1466,15 @@ export const Observability = React.memo((props: Props) => {
 																		`o11y: ObservabilityAddAdditionalService calling doRefresh(force)`
 																	);
 																	doRefresh(true);
-																	HostApi.instance.track("codestream/entity_association succeeded", {
-																		entity_guid: e?.entityGuid,
-																		account_id: parseId(e?.entityGuid)?.accountId,
-																		event_type: "response",
-																		meta_data: "first_association: false",
-																	});
+																	HostApi.instance.track(
+																		"codestream/entity_association succeeded",
+																		{
+																			entity_guid: e?.entityGuid,
+																			account_id: parseId(e?.entityGuid)?.accountId,
+																			event_type: "response",
+																			meta_data: "first_association: false",
+																		}
+																	);
 																}}
 																remote={currentObsRepo.repoRemote}
 																remoteName={currentObsRepo.repoName}

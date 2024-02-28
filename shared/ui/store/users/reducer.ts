@@ -102,6 +102,9 @@ export const getAllUsers = createSelector(getUsers, (users: UsersState) => Objec
 export const getUsernames = createSelector(getAllUsers, users => {
 	return users.map(getUsername);
 });
+export const getNrAiUser = createSelector(getAllUsers, users => {
+	return users.find(u => u.username === "AI");
+});
 
 export const getUsernamesById = createSelector(getAllUsers, users => {
 	const map = {};

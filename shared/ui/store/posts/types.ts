@@ -27,7 +27,7 @@ export function isPending(post: object | undefined): post is PendingPost {
 }
 
 export type GrokStreamEvent = {
-	sequence: number;
+	sequence?: number;
 	streamId: string;
 	postId: string;
 	content?: string;

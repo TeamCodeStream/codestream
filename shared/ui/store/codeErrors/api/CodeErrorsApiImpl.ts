@@ -6,6 +6,9 @@ import {
 	FetchCodeErrorsRequest,
 	FetchCodeErrorsRequestType,
 	FetchCodeErrorsResponse,
+	FetchPostRepliesRequest,
+	FetchPostRepliesRequestType,
+	FetchPostRepliesResponse,
 	GetNewRelicErrorGroupRequest,
 	GetNewRelicErrorGroupRequestType,
 	GetNewRelicErrorGroupResponse,
@@ -28,11 +31,25 @@ import {
 import { CodeErrorsApi } from "@codestream/webview/store/codeErrors/api/CodeErrorsApi";
 import { HostApi } from "@codestream/webview/webview-api";
 
-export class CodeErrorsApiImpl implements CodeErrorsApi {
+class CodeErrorsApiImpl implements CodeErrorsApi {
+	private _currentRepoId: string | undefined;
+	private _nraiUserId: string | undefined;
+
 	async createShareableCodeError(
 		request: CreateShareableCodeErrorRequest
 	): Promise<CreateShareableCodeErrorResponse> {
 		const result = await HostApi.instance.send(CreateShareableCodeErrorRequestType, request);
+		return result;
+	}
+
+	async fetchPostReplies({
+		streamId,
+		postId,
+	}: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse> {
+		const result = await HostApi.instance.send(FetchPostRepliesRequestType, {
+			streamId,
+			postId: postId,
+		});
 		return result;
 	}
 
@@ -84,4 +101,14 @@ export class CodeErrorsApiImpl implements CodeErrorsApi {
 		const result = await HostApi.instance.track(eventName, properties);
 		return result;
 	}
+
+	setCurrentRepoId(repoId: string) {
+		this._currentRepoId = repoId;
+	}
+
+	setNrAiUserId(userId: string): void {
+		this._nraiUserId = userId;
+	}
 }
+
+export const codeErrorsApiImpl = new CodeErrorsApiImpl();

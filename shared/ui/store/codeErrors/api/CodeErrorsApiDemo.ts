@@ -1,18 +1,21 @@
 import {
 	CreateShareableCodeErrorRequest,
-	CreateShareableCodeErrorRequestType,
 	CreateShareableCodeErrorResponse,
 	ExecuteThirdPartyTypedType,
 	FetchCodeErrorsRequest,
 	FetchCodeErrorsResponse,
+	FetchPostRepliesRequest,
+	FetchPostRepliesResponse,
 	GetNewRelicErrorGroupRequest,
 	GetNewRelicErrorGroupRequestType,
 	GetNewRelicErrorGroupResponse,
 	GetObservabilityErrorsRequest,
 	GetObservabilityErrorsResponse,
 	ResolveStackTracePositionRequest,
+	ResolveStackTracePositionRequestType,
 	ResolveStackTracePositionResponse,
 	ResolveStackTraceRequest,
+	ResolveStackTraceRequestType,
 	ResolveStackTraceResponse,
 	TelemetryData,
 	TelemetryEventName,
@@ -23,20 +26,41 @@ import {
 
 import { CodeErrorsApi } from "@codestream/webview/store/codeErrors/api/CodeErrorsApi";
 import { HostApi } from "@codestream/webview/webview-api";
-import { codeErrorsResponse } from "@codestream/webview/store/codeErrors/api/data/fetchCodeErrorsResponse";
-import { observabilityErrorsResponse } from "@codestream/webview/store/codeErrors/api/data/getObservabilityErrorsResponse";
-import { resolveStackTraceResponse } from "@codestream/webview/store/codeErrors/api/data/resolveStackTraceResponse";
-import { resolveStackTracePosition } from "@codestream/webview/store/codeErrors/api/data/resolveStackTracePosition";
+import { getCodeErrorsResponse } from "@codestream/webview/store/codeErrors/api/data/fetchCodeErrorsResponse";
+import { getObservabilityErrorsResponse } from "@codestream/webview/store/codeErrors/api/data/getObservabilityErrorsResponse";
+import {
+	codeErrorId,
+	getCreateSharableCodeErrorResponse,
+	parentPostId,
+	postId,
+	streamId,
+} from "@codestream/webview/store/codeErrors/api/data/createSharableCodeErrorResponse";
+import { getFetchPostRepliesResponse } from "@codestream/webview/store/codeErrors/api/data/fetchPostReplies";
 
-export class CodeErrorsApiDemo implements CodeErrorsApi {
+class CodeErrorsApiDemo implements CodeErrorsApi {
+	private _currentRepoId: string | undefined;
+	private _nraiUserId: string | undefined;
+
 	async createShareableCodeError(
 		request: CreateShareableCodeErrorRequest
 	): Promise<CreateShareableCodeErrorResponse> {
-		return HostApi.instance.send(CreateShareableCodeErrorRequestType, request);
+		return getCreateSharableCodeErrorResponse(this._currentRepoId!);
+	}
+
+	async fetchPostReplies(request: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse> {
+		const result = getFetchPostRepliesResponse(
+			streamId,
+			postId,
+			parentPostId,
+			codeErrorId,
+			this._nraiUserId!
+		);
+		return result;
 	}
 
 	async fetchCodeErrors(request: FetchCodeErrorsRequest): Promise<FetchCodeErrorsResponse> {
-		return codeErrorsResponse;
+		const response = getCodeErrorsResponse(postId, streamId, codeErrorId, this._currentRepoId!);
+		return response;
 		// return HostApi.instance.send(FetchCodeErrorsRequestType, request);
 	}
 
@@ -50,17 +74,21 @@ export class CodeErrorsApiDemo implements CodeErrorsApi {
 		request: GetObservabilityErrorsRequest
 	): Promise<GetObservabilityErrorsResponse> {
 		// return HostApi.instance.send(GetObservabilityErrorsRequestType, request);
-		return observabilityErrorsResponse;
+		return this._currentRepoId ? getObservabilityErrorsResponse(this._currentRepoId) : {};
 	}
 
 	async resolveStackTrace(request: ResolveStackTraceRequest): Promise<ResolveStackTraceResponse> {
-		return resolveStackTraceResponse;
+		// return resolveStackTraceResponse;
+		const result = await HostApi.instance.send(ResolveStackTraceRequestType, request);
+		return result;
 	}
 
 	async resolveStackTracePosition(
 		request: ResolveStackTracePositionRequest
 	): Promise<ResolveStackTracePositionResponse> {
-		return resolveStackTracePosition;
+		// return resolveStackTracePosition;
+		const result = await HostApi.instance.send(ResolveStackTracePositionRequestType, request);
+		return result;
 	}
 
 	async updateCodeErrors(request: UpdateCodeErrorRequest): Promise<UpdateCodeErrorResponse> {
@@ -78,4 +106,14 @@ export class CodeErrorsApiDemo implements CodeErrorsApi {
 	async track(eventName: TelemetryEventName, properties?: TelemetryData): Promise<void> {
 		return HostApi.instance.track(eventName, properties);
 	}
+
+	setCurrentRepoId(repoId: string) {
+		this._currentRepoId = repoId;
+	}
+
+	setNrAiUserId(userId: string): void {
+		this._nraiUserId = userId;
+	}
 }
+
+export const codeErrorsApiDemo = new CodeErrorsApiDemo();
