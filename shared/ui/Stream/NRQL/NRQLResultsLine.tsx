@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
 	Line,
 	LineChart,
@@ -13,6 +13,7 @@ import { isEmpty as _isEmpty } from "lodash-es";
 import { ColorsHash, Colors } from "./utils";
 import { EventTypeTooltip } from "./EventTypeTooltip";
 import { EventTypeLegend } from "./EventTypeLegend";
+import { FacetLineTooltip } from "./FacetLineTooltip";
 
 export const LEFT_MARGIN_ADJUST_VALUE = 25;
 
@@ -28,13 +29,6 @@ const processResults = results => {
 	);
 	const uniqueFacetValues = [...new Set(results.map(obj => obj.facet))];
 	return { dataKeys, uniqueFacetValues };
-};
-
-const convertData = (results, formatXAxisTime) => {
-	return results.map(obj => ({
-		...obj,
-		endTimeSeconds: formatXAxisTime(obj.endTimeSeconds),
-	}));
 };
 
 const createNewArray = (originalArray, uniqueFacets, dataKeys) => {
@@ -78,15 +72,23 @@ const fillNullValues = array => {
 
 export const NRQLResultsLine = ({ results, facet, eventType }) => {
 	if (!results || results.length === 0) return null;
+	const [activeDotKey, setActiveDotKey] = useState(undefined);
 
 	const { dataKeys, uniqueFacetValues } = processResults(results);
-	const convertedData = convertData(results, formatXAxisTime);
 	const newArray = createNewArray(results, uniqueFacetValues, dataKeys);
 	const noNullNewArray = fillNullValues(newArray);
 
 	const filteredArray = noNullNewArray.filter(obj =>
 		Object.keys(obj).some(key => key !== "endTimeSeconds" && obj[key] !== undefined)
 	);
+
+	const customMouseOver = (e, key) => {
+		setActiveDotKey(key);
+	};
+
+	const customMouseLeave = (e, key) => {
+		setActiveDotKey(undefined);
+	};
 
 	return (
 		<div style={{ marginLeft: `-${LEFT_MARGIN_ADJUST_VALUE}px` }} className="histogram-chart">
@@ -126,7 +128,7 @@ export const NRQLResultsLine = ({ results, facet, eventType }) => {
 							tickFormatter={formatXAxisTime}
 						/>
 						<YAxis tick={{ fontSize: 11 }} />
-						<ReTooltip />
+						<ReTooltip content={<FacetLineTooltip activeDotKey={activeDotKey} />} />
 						<Legend />
 						{Object.keys(filteredArray[0]).map((key, index) =>
 							key !== "endTimeSeconds" ? (
@@ -136,6 +138,10 @@ export const NRQLResultsLine = ({ results, facet, eventType }) => {
 									stroke={ColorsHash[index % Colors.length]}
 									fill={ColorsHash[index % Colors.length]}
 									dot={false}
+									activeDot={{
+										onMouseOver: e => customMouseOver(e, key),
+										onMouseLeave: e => customMouseLeave(e, key),
+									}}
 								/>
 							) : null
 						)}
@@ -145,5 +151,3 @@ export const NRQLResultsLine = ({ results, facet, eventType }) => {
 		</div>
 	);
 };
-
-// export default NRQLResultsLine;
