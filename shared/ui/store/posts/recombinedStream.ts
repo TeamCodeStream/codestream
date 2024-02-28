@@ -70,7 +70,7 @@ export function advanceRecombinedStream(
 }
 
 // A stream is done if it has a done event and there are no gaps in the sequence and it is not timed out
-export function isGrokStreamDone(stream: RecombinedStream) {
+export function isNrAiStreamDone(stream: RecombinedStream) {
 	if (stream.lastMessageReceivedAt && Date.now() - stream.lastMessageReceivedAt > NRAI_TIMEOUT) {
 		console.warn("Grok stream timed out");
 		return true;
@@ -78,9 +78,11 @@ export function isGrokStreamDone(stream: RecombinedStream) {
 	for (let i = 0; i < stream.items.length; i++) {
 		const item = stream.items[i];
 		if (item.sequence !== i) {
+			console.debug(`*** nrai stream not done, gap at ${i}`);
 			return false;
 		}
 	}
 	const lastItem = stream.items[stream.items.length - 1];
-	return lastItem && lastItem.done;
+	const result = lastItem && lastItem.done;
+	return result;
 }

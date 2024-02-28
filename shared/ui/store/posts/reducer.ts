@@ -9,7 +9,7 @@ import { PostPlus } from "@codestream/protocols/agent";
 import {
 	advanceRecombinedStream,
 	extractParts,
-	isGrokStreamDone,
+	isNrAiStreamDone,
 	RecombinedStream,
 } from "@codestream/webview/store/posts/recombinedStream";
 import { Index } from "@codestream/utils/types";
@@ -167,11 +167,11 @@ export function reducePosts(state: PostsState = initialState, action: PostsActio
 	}
 }
 
-const _isGrokLoading = (state: PostsState) => {
+const _isGrokLoading = (state: PostsState): boolean => {
 	const recombinedStreams = state.streamingPosts;
 	return Object.keys(recombinedStreams).some(postId => {
 		const stream = recombinedStreams[postId];
-		return !isGrokStreamDone(stream);
+		return !isNrAiStreamDone(stream);
 	});
 };
 

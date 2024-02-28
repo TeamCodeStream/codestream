@@ -5,7 +5,7 @@ export type GrokStreamActionType = {
 	data: CSGrokStream[];
 };
 
-export function getDemoGrokStream(
+export function getDemoNrAiStream(
 	streamId,
 	postId: string,
 	parentPostId: string

@@ -12,20 +12,23 @@ import {
 import { CodeErrorsIDEApi } from "@codestream/webview/store/codeErrors/api/CodeErrorsIDEApi";
 import { HostApi } from "@codestream/webview/webview-api";
 import { wait } from "@codestream/webview/utils";
-import { getDemoGrokStream } from "@codestream/webview/store/codeErrors/api/data/grokStream";
+import { getDemoNrAiStream } from "@codestream/webview/store/codeErrors/api/data/nraiStream";
 import {
 	parentPostId,
 	postId,
 	streamId,
 } from "@codestream/webview/store/codeErrors/api/data/createSharableCodeErrorResponse";
 import { DidChangeDataNotificationType } from "@codestream/protocols/agent";
-import { getAddPostsMain } from "@codestream/webview/store/codeErrors/api/data/broadcasts";
+import {
+	getAddPostsMain,
+	getFinalAddPosts,
+} from "@codestream/webview/store/codeErrors/api/data/broadcasts";
 
 // const dispatch = useAppDispatch();
 
 async function startDemoGrokStream(nrAiUserId: string) {
 	console.log("*** startDemoGrokStream ***");
-	const demoGrokStream = getDemoGrokStream(streamId, postId, parentPostId);
+	const demoGrokStream = getDemoNrAiStream(streamId, postId, parentPostId);
 	HostApi.instance.emit(DidChangeDataNotificationType.method, {
 		type: "posts",
 		data: getAddPostsMain(streamId, postId, parentPostId, nrAiUserId),
@@ -36,6 +39,11 @@ async function startDemoGrokStream(nrAiUserId: string) {
 		HostApi.instance.emit(DidChangeDataNotificationType.method, event);
 		await wait(100);
 	}
+	await wait(400);
+	HostApi.instance.emit(DidChangeDataNotificationType.method, {
+		type: "posts",
+		data: getFinalAddPosts(streamId, postId, parentPostId, nrAiUserId),
+	});
 }
 
 class CodeErrorsIDEApiDemo implements CodeErrorsIDEApi {

@@ -3,7 +3,7 @@ import {
 	advanceRecombinedStream,
 	extractParts,
 	NRAI_TIMEOUT,
-	isGrokStreamDone,
+	isNrAiStreamDone,
 	RecombinedStream,
 } from "@codestream/webview/store/posts/recombinedStream";
 
@@ -394,7 +394,7 @@ describe("RecombinedStream", () => {
 		expect(recombinedStream.items.length).toBe(4);
 		expect(recombinedStream.lastContentIndex).toBe(2);
 
-		expect(isGrokStreamDone(recombinedStream)).toBe(true);
+		expect(isNrAiStreamDone(recombinedStream)).toBe(true);
 	});
 
 	it("should not report done for missing sequence", () => {
@@ -440,7 +440,7 @@ describe("RecombinedStream", () => {
 		expect(recombinedStream.items.length).toBe(4);
 		expect(recombinedStream.lastContentIndex).toBe(1);
 
-		expect(isGrokStreamDone(recombinedStream)).toBe(false);
+		expect(isNrAiStreamDone(recombinedStream)).toBe(false);
 	});
 
 	it("should report done for incomplete stream with lastMessageReceivedAt > 2 minutes ago", () => {
@@ -466,6 +466,6 @@ describe("RecombinedStream", () => {
 			lastMessageReceivedAt: Date.now() - (NRAI_TIMEOUT + 1000),
 		};
 
-		expect(isGrokStreamDone(recombinedStream)).toBe(true);
+		expect(isNrAiStreamDone(recombinedStream)).toBe(true);
 	});
 });
