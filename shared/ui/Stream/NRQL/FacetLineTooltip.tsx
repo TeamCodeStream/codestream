@@ -4,7 +4,7 @@ import { LegendProps } from "recharts";
 
 interface FacetLineTooltipProps {
 	active?: boolean;
-	payload?: any[];
+	payload?: { payload: any; dataKey: string; color: string; value: number }[];
 	label?: string;
 	timeRangeDisplay?: boolean;
 	activeDotKey?: string;
@@ -68,22 +68,24 @@ export const FacetLineTooltip: React.FC<FacetLineTooltipProps> = ({
 
 	if (active && payload && payload.length && label && activeDotKey) {
 		const activeDotPayload = payload.find(obj => obj.dataKey === activeDotKey);
-		const activeTime = formatXAxisTime(activeDotPayload.payload.endTimeSeconds);
-		const activeRoundedValue = Number(activeDotPayload.value.toFixed(2));
+		if (activeDotPayload) {
+			const activeTime = formatXAxisTime(activeDotPayload.payload.endTimeSeconds);
+			const activeRoundedValue = Number(activeDotPayload.value.toFixed(2));
 
-		if (!timeRangeDisplay) {
-			return (
-				<Container colorSubtle={colorSubtle} colorBackgroundHover={colorBackgroundHover}>
-					<div>{activeTime}</div>
-					<FacetLineValueContainer>
-						<FacetLine>
-							<Bullet bulletColor={activeDotPayload.color} />
-							{activeDotPayload.dataKey}
-						</FacetLine>
-						<Value>{activeRoundedValue}</Value>
-					</FacetLineValueContainer>
-				</Container>
-			);
+			if (!timeRangeDisplay) {
+				return (
+					<Container colorSubtle={colorSubtle} colorBackgroundHover={colorBackgroundHover}>
+						<div>{activeTime}</div>
+						<FacetLineValueContainer>
+							<FacetLine>
+								<Bullet bulletColor={activeDotPayload.color} />
+								{activeDotPayload.dataKey}
+							</FacetLine>
+							<Value>{activeRoundedValue}</Value>
+						</FacetLineValueContainer>
+					</Container>
+				);
+			}
 		}
 	}
 	return null;

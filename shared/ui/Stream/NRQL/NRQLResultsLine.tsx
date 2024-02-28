@@ -9,6 +9,7 @@ import {
 	YAxis,
 	Legend,
 } from "recharts";
+import { NRQLResult } from "@codestream/protocols/agent";
 import { isEmpty as _isEmpty } from "lodash-es";
 import { ColorsHash, Colors } from "./utils";
 import { EventTypeTooltip } from "./EventTypeTooltip";
@@ -79,7 +80,19 @@ const truncate = (str: string, max: number) => {
 	return str;
 };
 
-export const NRQLResultsLine = ({ results, facet, eventType, height }) => {
+interface NRQLResultsLineProps {
+	results: NRQLResult[];
+	facet?: string[];
+	eventType?: string;
+	height?: number;
+}
+
+export const NRQLResultsLine: React.FC<NRQLResultsLineProps> = ({
+	results,
+	facet,
+	eventType,
+	height,
+}) => {
 	if (!results || results.length === 0) return null;
 	const [activeDotKey, setActiveDotKey] = useState(undefined);
 	const [activeIndex, setActiveIndex] = useState(undefined);
@@ -105,7 +118,7 @@ export const NRQLResultsLine = ({ results, facet, eventType, height }) => {
 		setActiveIndex(undefined);
 	};
 
-	const FacetLineLegend = ({ payload }: { payload?: any[] }) => {
+	const FacetLineLegend = ({ payload }: { payload?: { dataKey: string; color: string }[] }) => {
 		return (
 			<div
 				style={{
@@ -121,7 +134,7 @@ export const NRQLResultsLine = ({ results, facet, eventType, height }) => {
 					const isHighlighted = activeIndex === index;
 
 					return (
-						<Tooltip placement="top" delay={1} title={key}>
+						<Tooltip placement="top" delay={1} title={entry.dataKey}>
 							<div
 								onMouseEnter={() => handleMouseEnter(index)}
 								onMouseLeave={handleMouseLeave}
