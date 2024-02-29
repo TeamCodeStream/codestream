@@ -156,7 +156,6 @@ const ComposeWrapper = styled.div.attrs(() => ({
 	&&& {
 		padding: 0 !important;
 	}
-
 	.message-input#input-div {
 		max-width: none !important;
 	}
@@ -174,14 +173,12 @@ export const Description = styled.div`
 
 const ClickLines = styled.div`
 	padding: 1px !important;
-
 	&:focus {
 		border: none;
 		outline: none;
 	}
-
 	,
-	& . pulse {
+	&.pulse {
 		opacity: 1;
 		background: var(--app-background-color-hover);
 	}
@@ -205,7 +202,6 @@ const ClickLine = styled.div`
 	direction: rtl;
 	text-overflow: ellipsis;
 	overflow: hidden;
-
 	:hover {
 		color: var(--text-color-highlight);
 		background: var(--app-background-color-hover);
@@ -229,18 +225,15 @@ const ApmServiceTitle = styled.span`
 		color: var(--text-color-highlight);
 		text-decoration: none;
 	}
-
 	.open-external {
 		margin-left: 5px;
 		font-size: 12px;
 		visibility: hidden;
 		color: var(--text-color-highlight);
 	}
-
 	&:hover .open-external {
 		visibility: visible;
 	}
-
 	padding-left: 5px;
 `;
 

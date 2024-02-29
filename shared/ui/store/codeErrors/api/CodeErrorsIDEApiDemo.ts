@@ -97,7 +97,6 @@ class CodeErrorsIDEApiDemo implements CodeErrorsIDEApi {
 
 	async clearReply() {
 		if (this._postReplyCallback) {
-			await wait(400);
 			this._postReplyCallback("");
 		}
 	}
@@ -122,7 +121,6 @@ class CodeErrorsIDEApiDemo implements CodeErrorsIDEApi {
 		await this.askForUnitTest();
 		await wait(400);
 		await this.postUnitTestReply();
-		await wait(400);
 		await this.clearReply();
 		await wait(400);
 		await this.startUnitTestStream();
