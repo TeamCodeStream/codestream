@@ -9,7 +9,6 @@ export let codeErrorsApi: CodeErrorsApi = codeErrorsApiImpl;
 export let codeErrorsIDEApi: CodeErrorsIDEApi = codeErrorsIDEApiImpl;
 
 export function setApiDemoMode(demoMode: boolean) {
-	console.log(`*** setApiDemoMode *** ${demoMode}`);
 	if (demoMode) {
 		codeErrorsApi = codeErrorsApiDemo;
 		codeErrorsIDEApi = codeErrorsIDEApiDemo;
@@ -31,7 +30,15 @@ export function setApiNrAiUserId(userId: string) {
 	codeErrorsIDEApiDemo.setNrAiUserId(userId);
 }
 
+export function setApiUserId(userId: string) {
+	codeErrorsIDEApiImpl.setUserId(userId);
+	codeErrorsIDEApiDemo.setUserId(userId);
+}
+
 export function setApplyFixCallback(callback: () => void) {
-	console.log("*** setApplyFixCallback ***");
 	codeErrorsIDEApiDemo.setApplyFixCallback(callback);
+}
+
+export function setPostReplyCallback(callback: (text: string) => void) {
+	codeErrorsIDEApiDemo.setPostReplyCallback(callback);
 }

@@ -29,7 +29,11 @@ class CodeErrorsIDEApiImpl implements CodeErrorsIDEApi {
 
 	setNrAiUserId(userId: string): void {}
 
+	setUserId(userId: string): void {}
+
 	setApplyFixCallback(callback: () => void) {}
+
+	setPostReplyCallback(callback: (text: string) => void) {}
 }
 
 export const codeErrorsIDEApiImpl = new CodeErrorsIDEApiImpl();

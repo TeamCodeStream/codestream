@@ -16,5 +16,9 @@ export interface CodeErrorsIDEApi {
 
 	setNrAiUserId(userId: string): void;
 
+	setUserId(userId: string): void;
+
 	setApplyFixCallback(callback: () => void);
+
+	setPostReplyCallback(callback: (text: string) => void);
 }

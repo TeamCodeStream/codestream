@@ -17,6 +17,7 @@ import { isDarkTheme } from "@codestream/webview/src/themes";
 import { HostApi } from "@codestream/webview/webview-api";
 import { URI } from "vscode-uri";
 import { setApplyFixCallback } from "@codestream/webview/store/codeErrors/api/apiResolver";
+import { CodeStreamState } from "@codestream/webview/store";
 
 export const DiffSection = styled.div`
 	margin: 10px 0;
@@ -51,6 +52,7 @@ export function NrAiComponent(props: NrAiComponentProps) {
 	// console.debug("NrAiComponent", props);
 	const dispatch = useAppDispatch();
 	const isGrokLoading = useAppSelector(isGrokStreamLoading);
+	const demoMode = useAppSelector((state: CodeStreamState) => state.codeErrors.demoMode);
 	const hasIntro = useMemo(
 		() => props.post.parts?.intro && props.post.parts.intro.length > 0,
 		[props.post.parts?.intro]
@@ -125,7 +127,9 @@ export function NrAiComponent(props: NrAiComponentProps) {
 	}, [normalizedCodeFix, props.errorGroup, props.file, props.functionToEdit]);
 
 	useMemo(() => {
-		setApplyFixCallback(applyFix);
+		if (demoMode.enabled) {
+			setApplyFixCallback(applyFix);
+		}
 	}, [applyFix]);
 
 	return (

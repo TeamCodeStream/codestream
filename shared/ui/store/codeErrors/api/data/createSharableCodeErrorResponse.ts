@@ -8,6 +8,8 @@ export const streamId = generateMongoId();
 export const codeErrorId = generateMongoId();
 export const createdAt = Date.now() - 20000;
 export const modifiedAt = Date.now();
+export const unitTestPostId = generateMongoId();
+export const userUnitTestPostId = generateMongoId();
 
 export function getCreateSharableCodeErrorResponse(
 	repoId: string

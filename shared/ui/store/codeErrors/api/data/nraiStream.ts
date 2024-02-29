@@ -6,7 +6,7 @@ export type GrokStreamActionType = {
 };
 
 export function getDemoNrAiStream(
-	streamId,
+	streamId: string,
 	postId: string,
 	parentPostId: string
 ): GrokStreamActionType[] {

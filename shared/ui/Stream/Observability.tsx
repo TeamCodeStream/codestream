@@ -94,6 +94,7 @@ import { doGetObservabilityErrors } from "@codestream/webview/store/codeErrors/t
 import {
 	setApiCurrentRepoId,
 	setApiNrAiUserId,
+	setApiUserId,
 } from "@codestream/webview/store/codeErrors/api/apiResolver";
 import { getNrAiUserId } from "@codestream/webview/store/users/reducer";
 
@@ -204,12 +205,20 @@ export const ErrorRow = (props: {
 		encodeURIComponent(state.ide.name || "")
 	);
 	const nrAiUserId = useAppSelector(getNrAiUserId);
+	const userId = useAppSelector((state: CodeStreamState) => state.session.userId);
+	const demoMode = useAppSelector((state: CodeStreamState) => state.codeErrors.demoMode);
 
 	useMemo(() => {
-		if (nrAiUserId) {
+		if (nrAiUserId && demoMode.enabled) {
 			setApiNrAiUserId(nrAiUserId);
 		}
 	}, [nrAiUserId]);
+
+	useMemo(() => {
+		if (userId && demoMode.enabled) {
+			setApiUserId(userId);
+		}
+	}, [userId]);
 
 	return (
 		<Row
@@ -767,8 +776,10 @@ export const Observability = React.memo((props: Props) => {
 
 	useEffect(() => {
 		if (derivedState.demoMode.count >= 1 && expandedEntity && currentRepoId) {
-			console.log("*** demoMode fetchObservabilityErrors", derivedState.demoMode);
-			setApiCurrentRepoId(currentRepoId);
+			console.debug(`demoMode fetchObservabilityErrors ${derivedState.demoMode}`);
+			if (derivedState.demoMode.enabled) {
+				setApiCurrentRepoId(currentRepoId);
+			}
 			fetchObservabilityErrors(expandedEntity, currentRepoId);
 		}
 	}, [derivedState.demoMode]);

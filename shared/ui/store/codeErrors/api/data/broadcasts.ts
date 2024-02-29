@@ -814,6 +814,69 @@ export function getAddPostsParent2(repoId: string) {
 	};
 }
 
+export function getAddPostsUnitTest(
+	streamId: string,
+	postId: string,
+	parentPostId: string,
+	nraiUserId: string
+) {
+	return [
+		{
+			version: 1,
+			deactivated: false,
+			numReplies: 0,
+			reactions: {},
+			shareIdentifiers: [],
+			createdAt: createdAt,
+			modifiedAt: modifiedAt,
+			forGrok: true,
+			streamId: streamId,
+			teamId: "65d79a3e2fb6892cd4e7c91a",
+			text: "",
+			parentPostId: parentPostId,
+			origin: "JetBrains",
+			originDetail: "IntelliJ IDEA Ultimate Edition",
+			creatorId: nraiUserId,
+			seqNum: 32,
+			_id: postId,
+			id: postId,
+			hasMarkers: false,
+		},
+	];
+}
+
+export function getAddPostsUserUnitTest(
+	streamId: string,
+	postId: string,
+	parentPostId: string,
+	creatorId: string
+) {
+	return [
+		{
+			version: 2,
+			deactivated: false,
+			numReplies: 0,
+			reactions: {},
+			shareIdentifiers: [],
+			createdAt: createdAt,
+			modifiedAt: modifiedAt,
+			streamId: streamId,
+			text: "@AI Write a unit test for the suggested fix.",
+			parentPostId: parentPostId,
+			mentionedUserIds: [],
+			files: [],
+			teamId: "65d79a3e2fb6892cd4e7c91a",
+			origin: "JetBrains",
+			originDetail: "IntelliJ IDEA Ultimate Edition",
+			creatorId: creatorId,
+			id: postId,
+			seqNum: 31,
+			_id: postId,
+			hasMarkers: false,
+		},
+	];
+}
+
 export function getAddPostsMain(
 	streamId: string,
 	postId: string,
@@ -895,6 +958,37 @@ export function getAddPostsForStream(nraiUserId: string) {
 			streamId: streamId,
 		},
 	};
+}
+
+export function getFinalAddPostsUnitTest(
+	streamId: string,
+	postId: string,
+	parentPostId: string,
+	nraiUserId: string
+) {
+	return [
+		{
+			version: 2,
+			deactivated: false,
+			numReplies: 0,
+			reactions: {},
+			shareIdentifiers: [],
+			createdAt: createdAt,
+			modifiedAt: modifiedAt,
+			forGrok: true,
+			streamId: streamId,
+			teamId: "65d79a3e2fb6892cd4e7c91a",
+			text: "**DESCRIPTION**\n\nHere is a simple unit test using Jest, a popular JavaScript testing framework. This test checks if the `countUsersByState` function correctly counts the number of users by state, even when some users do not have an `address` property.\n\n```javascript\nconst { countUsersByState } = require('./your-file-path'); // replace with your actual file path\n\ndescribe('countUsersByState', () => {\n  it('should correctly count users by state and handle users without address', () => {\n    const userData = [\n      { address: { state: 'CA' } },\n      { address: { state: 'NY' } },\n      { address: { state: 'CA' } },\n      {},\n      { address: { state: 'NY' } },\n      { address: { state: 'TX' } },\n      {},\n    ];\n\n    const result = countUsersByState(userData);\n\n    expect(result.get('CA')).toBe(2);\n    expect(result.get('NY')).toBe(2);\n    expect(result.get('TX')).toBe(1);\n    expect(result.size).toBe(3); // There should be 3 states in the map\n  });\n});\n```\n\nThis test creates a mock `userData` array with some users having an `address` property and some not. It then calls `countUsersByState` with this array and checks if the returned Map has the correct counts for each state. It also checks if the total number of states in the Map is correct.",
+			parentPostId: parentPostId,
+			origin: "JetBrains",
+			originDetail: "IntelliJ IDEA Ultimate Edition",
+			creatorId: nraiUserId,
+			seqNum: 32,
+			_id: postId,
+			id: postId,
+			hasMarkers: false,
+		},
+	];
 }
 
 export function getFinalAddPosts(

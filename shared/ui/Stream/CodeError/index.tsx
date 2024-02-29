@@ -6,7 +6,15 @@ import {
 	ResolveStackTraceResponse,
 } from "@codestream/protocols/agent";
 import { CSCodeError, CSPost, CSStackTraceLine, CSUser } from "@codestream/protocols/api";
-import React, { PropsWithChildren, RefObject, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+	PropsWithChildren,
+	RefObject,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
 
@@ -84,6 +92,7 @@ import { isFeatureEnabled } from "../../store/apiVersioning/reducer";
 import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
 import { isEmpty } from "lodash-es";
 import { getNrCapability } from "@codestream/webview/store/nrCapabilities/thunks";
+import { setPostReplyCallback } from "@codestream/webview/store/codeErrors/api/apiResolver";
 
 interface SimpleError {
 	/**
@@ -147,6 +156,7 @@ const ComposeWrapper = styled.div.attrs(() => ({
 	&&& {
 		padding: 0 !important;
 	}
+
 	.message-input#input-div {
 		max-width: none !important;
 	}
@@ -164,12 +174,14 @@ export const Description = styled.div`
 
 const ClickLines = styled.div`
 	padding: 1px !important;
+
 	&:focus {
 		border: none;
 		outline: none;
 	}
+
 	,
-	&.pulse {
+	& . pulse {
 		opacity: 1;
 		background: var(--app-background-color-hover);
 	}
@@ -193,6 +205,7 @@ const ClickLine = styled.div`
 	direction: rtl;
 	text-overflow: ellipsis;
 	overflow: hidden;
+
 	:hover {
 		color: var(--text-color-highlight);
 		background: var(--app-background-color-hover);
@@ -216,15 +229,18 @@ const ApmServiceTitle = styled.span`
 		color: var(--text-color-highlight);
 		text-decoration: none;
 	}
+
 	.open-external {
 		margin-left: 5px;
 		font-size: 12px;
 		visibility: hidden;
 		color: var(--text-color-highlight);
 	}
+
 	&:hover .open-external {
 		visibility: visible;
 	}
+
 	padding-left: 5px;
 `;
 
@@ -1777,6 +1793,17 @@ const ReplyInput = (props: ReplyInputProps) => {
 	const [attachments, setAttachments] = useState<AttachmentField[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const teamMates = useAppSelector((state: CodeStreamState) => getTeamMates(state));
+	const demoMode = useAppSelector((state: CodeStreamState) => state.codeErrors.demoMode);
+
+	const postDemoReply = useCallback((text: string) => {
+		setText(text);
+	}, []);
+
+	useMemo(() => {
+		if (demoMode.enabled) {
+			setPostReplyCallback(postDemoReply);
+		}
+	}, [postDemoReply]);
 
 	const submit = async () => {
 		// don't create empty replies
