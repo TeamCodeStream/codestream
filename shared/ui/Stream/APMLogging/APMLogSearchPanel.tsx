@@ -24,6 +24,7 @@ import Icon from "../Icon";
 import { Link } from "../Link";
 import { TableWindow } from "../TableWindow";
 import { APMLogRow } from "./APMLogRow";
+import { APMLogTableLoading } from "./APMLogTableLoading";
 import { isEmpty as _isEmpty } from "lodash";
 
 interface SelectedOption {
@@ -282,7 +283,8 @@ export const APMLogSearchPanel = (props: {
 	const fetchSurroundingLogs = async (entityGuid: string, messageId: string, since: number) => {
 		try {
 			setSearchResults([]);
-
+			setIsLoading(true);
+			console.warn("eric");
 			const response = await HostApi.instance.send(GetSurroundingLogsRequestType, {
 				entityGuid,
 				messageId,
@@ -331,6 +333,7 @@ export const APMLogSearchPanel = (props: {
 			handleError(ex);
 		} finally {
 			setSurroundingLogsLoading(false);
+			setIsLoading(false);
 		}
 	};
 
@@ -640,9 +643,7 @@ export const APMLogSearchPanel = (props: {
 				)} */}
 
 				<div>
-					{/* {isLoading && (
-							TODO: Skeleton loader? Couldn't get it to work when I tried
-						)} */}
+					{isLoading && <APMLogTableLoading height={height} />}
 
 					{!logError && !isLoading && searchResults && totalItems > 0 && fieldDefinitions && (
 						<>
@@ -652,6 +653,7 @@ export const APMLogSearchPanel = (props: {
 								itemCount={searchResults.length}
 								height={trimmedListHeight}
 								width={"100%"}
+								currentShowSurroundingIndex={currentShowSurroundingIndex}
 							/>
 						</>
 					)}
