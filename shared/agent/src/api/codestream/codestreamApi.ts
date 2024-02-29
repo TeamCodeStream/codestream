@@ -65,7 +65,6 @@ import {
 	DeleteUserRequest,
 	DeleteUserResponse,
 	DidChangeDataNotificationType,
-	DidEncounterInvalidRefreshTokenNotificationType,
 	ERROR_GENERIC_USE_ERROR_MESSAGE,
 	EditPostRequest,
 	FetchCodeErrorsRequest,
@@ -149,6 +148,7 @@ import {
 	ReportingMessageType,
 	SendPasswordResetEmailRequest,
 	SendPasswordResetEmailRequestType,
+	SessionTokenStatus,
 	SetCodemarkPinnedRequest,
 	SetCodemarkStatusRequest,
 	SetPasswordRequest,
@@ -368,6 +368,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private _messageProcessingPromise: Promise<void> | undefined;
 	private _usingServiceGatewayAuth: boolean = false;
 	private _refreshNRTokenPromise: Promise<CSNewRelicProviderInfo> | undefined;
+	private _refreshTokenFailed: boolean = false;
 
 	readonly capabilities: Capabilities = {
 		channelMute: true,
@@ -2450,10 +2451,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 		if (this._refreshNRTokenPromise) {
 			return this._refreshNRTokenPromise;
 		}
+
 		this._refreshNRTokenPromise = new Promise((resolve, reject) => {
 			const url = "/no-auth/provider-refresh/newrelic";
 			this.put<{ refreshToken: string }, CSNewRelicProviderInfo>(url, {
-				refreshToken,
+				refreshToken: refreshToken, //+ "x", // uncomment to test roadblock
 			})
 				.then(response => {
 					if (response.accessToken) {
@@ -2472,20 +2474,25 @@ export class CodeStreamApiProvider implements ApiProvider {
 						}
 					}
 					delete this._refreshNRTokenPromise;
+					if (this._refreshTokenFailed) {
+						if (SessionContainer.isInitialized()) {
+							SessionContainer.instance().session.onSessionTokenStatusChanged(
+								SessionTokenStatus.Active
+							);
+						}
+						this._refreshTokenFailed = false;
+					}
 					resolve(response);
 				})
 				.catch(ex => {
 					Logger.error(ex, cc);
-					if (ex.statusCode === 403) {
-						Logger.warn(
-							"New Relic access token refresh failed, sending DidEncounterInvalidRefreshTokenNotification..."
-						);
-						Container.instance().agent.sendNotification(
-							DidEncounterInvalidRefreshTokenNotificationType,
-							undefined
+					delete this._refreshNRTokenPromise;
+					if (SessionContainer.isInitialized()) {
+						SessionContainer.instance().session.onSessionTokenStatusChanged(
+							SessionTokenStatus.Expired
 						);
 					}
-					delete this._refreshNRTokenPromise;
+					this._refreshTokenFailed = true;
 					reject(ex);
 				});
 		});

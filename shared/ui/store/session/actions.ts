@@ -1,6 +1,7 @@
 import {
 	ConfirmLoginCodeRequest,
 	RefreshMaintenancePollNotification,
+	SessionTokenStatus,
 	TokenLoginRequest,
 } from "@codestream/protocols/agent";
 
@@ -26,3 +27,6 @@ export const setMaintenanceMode = (
 		| RefreshMaintenancePollNotification
 		| HostDidChangeVisibilityNotification
 ) => action(SessionActionType.SetMaintenanceMode, value, meta);
+
+export const setSessionTokenStatus = (status: SessionTokenStatus) =>
+	action(SessionActionType.SetSessionTokenStatus, status);

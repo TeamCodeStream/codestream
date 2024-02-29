@@ -141,13 +141,6 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
     @JsonNotification("codestream/didFailLogin")
     fun didFailLogin(json: JsonElement?) {}
 
-    @JsonNotification("codestream/didEncounterInvalidRefreshToken")
-    fun didEncounterInvalidRefreshToken(json: JsonElement?) {
-        appDispatcher.launch {
-            project.authenticationService?.onDidEncounterInvalidRefreshToken();
-        }
-    }
-
     @JsonNotification("codestream/didLogin")
     fun didLogin(json: JsonElement) {
         val notification = gson.fromJson<DidLoginNotification>(json)

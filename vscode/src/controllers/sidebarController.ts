@@ -16,6 +16,8 @@ import {
 	DidChangeProcessBufferNotificationType,
 	DidChangeServerUrlNotification,
 	DidChangeServerUrlNotificationType,
+	DidChangeSessionTokenStatusNotification,
+	DidChangeSessionTokenStatusNotificationType,
 	DidChangeVersionCompatibilityNotification,
 	DidChangeVersionCompatibilityNotificationType,
 	DidEncounterMaintenanceModeNotificationType,
@@ -617,6 +619,11 @@ export class SidebarController implements Disposable {
 				(...args) => this.onConnectionStatusChanged(webview, ...args),
 				this
 			),
+			Container.agent.onDidChangeSessionTokenStatus(
+				(...args) => this.onSessionTokenStatusChanged(webview, ...args),
+				this
+			),
+
 			Container.agent.onDidChangeData((...args) => this.onDataChanged(webview, ...args), this),
 			Container.agent.onDidChangeDocumentMarkers(
 				(...args) => this.onDocumentMarkersChanged(webview, ...args),
@@ -744,6 +751,13 @@ export class SidebarController implements Disposable {
 				webview.notify(DidChangeConnectionStatusNotificationType, e);
 				break;
 		}
+	}
+
+	private async onSessionTokenStatusChanged(
+		webview: WebviewLike,
+		e: DidChangeSessionTokenStatusNotification
+	) {
+		webview.notify(DidChangeSessionTokenStatusNotificationType, e);
 	}
 
 	private onConfigurationChanged(webview: WebviewLike, e: ConfigurationChangeEvent) {

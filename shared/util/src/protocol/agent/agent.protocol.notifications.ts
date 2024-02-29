@@ -352,10 +352,6 @@ export const DidFailLoginNotificationType = new NotificationType<void, void>(
 	"codestream/didFailLogin"
 );
 
-export const DidEncounterInvalidRefreshTokenNotificationType = new NotificationType<void, void>(
-	"codestream/didEncounterInvalidRefreshToken"
-);
-
 export const DidStartLoginCodeGenerationNotificationType = new NotificationType<void, void>(
 	"codestream/didStartLoginCodeGeneration"
 );
@@ -403,6 +399,20 @@ export const DidRefreshAccessTokenNotificationType = new NotificationType<
 	DidRefreshAccessTokenNotification,
 	void
 >("codestream/didRefreshAccessToken");
+
+export enum SessionTokenStatus {
+	Active = "active",
+	Expired = "expired",
+}
+
+export interface DidChangeSessionTokenStatusNotification {
+	status: SessionTokenStatus;
+}
+
+export const DidChangeSessionTokenStatusNotificationType = new NotificationType<
+	DidChangeSessionTokenStatusNotification,
+	void
+>("codestream/didChangeSessionTokenStatus");
 
 export const AgentInitializedNotificationType = new NotificationType<void, void>(
 	"codestream/agentInitialized"

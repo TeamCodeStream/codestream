@@ -7,10 +7,7 @@ import { ThemeProvider } from "styled-components";
 
 import { errorDismissed } from "@codestream/webview/store/connectivity/actions";
 import { UnauthenticatedRoutes } from "../Authentication";
-import {
-	ReloadWebviewRequestType,
-	RestartRequestType,
-} from "../ipc/webview.protocol";
+import { ReloadWebviewRequestType, RestartRequestType } from "../ipc/webview.protocol";
 import { logError } from "../logger";
 import { Button } from "../src/components/Button";
 import { createTheme, darkTheme } from "../src/themes";
@@ -44,6 +41,7 @@ const mapStateToProps = state => {
 		offline: state.connectivity.offline,
 		acceptedTOS: state.session.userId ? state.preferences.acceptedTOS : state.session.acceptedTOS,
 		configChangeReloadRequired: state.configs.configChangeReloadRequired,
+		sessionTokenStatus: state.session.sessionTokenStatus,
 	};
 };
 
@@ -120,6 +118,26 @@ const Root = connect(mapStateToProps)(props => {
 				</p>
 				<p>Error: {props.connectivityError.message}</p>
 			</Dismissable>
+		);
+	}
+
+	if (props.sessionTokenStatus === SessionTokenStatus.Expired) {
+		return (
+			<RoadBlock title="Session Expired">
+				<div>
+					<p>Your CodeStream session has expired. Please login again.</p>
+					<Button
+						onClick={e => {
+							e.preventDefault();
+							HostApi.instance.send(LogoutRequestType, {
+								reason: LogoutReason.InvalidRefreshToken,
+							});
+						}}
+					>
+						OK
+					</Button>
+				</div>
+			</RoadBlock>
 		);
 	}
 

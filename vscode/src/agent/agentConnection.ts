@@ -148,11 +148,12 @@ import {
 	UpdateUserRequestType,
 	UserDidCommitNotification,
 	UserDidCommitNotificationType,
-	DidEncounterInvalidRefreshTokenNotificationType,
 	TelemetryEventName,
 	TelemetryData,
 	WhatsNewNotificationType,
-	WhatsNewNotification
+	WhatsNewNotification,
+	DidChangeSessionTokenStatusNotification,
+	DidChangeSessionTokenStatusNotificationType
 } from "@codestream/protocols/agent";
 import {
 	ChannelServiceType,
@@ -204,11 +205,6 @@ export class CodeStreamAgentConnection implements Disposable {
 		return this._onDidFailLogin.event;
 	}
 
-	private _onDidEncounterInvalidRefreshToken = new EventEmitter<void>();
-	get onDidEncounterInvalidRefreshToken(): Event<void> {
-		return this._onDidEncounterInvalidRefreshToken.event;
-	}
-
 	private _onDidRequireRestart = new EventEmitter<void>();
 	get onDidRequireRestart(): Event<void> {
 		return this._onDidRequireRestart.event;
@@ -222,6 +218,12 @@ export class CodeStreamAgentConnection implements Disposable {
 	private _onDidChangeConnectionStatus = new EventEmitter<DidChangeConnectionStatusNotification>();
 	get onDidChangeConnectionStatus(): Event<DidChangeConnectionStatusNotification> {
 		return this._onDidChangeConnectionStatus.event;
+	}
+
+	private _onDidChangeSessionTokenStatus =
+		new EventEmitter<DidChangeSessionTokenStatusNotification>();
+	get onDidChangeSessionTokenStatus(): Event<DidChangeSessionTokenStatusNotification> {
+		return this._onDidChangeSessionTokenStatus.event;
 	}
 
 	private _onDidEncounterMaintenanceMode =
@@ -1022,6 +1024,14 @@ export class CodeStreamAgentConnection implements Disposable {
 	}
 
 	@log({
+		prefix: (context, e: DidChangeSessionTokenStatusNotification) =>
+			`${context.prefix}(${e.status})`
+	})
+	private onSessionTokenStatusChanged(e: DidChangeSessionTokenStatusNotification) {
+		this._onDidChangeSessionTokenStatus.fire(e);
+	}
+
+	@log({
 		prefix: (context, e: DidChangeDocumentMarkersNotification) =>
 			`${context.prefix}(${e.textDocument.uri})`
 	})
@@ -1324,6 +1334,10 @@ export class CodeStreamAgentConnection implements Disposable {
 			this.onConnectionStatusChanged.bind(this)
 		);
 		this._client.onNotification(
+			DidChangeSessionTokenStatusNotificationType,
+			this.onSessionTokenStatusChanged.bind(this)
+		);
+		this._client.onNotification(
 			DidChangeDocumentMarkersNotificationType,
 			this.onDocumentMarkersChanged.bind(this)
 		);
@@ -1347,9 +1361,7 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._client.onNotification(DidLoginNotificationType, e => this._onDidLogin.fire(e));
 		this._client.onNotification(DidStartLoginNotificationType, () => this._onDidStartLogin.fire());
 		this._client.onNotification(DidFailLoginNotificationType, () => this._onDidFailLogin.fire());
-		this._client.onNotification(DidEncounterInvalidRefreshTokenNotificationType, () =>
-			this._onDidEncounterInvalidRefreshToken.fire()
-		);
+
 		this._client.onNotification(DidLogoutNotificationType, this.onLogout.bind(this));
 		this._client.onNotification(RestartRequiredNotificationType, () => {
 			this._onDidRequireRestart.fire();
