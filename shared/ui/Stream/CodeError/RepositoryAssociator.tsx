@@ -3,6 +3,7 @@ import {
 	DidChangeDataNotificationType,
 	DidChangeObservabilityDataNotificationType,
 	GetReposScmRequestType,
+	RelatedRepository,
 	ReposScm,
 } from "@codestream/protocols/agent";
 import { CSCodeError } from "@codestream/protocols/api";
@@ -57,6 +58,7 @@ export function RepositoryAssociator(props: {
 	isLoadingCallback?: (b: boolean) => void;
 	isLoadingParent?: boolean;
 	noSingleItemDropdownSkip?: boolean;
+	relatedRepos?: RelatedRepository[];
 }) {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const codeError = state.context.currentCodeErrorId
@@ -66,7 +68,7 @@ export function RepositoryAssociator(props: {
 		return {
 			codeError: codeError,
 			repos: state.repos,
-			relatedRepos: state.context.currentCodeErrorData?.relatedRepos,
+			relatedRepos: props.relatedRepos || state.context.currentCodeErrorData?.relatedRepos,
 		};
 	});
 	const { error: repositoryError } = props;

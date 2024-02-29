@@ -236,6 +236,7 @@ export const TransactionSpanPanel = () => {
 	const [repoLoading, setRepoLoading] = useState(false);
 	const [chartData, setChartData] = useState<GetSpanChartDataResponse | undefined>(undefined);
 	const [selectedRepo, setSelectedRepo] = useState<string | undefined>(undefined);
+	const [relatedRepos, setRelatedRepos] = useState<RelatedRepository[] | undefined>(undefined);
 	const [fetchError, setFetchError] = useState<ErrorMessage | undefined>(undefined);
 	const [repoError, setRepoError] = useState<ErrorMessage | undefined>(undefined);
 	const [needsRepoAssociation, setNeedsRepoAssociation] = useState(false);
@@ -264,9 +265,9 @@ export const TransactionSpanPanel = () => {
 				entityGuid: derivedState.currentTransactionSpan.newRelicEntityGuid,
 			}
 		);
-		const relatedRepos = metadataResponse?.relatedRepos as RelatedRepository[];
+		const fetchedRelatedRepos = metadataResponse?.relatedRepos as RelatedRepository[];
 
-		if (relatedRepos.length === 0) {
+		if (fetchedRelatedRepos.length === 0) {
 			return {
 				success: false,
 				needsRepoAssociation: true,
@@ -284,7 +285,7 @@ export const TransactionSpanPanel = () => {
 
 		const repoUrls = (
 			await Promise.all(
-				relatedRepos.map(_ =>
+				fetchedRelatedRepos.map(_ =>
 					_.url ? HostApi.instance.send(NormalizeUrlRequestType, { url: _.url }) : undefined
 				)
 			)
@@ -315,6 +316,7 @@ export const TransactionSpanPanel = () => {
 		}
 		if (repoResponse.repos.length > 1) {
 			if (!selectedRepo) {
+				setRelatedRepos(fetchedRelatedRepos);
 				return {
 					success: false,
 					needsRepoAssociation: false,
@@ -507,6 +509,41 @@ export const TransactionSpanPanel = () => {
 		});
 	};
 
+	if (needsRepoAssociation) {
+		return (
+			<RepositoryAssociator
+				error={{
+					title: "Which Repository?",
+					description: `Select the repository that the ${entityName} service is associated with so that we can take you to the code. If the repository doesn't appear in the list, open it in your IDE.`,
+				}}
+				buttonText="Select"
+				onCancelled={exit}
+				isLoadingCallback={setRepoLoading}
+				isLoadingParent={chartLoading}
+				noSingleItemDropdownSkip={true}
+				onSubmit={associateRepo}
+			/>
+		);
+	}
+
+	if (needsRepoSelector) {
+		return (
+			<RepositoryAssociator
+				error={{
+					title: "Select a Repository",
+					description: `The ${entityName} service is associated with multiple repositories. Please select one to continue.`,
+				}}
+				buttonText="Select"
+				onCancelled={exit}
+				isLoadingCallback={setRepoLoading}
+				isLoadingParent={chartLoading}
+				noSingleItemDropdownSkip={false}
+				onSubmit={selectRepo}
+				relatedRepos={relatedRepos}
+			/>
+		);
+	}
+
 	return (
 		<div className="full-height-codemark-form">
 			<CancelButton onClick={exit} />
@@ -519,33 +556,7 @@ export const TransactionSpanPanel = () => {
 			>
 				<PanelHeader title={derivedState.currentTransactionSpan.spanName}></PanelHeader>
 			</div>
-			{needsRepoAssociation ? (
-				<RepositoryAssociator
-					error={{
-						title: "Which Repository?",
-						description: `Select the repository that the ${entityName} service is associated with so that we can take you to the code. If the repository doesn't appear in the list, open it in your IDE.`,
-					}}
-					buttonText="Select"
-					onCancelled={exit}
-					isLoadingCallback={setRepoLoading}
-					isLoadingParent={chartLoading}
-					noSingleItemDropdownSkip={true}
-					onSubmit={associateRepo}
-				/>
-			) : needsRepoSelector ? (
-				<RepositoryAssociator
-					error={{
-						title: "Select a Repository",
-						description: `The ${entityName} service is associated with multiple repositories. Please select one to continue.`,
-					}}
-					buttonText="Select"
-					onCancelled={exit}
-					isLoadingCallback={setRepoLoading}
-					isLoadingParent={chartLoading}
-					noSingleItemDropdownSkip={false}
-					onSubmit={selectRepo}
-				/>
-			) : chartLoading || repoLoading ? (
+			{chartLoading || repoLoading ? (
 				<DelayedRender>
 					<div style={{ display: "flex", alignItems: "center" }}>
 						<LoadingMessage>Loading span data...</LoadingMessage>
