@@ -284,7 +284,6 @@ export const APMLogSearchPanel = (props: {
 		try {
 			setSearchResults([]);
 			setIsLoading(true);
-			console.warn("eric");
 			const response = await HostApi.instance.send(GetSurroundingLogsRequestType, {
 				entityGuid,
 				messageId,
@@ -514,6 +513,7 @@ export const APMLogSearchPanel = (props: {
 				const isShowSurrounding = r?.isShowSurrounding ?? false;
 				const entityGuid = selectedEntityAccount?.value;
 				const accountId = parseId(entityGuid);
+				const enableShowSurrounding = queriedWithNonEmptyString && !currentShowSurroundingIndex;
 
 				return (
 					<APMLogRow
@@ -529,7 +529,7 @@ export const APMLogSearchPanel = (props: {
 						updateExpandedContent={updateExpandedContent}
 						updateShowSurrounding={updateShowSurrounding}
 						expandedContent={expandedContent}
-						enableShowSurrounding={queriedWithNonEmptyString}
+						enableShowSurrounding={enableShowSurrounding}
 					/>
 				);
 			});
