@@ -46,6 +46,7 @@ import { CSRepository } from "@codestream/protocols/api";
 import { EnhancedRepoScm, RepositoryAssociator } from "./CodeError/RepositoryAssociator";
 import { api } from "../store/codeErrors/thunks";
 import { logError } from "../logger";
+import { Modal } from "./Modal";
 
 const COLOR_LINE_1 = "#8884d8";
 const COLOR_LINE_2 = "#7aa7d2";
@@ -511,36 +512,40 @@ export const TransactionSpanPanel = () => {
 
 	if (needsRepoAssociation) {
 		return (
-			<RepositoryAssociator
-				error={{
-					title: "Which Repository?",
-					description: `Select the repository that the ${entityName} service is associated with so that we can take you to the code. If the repository doesn't appear in the list, open it in your IDE.`,
-				}}
-				buttonText="Select"
-				onCancelled={exit}
-				isLoadingCallback={setRepoLoading}
-				isLoadingParent={chartLoading}
-				noSingleItemDropdownSkip={true}
-				onSubmit={associateRepo}
-			/>
+			<Modal noScroll={true} noPadding={true} sidebarBackground={true}>
+				<RepositoryAssociator
+					error={{
+						title: "Which Repository?",
+						description: `Select the repository that the ${entityName} service is associated with so that we can take you to the code. If the repository doesn't appear in the list, open it in your IDE.`,
+					}}
+					buttonText="Select"
+					onCancelled={exit}
+					isLoadingCallback={setRepoLoading}
+					isLoadingParent={chartLoading}
+					noSingleItemDropdownSkip={true}
+					onSubmit={associateRepo}
+				/>
+			</Modal>
 		);
 	}
 
 	if (needsRepoSelector) {
 		return (
-			<RepositoryAssociator
-				error={{
-					title: "Select a Repository",
-					description: `The ${entityName} service is associated with multiple repositories. Please select one to continue.`,
-				}}
-				buttonText="Select"
-				onCancelled={exit}
-				isLoadingCallback={setRepoLoading}
-				isLoadingParent={chartLoading}
-				noSingleItemDropdownSkip={false}
-				onSubmit={selectRepo}
-				relatedRepos={relatedRepos}
-			/>
+			<Modal noScroll={true} noPadding={true} sidebarBackground={true}>
+				<RepositoryAssociator
+					error={{
+						title: "Select a Repository",
+						description: `The ${entityName} service is associated with multiple repositories. Please select one to continue.`,
+					}}
+					buttonText="Select"
+					onCancelled={exit}
+					isLoadingCallback={setRepoLoading}
+					isLoadingParent={chartLoading}
+					noSingleItemDropdownSkip={false}
+					onSubmit={selectRepo}
+					relatedRepos={relatedRepos}
+				/>
+			</Modal>
 		);
 	}
 
