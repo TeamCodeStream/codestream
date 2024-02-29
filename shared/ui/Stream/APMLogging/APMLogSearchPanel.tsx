@@ -29,6 +29,7 @@ import { PanelHeaderTitleWithLink } from "../PanelHeaderTitleWithLink";
 import { Disposable } from "@codestream/webview/utils";
 import { isEmpty as _isEmpty } from "lodash";
 import { APMLogTableLoading } from "./APMLogTableLoading";
+import { TableWindow } from "../TableWindow";
 
 interface SelectedOption {
 	value: string;
@@ -697,11 +698,13 @@ export const APMLogSearchPanel = (props: {
 						!isInitializing && (
 							<>
 								{ListHeader()}
-								itemData={formatRowResults()}
-								itemCount={searchResults.length}
-								height={trimmedListHeight}
-								width={"100%"}
-								currentShowSurroundingIndex={currentShowSurroundingIndex}
+								<TableWindow
+									itemData={formatRowResults()}
+									itemCount={searchResults.length}
+									height={trimmedListHeight}
+									width={"100%"}
+									currentShowSurroundingIndex={currentShowSurroundingIndex}
+								/>
 							</>
 						)}
 
