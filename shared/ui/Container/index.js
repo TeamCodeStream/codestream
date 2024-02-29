@@ -1,4 +1,4 @@
-import { WebviewErrorRequestType } from "@codestream/protocols/agent";
+import { WebviewErrorRequestType, SessionTokenStatus } from "@codestream/protocols/agent";
 import PropTypes from "prop-types";
 import React from "react";
 import { IntlProvider } from "react-intl";
@@ -7,7 +7,10 @@ import { ThemeProvider } from "styled-components";
 
 import { errorDismissed } from "@codestream/webview/store/connectivity/actions";
 import { UnauthenticatedRoutes } from "../Authentication";
-import { ReloadWebviewRequestType, RestartRequestType } from "../ipc/webview.protocol";
+import {
+	ReloadWebviewRequestType,
+	RestartRequestType,
+} from "../ipc/webview.protocol";
 import { logError } from "../logger";
 import { Button } from "../src/components/Button";
 import { createTheme, darkTheme } from "../src/themes";
@@ -23,6 +26,7 @@ import RoadBlock from "../Stream/RoadBlock";
 import { SearchContextProvider } from "../Stream/SearchContextProvider";
 import { HostApi } from "../webview-api";
 import { Loading } from "./Loading";
+import { logout } from "@codestream/webview/store/session/thunks";
 
 const mapStateToProps = state => {
 	const team = state.teams[state.context.currentTeamId];
@@ -129,9 +133,7 @@ const Root = connect(mapStateToProps)(props => {
 					<Button
 						onClick={e => {
 							e.preventDefault();
-							HostApi.instance.send(LogoutRequestType, {
-								reason: LogoutReason.InvalidRefreshToken,
-							});
+							props.dispatch(logout());
 						}}
 					>
 						OK
