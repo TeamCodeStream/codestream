@@ -29,6 +29,7 @@ import { APMLogRow } from "./APMLogRow";
 import { PanelHeaderTitleWithLink } from "../PanelHeaderTitleWithLink";
 import { Disposable } from "@codestream/webview/utils";
 import { isEmpty as _isEmpty, isUndefined as _isUndefined } from "lodash";
+import { APMLogTableLoading } from "./APMLogTableLoading";
 
 interface SelectedOption {
 	value: string;
@@ -317,7 +318,8 @@ export const APMLogSearchPanel = (props: {
 	const fetchSurroundingLogs = async (entityGuid: string, messageId: string, since: number) => {
 		try {
 			setSearchResults([]);
-
+			setIsLoading(true);
+			console.warn("eric");
 			const response = await HostApi.instance.send(GetSurroundingLogsRequestType, {
 				entityGuid,
 				messageId,
@@ -366,6 +368,7 @@ export const APMLogSearchPanel = (props: {
 			handleError(ex);
 		} finally {
 			setSurroundingLogsLoading(false);
+			setIsLoading(false);
 		}
 	};
 
@@ -685,9 +688,7 @@ export const APMLogSearchPanel = (props: {
 				)} */}
 
 				<div>
-					{/* {isLoading && (
-							TODO: Skeleton loader? Couldn't get it to work when I tried
-						)} */}
+					{isLoading && <APMLogTableLoading height={height} />}
 
 					{!logError &&
 						!isLoading &&
@@ -697,14 +698,14 @@ export const APMLogSearchPanel = (props: {
 						!isInitializing && (
 							<>
 								{ListHeader()}
-								<TableWindow
-									itemData={formatRowResults()}
-									itemCount={results.length}
-									height={trimmedListHeight}
-									width={"100%"}
-								/>
-							</>
-						)}
+								itemData={formatRowResults()}
+								itemCount={searchResults.length}
+								height={trimmedListHeight}
+								width={"100%"}
+								currentShowSurroundingIndex={currentShowSurroundingIndex}
+							/>
+						</>
+					)}
 
 					{!logError && !totalItems && !isLoading && !hasSearched && !isInitializing && (
 						<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
