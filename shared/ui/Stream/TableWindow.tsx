@@ -37,7 +37,7 @@ export const TableWindow = (props: TableWindowProps) => {
 				let tableHeightInt = parseInt(tableHeightString, 10);
 				setHasVerticalScrollbar(tableHeightInt > containerHeight);
 				if (props.currentShowSurroundingIndex) {
-					(element as any).scrollToItem(props.currentShowSurroundingIndex, "start");
+					(element as any).scrollToItem(props.currentShowSurroundingIndex - 2, "start");
 				}
 			}
 		}, 50);
