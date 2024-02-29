@@ -20,6 +20,7 @@ export enum CodeErrorsActionsTypes {
 	SetErrorGroup = "@codeError/SetErrorGroup",
 	IsLoadingErrorGroup = "@codeError/IsLoadingErrorGroup",
 	ResetNrAi = "@codeError/ResetNrAiState",
+	SetDemoMode = "@codeError/SetDemoMode",
 }
 
 export type FunctionToEdit = {
@@ -44,4 +45,5 @@ export type CodeErrorsState = {
 	grokRepliesLength: number;
 	grokError: CSAsyncError | undefined;
 	functionToEditFailed: boolean;
+	demoMode: { enabled: boolean; count: number };
 };

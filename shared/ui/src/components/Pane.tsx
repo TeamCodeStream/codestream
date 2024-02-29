@@ -17,6 +17,7 @@ import { DragHeaderContext } from "@codestream/webview/Stream/Sidebar";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import ScrollBox from "../../Stream/ScrollBox";
 import { setApiDemoMode } from "@codestream/webview/store/codeErrors/api/apiResolver";
+import { setDemoMode } from "@codestream/webview/store/codeErrors/actions";
 
 export enum PaneState {
 	Open = "open",
@@ -211,13 +212,13 @@ export const PaneHeader = React.memo((props: PropsWithChildren<PaneHeaderProps>)
 			maximized: settings.maximized,
 			collapsed: settings.collapsed,
 			anyMaximized,
+			demoMode: state.codeErrors.demoMode,
 		};
 	}, shallowEqual);
 
 	const [dragging, setDragging] = React.useState(false);
 	const [draggingBeyondMinDistance, setDraggingBeyondMinDistance] = React.useState(false);
 	const dragFunctions = React.useContext(DragHeaderContext);
-	const [demoMode, setDemoMode] = React.useState(false);
 
 	const togglePanel = e => {
 		if (draggingBeyondMinDistance) return;
@@ -263,9 +264,9 @@ export const PaneHeader = React.memo((props: PropsWithChildren<PaneHeaderProps>)
 		}
 
 		if (captured === demoSequence) {
-			const nextDemoMode = !demoMode;
-			setDemoMode(nextDemoMode);
+			const nextDemoMode = !derivedState.demoMode.enabled;
 			setApiDemoMode(nextDemoMode);
+			dispatch(setDemoMode(nextDemoMode));
 			captured = "";
 		}
 	};
@@ -279,7 +280,10 @@ export const PaneHeader = React.memo((props: PropsWithChildren<PaneHeaderProps>)
 				tabIndex={1}
 				style={{ alignItems: "center", marginLeft: "-3px" }}
 			>
-				<div className={cx("label", { demo: demoMode })} data-testid={props.id + "-label-title"}>
+				<div
+					className={cx("label", { demo: derivedState.demoMode.enabled })}
+					data-testid={props.id + "-label-title"}
+				>
 					{props.title}
 					{(typeof props.count === "string" && props.count.length > 0) ||
 					(typeof props.count === "number" && props.count > 0) ? (

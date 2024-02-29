@@ -42,6 +42,9 @@ export const setFunctionToEditFailed = (value: boolean) =>
 export const setGrokError = (grokError: CSAsyncGrokError | undefined) =>
 	action(CodeErrorsActionsTypes.SetGrokError, grokError);
 
+export const setDemoMode = (enabled: boolean) =>
+	action(CodeErrorsActionsTypes.SetDemoMode, enabled);
+
 export const resetNrAi = () => action(CodeErrorsActionsTypes.ResetNrAi);
 
 export interface NewCodeErrorAttributes {

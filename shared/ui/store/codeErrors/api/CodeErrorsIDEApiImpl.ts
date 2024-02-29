@@ -13,8 +13,6 @@ import { CodeErrorsIDEApi } from "@codestream/webview/store/codeErrors/api/CodeE
 import { HostApi } from "@codestream/webview/webview-api";
 
 class CodeErrorsIDEApiImpl implements CodeErrorsIDEApi {
-	_nraiUserId: string | undefined;
-
 	async editorCopySymbol(request: EditorCopySymbolRequest): Promise<EditorCopySymbolResponse> {
 		return HostApi.instance.send(EditorCopySymbolType, request);
 	}
@@ -29,9 +27,9 @@ class CodeErrorsIDEApiImpl implements CodeErrorsIDEApi {
 		return HostApi.instance.send(EditorRevealRangeRequestType, request);
 	}
 
-	setNrAiUserId(userId: string): void {
-		this._nraiUserId = userId;
-	}
+	setNrAiUserId(userId: string): void {}
+
+	setApplyFixCallback(callback: () => void) {}
 }
 
 export const codeErrorsIDEApiImpl = new CodeErrorsIDEApiImpl();

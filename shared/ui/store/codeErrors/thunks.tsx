@@ -170,7 +170,6 @@ type FetchErrorGroupParameters = {
 export const fetchErrorGroup = createAppAsyncThunk(
 	"codeErrors/fetchErrorGroup",
 	async ({ codeError, occurrenceId, entityGuid }: FetchErrorGroupParameters, { dispatch }) => {
-		console.log("*** fetchErrorGroup thudunk");
 		let objectId;
 		try {
 			// this is an errorGroupGuid
@@ -213,7 +212,6 @@ export const findErrorGroupByObjectId = createAppAsyncThunk(
 		{ objectId, occurrenceId }: FindErrorGroupByObjectIdParameters,
 		{ dispatch, getState }
 	) => {
-		console.log("*** findErrorGroupByObjectId thudunk");
 		try {
 			const locator = (state: CodeStreamState, oid: string, tid?: string) => {
 				const codeError = Object.values(state.codeErrors.codeErrors).find(
@@ -245,7 +243,6 @@ export const findErrorGroupByObjectId = createAppAsyncThunk(
 export const bootstrapCodeErrors = createAppAsyncThunk(
 	"codeErrors/bootstrapCodeErrors",
 	async (_, { dispatch }) => {
-		console.log("*** bootstrapCodeErrors thudunk");
 		const { codeErrors } = await codeErrorsApi.fetchCodeErrors({});
 		dispatch(_bootstrapCodeErrors(codeErrors));
 	}
@@ -271,7 +268,6 @@ export const openErrorGroup = createAppAsyncThunk(
 		{ errorGroupGuid, occurrenceId, data }: OpenErrorGroupParameters,
 		{ dispatch, getState }
 	) => {
-		console.log("*** openErrorGroup thudunk");
 		dispatch(setFunctionToEdit(undefined));
 		const { environment } = getState().configs;
 		let message, response;
@@ -559,7 +555,6 @@ export type ReplaceSymbolParameters = {
 export const replaceSymbol = createAppAsyncThunk(
 	"codeErrors/replaceSymbol", // action type
 	async ({ uri, symbol, codeBlock, namespace }: ReplaceSymbolParameters) => {
-		console.log("*** replaceSymbol thudunk");
 		await codeErrorsIDEApi.editorReplaceSymbol({
 			uri,
 			symbolName: symbol,
@@ -578,7 +573,6 @@ export type CopySymbolFromIdeRequest = {
 export const copySymbolFromIde = createAppAsyncThunk(
 	"codeErrors/copySymbolFromIde",
 	async ({ stackLine, repoId, ref }: CopySymbolFromIdeRequest, { dispatch }) => {
-		console.log("*** copySymbolFromIde thudunk");
 		if (!stackLine.method || !stackLine.fileRelativePath) {
 			return;
 		}
@@ -640,7 +634,6 @@ export type JumpToStackLineRequest = {
 export const jumpToStackLine = createAppAsyncThunk(
 	"codeErrors/jumpToStackLine",
 	async ({ lineIndex, stackLine, repoId, ref }: JumpToStackLineRequest, { dispatch, getState }) => {
-		console.log("*** jumpToStackLine dathunk");
 		const state = getState();
 		dispatch(
 			setCurrentCodeError(state.context.currentCodeErrorId, {
@@ -697,7 +690,6 @@ export const jumpToStackLine = createAppAsyncThunk(
 export const updateCodeError = createAppAsyncThunk(
 	"codeErrors/updateCodeError",
 	async (request: UpdateCodeErrorRequest, { dispatch }) => {
-		console.log("*** updateCodeError dathunk");
 		const response = await codeErrorsApi.updateCodeErrors(request);
 		if (response?.codeError) {
 			dispatch(updateCodeErrors([response.codeError]));
@@ -708,7 +700,6 @@ export const updateCodeError = createAppAsyncThunk(
 export const fetchNewRelicErrorGroup = createAppAsyncThunk(
 	"codeErrors/fetchNewRelicErrorGroup",
 	async (request: GetNewRelicErrorGroupRequest) => {
-		console.log("*** fetchNewRelicErrorGroup dathunk");
 		return codeErrorsApi.getNewRelicErrorGroup(request);
 	}
 );
@@ -730,7 +721,6 @@ export const fetchNewRelicErrorGroup = createAppAsyncThunk(
 export const resolveStackTrace = createAppAsyncThunk(
 	"codeErrors/resolveStackTrace",
 	async (request: ResolveStackTraceRequest) => {
-		console.log("*** resolveStackTrace dathunk");
 		return codeErrorsApi.resolveStackTrace(request);
 	}
 );
@@ -772,7 +762,6 @@ export const handleGrokChonk = (events: CSGrokStream[]) => dispatch => {
 export const doGetObservabilityErrors = createAppAsyncThunk(
 	"codeErrors/getObservabilityErrors",
 	async (request: GetObservabilityErrorsRequest) => {
-		console.log("***  doGetObservabilityErrors dathunk");
 		return await codeErrorsApi.getObservabilityErrors(request);
 	}
 );

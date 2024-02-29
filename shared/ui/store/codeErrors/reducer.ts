@@ -22,6 +22,7 @@ const initialState: CodeErrorsState = {
 	grokRepliesLength: 0,
 	grokError: undefined,
 	functionToEditFailed: false,
+	demoMode: { enabled: false, count: 0 },
 };
 
 export function reduceCodeErrors(
@@ -43,6 +44,7 @@ export function reduceCodeErrors(
 						action.payload.filter(_ => !_.deactivated)
 					),
 				},
+				demoMode: state.demoMode,
 			};
 		case CodeErrorsActionsTypes.AddCodeErrors: {
 			const newCodeErrors = toMapBy(
@@ -64,6 +66,7 @@ export function reduceCodeErrors(
 				codeErrors: { ...state.codeErrors, ...newCodeErrors },
 				functionToEdit: state.functionToEdit,
 				functionToEditFailed: state.functionToEditFailed,
+				demoMode: state.demoMode,
 			};
 		}
 		case CodeErrorsActionsTypes.UpdateCodeErrors:
@@ -76,6 +79,7 @@ export function reduceCodeErrors(
 				codeErrors: { ...state.codeErrors, ...toMapBy("id", action.payload) },
 				functionToEdit: state.functionToEdit,
 				functionToEditFailed: state.functionToEditFailed,
+				demoMode: state.demoMode,
 			};
 		}
 		case CodeErrorsActionsTypes.SetFunctionToEdit: {
@@ -113,6 +117,7 @@ export function reduceCodeErrors(
 				grokRepliesLength: state.grokRepliesLength,
 				grokError: state.grokError,
 				functionToEditFailed: state.functionToEditFailed,
+				demoMode: state.demoMode,
 			};
 		}
 		case CodeErrorsActionsTypes.SetErrorGroup: {
@@ -181,6 +186,12 @@ export function reduceCodeErrors(
 				}
 			}
 			return { ...state, errorGroups: nextErrorGroups };
+		}
+		case CodeErrorsActionsTypes.SetDemoMode: {
+			return {
+				...state,
+				demoMode: { enabled: action.payload, count: state.demoMode.count + 1 },
+			};
 		}
 		case "RESET":
 			return initialState;

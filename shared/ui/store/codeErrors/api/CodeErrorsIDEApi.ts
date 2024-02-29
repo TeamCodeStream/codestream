@@ -15,4 +15,6 @@ export interface CodeErrorsIDEApi {
 	editorReplaceSymbol(request: EditorReplaceSymbolRequest): Promise<EditorReplaceSymbolResponse>;
 
 	setNrAiUserId(userId: string): void;
+
+	setApplyFixCallback(callback: () => void);
 }

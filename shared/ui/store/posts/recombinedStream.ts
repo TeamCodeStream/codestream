@@ -78,11 +78,9 @@ export function isNrAiStreamDone(stream: RecombinedStream) {
 	for (let i = 0; i < stream.items.length; i++) {
 		const item = stream.items[i];
 		if (item.sequence !== i) {
-			console.debug(`*** nrai stream not done, gap at ${i}`);
 			return false;
 		}
 	}
 	const lastItem = stream.items[stream.items.length - 1];
-	const result = lastItem && lastItem.done;
-	return result;
+	return lastItem && lastItem.done;
 }

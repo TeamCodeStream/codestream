@@ -24,35 +24,50 @@ import {
 	getFinalAddPosts,
 } from "@codestream/webview/store/codeErrors/api/data/broadcasts";
 
-// const dispatch = useAppDispatch();
-
-async function startDemoGrokStream(nrAiUserId: string) {
-	console.log("*** startDemoGrokStream ***");
-	const demoGrokStream = getDemoNrAiStream(streamId, postId, parentPostId);
-	HostApi.instance.emit(DidChangeDataNotificationType.method, {
-		type: "posts",
-		data: getAddPostsMain(streamId, postId, parentPostId, nrAiUserId),
-	});
-
-	await wait(400);
-	for (const event of demoGrokStream) {
-		HostApi.instance.emit(DidChangeDataNotificationType.method, event);
-		await wait(100);
-	}
-	await wait(400);
-	HostApi.instance.emit(DidChangeDataNotificationType.method, {
-		type: "posts",
-		data: getFinalAddPosts(streamId, postId, parentPostId, nrAiUserId),
-	});
-}
-
 class CodeErrorsIDEApiDemo implements CodeErrorsIDEApi {
 	private _nraiUserId: string | undefined;
+	private _applyFixCallback: (() => void) | undefined;
+
+	async startDemoGrokStream() {
+		const nraiUserId = this._nraiUserId;
+		if (!nraiUserId) {
+			return;
+		}
+		const demoGrokStream = getDemoNrAiStream(streamId, postId, parentPostId);
+		HostApi.instance.emit(DidChangeDataNotificationType.method, {
+			type: "posts",
+			data: getAddPostsMain(streamId, postId, parentPostId, nraiUserId),
+		});
+
+		await wait(400);
+		for (const event of demoGrokStream) {
+			HostApi.instance.emit(DidChangeDataNotificationType.method, event);
+			await wait(100);
+		}
+		await wait(400);
+		HostApi.instance.emit(DidChangeDataNotificationType.method, {
+			type: "posts",
+			data: getFinalAddPosts(streamId, postId, parentPostId, nraiUserId),
+		});
+	}
+
+	async applyFix() {
+		if (this._applyFixCallback) {
+			await wait(400);
+			this._applyFixCallback();
+		}
+	}
+
+	async startDemoSequence() {
+		await this.startDemoGrokStream();
+		await wait(400);
+		await this.applyFix();
+	}
 
 	async editorCopySymbol(request: EditorCopySymbolRequest): Promise<EditorCopySymbolResponse> {
 		const result = HostApi.instance.send(EditorCopySymbolType, request);
 		// Can be non awaited
-		startDemoGrokStream(this._nraiUserId!);
+		this.startDemoSequence();
 		return result;
 	}
 
@@ -68,6 +83,10 @@ class CodeErrorsIDEApiDemo implements CodeErrorsIDEApi {
 
 	setNrAiUserId(userId: string): void {
 		this._nraiUserId = userId;
+	}
+
+	setApplyFixCallback(callback: () => void) {
+		this._applyFixCallback = callback;
 	}
 }
 

@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from "react";
+import React, { useCallback, useContext, useMemo } from "react";
 import { NewRelicErrorGroup, PostPlus } from "@codestream/protocols/agent";
 import { MarkdownText } from "@codestream/webview/Stream/MarkdownText";
 import { MarkdownContent } from "@codestream/webview/Stream/Posts/Reply";
@@ -16,6 +16,7 @@ import { DiffEditor } from "@monaco-editor/react";
 import { isDarkTheme } from "@codestream/webview/src/themes";
 import { HostApi } from "@codestream/webview/webview-api";
 import { URI } from "vscode-uri";
+import { setApplyFixCallback } from "@codestream/webview/store/codeErrors/api/apiResolver";
 
 export const DiffSection = styled.div`
 	margin: 10px 0;
@@ -93,7 +94,7 @@ export function NrAiComponent(props: NrAiComponentProps) {
 		return result;
 	}, [props.post.parts?.codeFix]);
 
-	const applyFix = async () => {
+	const applyFix = useCallback(async () => {
 		if (!props.file || !props.functionToEdit?.symbol || !normalizedCodeFix) {
 			console.error("No file symbol or codeBlock");
 			return;
@@ -121,7 +122,11 @@ export function NrAiComponent(props: NrAiComponentProps) {
 		} catch (e) {
 			console.error("Error applying fix", e);
 		}
-	};
+	}, [normalizedCodeFix, props.errorGroup, props.file, props.functionToEdit]);
+
+	useMemo(() => {
+		setApplyFixCallback(applyFix);
+	}, [applyFix]);
 
 	return (
 		<section className="nrai-post">
