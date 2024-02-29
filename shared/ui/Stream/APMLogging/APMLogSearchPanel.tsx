@@ -24,11 +24,10 @@ import { HostApi } from "../../webview-api";
 import Button from "../Button";
 import Icon from "../Icon";
 import { Link } from "../Link";
-import { TableWindow } from "../TableWindow";
 import { APMLogRow } from "./APMLogRow";
 import { PanelHeaderTitleWithLink } from "../PanelHeaderTitleWithLink";
 import { Disposable } from "@codestream/webview/utils";
-import { isEmpty as _isEmpty, isUndefined as _isUndefined } from "lodash";
+import { isEmpty as _isEmpty } from "lodash";
 import { APMLogTableLoading } from "./APMLogTableLoading";
 
 interface SelectedOption {
@@ -692,7 +691,7 @@ export const APMLogSearchPanel = (props: {
 
 					{!logError &&
 						!isLoading &&
-						results &&
+						searchResults &&
 						totalItems > 0 &&
 						fieldDefinitions &&
 						!isInitializing && (
@@ -703,9 +702,8 @@ export const APMLogSearchPanel = (props: {
 								height={trimmedListHeight}
 								width={"100%"}
 								currentShowSurroundingIndex={currentShowSurroundingIndex}
-							/>
-						</>
-					)}
+							</>
+						)}
 
 					{!logError && !totalItems && !isLoading && !hasSearched && !isInitializing && (
 						<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
