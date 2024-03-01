@@ -7,13 +7,6 @@ import {
 } from "@codestream/protocols/agent";
 import { LanguageId } from "./clm/clmManager";
 
-export interface NewRelicId {
-	accountId: number;
-	domain: string;
-	type: string;
-	identifier: string;
-}
-
 export interface MetricTimeslice {
 	facet: string[];
 	// metricTimesliceName: string;

@@ -1,5 +1,5 @@
-import { NRErrorResponse, NRErrorType } from "@codestream/protocols/agent";
-import { CodedError, NewRelicId } from "./newrelic.types";
+import { NRErrorResponse, NRErrorType, NewRelicId } from "@codestream/protocols/agent";
+import { CodedError } from "./newrelic.types";
 import { ContextLogger } from "../contextLogger";
 
 export function toFixedNoRounding(number: number, precision = 1): string {
@@ -22,10 +22,6 @@ export function mapNRErrorResponse(ex: Error): NRErrorResponse {
 	return <NRErrorResponse>{ error: { type: "NR_UNKNOWN", message: ex.message, stack: ex.stack } };
 }
 
-type Rules = {
-	[key: string]: RegExp;
-};
-
 /**
  * Parses an ID-like string and returns the corresponding NewRelicId object.
  * @param idLike - ID-like string to be parsed.
@@ -34,6 +30,8 @@ type Rules = {
  */
 export function parseId(idLike: string, strict: boolean = false): NewRelicId | undefined {
 	try {
+		// KEEP IN SYNC WITH UI
+
 		if (!idLike) return undefined;
 
 		const parsed = Buffer.from(idLike, "base64").toString("utf-8");
