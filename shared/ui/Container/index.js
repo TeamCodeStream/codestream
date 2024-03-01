@@ -1,16 +1,13 @@
 import { WebviewErrorRequestType, SessionTokenStatus } from "@codestream/protocols/agent";
 import PropTypes from "prop-types";
-import React from "react";
+import React, { useState } from "react";
 import { IntlProvider } from "react-intl";
 import { connect, Provider } from "react-redux";
 import { ThemeProvider } from "styled-components";
 
 import { errorDismissed } from "@codestream/webview/store/connectivity/actions";
 import { UnauthenticatedRoutes } from "../Authentication";
-import {
-	ReloadWebviewRequestType,
-	RestartRequestType,
-} from "../ipc/webview.protocol";
+import { ReloadWebviewRequestType, RestartRequestType } from "../ipc/webview.protocol";
 import { logError } from "../logger";
 import { Button } from "../src/components/Button";
 import { createTheme, darkTheme } from "../src/themes";
@@ -80,6 +77,8 @@ const getIdeInstallationInstructions = props => {
 };
 
 const Root = connect(mapStateToProps)(props => {
+	const [isLoggingOut, setIsLoggingOut] = useState(false);
+
 	if (props.inMaintenanceMode)
 		return (
 			<RoadBlock title="Pardon the Interruption">
@@ -133,8 +132,10 @@ const Root = connect(mapStateToProps)(props => {
 					<Button
 						onClick={e => {
 							e.preventDefault();
+							setIsLoggingOut(true);
 							props.dispatch(logout());
 						}}
+						isLoading={isLoggingOut}
 					>
 						OK
 					</Button>
