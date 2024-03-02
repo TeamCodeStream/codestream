@@ -25,7 +25,7 @@ class NrqlGutterIconRendererImpl(val editor: Editor, val line: Int, val query: S
     }
 
     override fun getIcon(): Icon {
-        return IconLoader.getIcon("/images/run.svg")
+        return IconLoader.getIcon("/images/run.svg", javaClass)
     }
 
     override fun getAlignment() = Alignment.RIGHT
