@@ -152,14 +152,13 @@ export class NrLogsProvider {
 
 			const logs = await this.graphqlClient.runNrql<LogResult>(accountId, query, 400);
 
-			const possibleSeverityAttributes: string[] = [
+			const possibleSeverityAttributes: Set<string> = new Set([
 				`log_severity`,
 				`level`,
 				`log.level`,
 				`loglevel`,
 				`log_level`,
-				`level_name`,
-			];
+			]);
 
 			logs.map(lr => {
 				const myKeys = Object.keys(lr);
