@@ -581,12 +581,7 @@ export class AnomalyDetectorDrillDown {
 	}
 
 	private runNrql<T>(nrql: string): Promise<T[]> {
-		try {
-			return this.graphqlClient.runNrql(this._accountId, nrql, 400);
-		} catch (ex) {
-			Logger.error(ex);
-			return Promise.resolve([]);
-		}
+		return this.graphqlClient.runNrql(this._accountId, nrql, 400);
 	}
 
 	private durationComparisonToAnomaly(
