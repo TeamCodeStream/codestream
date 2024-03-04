@@ -184,6 +184,7 @@ export class AnomalyDetectorDrillDown {
 			isSupported: true,
 		};
 	}
+
 	private async executeCore(
 		languageSupport: LanguageSupport,
 		benchmarkSpans: SpanWithCodeAttrs[],
@@ -275,7 +276,7 @@ export class AnomalyDetectorDrillDown {
 		minimumSampleRate: number,
 		minimumRatio: number
 	): Promise<{ comparisons: Comparison[]; metricTimesliceNames: string[] }> {
-		const metricFilter = this.getMetricFilter(languageSupport, scope);
+		const metricFilter = this.getMetricFilter(scope);
 		const data = await this.getDurationMetric(this._dataTimeFrame, metricFilter);
 		const dataFiltered = languageSupport.filterMetrics(data, benchmarkSpans);
 
@@ -313,7 +314,7 @@ export class AnomalyDetectorDrillDown {
 		comparisons: Comparison[];
 		metricTimesliceNames: string[];
 	}> {
-		const metricFilter = this.getMetricFilter(languageSupport, scope);
+		const metricFilter = this.getMetricFilter(scope);
 		const errorCountLookup = `metricTimesliceName LIKE 'Errors/%'`;
 		const dataErrorCount = await this.getErrorCountMetric(errorCountLookup, this._dataTimeFrame);
 		const dataErrorCountFiltered = languageSupport.filterMetrics(dataErrorCount, benchmarkSpans);
@@ -561,7 +562,7 @@ export class AnomalyDetectorDrillDown {
 		return this.runNrql<NameValue>(query);
 	}
 
-	private getMetricFilter(languageSupport: LanguageSupport, scope: string | undefined) {
+	getMetricFilter(scope: string | undefined) {
 		if (scope) {
 			return `scope = '${escapeNrql(scope)}'`;
 		} else {

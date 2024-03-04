@@ -106,44 +106,6 @@
 			"smartStep": true,
 			"sourceMaps": true
 		},
-		{
-			"name": "Debug/Watch Current File Jest Tests",
-			"type": "node",
-			"request": "launch",
-			"cwd": "${workspaceFolder}/shared/ui",
-			"program": "./node_modules/.bin/jest",
-			"args": [
-				"--runInBand",
-				"--watch",
-				"${file}"
-			],
-			"console": "integratedTerminal",
-			"internalConsoleOptions": "neverOpen"
-		},
-		{
-			"name": "Debug/Watch All Jest Tests",
-			"type": "node",
-			"request": "launch",
-			"cwd": "${workspaceFolder}/shared/ui",
-			"program": "./node_modules/.bin/jest",
-			"args": [
-				"--runInBand",
-				"--watch",
-			],
-			"console": "integratedTerminal",
-			"internalConsoleOptions": "neverOpen"
-		},
-		{
-			"name": "Debug UI Jest Tests",
-			"type": "node",
-			"request": "launch",
-			"cwd": "${workspaceFolder}/shared/ui",
-			"program": "./node_modules/.bin/jest",
-			"args": [
-				"--runInBand",
-			],
-			"console": "integratedTerminal",
-			"internalConsoleOptions": "neverOpen"
-		}
+
 	]
 }

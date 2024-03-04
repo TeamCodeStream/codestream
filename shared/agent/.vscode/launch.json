@@ -82,6 +82,19 @@
 			"env": {
 				"TS_NODE_COMPILER_OPTIONS": "{ \"module\": \"commonjs\", \"types\": [\"node\"] }"
 			}
+		},
+		{
+			"name": "Debug/Watch Current File Jest Tests",
+			"type": "node",
+			"request": "launch",
+			"cwd": "${workspaceFolder}",
+			"program": "./node_modules/.bin/jest",
+			"args": ["--runInBand", "--watch", "${file}"],
+			"env": {
+				"NEW_RELIC_ENABLED": false
+			},
+			"console": "integratedTerminal",
+			"internalConsoleOptions": "neverOpen"
 		}
 	]
 }

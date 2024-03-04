@@ -11,3 +11,5 @@ dist/
 jb/.classpath
 jb/bin/main/
 jb/bin/test/
+
+shared/agent/newrelic_agent.log
