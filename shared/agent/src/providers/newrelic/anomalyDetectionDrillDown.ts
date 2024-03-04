@@ -20,7 +20,7 @@ import { getLanguageSupport, LanguageSupport } from "./clm/languageSupport";
 import { flatten } from "lodash";
 import { DeploymentsProvider } from "./deployments/deploymentsProvider";
 import { parseId } from "./utils";
-import { NewRelicGraphqlClient } from "./newRelicGraphqlClient";
+import { NewRelicGraphqlClient, escapeNrql } from "./newRelicGraphqlClient";
 import { ReposProvider } from "./repos/reposProvider";
 
 export class AnomalyDetectorDrillDown {
@@ -563,7 +563,7 @@ export class AnomalyDetectorDrillDown {
 
 	private getMetricFilter(languageSupport: LanguageSupport, scope: string | undefined) {
 		if (scope) {
-			return `scope = '${scope}'`;
+			return `scope = '${escapeNrql(scope)}'`;
 		} else {
 			return "metricTimesliceName LIKE 'WebTransaction/%' OR metricTimesliceName LIKE 'OtherTransaction/%'";
 		}
@@ -580,7 +580,12 @@ export class AnomalyDetectorDrillDown {
 	}
 
 	private runNrql<T>(nrql: string): Promise<T[]> {
-		return this.graphqlClient.runNrql(this._accountId, nrql, 400);
+		try {
+			return this.graphqlClient.runNrql(this._accountId, nrql, 400);
+		} catch (ex) {
+			Logger.error(ex);
+			return Promise.resolve([]);
+		}
 	}
 
 	private durationComparisonToAnomaly(
