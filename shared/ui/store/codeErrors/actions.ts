@@ -1,5 +1,4 @@
 import {
-	ClaimCodeErrorRequestType,
 	CodeBlock,
 	CSAsyncGrokError,
 	DeleteCodeErrorRequestType,
@@ -101,10 +100,6 @@ export const fetchCodeError = (codeErrorId: string) => async dispatch => {
 	const response = await HostApi.instance.send(GetCodeErrorRequestType, { codeErrorId });
 
 	if (response.codeError) return dispatch(saveCodeErrors([response.codeError]));
-};
-
-export const claimCodeError = async request => {
-	return await HostApi.instance.send(ClaimCodeErrorRequestType, request);
 };
 
 export const handleDirectives = (id: string, data: any) =>

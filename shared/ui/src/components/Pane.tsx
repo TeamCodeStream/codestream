@@ -16,8 +16,6 @@ import Icon from "@codestream/webview/Stream/Icon";
 import { DragHeaderContext } from "@codestream/webview/Stream/Sidebar";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import ScrollBox from "../../Stream/ScrollBox";
-import { setApiDemoMode } from "@codestream/webview/store/codeErrors/api/apiResolver";
-import { setDemoMode } from "@codestream/webview/store/codeErrors/actions";
 
 export enum PaneState {
 	Open = "open",
@@ -246,36 +244,9 @@ export const PaneHeader = React.memo((props: PropsWithChildren<PaneHeaderProps>)
 		//});
 	};
 
-	let startTime = 0;
-	const demoSequence = "lrlrll";
-	let captured = "";
-
-	const demoClick = e => {
-		e.preventDefault();
-		const now = Date.now();
-		if (now - startTime > 6000) {
-			captured = "";
-			startTime = now;
-		}
-		if (e.type === "click") {
-			captured += "l";
-		} else if (e.type === "contextmenu") {
-			captured += "r";
-		}
-
-		if (captured === demoSequence) {
-			const nextDemoMode = !derivedState.demoMode.enabled;
-			setApiDemoMode(nextDemoMode);
-			dispatch(setDemoMode(nextDemoMode));
-			captured = "";
-		}
-	};
-
 	if (props.noDropdown) {
 		return (
 			<PaneHeaderRoot
-				onClick={demoClick}
-				onContextMenu={demoClick}
 				className={cx("pane-header", props.className)}
 				tabIndex={1}
 				style={{ alignItems: "center", marginLeft: "-3px" }}
@@ -311,7 +282,10 @@ export const PaneHeader = React.memo((props: PropsWithChildren<PaneHeaderProps>)
 			})}
 			tabIndex={1}
 		>
-			<div className="label" data-testid={props.id + "-label-title"}>
+			<div
+				className={cx("label", { demo: derivedState.demoMode.enabled })}
+				data-testid={props.id + "-label-title"}
+			>
 				<Icon name={derivedState.stateIcon} className="expander" />
 				{props.title}
 				{(typeof props.count === "string" && props.count.length > 0) ||

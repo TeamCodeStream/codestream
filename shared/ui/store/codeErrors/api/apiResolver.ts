@@ -25,6 +25,11 @@ export function setApiCurrentRepoId(repoId: string) {
 	codeErrorsIDEApiImpl.setCurrentRepoId(repoId);
 }
 
+export function setApiCurrentEntityId(entityId: string) {
+	codeErrorsApiImpl.setCurrentEntityId(entityId);
+	codeErrorsApiDemo.setCurrentEntityId(entityId);
+}
+
 export function setApiNrAiUserId(userId: string) {
 	codeErrorsApiImpl.setNrAiUserId(userId);
 	codeErrorsIDEApiImpl.setNrAiUserId(userId);

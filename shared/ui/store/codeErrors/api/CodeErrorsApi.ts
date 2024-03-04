@@ -1,4 +1,6 @@
 import {
+	ClaimCodeErrorRequest,
+	ClaimCodeErrorResponse,
 	CreateShareableCodeErrorRequest,
 	CreateShareableCodeErrorResponse,
 	FetchCodeErrorsRequest,
@@ -44,6 +46,8 @@ export interface CodeErrorsApi {
 		request: GetObservabilityErrorsRequest
 	): Promise<GetObservabilityErrorsResponse>;
 
+	claimCodeError(request: ClaimCodeErrorRequest): Promise<ClaimCodeErrorResponse>;
+
 	executeThirdPartyTyped<T, R>(method: string, providerId: string, params: any): Promise<any>;
 
 	track(eventName: TelemetryEventName, properties?: TelemetryData): Promise<void>;
@@ -51,4 +55,6 @@ export interface CodeErrorsApi {
 	setCurrentRepoId(repoId: string): void;
 
 	setNrAiUserId(userId: string): void;
+
+	setCurrentEntityId(entityId: string): void;
 }

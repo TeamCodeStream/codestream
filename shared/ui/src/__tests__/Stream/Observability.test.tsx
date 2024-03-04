@@ -49,6 +49,7 @@ import { IntlProvider } from "react-intl";
 import translations from "@codestream/webview/translations/en";
 import { ConfigsState } from "@codestream/webview/store/configs/types";
 import { isFeatureEnabled } from "@codestream/webview/store/apiVersioning/reducer";
+import { CodeErrorsState } from "@codestream/webview/store/codeErrors/types";
 
 jest.mock("@codestream/webview/store/apiVersioning/reducer");
 jest.mock("@codestream/webview/webview-api");
@@ -144,6 +145,12 @@ function createState(): Partial<CodeStreamState> {
 		repos: {
 			repoid: myrepo as CSRepository,
 		},
+		codeErrors: {
+			demoMode: {
+				enabled: false,
+				count: 0,
+			},
+		} as CodeErrorsState,
 	};
 }
 

@@ -12,7 +12,7 @@ import {
 	GetObservabilityErrorGroupMetadataRequestType,
 	GetObservabilityErrorGroupMetadataResponse,
 } from "@codestream/protocols/agent";
-import { CodeErrorTimeWindow } from "../../util/src/protocol/agent/api.protocol.models";
+import { CodeErrorTimeWindow } from "@codestream/protocols/api";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { setUserPreference } from "./actions";
 import styled from "styled-components";
@@ -40,6 +40,7 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 		return {
 			sessionStart: state.context.sessionStart,
 			timeWindow,
+			errorsDemoMode: state.codeErrors.demoMode.enabled,
 		};
 	}, shallowEqual);
 
@@ -126,10 +127,12 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 											onClick={async e => {
 												try {
 													setIsLoadingErrorGroupGuid(indexedErrorGroupGuid);
-													const response = (await HostApi.instance.send(
-														GetObservabilityErrorGroupMetadataRequestType,
-														{ errorGroupGuid: err.errorGroupGuid }
-													)) as GetObservabilityErrorGroupMetadataResponse;
+													const response = derivedState.errorsDemoMode
+														? ({} as GetObservabilityErrorGroupMetadataResponse)
+														: await HostApi.instance.send(
+																GetObservabilityErrorGroupMetadataRequestType,
+																{ errorGroupGuid: err.errorGroupGuid }
+														  );
 													await dispatch(
 														openErrorGroup({
 															errorGroupGuid: err.errorGroupGuid,

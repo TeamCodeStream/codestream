@@ -2,7 +2,10 @@ import { GetObservabilityErrorsResponse } from "@codestream/protocols/agent";
 
 const lastOccurrence = Date.now() - 90000;
 
-export function getObservabilityErrorsResponse(repoId: string): GetObservabilityErrorsResponse {
+export function getObservabilityErrorsResponse(
+	repoId: string,
+	entityId: string
+): GetObservabilityErrorsResponse {
 	return {
 		repos: [
 			{
@@ -10,12 +13,12 @@ export function getObservabilityErrorsResponse(repoId: string): GetObservability
 				repoName: "Java",
 				errors: [
 					{
-						entityId: "MTE4Nzk2ODh8QVBNfEFQUExJQ0FUSU9OfDQ1ODg2NTYz",
-						appName: "webportal-telco-dillon",
+						entityId: entityId,
+						appName: "WebPortal",
 						errorClass: "java.lang.NullPointerException",
 						message:
 							'Cannot invoke "acme.storefront.action.report.UserDataManager$Phone.getCountryCode()" because the return value of "acme.storefront.action.report.UserDataManager$User.getPhone()" is null',
-						remote: "https://github.com/TeamCodeStream/telco-microservices.git",
+						remote: "https://github.com/TeamCodeStream/telco-microservices",
 						errorGroupGuid:
 							"MTE4Nzk2ODh8RVJUfEVSUl9HUk9VUHwzMTY4NTFkZS1hMjVmLTNlMzMtYmI2ZS0zMTc2ZGRiYjIwYjU",
 						occurrenceId: "a8e80e5f-d99a-11ee-894b-068eae1a6a25_12731_13774",

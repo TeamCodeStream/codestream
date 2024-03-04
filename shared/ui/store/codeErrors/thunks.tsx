@@ -20,7 +20,6 @@ import {
 	_setErrorGroup,
 	_updateCodeErrors,
 	addCodeErrors,
-	claimCodeError,
 	handleDirectives,
 	NewCodeErrorAttributes,
 	PENDING_CODE_ERROR_ID_FORMAT,
@@ -273,7 +272,7 @@ export const openErrorGroup = createAppAsyncThunk(
 		if (data.environment && data.environment !== environment) {
 			message = "This error group belongs to an account in a different region.";
 		} else {
-			response = await claimCodeError({
+			response = await codeErrorsApi.claimCodeError({
 				objectId: errorGroupGuid,
 				objectType: "errorGroup",
 			});

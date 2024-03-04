@@ -92,6 +92,7 @@ import { parseId } from "../utilities/newRelic";
 import { bootstrapNrCapabilities } from "../store/nrCapabilities/thunks";
 import { doGetObservabilityErrors } from "@codestream/webview/store/codeErrors/thunks";
 import {
+	setApiCurrentEntityId,
 	setApiCurrentRepoId,
 	setApiNrAiUserId,
 	setApiUserId,
@@ -779,6 +780,7 @@ export const Observability = React.memo((props: Props) => {
 			console.debug(`demoMode fetchObservabilityErrors ${derivedState.demoMode}`);
 			if (derivedState.demoMode.enabled) {
 				setApiCurrentRepoId(currentRepoId);
+				setApiCurrentEntityId(expandedEntity);
 			}
 			fetchObservabilityErrors(expandedEntity, currentRepoId);
 		}

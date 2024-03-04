@@ -1,4 +1,7 @@
 import {
+	ClaimCodeErrorRequest,
+	ClaimCodeErrorRequestType,
+	ClaimCodeErrorResponse,
 	CreateShareableCodeErrorRequest,
 	CreateShareableCodeErrorRequestType,
 	CreateShareableCodeErrorResponse,
@@ -32,9 +35,6 @@ import { CodeErrorsApi } from "@codestream/webview/store/codeErrors/api/CodeErro
 import { HostApi } from "@codestream/webview/webview-api";
 
 class CodeErrorsApiImpl implements CodeErrorsApi {
-	private _currentRepoId: string | undefined;
-	private _nraiUserId: string | undefined;
-
 	async createShareableCodeError(
 		request: CreateShareableCodeErrorRequest
 	): Promise<CreateShareableCodeErrorResponse> {
@@ -89,6 +89,11 @@ class CodeErrorsApiImpl implements CodeErrorsApi {
 		return result;
 	}
 
+	async claimCodeError(request: ClaimCodeErrorRequest): Promise<ClaimCodeErrorResponse> {
+		const response = await HostApi.instance.send(ClaimCodeErrorRequestType, request);
+		return response;
+	}
+
 	async executeThirdPartyTyped<T, R>(
 		method: string,
 		providerId: string,
@@ -106,13 +111,11 @@ class CodeErrorsApiImpl implements CodeErrorsApi {
 		return result;
 	}
 
-	setCurrentRepoId(repoId: string) {
-		this._currentRepoId = repoId;
-	}
+	setCurrentRepoId(repoId: string) {}
 
-	setNrAiUserId(userId: string): void {
-		this._nraiUserId = userId;
-	}
+	setNrAiUserId(userId: string): void {}
+
+	setCurrentEntityId(entityId: string): void {}
 }
 
 export const codeErrorsApiImpl = new CodeErrorsApiImpl();

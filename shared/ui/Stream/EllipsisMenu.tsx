@@ -19,6 +19,9 @@ import Icon from "./Icon";
 import Menu from "./Menu";
 import { AVAILABLE_PANES } from "./Sidebar";
 import { EMPTY_STATUS } from "./StartWork";
+import { setApiDemoMode } from "@codestream/webview/store/codeErrors/api/apiResolver";
+import { setDemoMode } from "@codestream/webview/store/codeErrors/actions";
+import { shallowEqual } from "react-redux";
 
 const RegionSubtext = styled.div`
 	font-size: smaller;
@@ -116,8 +119,9 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			possibleAuthDomains,
 			nrUserId: user?.nrUserId,
 			ide: state.ide,
+			demoMode: state.codeErrors.demoMode,
 		};
-	});
+	}, shallowEqual);
 
 	const hasInvites =
 		derivedState.eligibleJoinCompanies &&
@@ -425,7 +429,18 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 	if (!derivedState.isProductionCloud || derivedState.hasMultipleEnvironments) {
 		versionStatement += ` (${derivedState.environment.toLocaleUpperCase()})`;
 	}
-	const text = <span style={{ fontSize: "smaller" }}>{versionStatement}</span>;
+	const demoClick = e => {
+		e.preventDefault();
+		const nextDemoMode = !derivedState.demoMode.enabled;
+		setApiDemoMode(nextDemoMode);
+		dispatch(setDemoMode(nextDemoMode));
+	};
+
+	const text = (
+		<span style={{ fontSize: "smaller" }} onClick={demoClick}>
+			{versionStatement}
+		</span>
+	);
 	menuItems.push({ label: text, action: "", noHover: true, disabled: true });
 	// &#9993;
 	return (

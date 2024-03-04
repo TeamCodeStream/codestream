@@ -1,4 +1,6 @@
 import {
+	ClaimCodeErrorRequest,
+	ClaimCodeErrorResponse,
 	CreateShareableCodeErrorRequest,
 	CreateShareableCodeErrorResponse,
 	ExecuteThirdPartyTypedType,
@@ -36,10 +38,12 @@ import {
 } from "@codestream/webview/store/codeErrors/api/data/createSharableCodeErrorResponse";
 import { getFetchPostRepliesResponse } from "@codestream/webview/store/codeErrors/api/data/fetchPostReplies";
 import { getNewRelicErrorGroupResponse } from "@codestream/webview/store/codeErrors/api/data/getNewRelicErrorGroupResponse";
+import { getClaimCodeErrorResponse } from "@codestream/webview/store/codeErrors/api/data/claimCodeErrorResponse";
 
 class CodeErrorsApiDemo implements CodeErrorsApi {
 	private _currentRepoId: string | undefined;
 	private _nraiUserId: string | undefined;
+	private _entityId: string | undefined;
 
 	async createShareableCodeError(
 		request: CreateShareableCodeErrorRequest
@@ -75,7 +79,12 @@ class CodeErrorsApiDemo implements CodeErrorsApi {
 		request: GetObservabilityErrorsRequest
 	): Promise<GetObservabilityErrorsResponse> {
 		// return HostApi.instance.send(GetObservabilityErrorsRequestType, request);
-		return this._currentRepoId ? getObservabilityErrorsResponse(this._currentRepoId) : {};
+		return getObservabilityErrorsResponse(this._currentRepoId!, this._entityId!);
+	}
+
+	async claimCodeError(request: ClaimCodeErrorRequest): Promise<ClaimCodeErrorResponse> {
+		const response = getClaimCodeErrorResponse(this._currentRepoId!);
+		return response;
 	}
 
 	async resolveStackTrace(request: ResolveStackTraceRequest): Promise<ResolveStackTraceResponse> {
@@ -114,6 +123,10 @@ class CodeErrorsApiDemo implements CodeErrorsApi {
 
 	setNrAiUserId(userId: string): void {
 		this._nraiUserId = userId;
+	}
+
+	setCurrentEntityId(entityId: string): void {
+		this._entityId = entityId;
 	}
 }
 
