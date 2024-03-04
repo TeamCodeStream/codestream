@@ -2571,10 +2571,14 @@ export interface LogResult {
 	[key: string]: string;
 }
 
+export const LogResultSpecialColumns = {
+	message: "__cs_message",
+	severity: "__cs_severity",
+	summary: "__cs_log_summary",
+};
+
 export interface GetLogsResponse {
 	logs?: LogResult[];
-	messageAttribute?: string;
-	severityAttribute?: string;
 	accountId: number;
 	error?: NRErrorResponse;
 }
@@ -2730,7 +2734,7 @@ export interface NRQLRecentQuery {
 	/**
 	 * Recent, runnable, query from the current user
 	 */
-	query: string;	
+	query: string;
 	accounts: Account[];
 	createdAt: number;
 	dayString?: string;

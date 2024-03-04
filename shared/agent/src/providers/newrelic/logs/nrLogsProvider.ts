@@ -16,6 +16,7 @@ import {
 	GetSurroundingLogsResponse,
 	LogFieldDefinition,
 	LogResult,
+	LogResultSpecialColumns,
 } from "@codestream/protocols/agent";
 import { log } from "../../../system/decorators/log";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
@@ -151,40 +152,36 @@ export class NrLogsProvider {
 
 			const logs = await this.graphqlClient.runNrql<LogResult>(accountId, query, 400);
 
-			let messageAttribute: string = "message";
-			const hasMessageAttribute = logs.some(lr => Object.keys(lr).includes("message"));
-			if (!hasMessageAttribute) {
-				messageAttribute = "log_summary";
-			}
-
-			logs.map(lr => {
-				const json = JSON.stringify(lr);
-				lr["log_summary"] = json;
-			});
-
 			const possibleSeverityAttributes: string[] = [
 				`log_severity`,
 				`level`,
 				`log.level`,
 				`loglevel`,
 				`log_level`,
+				`level_name`,
 			];
 
-			let severityAttribute: string = "";
+			logs.map(lr => {
+				const myKeys = Object.keys(lr);
 
-			// should have at least (and no more) than one of these
-			possibleSeverityAttributes.map(psa => {
-				const hasAttribute = logs.some(lr => Object.keys(lr).includes(psa));
+				const json = JSON.stringify(lr);
+				lr[LogResultSpecialColumns.summary] = json;
 
-				if (hasAttribute) {
-					severityAttribute = psa;
+				if (myKeys.includes("message")) {
+					lr[LogResultSpecialColumns.message] = "message";
+				} else {
+					lr[LogResultSpecialColumns.message] = "log_summary";
+				}
+
+				for (let psa of possibleSeverityAttributes) {
+					if (myKeys.includes(psa) && typeof lr[psa] === "string") {
+						lr[LogResultSpecialColumns.severity] = psa;
+					}
 				}
 			});
 
 			return {
 				logs,
-				messageAttribute,
-				severityAttribute,
 				accountId,
 			};
 		} catch (ex) {

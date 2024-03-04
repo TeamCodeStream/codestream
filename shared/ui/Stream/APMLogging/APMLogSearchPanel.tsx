@@ -9,6 +9,7 @@ import {
 	isNRErrorResponse,
 	LogFieldDefinition,
 	LogResult,
+	LogResultSpecialColumns,
 	TelemetryData,
 } from "@codestream/protocols/agent";
 import { IdeNames, OpenEditorViewNotificationType } from "@codestream/protocols/webview";
@@ -161,14 +162,10 @@ export const APMLogSearchPanel = (props: {
 	const [originalSearchResults, setOriginalSearchResults] = useState<LogResult[]>([]);
 	const [searchResults, setSearchResults] = useState<LogResult[]>([]);
 
-	const [severityAttribute, setSeverityAttribute] = useState<string>();
-	const [messageAttribute, setMessageAttribute] = useState<string>();
 	const [currentShowSurroundingIndex, setCurrentShowSurroundingIndex] = useState<
 		number | undefined
 	>(undefined);
 	const [queriedWithNonEmptyString, setQueriedWithNonEmptyString] = useState<boolean>(false);
-	const [displayColumns, setDisplayColumns] = useState<string[]>([]);
-	const [surroundingLogsLoading, setSurroundingLogsLoading] = useState<boolean>();
 	const [totalItems, setTotalItems] = useState<number>(0);
 	const [logError, setLogError] = useState<string | undefined>("");
 	const { height, ref } = useResizeDetector();
@@ -372,7 +369,6 @@ export const APMLogSearchPanel = (props: {
 		} catch (ex) {
 			handleError(ex);
 		} finally {
-			setSurroundingLogsLoading(false);
 			setIsLoading(false);
 		}
 	};
@@ -384,8 +380,6 @@ export const APMLogSearchPanel = (props: {
 			setIsLoading(true);
 			setSearchResults([]);
 			setOriginalSearchResults([]);
-			setSeverityAttribute(undefined);
-			setMessageAttribute(undefined);
 			setTotalItems(0);
 			setCurrentShowSurroundingIndex(undefined);
 
@@ -431,11 +425,6 @@ export const APMLogSearchPanel = (props: {
 				setSearchResults(response.logs);
 				setOriginalSearchResults(response.logs);
 				setTotalItems(response.logs.length);
-				setMessageAttribute(response.messageAttribute!);
-				setSeverityAttribute(response.severityAttribute!);
-
-				// TODO: Instead of this, utilize a preference with a list of columns
-				setDisplayColumns(["timestamp", response.severityAttribute!, response.messageAttribute!]);
 			}
 
 			trackSearchTelemetry(entityGuid, response.accountId, (response?.logs?.length ?? 0) > 0);
@@ -546,9 +535,12 @@ export const APMLogSearchPanel = (props: {
 			// 	_results.push({ showMore: "true" });
 			// }
 			return _results.map((r, index) => {
+				const messageField = r[LogResultSpecialColumns.message];
+				const severityField = r[LogResultSpecialColumns.severity];
+
 				const timestamp = r?.timestamp;
-				const message = messageAttribute ? r[messageAttribute] : "";
-				const severity = severityAttribute ? r[severityAttribute] : "";
+				const message = r[messageField] ?? "";
+				const severity = r[severityField] ?? "";
 				const showMore = r?.showMore ? true : false;
 				const expandedContent = r?.expandedContent ?? undefined;
 				const isShowSurrounding = r?.isShowSurrounding ?? false;

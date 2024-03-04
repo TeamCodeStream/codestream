@@ -4,7 +4,7 @@ import Timestamp from "../Timestamp";
 import Icon from "@codestream/webview/Stream/Icon";
 import { isEmpty as _isEmpty } from "lodash-es";
 import { HostApi } from "@codestream/webview/webview-api";
-import { LogResult } from "@codestream/protocols/agent";
+import { LogResult, LogResultSpecialColumns } from "@codestream/protocols/agent";
 import copy from "copy-to-clipboard";
 import Tooltip from "../Tooltip";
 
@@ -122,7 +122,12 @@ const DetailViewTable = styled.div`
 	}
 `;
 
-const hiddenColumns = ["log_summary", "expandedContent"];
+const hiddenColumns = [
+	"expandedContent",
+	LogResultSpecialColumns.message,
+	LogResultSpecialColumns.severity,
+	LogResultSpecialColumns.summary,
+];
 
 export const APMLogRow = (props: {
 	timestamp: string;
