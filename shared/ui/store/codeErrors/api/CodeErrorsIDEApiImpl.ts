@@ -34,6 +34,8 @@ class CodeErrorsIDEApiImpl implements CodeErrorsIDEApi {
 	setApplyFixCallback(callback: () => void) {}
 
 	setPostReplyCallback(callback: (text: string) => void) {}
+
+	setCurrentRepoId(repoId: string): void {}
 }
 
 export const codeErrorsIDEApiImpl = new CodeErrorsIDEApiImpl();

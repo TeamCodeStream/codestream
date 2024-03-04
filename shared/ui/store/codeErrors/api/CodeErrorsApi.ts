@@ -44,7 +44,7 @@ export interface CodeErrorsApi {
 		request: GetObservabilityErrorsRequest
 	): Promise<GetObservabilityErrorsResponse>;
 
-	executeThirdPartyTyped<T, R>(method: string, params: any): Promise<any>;
+	executeThirdPartyTyped<T, R>(method: string, providerId: string, params: any): Promise<any>;
 
 	track(eventName: TelemetryEventName, properties?: TelemetryData): Promise<void>;
 

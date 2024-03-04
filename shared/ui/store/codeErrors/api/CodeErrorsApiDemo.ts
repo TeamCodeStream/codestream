@@ -7,7 +7,6 @@ import {
 	FetchPostRepliesRequest,
 	FetchPostRepliesResponse,
 	GetNewRelicErrorGroupRequest,
-	GetNewRelicErrorGroupRequestType,
 	GetNewRelicErrorGroupResponse,
 	GetObservabilityErrorsRequest,
 	GetObservabilityErrorsResponse,
@@ -36,6 +35,7 @@ import {
 	streamId,
 } from "@codestream/webview/store/codeErrors/api/data/createSharableCodeErrorResponse";
 import { getFetchPostRepliesResponse } from "@codestream/webview/store/codeErrors/api/data/fetchPostReplies";
+import { getNewRelicErrorGroupResponse } from "@codestream/webview/store/codeErrors/api/data/getNewRelicErrorGroupResponse";
 
 class CodeErrorsApiDemo implements CodeErrorsApi {
 	private _currentRepoId: string | undefined;
@@ -67,7 +67,8 @@ class CodeErrorsApiDemo implements CodeErrorsApi {
 	async getNewRelicErrorGroup(
 		request: GetNewRelicErrorGroupRequest
 	): Promise<GetNewRelicErrorGroupResponse> {
-		return HostApi.instance.send(GetNewRelicErrorGroupRequestType, request);
+		const response = getNewRelicErrorGroupResponse();
+		return response;
 	}
 
 	async getObservabilityErrors(

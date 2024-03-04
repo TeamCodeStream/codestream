@@ -14,6 +14,7 @@ import { HostApi } from "@codestream/webview/webview-api";
 import { wait } from "@codestream/webview/utils";
 import { getDemoNrAiStream } from "@codestream/webview/store/codeErrors/api/data/nraiStream";
 import {
+	codeErrorId,
 	parentPostId,
 	postId,
 	streamId,
@@ -35,13 +36,19 @@ class CodeErrorsIDEApiDemo implements CodeErrorsIDEApi {
 	private _userId: string | undefined;
 	private _applyFixCallback: (() => void) | undefined;
 	private _postReplyCallback: ((text: string) => void) | undefined;
+	private _repoId: string | undefined;
 
 	async startUnitTestStream() {
 		const nraiUserId = this._nraiUserId;
 		if (!nraiUserId) {
 			return;
 		}
-		const unitTestStream = getNraiUnitTestStream(streamId, unitTestPostId, parentPostId);
+		const unitTestStream = getNraiUnitTestStream(
+			streamId,
+			unitTestPostId,
+			parentPostId,
+			codeErrorId
+		);
 		HostApi.instance.emit(DidChangeDataNotificationType.method, {
 			type: "posts",
 			data: getAddPostsUnitTest(streamId, unitTestPostId, parentPostId, nraiUserId),
@@ -49,7 +56,7 @@ class CodeErrorsIDEApiDemo implements CodeErrorsIDEApi {
 		await wait(400);
 		for (const event of unitTestStream) {
 			HostApi.instance.emit(DidChangeDataNotificationType.method, event);
-			await wait(50);
+			await wait(100);
 		}
 		await wait(400);
 		HostApi.instance.emit(DidChangeDataNotificationType.method, {
@@ -63,7 +70,7 @@ class CodeErrorsIDEApiDemo implements CodeErrorsIDEApi {
 		if (!nraiUserId) {
 			return;
 		}
-		const demoGrokStream = getDemoNrAiStream(streamId, postId, parentPostId);
+		const demoGrokStream = getDemoNrAiStream(streamId, postId, parentPostId, codeErrorId);
 		HostApi.instance.emit(DidChangeDataNotificationType.method, {
 			type: "posts",
 			data: getAddPostsMain(streamId, postId, parentPostId, nraiUserId),
@@ -72,12 +79,12 @@ class CodeErrorsIDEApiDemo implements CodeErrorsIDEApi {
 		await wait(400);
 		for (const event of demoGrokStream) {
 			HostApi.instance.emit(DidChangeDataNotificationType.method, event);
-			await wait(50);
+			await wait(100);
 		}
 		await wait(400);
 		HostApi.instance.emit(DidChangeDataNotificationType.method, {
 			type: "posts",
-			data: getFinalAddPosts(streamId, postId, parentPostId, nraiUserId),
+			data: getFinalAddPosts(streamId, postId, parentPostId, nraiUserId, this._repoId!),
 		});
 	}
 
@@ -157,6 +164,10 @@ class CodeErrorsIDEApiDemo implements CodeErrorsIDEApi {
 
 	setPostReplyCallback(callback: (text: string) => void) {
 		this._postReplyCallback = callback;
+	}
+
+	setCurrentRepoId(repoId: string): void {
+		this._repoId = repoId;
 	}
 }
 

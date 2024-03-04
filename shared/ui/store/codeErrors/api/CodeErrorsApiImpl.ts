@@ -89,11 +89,15 @@ class CodeErrorsApiImpl implements CodeErrorsApi {
 		return result;
 	}
 
-	async executeThirdPartyTyped<T, R>(method: string, params: any): Promise<any> {
+	async executeThirdPartyTyped<T, R>(
+		method: string,
+		providerId: string,
+		params: any
+	): Promise<any> {
 		return await HostApi.instance.send(new ExecuteThirdPartyTypedType<T, R>(), {
 			method: method,
-			providerId: "newrelic*com",
-			params: params,
+			providerId,
+			params,
 		});
 	}
 

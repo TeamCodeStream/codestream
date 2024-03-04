@@ -21,4 +21,6 @@ export interface CodeErrorsIDEApi {
 	setApplyFixCallback(callback: () => void);
 
 	setPostReplyCallback(callback: (text: string) => void);
+
+	setCurrentRepoId(repoId: string): void;
 }

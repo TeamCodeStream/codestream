@@ -1,5 +1,4 @@
 import {
-	GetNewRelicErrorGroupRequestType,
 	GetNewRelicErrorGroupResponse,
 	MatchReposRequestType,
 	MatchReposResponse,
@@ -25,7 +24,6 @@ import {
 	openErrorGroup,
 	resolveStackTrace,
 	setErrorGroup,
-	updateCodeError,
 } from "@codestream/webview/store/codeErrors/thunks";
 import { closeAllPanels, setCurrentCodeError } from "@codestream/webview/store/context/actions";
 import {
@@ -60,6 +58,7 @@ import { ClearModal, ComposeArea, Step, Subtext, Tip } from "./ReviewNav";
 import ScrollBox from "./ScrollBox";
 import { WarningBox } from "./WarningBox";
 import { isEmpty as _isEmpty } from "lodash";
+import { codeErrorsApi } from "@codestream/webview/store/codeErrors/api/apiResolver";
 
 const NavHeader = styled.div`
 	// flex-grow: 0;
@@ -164,6 +163,7 @@ export function CodeErrorNav(props: Props) {
 
 		const result = {
 			demoMode: state.preferences.demoMode,
+			errorsDemoMode: state.codeErrors.demoMode,
 			codeErrorStateBootstrapped: state.codeErrors.bootstrapped,
 			currentCodeErrorId: state.context.currentCodeErrorId,
 			currentCodeErrorData: state.context.currentCodeErrorData,
@@ -377,7 +377,7 @@ export function CodeErrorNav(props: Props) {
 		try {
 			let errorGroupResult: GetNewRelicErrorGroupResponse | undefined = undefined;
 			if (isConnected || derivedState.isConnectedToNewRelic) {
-				errorGroupResult = await HostApi.instance.send(GetNewRelicErrorGroupRequestType, {
+				errorGroupResult = await codeErrorsApi.getNewRelicErrorGroup({
 					errorGroupGuid: errorGroupGuidToUse,
 					occurrenceId: occurrenceIdToUse,
 					entityGuid: entityIdToUse,
@@ -565,7 +565,7 @@ export function CodeErrorNav(props: Props) {
 					derivedState.currentCodeErrorId &&
 					derivedState.currentCodeErrorId?.indexOf(PENDING_CODE_ERROR_ID_PREFIX) === 0
 				) {
-					await dispatch(
+					dispatch(
 						addCodeErrors([
 							{
 								accountId: errorGroupResult.accountId,
@@ -599,26 +599,6 @@ export function CodeErrorNav(props: Props) {
 								},
 							},
 						])
-					);
-				} else if (derivedState.codeError && !derivedState.codeError.objectInfo) {
-					// codeError has an currentCodeErrorId, but isn't pending... it also doesn't have an objectInfo,
-					// so update it with one
-					await dispatch(
-						updateCodeError({
-							...derivedState.codeError,
-							// accountId: errorGroupResult.accountId,
-							// title: errorGroupResult.errorGroup?.title || "",
-							// text: errorGroupResult.errorGroup?.message || undefined,
-							// storing the permanently parsed stack info
-							stackTraces: actualStackInfo,
-							// objectInfo: {
-							// 	repoId: repoId,
-							// 	remote: targetRemote,
-							// 	accountId: errorGroupResult.accountId.toString(),
-							// 	entityId: errorGroupResult?.errorGroup?.entityGuid || "",
-							// 	entityName: errorGroupResult?.errorGroup?.entityName || "",
-							// },
-						})
 					);
 				}
 			}
@@ -677,7 +657,7 @@ export function CodeErrorNav(props: Props) {
 	};
 
 	const tryBuildWarningsOrErrors = () => {
-		if (derivedState.demoMode) return null;
+		if (derivedState.demoMode || derivedState.errorsDemoMode.enabled) return null;
 
 		const items: WarningOrError[] = [];
 		if (repoError) {

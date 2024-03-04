@@ -8,7 +8,8 @@ export type GrokStreamActionType = {
 export function getDemoNrAiStream(
 	streamId: string,
 	postId: string,
-	parentPostId: string
+	parentPostId: string,
+	codeErrorId: string
 ): GrokStreamActionType[] {
 	return [
 		{
@@ -22,7 +23,7 @@ export function getDemoNrAiStream(
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -40,7 +41,7 @@ export function getDemoNrAiStream(
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -53,13 +54,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 2,
 					content: {
-						content:
-							"RO**\n\nThe error message `TypeError: Cannot read properties of undefined (reading 'get')` suggests that the `map` object",
+						content: "RO**\n\nThe stack trace indicates",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -72,12 +72,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 3,
 					content: {
-						content: " is `undefined` at the time",
+						content: " a `NullPointerException` at line",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -90,12 +90,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 4,
 					content: {
-						content: " when the",
+						content: " 240 of `",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -108,12 +108,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 5,
 					content: {
-						content: " `get` method is being",
+						content: "UserDataManager.java`. The error message suggests",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -126,48 +126,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 6,
 					content: {
-						content: " called. This is happening because",
+						content: " that the method `getPhone",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
-						postId: postId,
-						streamId: streamId,
-					},
-				},
-			],
-		},
-		{
-			type: ChangeDataType.GrokStream,
-			data: [
-				{
-					sequence: 9,
-					content: {
-						content: " iteration",
-						role: "assistant",
-					},
-					extra: {
-						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
-						postId: postId,
-						streamId: streamId,
-					},
-				},
-			],
-		},
-		{
-			type: ChangeDataType.GrokStream,
-			data: [
-				{
-					sequence: 7,
-					content: {
-						content: " the `reduce` function is not returning the `",
-						role: "assistant",
-					},
-					extra: {
-						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -180,12 +144,30 @@ export function getDemoNrAiStream(
 				{
 					sequence: 8,
 					content: {
-						content: "map` object at the end of each",
+						content: "User` class is",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
+						postId: postId,
+						streamId: streamId,
+					},
+				},
+			],
+		},
+		{
+			type: ChangeDataType.GrokStream,
+			data: [
+				{
+					sequence: 9,
+					content: {
+						content: " returning `null`, and the program is",
+						role: "assistant",
+					},
+					extra: {
+						topmostPostId: parentPostId,
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -198,12 +180,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 10,
 					content: {
-						content: ".\n\n**",
+						content: " trying to invoke `getCountryCode()` on this",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -216,12 +198,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 11,
 					content: {
-						content: "CODE_FIX**\n\nHere is the",
+						content: " `null` value.\n\n**CODE_FIX",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -234,12 +216,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 12,
 					content: {
-						content: " corrected code:\n\n```javascript\nfunction count",
+						content: "**\n\n```java\n@Trace",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -250,14 +232,14 @@ export function getDemoNrAiStream(
 			type: ChangeDataType.GrokStream,
 			data: [
 				{
-					sequence: 13,
+					sequence: 7,
 					content: {
-						content: "UsersByState() {\n ",
+						content: "()` of the `",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -270,12 +252,30 @@ export function getDemoNrAiStream(
 				{
 					sequence: 14,
 					content: {
-						content: " return userData.reduce((map,",
+						content: " List<UserView> getUserView",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
+						postId: postId,
+						streamId: streamId,
+					},
+				},
+			],
+		},
+		{
+			type: ChangeDataType.GrokStream,
+			data: [
+				{
+					sequence: 13,
+					content: {
+						content: "\npublic",
+						role: "assistant",
+					},
+					extra: {
+						topmostPostId: parentPostId,
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -288,12 +288,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 15,
 					content: {
-						content: " user) => {\n    const",
+						content: "ByState(String state",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -306,12 +306,13 @@ export function getDemoNrAiStream(
 				{
 					sequence: 16,
 					content: {
-						content: " count =",
+						content:
+							") {\n    List<UserView> userViewList = new ArrayList<>();\n    for (User user :",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -324,12 +325,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 17,
 					content: {
-						content: " map.get",
+						content: " userData.userDb.values",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -342,12 +343,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 18,
 					content: {
-						content: "(user.address.state) ?? 0;\n",
+						content: "()) {\n",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -360,12 +361,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 19,
 					content: {
-						content: "    map.set(user.address.state, count + ",
+						content: "        if (user.getAddress",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -378,13 +379,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 20,
 					content: {
-						content:
-							"1);\n    return map;\n  }, new Map());\n}\n```\n\n**DESCRIPTION**\n\nThe `reduce` function",
+						content: "().getState().equals(state))",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -397,12 +397,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 21,
 					content: {
-						content: " in JavaScript",
+						content: " {\n            String phoneNumber = (user.getPhone() != null",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -415,12 +415,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 22,
 					content: {
-						content: " takes a callback function as its first",
+						content: ') ? "+" + user.getPhone().get',
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -433,12 +433,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 23,
 					content: {
-						content: " argument. This callback function is",
+						content: "CountryCode",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -451,12 +451,13 @@ export function getDemoNrAiStream(
 				{
 					sequence: 24,
 					content: {
-						content: " expected to return a value which",
+						content:
+							'() + " " + user.getPhone().getNumber() : "N/A";\n            userViewList.add(new UserView(user.getFirstName(),\n                    user.get',
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -469,12 +470,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 25,
 					content: {
-						content: " is then used as the first argument",
+						content: "LastName(),\n",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -487,12 +488,13 @@ export function getDemoNrAiStream(
 				{
 					sequence: 26,
 					content: {
-						content: " (`map",
+						content:
+							"                    phoneNumber,\n                    user.getAddress().getState()));\n       ",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -505,12 +507,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 27,
 					content: {
-						content: "` in",
+						content: " }\n    }\n    return userViewList",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -523,12 +525,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 28,
 					content: {
-						content: " this case) in",
+						content: ";\n}\n```\n\n**DESCRIPTION",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -541,12 +543,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 29,
 					content: {
-						content: " the next iteration.",
+						content: "**\n\nThe",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -559,12 +561,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 30,
 					content: {
-						content: " In the original code, there",
+						content: " code fix involves adding a null check before",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -577,12 +579,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 31,
 					content: {
-						content: " was no return statement",
+						content: " invoking `getCountryCode()` and `",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -595,12 +597,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 32,
 					content: {
-						content: " in the callback function",
+						content: "getNumber()` on the `Phone` object returned by `",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -613,12 +615,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 33,
 					content: {
-						content: ", so `map` was `undefined",
+						content: "getPhone()`. If `",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -631,12 +633,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 34,
 					content: {
-						content: "` in",
+						content: "getPhone",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -649,12 +651,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 35,
 					content: {
-						content: " the next",
+						content: "()` returns",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -667,12 +669,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 36,
 					content: {
-						content: " iteration. This was",
+						content: ' `null`, the phone number is set to "N/A". This prevents',
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -685,12 +687,13 @@ export function getDemoNrAiStream(
 				{
 					sequence: 37,
 					content: {
-						content: " causing the error",
+						content:
+							" the `NullPointerException` from being thrown when `getPhone()` returns `null",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},
@@ -703,139 +706,12 @@ export function getDemoNrAiStream(
 				{
 					sequence: 38,
 					content: {
-						content: ". \n\nThe fix is to",
+						content: "`.",
 						role: "assistant",
 					},
 					extra: {
 						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
-						postId: postId,
-						streamId: streamId,
-					},
-				},
-			],
-		},
-		{
-			type: ChangeDataType.GrokStream,
-			data: [
-				{
-					sequence: 40,
-					content: {
-						content: " end of",
-						role: "assistant",
-					},
-					extra: {
-						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
-						postId: postId,
-						streamId: streamId,
-					},
-				},
-			],
-		},
-		{
-			type: ChangeDataType.GrokStream,
-			data: [
-				{
-					sequence: 41,
-					content: {
-						content: " the callback function to return the `map",
-						role: "assistant",
-					},
-					extra: {
-						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
-						postId: postId,
-						streamId: streamId,
-					},
-				},
-			],
-		},
-		{
-			type: ChangeDataType.GrokStream,
-			data: [
-				{
-					sequence: 42,
-					content: {
-						content: "` object",
-						role: "assistant",
-					},
-					extra: {
-						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
-						postId: postId,
-						streamId: streamId,
-					},
-				},
-			],
-		},
-		{
-			type: ChangeDataType.GrokStream,
-			data: [
-				{
-					sequence: 39,
-					content: {
-						content: " add a return statement at the",
-						role: "assistant",
-					},
-					extra: {
-						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
-						postId: postId,
-						streamId: streamId,
-					},
-				},
-			],
-		},
-		{
-			type: ChangeDataType.GrokStream,
-			data: [
-				{
-					sequence: 43,
-					content: {
-						content: ". This",
-						role: "assistant",
-					},
-					extra: {
-						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
-						postId: postId,
-						streamId: streamId,
-					},
-				},
-			],
-		},
-		{
-			type: ChangeDataType.GrokStream,
-			data: [
-				{
-					sequence: 44,
-					content: {
-						content: " ensures that `map` is correctly passed",
-						role: "assistant",
-					},
-					extra: {
-						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
-						postId: postId,
-						streamId: streamId,
-					},
-				},
-			],
-		},
-		{
-			type: ChangeDataType.GrokStream,
-			data: [
-				{
-					sequence: 45,
-					content: {
-						content:
-							" to the next iteration and is not `undefined` when the `get` method is called.",
-						role: "assistant",
-					},
-					extra: {
-						topmostPostId: parentPostId,
-						codeErrorId: "65d663cd4a77c135cf388b51",
+						codeErrorId: codeErrorId,
 						postId: postId,
 						streamId: streamId,
 					},

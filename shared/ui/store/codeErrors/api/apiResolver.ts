@@ -21,6 +21,8 @@ export function setApiDemoMode(demoMode: boolean) {
 export function setApiCurrentRepoId(repoId: string) {
 	codeErrorsApiDemo.setCurrentRepoId(repoId);
 	codeErrorsApiImpl.setCurrentRepoId(repoId);
+	codeErrorsIDEApiDemo.setCurrentRepoId(repoId);
+	codeErrorsIDEApiImpl.setCurrentRepoId(repoId);
 }
 
 export function setApiNrAiUserId(userId: string) {

@@ -6,7 +6,6 @@ import {
 	GetNewRelicErrorGroupRequest,
 	GetObservabilityErrorsRequest,
 	ResolveStackTraceRequest,
-	UpdateCodeErrorRequest,
 } from "@codestream/protocols/agent";
 import { CSCodeError, CSStackTraceLine } from "@codestream/protocols/api";
 import { clearResolvedFlag } from "@codestream/utils/api/codeErrorCleanup";
@@ -486,10 +485,7 @@ export const api =
 			// 	params.metadata = currentPullRequest.metadata;
 			// }
 
-			const response = await codeErrorsApi.executeThirdPartyTyped(method, {
-				providerId: "newrelic*com",
-				params: params,
-			});
+			const response = await codeErrorsApi.executeThirdPartyTyped(method, "newrelic*com", params);
 			// if (response && (!options || (options && !options.preventClearError))) {
 			// 	dispatch(clearProviderError(params.errorGroupGuid, pullRequestId));
 			// }
@@ -683,16 +679,6 @@ export const jumpToStackLine = createAppAsyncThunk(
 				highlight: true,
 				ref,
 			});
-		}
-	}
-);
-
-export const updateCodeError = createAppAsyncThunk(
-	"codeErrors/updateCodeError",
-	async (request: UpdateCodeErrorRequest, { dispatch }) => {
-		const response = await codeErrorsApi.updateCodeErrors(request);
-		if (response?.codeError) {
-			dispatch(updateCodeErrors([response.codeError]));
 		}
 	}
 );

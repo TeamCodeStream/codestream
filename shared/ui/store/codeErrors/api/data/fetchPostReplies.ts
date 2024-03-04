@@ -22,7 +22,7 @@ export function getFetchPostRepliesResponse(
 				modifiedAt: modifiedAt,
 				text: "",
 				streamId: streamId,
-				language: "javascript",
+				language: "java",
 				analyze: true,
 				teamId: "651ed16ac2f7dee11c938922",
 				creatorId: "652db11a7c271413e88b4ae3",

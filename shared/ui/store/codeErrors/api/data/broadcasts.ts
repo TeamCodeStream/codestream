@@ -1,11 +1,7 @@
-// Maybe skip?
 import {
 	codeErrorId,
 	createdAt,
 	modifiedAt,
-	parentPostId,
-	postId,
-	streamId,
 } from "@codestream/webview/store/codeErrors/api/data/createSharableCodeErrorResponse";
 
 export function getAddPostsUnitTest(
@@ -102,58 +98,6 @@ export function getAddPostsMain(
 	];
 }
 
-export function getAddPostsForStream(nraiUserId: string) {
-	return {
-		type: "ADD_POSTS_FOR_STREAM",
-		payload: {
-			posts: [
-				{
-					version: 2,
-					deactivated: false,
-					numReplies: 0,
-					reactions: {},
-					shareIdentifiers: [],
-					createdAt: createdAt,
-					modifiedAt: modifiedAt,
-					text: "",
-					streamId: streamId,
-					language: "javascript",
-					analyze: true,
-					teamId: "651ed16ac2f7dee11c938922",
-					origin: "JetBrains",
-					originDetail: "IntelliJ IDEA Ultimate Edition",
-					creatorId: "652db11a7c271413e88b4ae3",
-					id: parentPostId,
-					codeErrorId: codeErrorId,
-					seqNum: 1,
-					_id: parentPostId,
-				},
-				{
-					version: 2,
-					deactivated: false,
-					numReplies: 0,
-					reactions: {},
-					shareIdentifiers: [],
-					createdAt: createdAt,
-					modifiedAt: modifiedAt,
-					_id: postId,
-					forGrok: true,
-					streamId: streamId,
-					teamId: "651ed16ac2f7dee11c938922",
-					text: "",
-					parentPostId: parentPostId,
-					origin: "JetBrains",
-					originDetail: "IntelliJ IDEA Ultimate Edition",
-					creatorId: nraiUserId,
-					seqNum: 35,
-					id: postId,
-				},
-			],
-			streamId: streamId,
-		},
-	};
-}
-
 export function getFinalAddPostsUnitTest(
 	streamId: string,
 	postId: string,
@@ -172,7 +116,40 @@ export function getFinalAddPostsUnitTest(
 			forGrok: true,
 			streamId: streamId,
 			teamId: "65d79a3e2fb6892cd4e7c91a",
-			text: "**DESCRIPTION**\n\nHere is a simple unit test using Jest, a popular JavaScript testing framework. This test checks if the `countUsersByState` function correctly counts the number of users by state, even when some users do not have an `address` property.\n\n```javascript\nconst { countUsersByState } = require('./your-file-path'); // replace with your actual file path\n\ndescribe('countUsersByState', () => {\n  it('should correctly count users by state and handle users without address', () => {\n    const userData = [\n      { address: { state: 'CA' } },\n      { address: { state: 'NY' } },\n      { address: { state: 'CA' } },\n      {},\n      { address: { state: 'NY' } },\n      { address: { state: 'TX' } },\n      {},\n    ];\n\n    const result = countUsersByState(userData);\n\n    expect(result.get('CA')).toBe(2);\n    expect(result.get('NY')).toBe(2);\n    expect(result.get('TX')).toBe(1);\n    expect(result.size).toBe(3); // There should be 3 states in the map\n  });\n});\n```\n\nThis test creates a mock `userData` array with some users having an `address` property and some not. It then calls `countUsersByState` with this array and checks if the returned Map has the correct counts for each state. It also checks if the total number of states in the Map is correct.",
+			text:
+				"**DESCRIPTION**\n" +
+				"\n" +
+				"Here is a simple unit test for the `getUserViewByState` method. This test checks if the method correctly handles a `User` object with a `null` phone field.\n" +
+				"\n" +
+				"```java\n" +
+				"@Test\n" +
+				"public void testGetUserViewByState() {\n" +
+				"    // Create a mock User object with a null phone field\n" +
+				"    User mockUser = new User();\n" +
+				'    mockUser.setFirstName("John");\n' +
+				'    mockUser.setLastName("Doe");\n' +
+				"    Address mockAddress = new Address();\n" +
+				'    mockAddress.setState("NY");\n' +
+				"    mockUser.setAddress(mockAddress);\n" +
+				"    mockUser.setPhone(null);\n" +
+				"\n" +
+				"    // Add the mock User to the userDb\n" +
+				"    Map<String, User> userDb = new HashMap<>();\n" +
+				'    userDb.put("1", mockUser);\n' +
+				"    userData.setUserDb(userDb);\n" +
+				"\n" +
+				"    // Call the method to test\n" +
+				'    List<UserView> userViewList = userDataManager.getUserViewByState("NY");\n' +
+				"\n" +
+				"    // Check that the returned list has one element\n" +
+				"    assertEquals(1, userViewList.size());\n" +
+				"\n" +
+				'    // Check that the phone number of the returned UserView is "N/A"\n' +
+				'    assertEquals("N/A", userViewList.get(0).getPhoneNumber());\n' +
+				"}\n" +
+				"```\n" +
+				"\n" +
+				'This test assumes that the `User`, `Address`, and `UserDataManager` classes have appropriate getter and setter methods, and that the `UserView` class has a `getPhoneNumber()` method. The test creates a `User` object with a `null` phone field, adds it to the `userDb`, and then calls `getUserViewByState()`. It checks that the returned `UserView` list has one element and that the phone number of this element is "N/A".',
 			parentPostId: parentPostId,
 			origin: "JetBrains",
 			originDetail: "IntelliJ IDEA Ultimate Edition",
@@ -189,7 +166,8 @@ export function getFinalAddPosts(
 	streamId: string,
 	postId: string,
 	parentPostId: string,
-	nraiUserId: string
+	nraiUserId: string,
+	repoId: string
 ) {
 	return [
 		{
@@ -204,7 +182,33 @@ export function getFinalAddPosts(
 			forGrok: true,
 			streamId: streamId,
 			teamId: "65d79a3e2fb6892cd4e7c91a",
-			text: "**INTRO**\n\nThe error message `TypeError: Cannot read properties of undefined (reading 'get')` suggests that the `map` object is `undefined` at the time when the `get` method is being called. This is happening because the `reduce` function is not returning the `map` object at the end of each iteration.\n\n**CODE_FIX**\n\n```javascript\nfunction countUsersByState() {\n  return userData.reduce((map, user) => {\n    const count = map.get(user.address.state) ?? 0;\n    map.set(user.address.state, count + 1);\n    return map;\n  }, new Map());\n}\n```\n\n**DESCRIPTION**\n\nThe `reduce` function in JavaScript takes a callback function as its first argument. This callback function is expected to return a value which is then used as the first argument (`map` in this case) in the next iteration. In the original code, the callback function was not returning anything, which means `undefined` was being passed as `map` in the next iteration. This was causing the error because `undefined` does not have a `get` method. The fix is to return the `map` object at the end of each iteration.",
+			text:
+				"**INTRO**\n" +
+				"\n" +
+				"The stack trace indicates a `NullPointerException` at line 240 of `UserDataManager.java`. The error message suggests that the method `getPhone()` of the `User` class is returning `null`, and the program is trying to invoke `getCountryCode()` on this `null` value.\n" +
+				"\n" +
+				"**CODE_FIX**\n" +
+				"\n" +
+				"```java\n" +
+				"@Trace\n" +
+				"public List<UserView> getUserViewByState(String state) {\n" +
+				"    List<UserView> userViewList = new ArrayList<>();\n" +
+				"    for (User user : userData.userDb.values()) {\n" +
+				"        if (user.getAddress().getState().equals(state)) {\n" +
+				'            String phoneNumber = (user.getPhone() != null) ? "+" + user.getPhone().getCountryCode() + " " + user.getPhone().getNumber() : "N/A";\n' +
+				"            userViewList.add(new UserView(user.getFirstName(),\n" +
+				"                    user.getLastName(),\n" +
+				"                    phoneNumber,\n" +
+				"                    user.getAddress().getState()));\n" +
+				"        }\n" +
+				"    }\n" +
+				"    return userViewList;\n" +
+				"}\n" +
+				"```\n" +
+				"\n" +
+				"**DESCRIPTION**\n" +
+				"\n" +
+				'The code fix involves adding a null check before invoking `getCountryCode()` and `getNumber()` on the `Phone` object returned by `getPhone()`. If `getPhone()` returns `null`, the phone number is set to "N/A". This prevents the `NullPointerException` from being thrown when `getPhone()` returns `null`.',
 			parentPostId: parentPostId,
 			origin: "JetBrains",
 			originDetail: "IntelliJ IDEA Ultimate Edition",
@@ -224,7 +228,7 @@ export function getFinalAddPosts(
 			_id: parentPostId,
 			text: "",
 			streamId: streamId,
-			language: "javascript",
+			language: "java",
 			analyze: true,
 			teamId: "65d79a3e2fb6892cd4e7c91a",
 			origin: "JetBrains",
@@ -239,130 +243,387 @@ export function getFinalAddPosts(
 				version: 2,
 				deactivated: false,
 				numReplies: 1,
-				createdAt: 1709152171994,
-				modifiedAt: 1709152172304,
-				_id: "65df97ab0bb2c59166b8e271",
+				createdAt: createdAt,
+				modifiedAt: modifiedAt,
 				accountId: 11879688,
 				objectId: "MTE4Nzk2ODh8RVJUfEVSUl9HUk9VUHxhOTE1MGJkMC05Mzg4LTM4ZWItOTRmMi0wYzA5MTQwYjlmMWE",
 				objectType: "errorGroup",
-				title: "TypeError",
-				text: "Cannot read properties of undefined (reading 'get')",
+				title: "java.lang.NullPointerException",
+				text: 'Cannot invoke "acme.storefront.action.report.UserDataManager$Phone.getCountryCode()" because the return value of "acme.storefront.action.report.UserDataManager$User.getPhone()" is null',
 				stackTraces: [
 					{
-						text: "TypeError: Cannot read properties of undefined (reading 'get')\n    at /app/src/data/usersRepository.js:51:23\n    at Array.reduce (<anonymous>)\n    at countUsersByState (/app/src/data/usersRepository.js:50:19)\n    at userStateReport (/app/src/data/usersRepository.js:57:10)\n    at fetchUserStateReport (/app/src/controllers/usersController.js:11:16)\n    at runInContextCb (/app/node_modules/newrelic/lib/shim/shim.js:1324:22)\n    at AsyncLocalStorage.run (node:async_hooks:346:14)\n    at AsyncLocalContextManager.runInContext (/app/node_modules/newrelic/lib/context-manager/async-local-context-manager.js:65:36)\n    at WebFrameworkShim.applySegment (/app/node_modules/newrelic/lib/shim/shim.js:1314:25)\n    at _applyRecorderSegment (/app/node_modules/newrelic/lib/shim/shim.js:956:20)",
+						text: "\tacme.storefront.action.report.UserDataManager.getUserViewByState(UserDataManager.java:240)\n\tacme.storefront.MyMain.runApp(MyMain.java:38)\n\tacme.storefront.MyMain.lambda$main$0(MyMain.java:16)\n\tjava.base/java.lang.Thread.run(Thread.java:840)",
 						lines: [
 							{
+								method: "getUserViewByState",
+								namespace: "acme.storefront.action.report.UserDataManager",
+								fullMethod: "acme.storefront.action.report.UserDataManager.getUserViewByState",
 								fileFullPath:
-									"/Users/dsellars/workspace/clm2/clm-demo-js-node/app/src/data/usersRepository.js",
-								method: "<unknown>",
-								fullMethod: "<unknown>",
-								arguments: [],
-								line: 51,
-								column: 23,
-								fileRelativePath: "app/src/data/usersRepository.js",
-								resolved: true,
+									"/Users/dsellars/workspace/telco-microservices/WebPortal/Java/src/main/java/acme/storefront/action/report/UserDataManager.java",
+								line: 240,
+								fileRelativePath:
+									"WebPortal/Java/src/main/java/acme/storefront/action/report/UserDataManager.java",
+								warning: "Missing sha",
 							},
 							{
-								fileFullPath: "<anonymous>",
-								method: "reduce",
-								namespace: "Array",
-								fullMethod: "Array.reduce",
-								arguments: [],
-								error: "Unable to find matching file for path <anonymous>",
+								method: "invoke",
+								namespace: "sun.reflect.GeneratedMethodAccessor156",
+								fullMethod: "sun.reflect.GeneratedMethodAccessor156.invoke",
+								error: "Unable to find matching file for path undefined",
 							},
 							{
-								fileFullPath:
-									"/Users/dsellars/workspace/clm2/clm-demo-js-node/app/src/data/usersRepository.js",
-								method: "countUsersByState",
-								fullMethod: "countUsersByState",
-								arguments: [],
-								line: 50,
-								column: 19,
-								fileRelativePath: "app/src/data/usersRepository.js",
-								resolved: true,
-							},
-							{
-								fileFullPath:
-									"/Users/dsellars/workspace/clm2/clm-demo-js-node/app/src/data/usersRepository.js",
-								method: "userStateReport",
-								fullMethod: "userStateReport",
-								arguments: [],
-								line: 57,
-								column: 10,
-								fileRelativePath: "app/src/data/usersRepository.js",
-								resolved: true,
-							},
-							{
-								fileFullPath:
-									"/Users/dsellars/workspace/clm2/clm-demo-js-node/app/src/controllers/usersController.js",
-								method: "fetchUserStateReport",
-								fullMethod: "fetchUserStateReport",
-								arguments: [],
-								line: 11,
-								column: 16,
-								fileRelativePath: "app/src/controllers/usersController.js",
-								resolved: true,
-							},
-							{
-								fileFullPath: "/app/node_modules/newrelic/lib/shim/shim.js",
-								method: "runInContextCb",
-								fullMethod: "runInContextCb",
-								arguments: [],
-								line: 1324,
-								column: 22,
+								method: "invoke",
+								namespace: "sun.reflect.DelegatingMethodAccessorImpl",
+								fullMethod: "sun.reflect.DelegatingMethodAccessorImpl.invoke",
+								fileFullPath: "sun/reflect/DelegatingMethodAccessorImpl.java",
+								line: 43,
 								error:
-									"Unable to find matching file for path /app/node_modules/newrelic/lib/shim/shim.js",
+									"Unable to find matching file for path sun/reflect/DelegatingMethodAccessorImpl.java",
 							},
 							{
-								fileFullPath: "node:async_hooks",
+								method: "invoke",
+								namespace: "java.lang.reflect.Method",
+								fullMethod: "java.lang.reflect.Method.invoke",
+								fileFullPath: "java/lang/reflect/Method.java",
+								line: 498,
+								error: "Unable to find matching file for path java/lang/reflect/Method.java",
+							},
+							{
+								method: "invokeActionMethod",
+								namespace: "jodd.madvoc.ActionRequest",
+								fullMethod: "jodd.madvoc.ActionRequest.invokeActionMethod",
+								fileFullPath: "jodd/madvoc/ActionRequest.java",
+								line: 355,
+								error: "Unable to find matching file for path jodd/madvoc/ActionRequest.java",
+							},
+							{
+								method: "invoke",
+								namespace: "jodd.madvoc.ActionRequest$2",
+								fullMethod: "jodd.madvoc.ActionRequest$2.invoke",
+								fileFullPath: "jodd/madvoc/ActionRequest.java",
+								line: 241,
+								error: "Unable to find matching file for path jodd/madvoc/ActionRequest.java",
+							},
+							{
+								method: "invoke",
+								namespace: "jodd.madvoc.ActionRequest",
+								fullMethod: "jodd.madvoc.ActionRequest.invoke",
+								fileFullPath: "jodd/madvoc/ActionRequest.java",
+								line: 345,
+								error: "Unable to find matching file for path jodd/madvoc/ActionRequest.java",
+							},
+							{
+								method: "invokeRequest",
+								namespace: "acme.storefront.InsightsInterceptor",
+								fullMethod: "acme.storefront.InsightsInterceptor.invokeRequest",
+								fileFullPath:
+									"/Users/dsellars/workspace/telco-microservices/WebPortal/Java/src/main/java/acme/storefront/InsightsInterceptor.java",
+								line: 43,
+								fileRelativePath:
+									"WebPortal/Java/src/main/java/acme/storefront/InsightsInterceptor.java",
+							},
+							{
+								method: "intercept",
+								namespace: "acme.storefront.InsightsInterceptor",
+								fullMethod: "acme.storefront.InsightsInterceptor.intercept",
+								fileFullPath:
+									"/Users/dsellars/workspace/telco-microservices/WebPortal/Java/src/main/java/acme/storefront/InsightsInterceptor.java",
+								line: 39,
+								fileRelativePath:
+									"WebPortal/Java/src/main/java/acme/storefront/InsightsInterceptor.java",
+							},
+							{
+								method: "invoke",
+								namespace: "jodd.madvoc.interceptor.BaseActionInterceptor",
+								fullMethod: "jodd.madvoc.interceptor.BaseActionInterceptor.invoke",
+								fileFullPath: "jodd/madvoc/interceptor/BaseActionInterceptor.java",
+								line: 38,
+								error:
+									"Unable to find matching file for path jodd/madvoc/interceptor/BaseActionInterceptor.java",
+							},
+							{
+								method: "invoke",
+								namespace: "jodd.madvoc.ActionRequest",
+								fullMethod: "jodd.madvoc.ActionRequest.invoke",
+								fileFullPath: "jodd/madvoc/ActionRequest.java",
+								line: 345,
+								error: "Unable to find matching file for path jodd/madvoc/ActionRequest.java",
+							},
+							{
+								method: "invokeRequest",
+								namespace: "acme.storefront.NewRelicInterceptor",
+								fullMethod: "acme.storefront.NewRelicInterceptor.invokeRequest",
+								fileFullPath:
+									"/Users/dsellars/workspace/telco-microservices/WebPortal/Java/src/main/java/acme/storefront/NewRelicInterceptor.java",
+								line: 43,
+								fileRelativePath:
+									"WebPortal/Java/src/main/java/acme/storefront/NewRelicInterceptor.java",
+							},
+							{
+								method: "intercept",
+								namespace: "acme.storefront.NewRelicInterceptor",
+								fullMethod: "acme.storefront.NewRelicInterceptor.intercept",
+								fileFullPath:
+									"/Users/dsellars/workspace/telco-microservices/WebPortal/Java/src/main/java/acme/storefront/NewRelicInterceptor.java",
+								line: 26,
+								fileRelativePath:
+									"WebPortal/Java/src/main/java/acme/storefront/NewRelicInterceptor.java",
+							},
+							{
+								method: "invoke",
+								namespace: "jodd.madvoc.interceptor.BaseActionInterceptor",
+								fullMethod: "jodd.madvoc.interceptor.BaseActionInterceptor.invoke",
+								fileFullPath: "jodd/madvoc/interceptor/BaseActionInterceptor.java",
+								line: 38,
+								error:
+									"Unable to find matching file for path jodd/madvoc/interceptor/BaseActionInterceptor.java",
+							},
+							{
+								method: "invoke",
+								namespace: "jodd.madvoc.ActionRequest",
+								fullMethod: "jodd.madvoc.ActionRequest.invoke",
+								fileFullPath: "jodd/madvoc/ActionRequest.java",
+								line: 345,
+								error: "Unable to find matching file for path jodd/madvoc/ActionRequest.java",
+							},
+							{
+								method: "intercept",
+								namespace: "jodd.madvoc.interceptor.ServletConfigInterceptor",
+								fullMethod: "jodd.madvoc.interceptor.ServletConfigInterceptor.intercept",
+								fileFullPath: "jodd/madvoc/interceptor/ServletConfigInterceptor.java",
+								line: 71,
+								error:
+									"Unable to find matching file for path jodd/madvoc/interceptor/ServletConfigInterceptor.java",
+							},
+							{
+								method: "invoke",
+								namespace: "jodd.madvoc.interceptor.BaseActionInterceptor",
+								fullMethod: "jodd.madvoc.interceptor.BaseActionInterceptor.invoke",
+								fileFullPath: "jodd/madvoc/interceptor/BaseActionInterceptor.java",
+								line: 38,
+								error:
+									"Unable to find matching file for path jodd/madvoc/interceptor/BaseActionInterceptor.java",
+							},
+							{
+								method: "invoke",
+								namespace: "jodd.madvoc.ActionRequest",
+								fullMethod: "jodd.madvoc.ActionRequest.invoke",
+								fileFullPath: "jodd/madvoc/ActionRequest.java",
+								line: 345,
+								error: "Unable to find matching file for path jodd/madvoc/ActionRequest.java",
+							},
+							{
+								method: "invoke",
+								namespace: "jodd.madvoc.ActionRequest$1",
+								fullMethod: "jodd.madvoc.ActionRequest$1.invoke",
+								fileFullPath: "jodd/madvoc/ActionRequest.java",
+								line: 222,
+								error: "Unable to find matching file for path jodd/madvoc/ActionRequest.java",
+							},
+							{
+								method: "invoke",
+								namespace: "jodd.madvoc.ActionRequest",
+								fullMethod: "jodd.madvoc.ActionRequest.invoke",
+								fileFullPath: "jodd/madvoc/ActionRequest.java",
+								line: 345,
+								error: "Unable to find matching file for path jodd/madvoc/ActionRequest.java",
+							},
+							{
+								method: "invoke",
+								namespace: "jodd.madvoc.component.MadvocController",
+								fullMethod: "jodd.madvoc.component.MadvocController.invoke",
+								fileFullPath: "jodd/madvoc/component/MadvocController.java",
+								line: 164,
+								error:
+									"Unable to find matching file for path jodd/madvoc/component/MadvocController.java",
+							},
+							{
+								method: "doFilter",
+								namespace: "jodd.madvoc.MadvocServletFilter",
+								fullMethod: "jodd.madvoc.MadvocServletFilter.doFilter",
+								fileFullPath: "jodd/madvoc/MadvocServletFilter.java",
+								line: 111,
+								error: "Unable to find matching file for path jodd/madvoc/MadvocServletFilter.java",
+							},
+							{
+								method: "internalDoFilter",
+								namespace: "org.apache.catalina.core.ApplicationFilterChain",
+								fullMethod: "org.apache.catalina.core.ApplicationFilterChain.internalDoFilter",
+								fileFullPath: "org/apache/catalina/core/ApplicationFilterChain.java",
+								line: 192,
+								error:
+									"Unable to find matching file for path org/apache/catalina/core/ApplicationFilterChain.java",
+							},
+							{
+								method: "doFilter",
+								namespace: "org.apache.catalina.core.ApplicationFilterChain",
+								fullMethod: "org.apache.catalina.core.ApplicationFilterChain.doFilter",
+								fileFullPath: "org/apache/catalina/core/ApplicationFilterChain.java",
+								line: 165,
+								error:
+									"Unable to find matching file for path org/apache/catalina/core/ApplicationFilterChain.java",
+							},
+							{
+								method: "invoke",
+								namespace: "org.apache.catalina.core.StandardWrapperValve",
+								fullMethod: "org.apache.catalina.core.StandardWrapperValve.invoke",
+								fileFullPath: "org/apache/catalina/core/StandardWrapperValve.java",
+								line: 198,
+								error:
+									"Unable to find matching file for path org/apache/catalina/core/StandardWrapperValve.java",
+							},
+							{
+								method: "invoke",
+								namespace: "org.apache.catalina.core.StandardContextValve",
+								fullMethod: "org.apache.catalina.core.StandardContextValve.invoke",
+								fileFullPath: "org/apache/catalina/core/StandardContextValve.java",
+								line: 108,
+								error:
+									"Unable to find matching file for path org/apache/catalina/core/StandardContextValve.java",
+							},
+							{
+								method: "invoke",
+								namespace: "org.apache.catalina.authenticator.AuthenticatorBase",
+								fullMethod: "org.apache.catalina.authenticator.AuthenticatorBase.invoke",
+								fileFullPath: "org/apache/catalina/authenticator/AuthenticatorBase.java",
+								line: 472,
+								error:
+									"Unable to find matching file for path org/apache/catalina/authenticator/AuthenticatorBase.java",
+							},
+							{
+								method: "invoke",
+								namespace: "org.apache.catalina.core.StandardHostValve",
+								fullMethod: "org.apache.catalina.core.StandardHostValve.invoke",
+								fileFullPath: "org/apache/catalina/core/StandardHostValve.java",
+								line: 140,
+								error:
+									"Unable to find matching file for path org/apache/catalina/core/StandardHostValve.java",
+							},
+							{
+								method: "invoke",
+								namespace: "org.apache.catalina.valves.ErrorReportValve",
+								fullMethod: "org.apache.catalina.valves.ErrorReportValve.invoke",
+								fileFullPath: "org/apache/catalina/valves/ErrorReportValve.java",
+								line: 79,
+								error:
+									"Unable to find matching file for path org/apache/catalina/valves/ErrorReportValve.java",
+							},
+							{
+								method: "invoke",
+								namespace: "org.apache.catalina.valves.AbstractAccessLogValve",
+								fullMethod: "org.apache.catalina.valves.AbstractAccessLogValve.invoke",
+								fileFullPath: "org/apache/catalina/valves/AbstractAccessLogValve.java",
+								line: 620,
+								error:
+									"Unable to find matching file for path org/apache/catalina/valves/AbstractAccessLogValve.java",
+							},
+							{
+								method: "invoke",
+								namespace: "org.apache.catalina.core.StandardEngineValve",
+								fullMethod: "org.apache.catalina.core.StandardEngineValve.invoke",
+								fileFullPath: "org/apache/catalina/core/StandardEngineValve.java",
+								line: 87,
+								error:
+									"Unable to find matching file for path org/apache/catalina/core/StandardEngineValve.java",
+							},
+							{
+								method: "service",
+								namespace: "org.apache.catalina.connector.CoyoteAdapter",
+								fullMethod: "org.apache.catalina.connector.CoyoteAdapter.service",
+								fileFullPath: "org/apache/catalina/connector/CoyoteAdapter.java",
+								line: 349,
+								error:
+									"Unable to find matching file for path org/apache/catalina/connector/CoyoteAdapter.java",
+							},
+							{
+								method: "service",
+								namespace: "org.apache.coyote.http11.Http11Processor",
+								fullMethod: "org.apache.coyote.http11.Http11Processor.service",
+								fileFullPath: "org/apache/coyote/http11/Http11Processor.java",
+								line: 784,
+								error:
+									"Unable to find matching file for path org/apache/coyote/http11/Http11Processor.java",
+							},
+							{
+								method: "process",
+								namespace: "org.apache.coyote.AbstractProcessorLight",
+								fullMethod: "org.apache.coyote.AbstractProcessorLight.process",
+								fileFullPath: "org/apache/coyote/AbstractProcessorLight.java",
+								line: 66,
+								error:
+									"Unable to find matching file for path org/apache/coyote/AbstractProcessorLight.java",
+							},
+							{
+								method: "process",
+								namespace: "org.apache.coyote.AbstractProtocol$ConnectionHandler",
+								fullMethod: "org.apache.coyote.AbstractProtocol$ConnectionHandler.process",
+								fileFullPath: "org/apache/coyote/AbstractProtocol.java",
+								line: 802,
+								error:
+									"Unable to find matching file for path org/apache/coyote/AbstractProtocol.java",
+							},
+							{
+								method: "doRun",
+								namespace: "org.apache.tomcat.util.net.NioEndpoint$SocketProcessor",
+								fullMethod: "org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun",
+								fileFullPath: "org/apache/tomcat/util/net/NioEndpoint.java",
+								line: 1410,
+								error:
+									"Unable to find matching file for path org/apache/tomcat/util/net/NioEndpoint.java",
+							},
+							{
 								method: "run",
-								namespace: "AsyncLocalStorage",
-								fullMethod: "AsyncLocalStorage.run",
-								arguments: [],
-								line: 346,
-								column: 14,
-								error: "Unable to find matching file for path node:async_hooks",
-							},
-							{
-								fileFullPath:
-									"/app/node_modules/newrelic/lib/context-manager/async-local-context-manager.js",
-								method: "runInContext",
-								namespace: "AsyncLocalContextManager",
-								fullMethod: "AsyncLocalContextManager.runInContext",
-								arguments: [],
-								line: 65,
-								column: 36,
+								namespace: "org.apache.tomcat.util.net.SocketProcessorBase",
+								fullMethod: "org.apache.tomcat.util.net.SocketProcessorBase.run",
+								fileFullPath: "org/apache/tomcat/util/net/SocketProcessorBase.java",
+								line: 49,
 								error:
-									"Unable to find matching file for path /app/node_modules/newrelic/lib/context-manager/async-local-context-manager.js",
+									"Unable to find matching file for path org/apache/tomcat/util/net/SocketProcessorBase.java",
 							},
 							{
-								fileFullPath: "/app/node_modules/newrelic/lib/shim/shim.js",
-								method: "applySegment",
-								namespace: "WebFrameworkShim",
-								fullMethod: "WebFrameworkShim.applySegment",
-								arguments: [],
-								line: 1314,
-								column: 25,
+								method: "runWorker",
+								namespace: "java.util.concurrent.ThreadPoolExecutor",
+								fullMethod: "java.util.concurrent.ThreadPoolExecutor.runWorker",
+								fileFullPath: "java/util/concurrent/ThreadPoolExecutor.java",
+								line: 1149,
+								error:
+									"Unable to find matching file for path java/util/concurrent/ThreadPoolExecutor.java",
 							},
 							{
-								fileFullPath: "/app/node_modules/newrelic/lib/shim/shim.js",
-								method: "_applyRecorderSegment",
-								fullMethod: "_applyRecorderSegment",
-								arguments: [],
-								line: 956,
-								column: 20,
+								method: "run",
+								namespace: "java.util.concurrent.ThreadPoolExecutor$Worker",
+								fullMethod: "java.util.concurrent.ThreadPoolExecutor$Worker.run",
+								fileFullPath: "java/util/concurrent/ThreadPoolExecutor.java",
+								line: 624,
+								error:
+									"Unable to find matching file for path java/util/concurrent/ThreadPoolExecutor.java",
+							},
+							{
+								method: "run",
+								namespace: "org.apache.tomcat.util.threads.TaskThread$WrappingRunnable",
+								fullMethod: "org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run",
+								fileFullPath: "org/apache/tomcat/util/threads/TaskThread.java",
+								line: 61,
+								error:
+									"Unable to find matching file for path org/apache/tomcat/util/threads/TaskThread.java",
+							},
+							{
+								method: "run",
+								namespace: "java.lang.Thread",
+								fullMethod: "java.lang.Thread.run",
+								fileFullPath: "java/lang/Thread.java",
+								line: 750,
+								error: "Unable to find matching file for path java/lang/Thread.java",
 							},
 						],
-						language: "javascript",
-						header: "TypeError: Cannot read properties of undefined (reading 'get')",
-						error: "Cannot read properties of undefined (reading 'get')",
-						repoId: "65d79aac60036406129c5be9",
-						sha: "release-4",
-						occurrenceId: "e4ccf01c-d677-11ee-894b-068eae1a6a25_5338_7111",
+						language: "java",
+						repoId: repoId,
+						// sha: "release-22",
+						occurrenceId: "9bef4b5d-d0fb-11ee-91b3-faf14c8b1a88_38244_40016",
 					},
 				],
 				objectInfo: {
-					repoId: "65d79aac60036406129c5be9",
+					repoId: repoId,
 					remote: "https://source.datanerd.us/codestream/clm-demo-js-node",
 					accountId: "11879688",
 					entityId: "MTE4Nzk2ODh8QVBNfEFQUExJQ0FUSU9OfDQxNzQ5NjQy",
@@ -370,16 +631,14 @@ export function getFinalAddPosts(
 					hasRelatedRepos: true,
 				},
 				postId: parentPostId,
-				teamId: "65d79a3e2fb6892cd4e7c91a",
+				teamId: "651ed16ac2f7dee11c938922",
 				streamId: streamId,
-				origin: "JetBrains",
-				originDetail: "IntelliJ IDEA Ultimate Edition",
-				creatorId: "65d79a3e2fb6892cd4e7c918",
-				followerIds: ["65d79a3e2fb6892cd4e7c918"],
-				permalink: "https://localhost.newrelic.com:12079/e/ZdeaPi-2iSzU58ka/pLwfblvfSFKqkqhG4LYySA",
-				lastActivityAt: 1709152172304,
-				lastReplyAt: 1709152172304,
-				id: "65df97ab0bb2c59166b8e271",
+				creatorId: "652db11a7c271413e88b4ae3",
+				followerIds: ["652db11a7c271413e88b4ae3"],
+				permalink:
+					"https://codestream-pd.staging-service.nr-ops.net/e/ZR7RasL33uEck4ki/EjOgI79MSwC2JWYROgOBBw",
+				lastActivityAt: 1708549069594,
+				id: codeErrorId,
 			},
 		},
 	];
