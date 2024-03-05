@@ -1,5 +1,5 @@
 import cx from "classnames";
-import { isBoolean as _isBoolean, isNil as _isNil } from "lodash-es";
+import { isNil as _isNil, isBoolean as _isBoolean } from "lodash-es";
 import React, { PropsWithChildren } from "react";
 import Draggable from "react-draggable";
 import { shallowEqual } from "react-redux";
@@ -48,7 +48,6 @@ interface PaneNodeNameProps {
 	customPadding?: string;
 	"data-testid"?: string;
 }
-
 export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>) => {
 	const dispatch = useAppDispatch();
 
@@ -111,24 +110,20 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 	display: flex;
 	cursor: pointer;
 	position: relative;
-
 	.label {
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
-
 	> .icon {
 		display: inline-block;
 		width: 16px;
 		text-align: center;
 	}
-
 	&:hover {
 		background: var(--app-background-color-hover);
 		// color: var(--text-color-highlight);
 	}
-
 	.actions {
 		text-align: right;
 		// position: absolute;
@@ -137,12 +132,10 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 		white-space: nowrap;
 		margin-left: auto;
 		display: ${props => (props.actionsVisibleIfOpen ? "block" : "none")};
-
 		.icon {
 			margin: 0 5px;
 			opacity: 0.7;
 		}
-
 		.icon-override-actions-visible {
 			display: none;
 		}
@@ -156,7 +149,6 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 		// background: var(--app-background-color-hover);
 		display: block;
 	}
-
 	.subtle {
 		padding-left: 5px;
 		font-weight: normal;
@@ -167,7 +159,6 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 export const PaneNode = styled.div`
 	.pane-row {
 		padding-left: 40px;
-
 		.selected-icon {
 			left: 20px;
 		}
@@ -184,7 +175,6 @@ interface PaneHeaderProps {
 	warning?: React.ReactNode;
 	noDropdown?: boolean;
 }
-
 export const PaneHeader = React.memo((props: PropsWithChildren<PaneHeaderProps>) => {
 	const dispatch = useAppDispatch();
 	const derivedState = useAppSelector((state: CodeStreamState) => {
@@ -210,7 +200,6 @@ export const PaneHeader = React.memo((props: PropsWithChildren<PaneHeaderProps>)
 			maximized: settings.maximized,
 			collapsed: settings.collapsed,
 			anyMaximized,
-			demoMode: state.codeErrors.demoMode,
 		};
 	}, shallowEqual);
 
@@ -251,10 +240,7 @@ export const PaneHeader = React.memo((props: PropsWithChildren<PaneHeaderProps>)
 				tabIndex={1}
 				style={{ alignItems: "center", marginLeft: "-3px" }}
 			>
-				<div
-					className={cx("label", { demo: derivedState.demoMode.enabled })}
-					data-testid={props.id + "-label-title"}
-				>
+				<div className="label" data-testid={props.id + "-label-title"}>
 					{props.title}
 					{(typeof props.count === "string" && props.count.length > 0) ||
 					(typeof props.count === "number" && props.count > 0) ? (
@@ -282,10 +268,7 @@ export const PaneHeader = React.memo((props: PropsWithChildren<PaneHeaderProps>)
 			})}
 			tabIndex={1}
 		>
-			<div
-				className={cx("label", { demo: derivedState.demoMode.enabled })}
-				data-testid={props.id + "-label-title"}
-			>
+			<div className="label" data-testid={props.id + "-label-title"}>
 				<Icon name={derivedState.stateIcon} className="expander" />
 				{props.title}
 				{(typeof props.count === "string" && props.count.length > 0) ||
@@ -364,24 +347,19 @@ const PaneHeaderRoot = styled.div`
 	height: 23px;
 	border: 1px solid transparent;
 	display: flex;
-
 	.label {
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
-
 	&:focus {
 		border: 1px solid var(--text-focus-border-color);
 		outline: none;
 	}
-
 	// make the dragged div invisible until we get beyond the minimum distance
-
 	&.react-draggable-dragging {
 		opacity: 0;
 	}
-
 	&.react-draggable-dragging.visualize-dragging {
 		opacity: 0.9;
 		border: 1px solid var(--base-border-color);
@@ -390,36 +368,29 @@ const PaneHeaderRoot = styled.div`
 		background: var(--base-background-color);
 		box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 		z-index: 10000;
-
 		.actions {
 			background: var(--base-background-color);
 		}
 	}
-
 	.toggle {
 		opacity: 0;
 		margin: 0 5px 0 -13px;
 		vertical-align: -1px;
 		transition: opacity 0.1s;
 	}
-
 	.maximize svg {
 		transform: scale(0.8) rotate(-45deg);
 	}
-
 	&:hover .toggle {
 		opacity: 1;
 	}
-
 	z-index: 49;
 	width: calc(100% - 2px);
 	cursor: pointer;
-
 	.progress-container {
 		position: absolute;
 		top: 21px;
 	}
-
 	.actions {
 		// position: absolute;
 		// right: 0;
@@ -431,38 +402,30 @@ const PaneHeaderRoot = styled.div`
 		white-space: nowrap;
 		// background: var(--app-background-color);
 		// background: var(--sidebar-header-background);
-
 		.icon {
 			vertical-align: 2px !important;
 			cursor: pointer;
 			display: inline-block;
 			opacity: 0.7;
-
 			&:hover {
 				opacity: 1;
 			}
-
 			margin: 0px 5px !important;
 			padding: 0 !important;
-
 			&:active {
 				transform: scale(1.2);
 			}
-
 			&.maximize:active {
 				transform: scale(1) rotate(-45deg);
 			}
 		}
 	}
-
 	&:focus .actions {
 		display: inline;
 	}
-
 	.expander {
 		vertical-align: 2px;
 	}
-
 	.subtle {
 		padding-left: 5px;
 		font-weight: normal;
@@ -473,7 +436,6 @@ const PaneHeaderRoot = styled.div`
 interface PaneBodyProps {
 	className?: string;
 }
-
 export function PaneBody(props: PropsWithChildren<PaneBodyProps>) {
 	return (
 		<ScrollBox>
@@ -486,11 +448,9 @@ const Root = styled.div`
 	padding: 22px 0 0px 0;
 	// border: 1px solid transparent;
 	border-bottom: 1px solid var(--sidebar-header-border);
-
 	&.open {
 		// border: 3px solid green;
 	}
-
 	&.highlightTop::before {
 		content: "";
 		position: absolute;
@@ -501,13 +461,11 @@ const Root = styled.div`
 		height: 3px;
 		background: var(--text-color);
 	}
-
 	&.highlightTop.open::before {
 		top: 0;
 		height: 50%;
 		background: rgba(127, 127, 127, 0.25);
 	}
-
 	&.highlightBottom::before {
 		content: "";
 		position: absolute;
@@ -518,50 +476,41 @@ const Root = styled.div`
 		height: 3px;
 		background: var(--text-color);
 	}
-
 	&.highlightBottom.open::before {
 		bottom: 0;
 		height: 50%;
 		background: rgba(127, 127, 127, 0.25);
 	}
-
 	.icon {
 		&.ticket,
 		&.link-external {
 			margin-right: 0;
 		}
 	}
-
 	.instructions {
 		display: none;
 		padding: 0 20px 20px 20px;
 		text-align: center;
 	}
-
 	&.show-instructions .instructions {
 		display: block;
 	}
-
 	&:hover ${PaneHeaderRoot} .actions {
 		display: inline;
 	}
-
 	position: absolute;
 	overflow: hidden;
 	// width: calc(100% - 2px); // absolute element w/a border
 	width: 100%;
 	left: 1px;
-
 	.animate-height & {
 		transition:
 			height 0.25s,
 			top 0.25s;
 	}
-
 	.expander {
 		margin: 0 2px 0 -2px;
 	}
-
 	.codemark.collapsed,
 	.codemark.wrap {
 		padding-left: 40px !important;
