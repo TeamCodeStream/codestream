@@ -2503,6 +2503,27 @@ export interface EntityGoldenMetrics {
 	pillsData?: DeploymentDiff;
 }
 
+export interface MethodGoldenMetricsResult {
+	beginTimeSeconds?: number;
+	endDate?: Date;
+	endTimeSeconds?: number;
+
+	/* old/deprecated -- used in CLM[?], but let's move to the new props*/
+	"Error %"?: string;
+	"Error rate"?: number;
+	"Error Rate"?: number;
+	"Response Time Ms"?: number | undefined;
+	"Response time (ms)"?: number | undefined;
+	Throughput?: number;
+	/* end old */
+
+	/* new */
+	throughput?: number;
+	errorRate?: number;
+	responseTimeMs?: number;
+	/* end new  */
+}
+
 export interface MethodGoldenMetrics {
 	/** the NR query we are running */
 	query?: string;
@@ -2510,26 +2531,7 @@ export interface MethodGoldenMetrics {
 	name: "responseTimeMs" | "throughput" | "errorRate" | string;
 	/** this title field is deprecated. use `name`as a query "key" and set the title with calling code */
 	title?: "Error Rate" | "Throughput" | "Response Time Ms" | string | undefined;
-	result: {
-		beginTimeSeconds?: number;
-		endDate?: Date;
-		endTimeSeconds?: number;
-
-		/* old/deprecated -- used in CLM[?], but let's move to the new props*/
-		"Error %"?: string;
-		"Error rate"?: number;
-		"Error Rate"?: number;
-		"Response Time Ms"?: number | undefined;
-		"Response time (ms)"?: number | undefined;
-		Throughput?: number;
-		/* end old */
-
-		/* new */
-		throughput?: number;
-		errorRate?: number;
-		responseTimeMs?: number;
-		/* end new  */
-	}[];
+	result: MethodGoldenMetricsResult[];
 	scopes?: {
 		name: string;
 		value: number;

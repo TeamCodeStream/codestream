@@ -11,32 +11,30 @@ import {
 	YAxis,
 } from "recharts";
 import {
-	DidChangeObservabilityDataNotificationType,
+	CriticalPathSpan,
 	GetMethodLevelTelemetryRequestType,
 	GetMethodLevelTelemetryResponse,
 	GetObservabilityErrorGroupMetadataRequestType,
 	GetObservabilityErrorGroupMetadataResponse,
+	MethodGoldenMetricsResult,
 	ObservabilityAnomaly,
+	ObservabilityError,
 	WarningOrError,
 } from "@codestream/protocols/agent";
 import styled from "styled-components";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import {
 	OpenUrlRequestType,
-	RefreshEditorsCodeLensRequestType,
-	UpdateConfigurationRequestType,
 } from "@codestream/webview/ipc/host.protocol";
 import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
 import { CodeStreamState } from "@codestream/webview/store";
 import {
-	closeAllPanels,
 	setCurrentObservabilityAnomaly,
 } from "@codestream/webview/store/context/actions";
 import { useDidMount, usePrevious } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";
 import { closePanel } from "../actions";
 import CancelButton from "../CancelButton";
-import { EntityAssociator } from "../EntityAssociator";
 import { WarningBox } from "../WarningBox";
 import { MetaLabel } from "../Codemark/BaseCodemark";
 import Icon from "../Icon";
@@ -69,6 +67,25 @@ const EntityDropdownContainer = styled.div`
 	margin: 0 0 4px 0;
 `;
 
+const DataRow = styled.div`
+	display: flex;
+	align-items: flex-start;
+	width: 85%;
+`;
+const DataLabel = styled.div`
+	margin-right: 5px;
+`;
+const DataValue = styled.div`
+	color: var(--text-color-subtle);
+	word-wrap: break-word;
+	width: 92%;
+`;
+
+const computedStyle = getComputedStyle(document.body);
+const colorSubtle = computedStyle.getPropertyValue("--text-color-subtle").trim();
+const colorPrimary = computedStyle.getPropertyValue("--text-color").trim();
+const colorLine = "#8884d8";
+
 const EMPTY_ARRAY = [];
 export const ObservabilityAnomalyPanel = () => {
 	const dispatch = useDispatch<any>();
@@ -91,17 +108,11 @@ export const ObservabilityAnomalyPanel = () => {
 		};
 	});
 
-	const computedStyle = getComputedStyle(document.body);
-	const colorSubtle = computedStyle.getPropertyValue("--text-color-subtle").trim();
-	const colorPrimary = computedStyle.getPropertyValue("--text-color").trim();
-	const colorLine = "#8884d8";
-
 	const [telemetryResponse, setTelemetryResponse] = useState<
 		GetMethodLevelTelemetryResponse | undefined
 	>(undefined);
 	const [remappedDeployments, setRemappedDeployments] = useState({});
 	const [loading, setLoading] = useState<boolean>(true);
-	const [isLoadingErrorGroupGuid, setIsLoadingErrorGroupGuid] = useState("");
 	const [warningOrErrors, setWarningOrErrors] = useState<WarningOrError[] | undefined>(undefined);
 	const previousCurrentObservabilityAnomaly = usePrevious(derivedState.currentObservabilityAnomaly);
 	const [showGoldenSignalsInEditor, setshowGoldenSignalsInEditor] = useState<boolean>(
@@ -112,15 +123,6 @@ export const ObservabilityAnomalyPanel = () => {
 	const loadData = async (newRelicEntityGuid: string) => {
 		setLoading(true);
 		try {
-			// if (!derivedState.currentObservabilityAnomaly.repo?.id) {
-			// 	setWarningOrErrors([{ message: "Repository missing" }]);
-			// 	return;
-			// }
-			// if (!derivedState.currentObservabilityAnomaly.metricTimesliceNameMapping) {
-			// 	setWarningOrErrors([{ message: "Repository metric timeslice names" }]);
-			// 	return;
-			// }
-
 			const anomaly = derivedState.currentObservabilityAnomaly;
 			const isPlural = anomaly.totalDays > 1 ? "s" : "";
 			const since = `${anomaly.totalDays} day${isPlural} ago`;
@@ -137,16 +139,6 @@ export const ObservabilityAnomalyPanel = () => {
 				includeDeployments: true,
 				includeErrors: true,
 				timeseriesGroup: "1 day",
-			});
-
-			response.goldenMetrics?.sort((a, b) => {
-				const aIsAnomaly =
-					derivedState.currentObservabilityAnomaly.chartHeaderTexts[a.title || ""] != null;
-				const bIsAnomaly =
-					derivedState.currentObservabilityAnomaly.chartHeaderTexts[b.title || ""] != null;
-				if (aIsAnomaly) return -1;
-				if (bIsAnomaly) return 1;
-				return 0;
 			});
 
 			response.goldenMetrics?.forEach(gm => {
@@ -196,16 +188,7 @@ export const ObservabilityAnomalyPanel = () => {
 	};
 
 	useDidMount(() => {
-		// HostApi.instance.track(odestream/codelense clicked", {
-		// account_id: derivedState.currentMethodLevelTelemetry?.newRelicAccountId + "",
-		// entity_guid: derivedState.currentMethodLevelTelemetry?.newRelicEntityGuid,
-		// target: "codelens",
-		// meta_data: `language: ${derivedState.currentMethodLevelTelemetry.languageId}`,
-		// event_type: "click",
-		// });
-		// if (!derivedState.currentMethodLevelTelemetry.error) {
 		loadData(derivedState.currentObservabilityAnomalyEntityGuid);
-		// }
 	});
 
 	useEffect(() => {
@@ -219,96 +202,6 @@ export const ObservabilityAnomalyPanel = () => {
 
 		loadData(derivedState.currentObservabilityAnomalyEntityGuid);
 	}, [derivedState.currentObservabilityAnomaly]);
-
-	if (
-		false
-		// derivedState.currentMethodLevelTelemetry.error &&
-		// derivedState.currentMethodLevelTelemetry.error.type === "NOT_ASSOCIATED" &&
-		// derivedState.currentMethodLevelTelemetry.repo
-	) {
-		return (
-			<Root className="full-height-codemark-form">
-				<div
-					style={{
-						display: "flex",
-						alignItems: "center",
-						width: "100%",
-					}}
-				>
-					<div
-						style={{ marginLeft: "auto", marginRight: "13px", whiteSpace: "nowrap", flexGrow: 0 }}
-					>
-						<CancelButton onClick={() => dispatch(closePanel())} />
-					</div>
-				</div>
-
-				<div className="embedded-panel">
-					<EntityAssociator
-						title="Code-Level Metrics"
-						label="Select the service on New Relic that is built from this repository to see how it's performing."
-						onSuccess={async e => {
-							HostApi.instance.send(RefreshEditorsCodeLensRequestType, {});
-							HostApi.instance.emit(DidChangeObservabilityDataNotificationType.method, {
-								type: "RepositoryAssociation",
-							});
-							dispatch(closeAllPanels());
-						}}
-						// remote={derivedState.currentMethodLevelTelemetry.repo.remote}
-						// remoteName={derivedState.currentMethodLevelTelemetry.repo.name}
-						remote={""}
-						remoteName={""}
-					>
-						<div>
-							<br />
-							<input
-								id="dontShowGoldenSignalsInEditor"
-								name="dontShowGoldenSignalsInEditor"
-								type="checkbox"
-								checked={!showGoldenSignalsInEditor}
-								onClick={e => {
-									HostApi.instance.send(UpdateConfigurationRequestType, {
-										name: "showGoldenSignalsInEditor",
-										value: !showGoldenSignalsInEditor,
-									});
-									setshowGoldenSignalsInEditor(!showGoldenSignalsInEditor);
-								}}
-							/>
-							<label htmlFor="dontShowGoldenSignalsInEditor">
-								Don't show repo association prompts in my editor
-							</label>
-						</div>
-					</EntityAssociator>
-				</div>
-			</Root>
-		);
-	}
-
-	const renderEntityDropdownSubtext = item => {
-		let subtext;
-		if (item.accountName && item.accountName.length > 25) {
-			subtext = item.accountName.substr(0, 25) + "...";
-		} else {
-			subtext = item.accountName;
-		}
-		if (item.domain) {
-			subtext += ` ${item.domain}`;
-		}
-		return subtext;
-	};
-
-	const DataRow = styled.div`
-		display: flex;
-		align-items: flex-start;
-		width: 85%;
-	`;
-	const DataLabel = styled.div`
-		margin-right: 5px;
-	`;
-	const DataValue = styled.div`
-		color: var(--text-color-subtle);
-		word-wrap: break-word;
-		width: 92%;
-	`;
 
 	const renderTitle = () => {
 		if (!derivedState.currentObservabilityAnomaly.scope) {
@@ -348,6 +241,28 @@ export const ObservabilityAnomalyPanel = () => {
 		);
 	};
 
+	const goldenMetricAvgDuration = telemetryResponse?.goldenMetrics?.find(
+		_ => _.name === "responseTimeMs"
+	);
+	const goldenMetricErrorRate = telemetryResponse?.goldenMetrics?.find(
+		_ => _.name === "errorsPerMinute"
+	);
+	const goldenMetricSampleRate = telemetryResponse?.goldenMetrics?.find(
+		_ => _.name === "samplesPerMinute"
+	);
+	const { chartHeaderTexts } = derivedState.currentObservabilityAnomaly;
+	const avgDurationTitle = goldenMetricAvgDuration?.title || "";
+	const errorRateTitle = goldenMetricErrorRate?.title || "";
+	const avgDurationHeaderText =
+		chartHeaderTexts[avgDurationTitle] != null
+			? "Average duration " + chartHeaderTexts[avgDurationTitle]
+			: null;
+	const errorRateHeaderText =
+		chartHeaderTexts[errorRateTitle] != null
+			? "Errors rate " + chartHeaderTexts[errorRateTitle]
+			: null;
+	const isAvgDurationAnomaly = avgDurationHeaderText != null;
+
 	return (
 		<Root className="full-height-codemark-form">
 			{!loading && (
@@ -363,11 +278,6 @@ export const ObservabilityAnomalyPanel = () => {
 						wordBreak: "break-word",
 					}}
 				>
-					{/* <PanelHeader
-						title={derivedState.currentObservabilityAnomaly.name}
-						linkJsx={titleHovered ? <Icon name="link-external" title="Open on New Relic" /> : ""}
-					></PanelHeader> */}
-
 					<PanelHeader title={renderTitle()}></PanelHeader>
 				</div>
 			)}
@@ -394,6 +304,13 @@ export const ObservabilityAnomalyPanel = () => {
 								</>
 							) : (
 								<div>
+									<div
+										data-testid={`anomaly-transaction-redcolor-index-0`}
+										style={{ color: "red" }}
+									>
+										{avgDurationHeaderText || errorRateHeaderText}
+									</div>
+									<br />
 									{derivedState.currentObservabilityAnomaly.scope && (
 										<DataRow>
 											<DataLabel>Transaction:</DataLabel>
@@ -408,238 +325,52 @@ export const ObservabilityAnomalyPanel = () => {
 											</DataValue>
 										</DataRow>
 									)}
-									{telemetryResponse?.errors && telemetryResponse.errors.length > 0 && (
-										<div>
-											<br />
-											<MetaLabel>Errors</MetaLabel>
-											<div>
-												{telemetryResponse.errors.map((_, index) => {
-													const indexedErrorGroupGuid = `${_.errorGroupGuid}_${index}`;
-													return (
-														<ErrorRow
-															key={`observability-error-${index}`}
-															title={_.errorClass}
-															tooltip={_.message}
-															subtle={_.message}
-															alternateSubtleRight={`${_.count}`} // we want to show count instead of timestamp
-															url={_.errorGroupUrl}
-															customPadding={"0"}
-															isLoading={isLoadingErrorGroupGuid === indexedErrorGroupGuid}
-															onClick={async e => {
-																try {
-																	setIsLoadingErrorGroupGuid(indexedErrorGroupGuid);
-																	const response = (await HostApi.instance.send(
-																		GetObservabilityErrorGroupMetadataRequestType,
-																		{ errorGroupGuid: _.errorGroupGuid }
-																	)) as GetObservabilityErrorGroupMetadataResponse;
-																	dispatch(
-																		openErrorGroup({
-																			errorGroupGuid: _.errorGroupGuid,
-																			occurrenceId: _.occurrenceId,
-																			data: {
-																				multipleRepos: response?.relatedRepos?.length > 1,
-																				relatedRepos: response?.relatedRepos || undefined,
-																				timestamp: _.lastOccurrence,
-																				sessionStart: derivedState.sessionStart,
-																				pendingEntityId: response?.entityId || _.entityId,
-																				occurrenceId: response?.occurrenceId || _.occurrenceId,
-																				pendingErrorGroupGuid: _.errorGroupGuid,
-																				openType: "CLM Details",
-																				remote: _?.remote || undefined,
-																				stackSourceMap: response?.stackSourceMap,
-																			},
-																		})
-																	);
-																} catch (ex) {
-																	console.error(ex);
-																} finally {
-																	setIsLoadingErrorGroupGuid("");
-																}
-															}}
-														/>
-													);
-												})}
-											</div>
-										</div>
+									<br />
+
+									{isAvgDurationAnomaly ? (
+										<>
+											<AvgDuration
+												criticalPath={telemetryResponse?.criticalPath}
+												sessionStart={derivedState.sessionStart}
+												goldenMetricAvgDuration={goldenMetricAvgDuration}
+												remappedDeployments={remappedDeployments}
+												index={0}
+											/>
+											<ErrorRate
+												errors={telemetryResponse?.errors}
+												sessionStart={derivedState.sessionStart}
+												goldenMetricErrorRate={goldenMetricErrorRate}
+												remappedDeployments={remappedDeployments}
+												index={1}
+											/>
+										</>
+									) : (
+										<>
+											<ErrorRate
+												errors={telemetryResponse?.errors}
+												sessionStart={derivedState.sessionStart}
+												goldenMetricErrorRate={goldenMetricErrorRate}
+												remappedDeployments={remappedDeployments}
+												index={0}
+											/>
+											<AvgDuration
+												criticalPath={telemetryResponse?.criticalPath}
+												sessionStart={derivedState.sessionStart}
+												goldenMetricAvgDuration={goldenMetricAvgDuration}
+												remappedDeployments={remappedDeployments}
+												index={1}
+											/>
+										</>
 									)}
-                  {(telemetryResponse?.criticalPath?.length || 0) > 0 && (
-                    <div style={{ marginBottom: "30px" }}>
-                      <table style={{ borderCollapse: "collapse", width: "100%" }}>
-                        <tr style={{ borderBottom: "1px solid #888" }}>
-                          <td
-                            style={{
-                              width: "100%",
-                              padding: "3px 1px",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            <DataValue>
-                              <b>Critical Path</b>
-                            </DataValue>
-                          </td>
-                        </tr>
-                        {telemetryResponse?.criticalPath?.map(span => {
-                          return (
-                            <tr style={{ borderBottom: "1px solid #888" }}>
-                              <td
-                                style={{
-                                  width: "75%",
-                                  padding: "3px 1px",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                <DataValue>{span.name}</DataValue>
-                              </td>
-                              <td
-                                style={{
-                                  width: "25%",
-                                  padding: "3px 1px",
-                                  whiteSpace: "nowrap",
-                                  textAlign: "right",
-                                }}
-                              >
-                                <DataValue>{span.duration.toFixed(3)}</DataValue>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </table>
-                    </div>
-                  )}
-									<div>
-										<br />
-										{telemetryResponse &&
-											telemetryResponse.goldenMetrics &&
-											telemetryResponse.goldenMetrics.map((_, index) => {
-												// hide charts with no data.
-												if (!_?.result || _.result?.length === 0) return null;
-												const title = _.title + (_.extrapolated ? " (extrapolated)" : "");
-												const yValues = _.result.map(o => o[_.title as any]);
-												const sanitizedYValues = (yValues as (number | undefined)[]).map(_ =>
-													_ != undefined ? _ : 0
-												);
-												const maxY = Math.max(...sanitizedYValues);
-												const redHeaderText =
-													derivedState.currentObservabilityAnomaly.chartHeaderTexts[title];
-												return (
-													<>
-														<div
-															key={"chart-" + index}
-															style={{ marginLeft: "0px", marginBottom: "20px" }}
-														>
-															<MetaLabel data-testid={`anomaly-transaction-title-index-${index}`}>
-																{title}
-															</MetaLabel>
-															<div
-																data-testid={`anomaly-transaction-redcolor-index-${index}`}
-																style={{ color: "red" }}
-															>
-																{redHeaderText}
-															</div>
-															<ResponsiveContainer width="100%" height={300} debounce={1}>
-																<LineChart
-																	width={500}
-																	height={300}
-																	data={_.result}
-																	margin={{
-																		top: 25,
-																		right: 0,
-																		left: 0,
-																		bottom: 5,
-																	}}
-																>
-																	<CartesianGrid strokeDasharray="3 3" />
-																	<XAxis
-																		dataKey="endTimeSeconds"
-																		tick={{ fontSize: 12 }}
-																		tickFormatter={label =>
-																			new Date(label * 1000).toLocaleDateString()
-																		}
-																	/>
-																	<YAxis tick={{ fontSize: 12 }} domain={[0, maxY]} />
-																	<ReTooltip
-																		content={<CustomTooltip />}
-																		contentStyle={{ color: colorLine, textAlign: "center" }}
-																	/>
-																	<Line
-																		type="monotone"
-																		dataKey={_.title}
-																		stroke={colorLine}
-																		activeDot={{ r: 8 }}
-																		connectNulls={true}
-																		name={title}
-																		dot={{ style: { fill: colorLine } }}
-																	/>
-																	{Object.entries(remappedDeployments).map(
-																		([key, value]: [string, any]) => {
-																			return (
-																				<ReferenceLine
-																					x={parseInt(key)}
-																					stroke={value?.length ? colorPrimary : colorSubtle}
-																					label={e => renderCustomLabel(e, value.join(", "))}
-																				/>
-																			);
-																		}
-																	)}
-																</LineChart>
-															</ResponsiveContainer>
-														</div>
-														{(_.scopes?.length || 0) > 0 &&
-															!derivedState.currentObservabilityAnomaly.scope && (
-																<div style={{ marginBottom: "30px" }}>
-																	<table style={{ borderCollapse: "collapse", width: "100%" }}>
-																		<tr style={{ borderBottom: "1px solid #888" }}>
-																			<td
-																				style={{
-																					width: "100%",
-																					padding: "3px 1px",
-																					whiteSpace: "nowrap",
-																				}}
-																			>
-																				<DataValue>
-																					<b>Scopes</b>
-																				</DataValue>
-																			</td>
-																		</tr>
-																		{_.scopes?.map(scope => {
-																			return (
-																				<tr style={{ borderBottom: "1px solid #888" }}>
-																					<td
-																						style={{
-																							width: "75%",
-																							padding: "3px 1px",
-																							whiteSpace: "nowrap",
-																						}}
-																					>
-																						<DataValue>{scope.name}</DataValue>
-																					</td>
-																					<td
-																						style={{
-																							width: "25%",
-																							padding: "3px 1px",
-																							whiteSpace: "nowrap",
-																							textAlign: "right",
-																						}}
-																					>
-																						<DataValue>{scope.value.toFixed(3)}</DataValue>
-																					</td>
-																				</tr>
-																			);
-																		})}
-																	</table>
-																</div>
-															)}
-													</>
-												);
-											})}
-									</div>
-									{/* {telemetryResponse && telemetryResponse.newRelicUrl && (
-										<div>
-											<Link className="external-link" href={telemetryResponse.newRelicUrl}>
-												View service summary on New Relic <Icon name="link-external" />
-											</Link>
-										</div>
-									)} */}
+
+									{goldenMetricSampleRate != null && (
+										<AnomalyChart
+											title={goldenMetricSampleRate.title}
+											result={goldenMetricSampleRate.result}
+											index={2}
+											remappedDeployments={remappedDeployments}
+										/>
+									)}
 								</div>
 							)}
 						</>
@@ -706,5 +437,229 @@ const renderCustomLabel = ({ viewBox: { x, y } }, title) => {
 				/>
 			</foreignObject>
 		</g>
+	);
+};
+
+interface AnomalyChartProps {
+	title?: string;
+	result: MethodGoldenMetricsResult[];
+	index: number;
+	remappedDeployments: Object;
+}
+
+const AnomalyChart = (props: AnomalyChartProps) => {
+	const yValues = props.result.map(o => o[props.title as any]);
+	const sanitizedYValues = (yValues as (number | undefined)[]).map(_ => (_ != undefined ? _ : 0));
+	const maxY = Math.max(...sanitizedYValues);
+	return (
+		<>
+			<div key={"chart-" + props.index} style={{ marginLeft: "0px", marginBottom: "20px" }}>
+				<MetaLabel data-testid={`anomaly-transaction-title-index-${props.index}`}>
+					{props.title}
+				</MetaLabel>
+				<ResponsiveContainer width="100%" height={300} debounce={1}>
+					<LineChart
+						width={500}
+						height={300}
+						data={props.result}
+						margin={{
+							top: 25,
+							right: 0,
+							left: 0,
+							bottom: 5,
+						}}
+					>
+						<CartesianGrid strokeDasharray="3 3" />
+						<XAxis
+							dataKey="endTimeSeconds"
+							tick={{ fontSize: 12 }}
+							tickFormatter={label => new Date(label * 1000).toLocaleDateString()}
+						/>
+						<YAxis tick={{ fontSize: 12 }} domain={[0, maxY]} />
+						<ReTooltip
+							content={<CustomTooltip />}
+							contentStyle={{ color: colorLine, textAlign: "center" }}
+						/>
+						<Line
+							type="monotone"
+							dataKey={props.title}
+							stroke={colorLine}
+							activeDot={{ r: 8 }}
+							connectNulls={true}
+							name={props.title}
+							dot={{ style: { fill: colorLine } }}
+						/>
+						{Object.entries(props.remappedDeployments).map(([key, value]: [string, any]) => {
+							return (
+								<ReferenceLine
+									x={parseInt(key)}
+									stroke={value?.length ? colorPrimary : colorSubtle}
+									label={e => renderCustomLabel(e, value.join(", "))}
+								/>
+							);
+						})}
+					</LineChart>
+				</ResponsiveContainer>
+			</div>
+		</>
+	);
+};
+
+interface CriticalPathProps {
+	criticalPath: CriticalPathSpan[];
+}
+
+const CriticalPath = (props: CriticalPathProps) => {
+	return (
+		<div style={{ marginBottom: "30px" }}>
+			<br />
+			<MetaLabel>Slowest operations</MetaLabel>
+			<DataValue>Based on a sample of slowest transactions for the last 30 minutes.</DataValue>
+			<br />
+			<table style={{ borderCollapse: "collapse", width: "100%" }}>
+				{props.criticalPath.map(span => {
+					return (
+						<tr>
+							<td
+								style={{
+									width: "75%",
+									padding: "3px 1px",
+									whiteSpace: "nowrap",
+								}}
+							>
+								<DataValue>{span.name}</DataValue>
+							</td>
+							<td
+								style={{
+									width: "25%",
+									padding: "3px 1px",
+									whiteSpace: "nowrap",
+									textAlign: "right",
+								}}
+							>
+								<DataValue>{span.duration.toFixed(2)} ms</DataValue>
+							</td>
+						</tr>
+					);
+				})}
+			</table>
+		</div>
+	);
+};
+
+interface ErrorsProps {
+	errors: ObservabilityError[];
+	sessionStart: number | undefined;
+}
+
+const Errors = (props: ErrorsProps) => {
+	const dispatch = useDispatch<any>();
+	const [isLoadingErrorGroupGuid, setIsLoadingErrorGroupGuid] = useState("");
+
+	return (
+		<div style={{ marginBottom: "30px" }}>
+			<br />
+			<MetaLabel>Errors</MetaLabel>
+			<br />
+			<div>
+				{props.errors.map((_, index) => {
+					const indexedErrorGroupGuid = `${_.errorGroupGuid}_${index}`;
+					return (
+						<ErrorRow
+							key={`observability-error-${index}`}
+							title={_.errorClass}
+							tooltip={_.message}
+							subtle={_.message}
+							alternateSubtleRight={`${_.count}`} // we want to show count instead of timestamp
+							url={_.errorGroupUrl}
+							customPadding={"0"}
+							isLoading={isLoadingErrorGroupGuid === indexedErrorGroupGuid}
+							onClick={async e => {
+								try {
+									setIsLoadingErrorGroupGuid(indexedErrorGroupGuid);
+									const response = (await HostApi.instance.send(
+										GetObservabilityErrorGroupMetadataRequestType,
+										{ errorGroupGuid: _.errorGroupGuid }
+									)) as GetObservabilityErrorGroupMetadataResponse;
+									dispatch(
+										openErrorGroup(_.errorGroupGuid, _.occurrenceId, {
+											multipleRepos: response?.relatedRepos?.length > 1,
+											relatedRepos: response?.relatedRepos || undefined,
+											timestamp: _.lastOccurrence,
+											sessionStart: props.sessionStart,
+											pendingEntityId: response?.entityId || _.entityId,
+											occurrenceId: response?.occurrenceId || _.occurrenceId,
+											pendingErrorGroupGuid: _.errorGroupGuid,
+											openType: "CLM Details",
+											remote: _?.remote || undefined,
+											stackSourceMap: response?.stackSourceMap,
+										})
+									);
+								} catch (ex) {
+									console.error(ex);
+								} finally {
+									setIsLoadingErrorGroupGuid("");
+								}
+							}}
+						/>
+					);
+				})}
+			</div>
+		</div>
+	);
+};
+
+interface ErrorRateProps {
+	errors?: ObservabilityError[];
+	sessionStart?: number;
+	goldenMetricErrorRate?: any;
+	remappedDeployments: Object;
+	index: number;
+}
+
+const ErrorRate = (props: ErrorRateProps) => {
+	const hasErrors = props.errors && props.errors.length > 0;
+	const hasResult =
+		props.goldenMetricErrorRate != null &&
+		props.goldenMetricErrorRate.result != null &&
+		props.goldenMetricErrorRate.result.length > 0;
+	return (
+		<>
+			{hasErrors && <Errors errors={props.errors!} sessionStart={props.sessionStart} />}
+			{hasResult && (
+				<AnomalyChart
+					title={props.goldenMetricErrorRate.title}
+					result={props.goldenMetricErrorRate.result}
+					index={props.index}
+					remappedDeployments={props.remappedDeployments}
+				/>
+			)}
+		</>
+	);
+};
+
+interface AvgDurationProps {
+	criticalPath?: CriticalPathSpan[];
+	sessionStart?: number;
+	goldenMetricAvgDuration?: any;
+	remappedDeployments: Object;
+	index: number;
+}
+
+const AvgDuration = (props: AvgDurationProps) => {
+	return (
+		<>
+			{props.criticalPath != null && props.criticalPath.length > 0 && (
+				<CriticalPath criticalPath={props.criticalPath!} />
+			)}
+			{props.goldenMetricAvgDuration != null && (
+				<AnomalyChart
+					title={props.goldenMetricAvgDuration.title}
+					result={props.goldenMetricAvgDuration.result}
+					index={props.index}
+					remappedDeployments={props.remappedDeployments}
+				/>
+			)}
+		</>
 	);
 };
