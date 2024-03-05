@@ -112,7 +112,8 @@ export const Sidebar = React.memo(function Sidebar() {
 	const [initialRender, setInitialRender] = useState(true);
 
 	const TOP_PADDING = useMemo(() => {
-		return derivedState.ideName === "VS" ? 31 : 25;
+		//@TODO, probably reduce padding for VS
+		return derivedState.ideName === "VS" ? 31 : 8;
 	}, [derivedState.ideName]);
 
 	const fetchOpenRepos = async () => {

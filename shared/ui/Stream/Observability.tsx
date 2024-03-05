@@ -52,8 +52,6 @@ import { WebviewPanels, CLMSettings, DEFAULT_CLM_SETTINGS } from "@codestream/pr
 import { Button } from "../src/components/Button";
 import {
 	NoContent,
-	PaneBody,
-	PaneHeader,
 	PaneNode,
 	PaneNodeName,
 	PaneState,
@@ -1153,131 +1151,169 @@ export const Observability = React.memo((props: Props) => {
 	};
 
 	const { activeO11y } = derivedState;
+	console.warn("eric observabilityRepos", observabilityRepos);
 
 	return (
 		<Root>
-			<PaneHeader
-				title={
-					derivedState.isO11yPaneOnly ? (
-						<CurrentRepoContext
-							observabilityRepos={observabilityRepos}
-							currentRepoCallback={setCurrentRepoId}
-							isHeaderText={true}
-						/>
-					) : (
-						"Observability"
-					)
-				}
-				id={WebviewPanels.Observability}
-				subtitle={
-					derivedState.isO11yPaneOnly ? (
-						false
-					) : (
-						<CurrentRepoContext
-							observabilityRepos={observabilityRepos}
-							currentRepoCallback={setCurrentRepoId}
-						/>
-					)
-				}
-				noDropdown={derivedState.isO11yPaneOnly ? true : false}
-			>
-				{derivedState.newRelicIsConnected ? (
-					<Icon
-						name="refresh"
-						title="Refresh"
-						placement="bottom"
-						delay={1}
-						onClick={e => {
-							doRefresh(true);
-						}}
-					/>
-				) : (
-					<>&nbsp;</>
-				)}
-			</PaneHeader>
-			{props.paneState !== PaneState.Collapsed && (
-				<PaneBody key={"observability"}>
-					<div style={{ padding: "0 10px 0 20px" }}></div>
-					{derivedState.newRelicIsConnected ? (
-						<>
-							<PaneNode>
-								{loadingEntities ? (
-									<ObservabilityLoadingServiceEntities />
-								) : (
-									<>
-										{genericError && (
-											<GenericWrapper>
-												<GenericCopy>{genericError}</GenericCopy>
-											</GenericWrapper>
+			{observabilityRepos.map(repo => {
+				// <PaneHeader
+				// 	title={
+				// 		derivedState.isO11yPaneOnly ? (
+				// 			<CurrentRepoContext
+				// 				observabilityRepos={observabilityRepos}
+				// 				currentRepoCallback={setCurrentRepoId}
+				// 				isHeaderText={true}
+				// 			/>
+				// 		) : (
+				// 			"Observability"
+				// 		)
+				// 	}
+				// 	id={WebviewPanels.Observability}
+				// 	subtitle={
+				// 		derivedState.isO11yPaneOnly ? (
+				// 			false
+				// 		) : (
+				// 			<CurrentRepoContext
+				// 				observabilityRepos={observabilityRepos}
+				// 				currentRepoCallback={setCurrentRepoId}
+				// 			/>
+				// 		)
+				// 	}
+				// 	noDropdown={false}
+				// >
+				// 	{derivedState.newRelicIsConnected ? (
+				// 		<Icon
+				// 			name="refresh"
+				// 			title="Refresh"
+				// 			placement="bottom"
+				// 			delay={1}
+				// 			onClick={e => {
+				// 				doRefresh(true);
+				// 			}}
+				// 		/>
+				// 	) : (
+				// 		<>&nbsp;</>
+				// 	)}
+				// </PaneHeader>;
+
+				console.warn("eric repoName", repo.repoName);
+
+				return (
+					<>
+						<div style={{ padding: "0 10px 0 20px" }}></div>
+						{derivedState.newRelicIsConnected ? (
+							<>
+								<PaneNode>
+									<PaneNodeName
+										data-testid={`observability-repo-id-${repo.repoId}`}
+										title={
+											<CurrentRepoContext
+												observabilityRepos={observabilityRepos}
+												currentRepoCallback={setCurrentRepoId}
+												isHeaderText={true}
+											/>
+										}
+										id={repo.repoId}
+										labelIsFlex={true}
+										onClick={e => {
+											return;
+										}}
+										collapsed={false}
+										showChildIconOnCollapse={true}
+										actionsVisibleIfOpen={true}
+										customPadding="2px 10px 2px 4px"
+									>
+										{derivedState.newRelicIsConnected ? (
+											<Icon
+												name="refresh"
+												title="Refresh"
+												placement="bottom"
+												delay={1}
+												onClick={e => {
+													doRefresh(true);
+												}}
+											/>
+										) : (
+											<>&nbsp;</>
 										)}
-										{!_isEmpty(currentRepoId) &&
-											!_isEmpty(repoForEntityAssociator) &&
-											!hasEntities &&
-											!genericError && (
+									</PaneNodeName>
+									{loadingEntities ? (
+										<ObservabilityLoadingServiceEntities />
+									) : (
+										<>
+											{genericError && (
 												<GenericWrapper>
-													<GenericCopy>
-														Set up application performance monitoring for your project so that you
-														can discover and investigate errors with CodeStream
-													</GenericCopy>
-													<Button style={{ width: "100%" }} onClick={handleSetUpMonitoring}>
-														Set Up Monitoring
-													</Button>
+													<GenericCopy>{genericError}</GenericCopy>
 												</GenericWrapper>
 											)}
+											{!_isEmpty(currentRepoId) &&
+												!_isEmpty(repoForEntityAssociator) &&
+												!hasEntities &&
+												!genericError && (
+													<GenericWrapper>
+														<GenericCopy>
+															Set up application performance monitoring for your project so that you
+															can discover and investigate errors with CodeStream
+														</GenericCopy>
+														<Button style={{ width: "100%" }} onClick={handleSetUpMonitoring}>
+															Set Up Monitoring
+														</Button>
+													</GenericWrapper>
+												)}
 
-										{_isEmpty(currentRepoId) &&
-											_isEmpty(repoForEntityAssociator) &&
-											!genericError && (
-												<NoContent>
-													<p>
-														Open a repository to see how your code is performing.{" "}
-														<a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#observability-in-IDE">
-															Learn more.
-														</a>
-													</p>
-												</NoContent>
-											)}
-										{!derivedState.hideCodeLevelMetricsInstructions &&
-											!derivedState.showGoldenSignalsInEditor &&
-											derivedState.isVS &&
-											observabilityRepos?.find(
-												_ =>
-													!isNRErrorResponse(_.hasCodeLevelMetricSpanData) &&
-													_.hasCodeLevelMetricSpanData
-											) && (
-												<WarningBox
-													style={{ margin: "20px" }}
-													items={[
-														{
-															message: `Enable CodeLenses to see code-level metrics. 
+											{_isEmpty(currentRepoId) &&
+												_isEmpty(repoForEntityAssociator) &&
+												!genericError && (
+													<NoContent>
+														<p>
+															Open a repository to see how your code is performing.{" "}
+															<a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#observability-in-IDE">
+																Learn more.
+															</a>
+														</p>
+													</NoContent>
+												)}
+											{!derivedState.hideCodeLevelMetricsInstructions &&
+												!derivedState.showGoldenSignalsInEditor &&
+												derivedState.isVS &&
+												observabilityRepos?.find(
+													_ =>
+														!isNRErrorResponse(_.hasCodeLevelMetricSpanData) &&
+														_.hasCodeLevelMetricSpanData
+												) && (
+													<WarningBox
+														style={{ margin: "20px" }}
+														items={[
+															{
+																message: `Enable CodeLenses to see code-level metrics. 
 														Go to Tools > Options > Text Editor > All Languages > CodeLens or [learn more about code-level metrics]`,
-															helpUrl:
-																"https://docs.newrelic.com/docs/codestream/observability/code-level-metrics",
-														},
-													]}
-													dismissCallback={e => {
-														dispatch(
-															setUserPreference({
-																prefPath: ["hideCodeLevelMetricsInstructions"],
-																value: true,
-															})
-														);
-													}}
-												/>
-											)}
-
-										{currentEntityAccounts &&
-											currentEntityAccounts?.length !== 0 &&
-											hasEntities && (
-												<>
-													{currentEntityAccounts
-														.filter(_ => _)
-														.map((ea, index) => {
-															const _observabilityRepo = observabilityRepos.find(
-																_ => _.repoId === currentRepoId
+																helpUrl:
+																	"https://docs.newrelic.com/docs/codestream/observability/code-level-metrics",
+															},
+														]}
+														dismissCallback={e => {
+															dispatch(
+																setUserPreference({
+																	prefPath: ["hideCodeLevelMetricsInstructions"],
+																	value: true,
+																})
 															);
+														}}
+													/>
+												)}
 
-															if (_observabilityRepo) {
+											{currentEntityAccounts &&
+												currentEntityAccounts?.length !== 0 &&
+												hasEntities && (
+													<>
+														{currentEntityAccounts
+															.filter(_ => _)
+															.map((ea, index) => {
+																console.warn("eric ea", ea);
+																const _observabilityRepo = observabilityRepos.find(
+																	_ => _.repoId === currentRepoId
+																);
+
 																const _alertSeverity = ea?.alertSeverity || "";
 																const alertSeverityColor = ALERT_SEVERITY_COLORS[_alertSeverity];
 																const collapsed = expandedEntity !== ea.entityGuid;
@@ -1285,8 +1321,6 @@ export const Observability = React.memo((props: Props) => {
 																	derivedState.observabilityRepoEntities.find(ore => {
 																		return ore.repoId === currentRepoId;
 																	});
-																const isSelectedCLM =
-																	ea.entityGuid === currentObservabilityRepoEntity?.entityGuid;
 																const showErrors = ea?.domain
 																	? ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS.includes(ea.domain)
 																	: false;
@@ -1492,6 +1526,7 @@ export const Observability = React.memo((props: Props) => {
 																		)}
 																	</>
 																);
+<<<<<<< HEAD
 															} else {
 																return null;
 															}
@@ -1555,60 +1590,117 @@ export const Observability = React.memo((props: Props) => {
 															remoteName={repoForEntityAssociator.repoName}
 														/>
 														<ObservabilityPreview />
+=======
+															})}
+														<>
+															{currentObsRepo && (
+																<ObservabilityAddAdditionalService
+																	onSuccess={async e => {
+																		console.debug(
+																			`o11y: ObservabilityAddAdditionalService calling doRefresh(force)`
+																		);
+																		doRefresh(true);
+																		HostApi.instance.track(
+																			"codestream/entity_association succeeded",
+																			{
+																				entity_guid: e?.entityGuid,
+																				account_id: parseId(e?.entityGuid)?.accountId,
+																				event_type: "response",
+																				meta_data: "first_association: false",
+																			}
+																		);
+																	}}
+																	remote={currentObsRepo.repoRemote}
+																	remoteName={currentObsRepo.repoName}
+																	servicesToExcludeFromSearch={currentEntityAccounts}
+																/>
+															)}
+														</>
+>>>>>>> ab782e5b1 (repo top level dropdown initial setup)
 													</>
 												)}
-											</>
-										)}
-									</>
-								)}
-							</PaneNode>
-						</>
-					) : (
-						<>
-							<div className="filters" style={{ padding: "0 20px 10px 20px" }}>
-								<span>
-									Connect to New Relic to see how your code is performing and identify issues.{" "}
-									<Link href="https://docs.newrelic.com/docs/codestream/observability/performance-monitoring/">
-										Learn more.
-									</Link>
-									{/* <Tooltip title="Connect later on the Integrations page" placement="top">
-										<Linkish
-											onClick={() =>
-												dispatch(setUserPreference({ prefPath: ["skipConnectObservabilityProviders"], value: true }))
-											}
-										>
-											Skip this step.
-										</Linkish>
-									</Tooltip> */}
-								</span>
-							</div>
+											{hasEntities && (
+												<>
+													{repoForEntityAssociator && (
+														<>
+															<EntityAssociator
+																isSidebarView={true}
+																label={
+																	<span>
+																		Select the service on New Relic that is built from this
+																		repository to see how it's performing. Or,{" "}
+																		<Link
+																			onClick={() => {
+																				dispatch(openPanel(WebviewPanels.OnboardNewRelic));
+																			}}
+																		>
+																			set up instrumentation.
+																		</Link>
+																	</span>
+																}
+																onSuccess={async e => {
+																	HostApi.instance.track(
+																		"codestream/entity_association succeeded",
+																		{
+																			entity_guid: e?.entityGuid,
+																			account_id: parseId(e?.entityGuid)?.accountId,
+																			event_type: "response",
+																			meta_data: "first_association: true",
+																		}
+																	);
 
-							<div style={{ padding: "0 20px 20px 20px" }}>
-								<Provider
-									appendIcon
-									style={{ maxWidth: "23em" }}
-									key="newrelic"
-									onClick={() =>
-										dispatch(configureAndConnectProvider("newrelic*com", "Observability Section"))
-									}
-								>
-									<span
-										style={{
-											fontSize: "smaller",
-											overflow: "hidden",
-											textOverflow: "ellipsis",
-											whiteSpace: "nowrap",
-										}}
-									>
-										<Icon name="newrelic" />
-										Connect to New Relic
+																	_useDidMount(true);
+																}}
+																remote={repoForEntityAssociator.repoRemote}
+																remoteName={repoForEntityAssociator.repoName}
+															/>
+															<ObservabilityPreview />
+														</>
+													)}
+												</>
+											)}
+										</>
+									)}
+								</PaneNode>
+							</>
+						) : (
+							<>
+								<div className="filters" style={{ padding: "0 20px 10px 20px" }}>
+									<span>
+										Connect to New Relic to see how your code is performing and identify issues.{" "}
+										<Link href="https://docs.newrelic.com/docs/codestream/observability/performance-monitoring/">
+											Learn more.
+										</Link>
 									</span>
-								</Provider>
-							</div>
-						</>
-					)}
-				</PaneBody>
-			)}
+								</div>
+
+								<div style={{ padding: "0 20px 20px 20px" }}>
+									<Provider
+										appendIcon
+										style={{ maxWidth: "23em" }}
+										key="newrelic"
+										onClick={() =>
+											dispatch(configureAndConnectProvider("newrelic*com", "Observability Section"))
+										}
+									>
+										<span
+											style={{
+												fontSize: "smaller",
+												overflow: "hidden",
+												textOverflow: "ellipsis",
+												whiteSpace: "nowrap",
+											}}
+										>
+											<Icon name="newrelic" />
+											Connect to New Relic
+										</span>
+									</Provider>
+								</div>
+							</>
+						)}
+					</>
+				);
+			})}
 		</Root>
 	);
 });
