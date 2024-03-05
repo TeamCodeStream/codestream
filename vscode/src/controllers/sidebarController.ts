@@ -97,7 +97,8 @@ import {
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage,
 	IdeNames,
-	LogoutReason
+	LogoutReason,
+	EditorUndoType
 } from "@codestream/protocols/webview";
 import {
 	authentication,
@@ -141,7 +142,7 @@ import { BuiltInCommands } from "../constants";
 import * as csUri from "../system/uri";
 import * as TokenManager from "../api/tokenManager";
 import { SaveTokenReason } from "../api/tokenManager";
-import { copySymbol, replaceSymbol } from "./symbolEditController";
+import { copySymbol, editorUndo, replaceSymbol } from "./symbolEditController";
 
 const emptyObj = {};
 
@@ -1119,6 +1120,14 @@ export class SidebarController implements Disposable {
 			case EditorReplaceSymbolType.method: {
 				webview.onIpcRequest(EditorReplaceSymbolType, e, async (_type, params) => {
 					return await replaceSymbol(params);
+				});
+				break;
+			}
+			case EditorUndoType.method: {
+				console.log("*** registering undo");
+				webview.onIpcRequest(EditorUndoType, e, async (_type, _params) => {
+					console.log("*** onIpcRequest editorUndo");
+					return await editorUndo();
 				});
 				break;
 			}

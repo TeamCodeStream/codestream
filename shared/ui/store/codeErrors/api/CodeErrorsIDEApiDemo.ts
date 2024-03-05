@@ -8,6 +8,7 @@ import {
 	EditorRevealRangeRequest,
 	EditorRevealRangeRequestType,
 	EditorRevealRangeResponse,
+	EditorUndoType,
 } from "@codestream/protocols/webview";
 import { CodeErrorsIDEApi } from "@codestream/webview/store/codeErrors/api/CodeErrorsIDEApi";
 import { HostApi } from "@codestream/webview/webview-api";
@@ -122,19 +123,19 @@ class CodeErrorsIDEApiDemo implements CodeErrorsIDEApi {
 
 	async startDemoSequence() {
 		await this.startDemoGrokStream();
-		await wait(400);
-		await this.applyFix();
-		await wait(400);
-		await this.askForUnitTest();
-		await wait(400);
-		await this.postUnitTestReply();
-		await this.clearReply();
-		await wait(400);
-		await this.startUnitTestStream();
+		// await wait(400);
+		// await this.applyFix();
+		// await wait(400);
+		// await this.askForUnitTest();
+		// await wait(400);
+		// await this.postUnitTestReply();
+		// await this.clearReply();
+		// await wait(400);
+		// await this.startUnitTestStream();
 	}
 
 	async editorCopySymbol(request: EditorCopySymbolRequest): Promise<EditorCopySymbolResponse> {
-		const result = HostApi.instance.send(EditorCopySymbolType, request);
+		const result = await HostApi.instance.send(EditorCopySymbolType, request);
 		// Can be non awaited
 		this.startDemoSequence();
 		return result;
@@ -148,6 +149,10 @@ class CodeErrorsIDEApiDemo implements CodeErrorsIDEApi {
 
 	async editorRevealRange(request: EditorRevealRangeRequest): Promise<EditorRevealRangeResponse> {
 		return HostApi.instance.send(EditorRevealRangeRequestType, request);
+	}
+
+	async editorUndo(): Promise<void> {
+		return HostApi.instance.send(EditorUndoType, undefined);
 	}
 
 	setNrAiUserId(userId: string): void {

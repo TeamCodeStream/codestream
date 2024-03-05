@@ -8,6 +8,7 @@ import {
 	EditorRevealRangeRequest,
 	EditorRevealRangeRequestType,
 	EditorRevealRangeResponse,
+	EditorUndoType,
 } from "@codestream/protocols/webview";
 import { CodeErrorsIDEApi } from "@codestream/webview/store/codeErrors/api/CodeErrorsIDEApi";
 import { HostApi } from "@codestream/webview/webview-api";
@@ -25,6 +26,10 @@ class CodeErrorsIDEApiImpl implements CodeErrorsIDEApi {
 
 	async editorRevealRange(request: EditorRevealRangeRequest): Promise<EditorRevealRangeResponse> {
 		return HostApi.instance.send(EditorRevealRangeRequestType, request);
+	}
+
+	async editorUndo(): Promise<void> {
+		return HostApi.instance.send(EditorUndoType, undefined);
 	}
 
 	setNrAiUserId(userId: string): void {}

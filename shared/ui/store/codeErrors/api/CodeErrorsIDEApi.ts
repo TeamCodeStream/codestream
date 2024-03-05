@@ -14,6 +14,8 @@ export interface CodeErrorsIDEApi {
 
 	editorReplaceSymbol(request: EditorReplaceSymbolRequest): Promise<EditorReplaceSymbolResponse>;
 
+	editorUndo(): Promise<void>;
+
 	setNrAiUserId(userId: string): void;
 
 	setUserId(userId: string): void;

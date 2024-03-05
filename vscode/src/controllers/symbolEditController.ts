@@ -31,6 +31,11 @@ function findSymbol(
 	return undefined;
 }
 
+export async function editorUndo(): Promise<void> {
+	console.log("**** executing undo");
+	await commands.executeCommand("undo");
+}
+
 export async function copySymbol(
 	params: EditorCopySymbolRequest
 ): Promise<EditorCopySymbolResponse> {

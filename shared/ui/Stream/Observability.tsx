@@ -92,12 +92,15 @@ import { parseId } from "../utilities/newRelic";
 import { bootstrapNrCapabilities } from "../store/nrCapabilities/thunks";
 import { doGetObservabilityErrors } from "@codestream/webview/store/codeErrors/thunks";
 import {
+	demoEntityId,
 	setApiCurrentEntityId,
 	setApiCurrentRepoId,
+	setApiDemoMode,
 	setApiNrAiUserId,
 	setApiUserId,
 } from "@codestream/webview/store/codeErrors/api/apiResolver";
 import { getNrAiUserId } from "@codestream/webview/store/users/reducer";
+import { setDemoMode } from "@codestream/webview/store/codeErrors/actions";
 
 interface Props {
 	paneState: PaneState;
@@ -213,13 +216,13 @@ export const ErrorRow = (props: {
 		if (nrAiUserId && demoMode.enabled) {
 			setApiNrAiUserId(nrAiUserId);
 		}
-	}, [nrAiUserId]);
+	}, [nrAiUserId, demoMode.enabled]);
 
 	useMemo(() => {
 		if (userId && demoMode.enabled) {
 			setApiUserId(userId);
 		}
-	}, [userId]);
+	}, [userId, demoMode.enabled]);
 
 	return (
 		<Row
@@ -597,6 +600,9 @@ export const Observability = React.memo((props: Props) => {
 
 				if (_expandedEntity !== entityGuid) {
 					setExpandedEntity(entityGuid);
+					if (entityGuid === demoEntityId) {
+						doSetDemoMode(true);
+					}
 				}
 			}
 		}
@@ -772,6 +778,17 @@ export const Observability = React.memo((props: Props) => {
 			} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
 				setNoErrorsAccess(ex.message || GENERIC_ERROR_MESSAGE);
 			}
+		}
+	}
+
+	function doSetDemoMode(value: boolean) {
+		dispatch(setDemoMode(value));
+		setApiDemoMode(value);
+		if (currentRepoId) {
+			setApiCurrentRepoId(currentRepoId);
+		}
+		if (expandedEntity) {
+			setApiCurrentEntityId(expandedEntity);
 		}
 	}
 
@@ -977,6 +994,9 @@ export const Observability = React.memo((props: Props) => {
 				setPendingServiceClickedTelemetryCall(true);
 			}, 500);
 			setExpandedEntity(entityGuid);
+			if (entityGuid === demoEntityId) {
+				doSetDemoMode(true);
+			}
 		}
 	};
 
@@ -1047,6 +1067,9 @@ export const Observability = React.memo((props: Props) => {
 					? userPrefExpanded
 					: _currentEntityAccounts[0].entityGuid;
 				setExpandedEntity(_expandedEntity);
+				if (_expandedEntity === demoEntityId) {
+					doSetDemoMode(true);
+				}
 			}
 		}
 	}, [currentRepoId, observabilityRepos]);

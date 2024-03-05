@@ -7,6 +7,7 @@ import { codeErrorsApiImpl } from "@codestream/webview/store/codeErrors/api/Code
 
 export let codeErrorsApi: CodeErrorsApi = codeErrorsApiImpl;
 export let codeErrorsIDEApi: CodeErrorsIDEApi = codeErrorsIDEApiImpl;
+export const demoEntityId = "MTYwNjg2MnxBUE18QVBQTElDQVRJT058NDMxOTIyMTA";
 
 export function setApiDemoMode(demoMode: boolean) {
 	if (demoMode) {
