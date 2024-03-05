@@ -639,12 +639,6 @@ function listenForEvents(store) {
 						definedQuery.query.occurrenceId =
 							definedQuery.query.occurrenceId || definedQuery.query.traceId;
 
-						if (definedQuery.query.multipleRepos === "true") {
-							definedQuery.query.multipleRepos = true;
-						} else if (definedQuery.query.multipleRepos === "false") {
-							definedQuery.query.multipleRepos = false;
-						}
-
 						// if the user isn't logged in we'll queue this url
 						// up for post-login processing
 						if (!store.getState().session.userId) {
@@ -679,6 +673,8 @@ function listenForEvents(store) {
 							GetObservabilityErrorGroupMetadataRequestType,
 							{ entityGuid: definedQuery.query.entityId || "" }
 						)) as GetObservabilityErrorGroupMetadataResponse;
+
+						definedQuery.query.multipleRepos = response?.relatedRepos?.length > 1;
 
 						store.dispatch(
 							openErrorGroup(definedQuery.query.errorGroupGuid, definedQuery.query.occurrenceId, {

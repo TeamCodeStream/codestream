@@ -853,7 +853,7 @@ export function CodeErrorNav(props: Props) {
 				}}
 				isLoadingCallback={setIsLoading}
 				isLoadingParent={isLoading}
-				noSingleItemDropdownSkip={false}
+				noSingleItemDropdownSkip={true}
 				onSubmit={r => {
 					return new Promise((resolve, reject) => {
 						const payload = {
