@@ -17,6 +17,7 @@ export interface Config {
 	serverUrl: string;
 	showInStatusBar: "left" | "right" | false;
 	showMarkerGlyphs: boolean;
+	highlightEntityGuids: boolean;
 	goldenSignalsInEditor: boolean;
 	traceLevel: TraceLevel;
 	showInstrumentationGlyphs?: boolean;

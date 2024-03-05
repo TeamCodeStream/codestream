@@ -190,7 +190,12 @@ export async function activate(context: ExtensionContext) {
 
 	context.globalState.update(GlobalState.Version, extensionVersion);
 	context.subscriptions.push(
-		new EntityEditorDecorationProvider(Container.agent, Container.session)
+		new EntityEditorDecorationProvider(
+			Container.agent,
+			Container.session,
+			configuration,
+			() => Container.config
+		)
 	);
 
 	Logger.log(

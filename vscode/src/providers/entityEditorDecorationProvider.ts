@@ -1,19 +1,28 @@
-import { EntityTypeMap, GetEditorEntityGuidsRequestType } from "@codestream/protocols/agent";
 import {
+	EntityGuidToken,
+	EntityTypeMap,
+	GetEditorEntityGuidsRequestType
+} from "@codestream/protocols/agent";
+import {
+	ConfigurationChangeEvent,
 	DecorationOptions,
 	Disposable,
 	MarkdownString,
 	OverviewRulerLane,
 	Range,
+	TextEditor,
 	TextEditorDecorationType,
 	window,
 	workspace
 } from "vscode";
 import { CodeStreamAgentConnection } from "../agent/agentConnection";
 import { CodeStreamSession, SessionStatus, SessionStatusChangedEvent } from "../api/session";
+import { ExecuteLogCommandArgs, ExecuteNrqlCommandArgs } from "../commands";
+import { Config, Configuration } from "../configuration";
 import { Logger } from "../logger";
 import { Functions } from "../system";
-import { ExecuteLogCommandArgs, ExecuteNrqlCommandArgs } from "../commands";
+
+const CONFIGURATION_NAME = "highlightEntityGuids";
 
 export class EntityEditorDecorationProvider implements Disposable {
 	private _isEnabled: boolean = false;
@@ -22,10 +31,14 @@ export class EntityEditorDecorationProvider implements Disposable {
 	private _disposable: Disposable | undefined;
 	private _sessionDisposable: Disposable | undefined;
 	private _activeEditor = window.activeTextEditor;
+	private _status: SessionStatus | undefined = undefined;
 
 	constructor(
 		private agent: CodeStreamAgentConnection,
-		private session: CodeStreamSession
+		private session: CodeStreamSession,
+		private configuration: Configuration,
+		// needs to be a function to avoid stale data (and don't want to use Container in this file)
+		private configLocator: () => Config
 	) {
 		this._entityGuidDecorationType = window.createTextEditorDecorationType({
 			overviewRulerColor: "#1de783",
@@ -40,41 +53,9 @@ export class EntityEditorDecorationProvider implements Disposable {
 		});
 		this._disposable = Disposable.from(
 			this._entityGuidDecorationType,
-			this.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this)
+			this.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
+			configuration.onDidChange((...args) => this.onConfigurationChanged(...args), this)
 		);
-	}
-
-	private onSessionStatusChanged(e: SessionStatusChangedEvent) {
-		switch (e.getStatus()) {
-			case SessionStatus.SignedOut:
-				this._isEnabled = false;
-
-				window.visibleTextEditors.forEach(editor => {
-					editor.setDecorations(this._entityGuidDecorationType!, []);
-				});
-				this._sessionDisposable?.dispose();
-
-				break;
-
-			case SessionStatus.SignedIn: {
-				this._isEnabled = true;
-				this._sessionDisposable = Disposable.from(
-					window.onDidChangeActiveTextEditor(editor => {
-						this._activeEditor = editor;
-						if (editor) {
-							this.updateDecorations();
-						}
-					}),
-					workspace.onDidSaveTextDocument(document => {
-						if (this._activeEditor && document === this._activeEditor.document) {
-							this.updateDecorations();
-						}
-					})
-				);
-				this.updateDecorations();
-				break;
-			}
-		}
 	}
 
 	/**
@@ -84,9 +65,7 @@ export class EntityEditorDecorationProvider implements Disposable {
 	 */
 	updateDecorations = Functions.debounce(
 		() => {
-			if (this._activeEditor) {
-				this._updateDecorations();
-			}
+			this._updateDecorations();
 		},
 		100,
 		{
@@ -96,81 +75,152 @@ export class EntityEditorDecorationProvider implements Disposable {
 	);
 
 	private async _updateDecorations() {
-		if (!this._isEnabled || !window.activeTextEditor) {
-			if (window.activeTextEditor && this._entityGuidDecorationType) {
-				window.activeTextEditor.setDecorations(this._entityGuidDecorationType, []);
-			}
-			return;
-		}
-
 		const decorations: DecorationOptions[] = [];
+
 		try {
+			if (!this._isEnabled || !window.activeTextEditor) {
+				if (window.activeTextEditor && this._entityGuidDecorationType) {
+					window.activeTextEditor.setDecorations(this._entityGuidDecorationType, decorations);
+				}
+				return;
+			}
+
 			const response = await this.agent.sendRequest(GetEditorEntityGuidsRequestType, {
 				documentUri: window.activeTextEditor.document.uri.toString(true)
 			});
 
-			if (response?.items?.length) {
-				for (const item of response.items) {
-					let nrqlArgs: ExecuteNrqlCommandArgs | undefined = undefined;
-					const logArgs: ExecuteLogCommandArgs = {
-						entity: item.entity,
-						entityTypeDescription: item.entity.entityType
-							? EntityTypeMap[item.entity.entityType]
-							: "",
-						entryPoint: "entity_guid_finder",
-						ignoreSearch: true
-					};
-					if (
-						item.entity?.goldenMetrics?.metrics?.length &&
-						item.entity?.goldenMetrics?.metrics[0].query
-					) {
-						nrqlArgs = {
-							accountId: item.entity.accountId,
-							entryPoint: "entity_guid_finder",
-							fileUri: window.activeTextEditor.document.uri,
-							text: item.entity.goldenMetrics?.metrics[0].query
-						};
-					}
-					let hoverMessage: MarkdownString | undefined = undefined;
-					if (item.markdownString) {
-						let markdownLinks = [];
-						if (nrqlArgs) {
-							markdownLinks.push(
-								`[__NRQL__](command:codestream.executeNrql?${encodeURIComponent(
-									JSON.stringify(nrqlArgs)
-								)})`
-							);
-						}
-						if (logArgs) {
-							markdownLinks.push(
-								`[__Logs__](command:codestream.logSearch?${encodeURIComponent(
-									JSON.stringify(logArgs)
-								)})`
-							);
-						}
-						hoverMessage = new MarkdownString(
-							item.markdownString +
-								(markdownLinks.length > 0 ? "\n\n" + markdownLinks.join(" | ") : ""),
-							true
-						);
-						hoverMessage.isTrusted = true;
-					}
-					const decoration = {
-						range: new Range(
-							window.activeTextEditor.document.positionAt(item.range.start),
-							window.activeTextEditor.document.positionAt(item.range.end)
-						),
-						hoverMessage: hoverMessage
-					};
-					decorations.push(decoration);
-				}
-				window.activeTextEditor.setDecorations(this._entityGuidDecorationType!, decorations);
+			if (!response?.items?.length) {
+				return;
 			}
-			if (decorations.length === 0) {
-				window.activeTextEditor.setDecorations(this._entityGuidDecorationType!, []);
+
+			for (const entityGuidToken of response.items) {
+				decorations.push({
+					range: new Range(
+						window.activeTextEditor.document.positionAt(entityGuidToken.range.start),
+						window.activeTextEditor.document.positionAt(entityGuidToken.range.end)
+					),
+					hoverMessage: this.buildHoverMessage(window.activeTextEditor, entityGuidToken)
+				});
 			}
+
+			window.activeTextEditor.setDecorations(this._entityGuidDecorationType!, decorations);
 		} catch (ex) {
-			Logger.warn("Error updating decorations", { error: ex });
+			Logger.warn("EntityEditorDecorationProvider: Error updating decorations", { error: ex });
+		}
+	}
+
+	private buildHoverMessage(
+		activeTextEditor: TextEditor,
+		item: EntityGuidToken
+	): MarkdownString | undefined {
+		if (!item || !item.markdownString) {
+			return undefined;
+		}
+
+		const markdownLinks = [];
+		if (
+			activeTextEditor &&
+			item.entity?.goldenMetrics?.metrics?.length &&
+			item.entity?.goldenMetrics?.metrics[0] &&
+			item.entity?.goldenMetrics?.metrics[0].query
+		) {
+			markdownLinks.push(
+				`[__NRQL__](command:codestream.executeNrql?${encodeURIComponent(
+					JSON.stringify({
+						accountId: item.entity.accountId,
+						entryPoint: "entity_guid_finder",
+						// used for the hash
+						fileUri: activeTextEditor.document.uri,
+						// text is the nrql query
+						text: item.entity.goldenMetrics?.metrics[0].query
+					} as ExecuteNrqlCommandArgs)
+				)})`
+			);
+		}
+
+		markdownLinks.push(
+			`[__Logs__](command:codestream.logSearch?${encodeURIComponent(
+				JSON.stringify({
+					entity: item.entity,
+					entityTypeDescription: item.entity.entityType
+						? EntityTypeMap[item.entity.entityType]
+						: "",
+					entryPoint: "entity_guid_finder",
+					ignoreSearch: true
+				} as ExecuteLogCommandArgs)
+			)})`
+		);
+
+		const hoverMessage = new MarkdownString(
+			item.markdownString + (markdownLinks.length > 0 ? "\n\n" + markdownLinks.join(" | ") : ""),
+			true
+		);
+		hoverMessage.isTrusted = true;
+
+		return hoverMessage;
+	}
+
+	private onConfigurationChanged(e: ConfigurationChangeEvent) {
+		if (this.configuration.changed(e, this.configuration.name(CONFIGURATION_NAME).value)) {
+			if (this.configLocator().highlightEntityGuids) {
+				this.ensure();
+			} else {
+				this.disable();
+			}
+		}
+	}
+
+	private disable() {
+		try {
+			window.visibleTextEditors.forEach(editor => {
+				editor.setDecorations(this._entityGuidDecorationType!, []);
+			});
+			this._sessionDisposable?.dispose();
+			this._isEnabled = false;
+		} catch (ex) {
+			Logger.error(ex, "EntityEditorDecorationProvider.disable");
+		}
+	}
+
+	private ensure() {
+		try {
+			if (!(this.configLocator().highlightEntityGuids && this._status === SessionStatus.SignedIn)) {
+				return;
+			}
+
+			this._sessionDisposable?.dispose();
+
+			this._sessionDisposable = Disposable.from(
+				window.onDidChangeActiveTextEditor(editor => {
+					this._activeEditor = editor;
+					if (editor) {
+						this.updateDecorations();
+					}
+				}),
+				workspace.onDidSaveTextDocument(document => {
+					if (this._activeEditor && document === this._activeEditor.document) {
+						this.updateDecorations();
+					}
+				})
+			);
+			this._isEnabled = true;
+			this.updateDecorations();
+		} catch (ex) {
+			Logger.error(ex, "EntityEditorDecorationProvider.ensure");
+		}
+	}
+
+	private onSessionStatusChanged(e: SessionStatusChangedEvent) {
+		this._status = e.getStatus();
+		switch (this._status) {
+			case SessionStatus.SignedOut:
+				this.disable();
+				break;
+
+			case SessionStatus.SignedIn: {
+				this.ensure();
+				break;
+			}
 		}
 	}
 

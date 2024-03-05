@@ -146,6 +146,12 @@
 					"description": "Specifies whether to show glyph indicators at the start of lines with associated codemarks in the editor",
 					"scope": "window"
 				},
+				"codestream.highlightEntityGuids": {
+					"type": "boolean",
+					"default": true,
+					"description": "Specifies whether to highlight entity guids in the editor",
+					"scope": "window"
+				},
 				"codestream.traceLevel": {
 					"type": "string",
 					"default": "verbose",
