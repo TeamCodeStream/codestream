@@ -51,9 +51,7 @@ export class NrLogsProvider {
 		try {
 			const query = `query search($cursor:String){
 				actor {
-				  entitySearch(query: "name LIKE '%${Strings.sanitizeGraphqlValue(
-						request.searchCharacters
-					)}%' AND domain IN ('APM', 'EXT') AND type IN ('APPLICATION', 'SERVICE')",
+				  entitySearch(query: "name LIKE '%${Strings.sanitizeGraphqlValue(request.searchCharacters)}%'",
 				  sortByWithDirection: { attribute: NAME, direction: ASC },
 				  options: { limit: ${limit} }) {
 					count
