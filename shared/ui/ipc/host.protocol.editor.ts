@@ -96,7 +96,15 @@ export const EditorCopySymbolType = new RequestType<
 	void
 >(`${IpcRoutes.Host}/editor/symbol/copy`);
 
-export const EditorUndoType = new RequestType<void, void, void, void>(
+export type EditorUndoRequest = {
+	times: number;
+};
+
+export type EditorUndoResponse = {
+	success: boolean;
+};
+
+export const EditorUndoType = new RequestType<EditorUndoRequest, EditorUndoResponse, void, void>(
 	`${IpcRoutes.Host}/editor/undo`
 );
 

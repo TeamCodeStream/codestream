@@ -19,18 +19,12 @@ import {
 	parentPostId,
 	postId,
 	streamId,
-	unitTestPostId,
-	userUnitTestPostId,
 } from "@codestream/webview/store/codeErrors/api/data/createSharableCodeErrorResponse";
 import { DidChangeDataNotificationType } from "@codestream/protocols/agent";
 import {
 	getAddPostsMain,
-	getAddPostsUnitTest,
-	getAddPostsUserUnitTest,
 	getFinalAddPosts,
-	getFinalAddPostsUnitTest,
 } from "@codestream/webview/store/codeErrors/api/data/broadcasts";
-import { getNraiUnitTestStream } from "@codestream/webview/store/codeErrors/api/data/nraiUnitTestStream";
 
 class CodeErrorsIDEApiDemo implements CodeErrorsIDEApi {
 	private _nraiUserId: string | undefined;
@@ -38,33 +32,6 @@ class CodeErrorsIDEApiDemo implements CodeErrorsIDEApi {
 	private _applyFixCallback: (() => void) | undefined;
 	private _postReplyCallback: ((text: string) => void) | undefined;
 	private _repoId: string | undefined;
-
-	async startUnitTestStream() {
-		const nraiUserId = this._nraiUserId;
-		if (!nraiUserId) {
-			return;
-		}
-		const unitTestStream = getNraiUnitTestStream(
-			streamId,
-			unitTestPostId,
-			parentPostId,
-			codeErrorId
-		);
-		HostApi.instance.emit(DidChangeDataNotificationType.method, {
-			type: "posts",
-			data: getAddPostsUnitTest(streamId, unitTestPostId, parentPostId, nraiUserId),
-		});
-		await wait(400);
-		for (const event of unitTestStream) {
-			HostApi.instance.emit(DidChangeDataNotificationType.method, event);
-			await wait(100);
-		}
-		await wait(400);
-		HostApi.instance.emit(DidChangeDataNotificationType.method, {
-			type: "posts",
-			data: getFinalAddPostsUnitTest(streamId, unitTestPostId, parentPostId, nraiUserId),
-		});
-	}
 
 	async startDemoGrokStream() {
 		const nraiUserId = this._nraiUserId;
@@ -89,49 +56,8 @@ class CodeErrorsIDEApiDemo implements CodeErrorsIDEApi {
 		});
 	}
 
-	async applyFix() {
-		if (this._applyFixCallback) {
-			await wait(400);
-			this._applyFixCallback();
-		}
-	}
-
-	async askForUnitTest() {
-		if (this._postReplyCallback) {
-			await wait(400);
-			this._postReplyCallback("@AI Write a unit test for the suggested fix.");
-		}
-	}
-
-	async clearReply() {
-		if (this._postReplyCallback) {
-			this._postReplyCallback("");
-		}
-	}
-
-	async postUnitTestReply() {
-		if (!this._userId) {
-			return;
-		}
-		const post = getAddPostsUserUnitTest(streamId, userUnitTestPostId, parentPostId, this._userId);
-		console.debug("Posting a unit test reply");
-		HostApi.instance.emit(DidChangeDataNotificationType.method, {
-			type: "posts",
-			data: post,
-		});
-	}
-
 	async startDemoSequence() {
 		await this.startDemoGrokStream();
-		// await wait(400);
-		// await this.applyFix();
-		// await wait(400);
-		// await this.askForUnitTest();
-		// await wait(400);
-		// await this.postUnitTestReply();
-		// await this.clearReply();
-		// await wait(400);
-		// await this.startUnitTestStream();
 	}
 
 	async editorCopySymbol(request: EditorCopySymbolRequest): Promise<EditorCopySymbolResponse> {
@@ -151,8 +77,9 @@ class CodeErrorsIDEApiDemo implements CodeErrorsIDEApi {
 		return HostApi.instance.send(EditorRevealRangeRequestType, request);
 	}
 
-	async editorUndo(): Promise<void> {
-		return HostApi.instance.send(EditorUndoType, undefined);
+	async editorUndo(times: number): Promise<void> {
+		await HostApi.instance.send(EditorUndoType, { times });
+		return;
 	}
 
 	setNrAiUserId(userId: string): void {

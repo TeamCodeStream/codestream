@@ -28,8 +28,9 @@ class CodeErrorsIDEApiImpl implements CodeErrorsIDEApi {
 		return HostApi.instance.send(EditorRevealRangeRequestType, request);
 	}
 
-	async editorUndo(): Promise<void> {
-		return HostApi.instance.send(EditorUndoType, undefined);
+	async editorUndo(times: number): Promise<void> {
+		await HostApi.instance.send(EditorUndoType, { times });
+		return;
 	}
 
 	setNrAiUserId(userId: string): void {}

@@ -61,6 +61,7 @@ import { WarningBox } from "./WarningBox";
 import { isEmpty as _isEmpty } from "lodash";
 import {
 	codeErrorsApi,
+	codeErrorsIDEApi,
 } from "@codestream/webview/store/codeErrors/api/apiResolver";
 
 const NavHeader = styled.div`
@@ -222,8 +223,7 @@ export function CodeErrorNav(props: Props) {
 	const exit = async () => {
 		// clear out the current code error (set to blank) in the webview
 		if (derivedState.errorsDemoMode.enabled) {
-			// await codeErrorsIDEApi.editorUndo(); // Undo formatting
-			// await codeErrorsIDEApi.editorUndo(); // Undo code edits
+			await codeErrorsIDEApi.editorUndo(2); // Undo apply fix and formatting
 			if (derivedState.currentCodeErrorId) {
 				// dispatch(deletePost(derivedState.currentCodeErrorData.postId!));
 				dispatch(removeCodeError(derivedState.currentCodeErrorId));

@@ -1124,10 +1124,8 @@ export class SidebarController implements Disposable {
 				break;
 			}
 			case EditorUndoType.method: {
-				console.log("*** registering undo");
-				webview.onIpcRequest(EditorUndoType, e, async (_type, _params) => {
-					console.log("*** onIpcRequest editorUndo");
-					return await editorUndo();
+				webview.onIpcRequest(EditorUndoType, e, async (_type, params) => {
+					return await editorUndo(params);
 				});
 				break;
 			}

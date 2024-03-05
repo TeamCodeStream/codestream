@@ -65,7 +65,6 @@ class CodeErrorsApiDemo implements CodeErrorsApi {
 	async fetchCodeErrors(request: FetchCodeErrorsRequest): Promise<FetchCodeErrorsResponse> {
 		const response = getCodeErrorsResponse(postId, streamId, codeErrorId, this._currentRepoId!);
 		return response;
-		// return HostApi.instance.send(FetchCodeErrorsRequestType, request);
 	}
 
 	async getNewRelicErrorGroup(
@@ -78,7 +77,6 @@ class CodeErrorsApiDemo implements CodeErrorsApi {
 	async getObservabilityErrors(
 		request: GetObservabilityErrorsRequest
 	): Promise<GetObservabilityErrorsResponse> {
-		// return HostApi.instance.send(GetObservabilityErrorsRequestType, request);
 		return getObservabilityErrorsResponse(this._currentRepoId!, this._entityId!);
 	}
 
@@ -88,7 +86,6 @@ class CodeErrorsApiDemo implements CodeErrorsApi {
 	}
 
 	async resolveStackTrace(request: ResolveStackTraceRequest): Promise<ResolveStackTraceResponse> {
-		// return resolveStackTraceResponse;
 		const result = await HostApi.instance.send(ResolveStackTraceRequestType, request);
 		return result;
 	}
@@ -96,7 +93,6 @@ class CodeErrorsApiDemo implements CodeErrorsApi {
 	async resolveStackTracePosition(
 		request: ResolveStackTracePositionRequest
 	): Promise<ResolveStackTracePositionResponse> {
-		// return resolveStackTracePosition;
 		const result = await HostApi.instance.send(ResolveStackTracePositionRequestType, request);
 		return result;
 	}

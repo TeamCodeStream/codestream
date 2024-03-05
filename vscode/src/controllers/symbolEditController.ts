@@ -3,10 +3,12 @@ import {
 	EditorCopySymbolRequest,
 	EditorCopySymbolResponse,
 	EditorReplaceSymbolRequest,
-	EditorReplaceSymbolResponse
+	EditorReplaceSymbolResponse,
+	EditorUndoRequest,
+	EditorUndoResponse
 } from "@codestream/protocols/webview";
 import { Editor } from "extensions";
-import { Uri, commands, Range, DocumentSymbol } from "vscode";
+import { Uri, commands, Range, DocumentSymbol, window } from "vscode";
 import { CancellationTokenSource } from "vscode-languageclient";
 import { BuiltInCommands } from "../constants";
 import { Logger } from "logger";
@@ -31,9 +33,19 @@ function findSymbol(
 	return undefined;
 }
 
-export async function editorUndo(): Promise<void> {
-	console.log("**** executing undo");
-	await commands.executeCommand("undo");
+export async function editorUndo(params: EditorUndoRequest): Promise<EditorUndoResponse> {
+	const editor = await Editor.getActiveOrVisible();
+	if (!editor) {
+		return { success: false };
+	}
+	window.showTextDocument(editor.document); // Try to focus the editor so the undo works
+	for (let i = 0; i < params.times; i++) {
+		await commands.executeCommand("undo");
+		if (params.times > 1) {
+			await new Promise(resolve => setTimeout(resolve, 1500)); // wait 1.5 seconds between undos - must be an epic debounce somewhere
+		}
+	}
+	return { success: true };
 }
 
 export async function copySymbol(
