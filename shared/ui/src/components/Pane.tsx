@@ -528,7 +528,7 @@ export function Pane(props: PropsWithChildren<PaneProps>) {
 	return (
 		<Root
 			className={props.className}
-			style={{ top: `${props.top}px`, height: `${props.height}px` }}
+			style={{ top: `${props.top}px`, height: `${props.height}px`, overflowY: "auto" }}
 		>
 			{props.children}
 		</Root>

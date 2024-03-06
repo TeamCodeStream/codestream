@@ -50,12 +50,7 @@ import { SecurityIssuesWrapper } from "@codestream/webview/Stream/SecurityIssues
 import { ObservabilityServiceLevelObjectives } from "@codestream/webview/Stream/ObservabilityServiceLevelObjectives";
 import { WebviewPanels, CLMSettings, DEFAULT_CLM_SETTINGS } from "@codestream/protocols/api";
 import { Button } from "../src/components/Button";
-import {
-	NoContent,
-	PaneNode,
-	PaneNodeName,
-	PaneState,
-} from "../src/components/Pane";
+import { NoContent, PaneNode, PaneNodeName, PaneState } from "../src/components/Pane";
 import { CodeStreamState } from "../store";
 import { configureAndConnectProvider } from "../store/providers/actions";
 import { isConnected } from "../store/providers/reducer";
@@ -1151,52 +1146,11 @@ export const Observability = React.memo((props: Props) => {
 	};
 
 	const { activeO11y } = derivedState;
-	console.warn("eric observabilityRepos", observabilityRepos);
 
 	return (
 		<Root>
 			{observabilityRepos.map(repo => {
-				// <PaneHeader
-				// 	title={
-				// 		derivedState.isO11yPaneOnly ? (
-				// 			<CurrentRepoContext
-				// 				observabilityRepos={observabilityRepos}
-				// 				currentRepoCallback={setCurrentRepoId}
-				// 				isHeaderText={true}
-				// 			/>
-				// 		) : (
-				// 			"Observability"
-				// 		)
-				// 	}
-				// 	id={WebviewPanels.Observability}
-				// 	subtitle={
-				// 		derivedState.isO11yPaneOnly ? (
-				// 			false
-				// 		) : (
-				// 			<CurrentRepoContext
-				// 				observabilityRepos={observabilityRepos}
-				// 				currentRepoCallback={setCurrentRepoId}
-				// 			/>
-				// 		)
-				// 	}
-				// 	noDropdown={false}
-				// >
-				// 	{derivedState.newRelicIsConnected ? (
-				// 		<Icon
-				// 			name="refresh"
-				// 			title="Refresh"
-				// 			placement="bottom"
-				// 			delay={1}
-				// 			onClick={e => {
-				// 				doRefresh(true);
-				// 			}}
-				// 		/>
-				// 	) : (
-				// 		<>&nbsp;</>
-				// 	)}
-				// </PaneHeader>;
-
-				console.warn("eric repoName", repo.repoName);
+				const repoIsCollapsed = currentRepoId !== repo.repoId;
 
 				return (
 					<>
@@ -1211,19 +1165,25 @@ export const Observability = React.memo((props: Props) => {
 												observabilityRepos={observabilityRepos}
 												currentRepoCallback={setCurrentRepoId}
 												isHeaderText={true}
+												repoName={repo.repoName}
+												serviceCount={repo.entityAccounts.length}
 											/>
 										}
 										id={repo.repoId}
 										labelIsFlex={true}
 										onClick={e => {
-											return;
+											if (repo.repoId === currentRepoId) {
+												setCurrentRepoId(undefined);
+											} else {
+												setCurrentRepoId(repo.repoId);
+											}
 										}}
-										collapsed={false}
+										collapsed={repoIsCollapsed}
 										showChildIconOnCollapse={true}
 										actionsVisibleIfOpen={true}
 										customPadding="2px 10px 2px 4px"
 									>
-										{derivedState.newRelicIsConnected ? (
+										{derivedState.newRelicIsConnected && !repoIsCollapsed ? (
 											<Icon
 												name="refresh"
 												title="Refresh"
@@ -1261,7 +1221,8 @@ export const Observability = React.memo((props: Props) => {
 													</GenericWrapper>
 												)}
 
-											{_isEmpty(currentRepoId) &&
+											{!repoIsCollapsed &&
+												_isEmpty(currentRepoId) &&
 												_isEmpty(repoForEntityAssociator) &&
 												!genericError && (
 													<NoContent>
@@ -1302,14 +1263,14 @@ export const Observability = React.memo((props: Props) => {
 													/>
 												)}
 
-											{currentEntityAccounts &&
-												currentEntityAccounts?.length !== 0 &&
+											{!repoIsCollapsed &&
+												repo.entityAccounts &&
+												repo.entityAccounts?.length !== 0 &&
 												hasEntities && (
 													<>
-														{currentEntityAccounts
+														{repo.entityAccounts
 															.filter(_ => _)
 															.map((ea, index) => {
-																console.warn("eric ea", ea);
 																const _observabilityRepo = observabilityRepos.find(
 																	_ => _.repoId === currentRepoId
 																);

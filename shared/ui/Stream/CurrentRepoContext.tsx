@@ -22,6 +22,8 @@ interface Props {
 	currentRepoCallback: (repoId?: string) => void;
 	observabilityRepos?: ObservabilityRepo[];
 	isHeaderText?: boolean;
+	repoName?: string;
+	serviceCount?: number;
 }
 
 interface CurrentRepoContainerProps {
@@ -31,6 +33,7 @@ const CurrentRepoContainer = styled.span<CurrentRepoContainerProps>`
 	color: ${props =>
 		props.isHeaderText ? "var(--text-color-highlight)" : "var(--text-color-subtle)"};
 	display: ${props => (props.isHeaderText ? "flex" : "inherit")};
+	margin-left: -4px;
 `;
 
 export const CurrentRepoContext = React.memo((props: Props) => {
@@ -132,17 +135,11 @@ export const CurrentRepoContext = React.memo((props: Props) => {
 	return (
 		<CurrentRepoContainer isHeaderText={props.isHeaderText ? true : false}>
 			<Icon style={{ transform: "scale(0.7)", display: "inline-block" }} name="repo" />{" "}
-			<span className="repo-name" style={{ margin: props.isHeaderText ? "1px 2px 0px 0px" : "0" }}>
-				{currentRepoName}
-			</span>
+			<span style={{ margin: props.isHeaderText ? "0px 2px 0px 0px" : "0" }}>{props.repoName}</span>
 			{props.isHeaderText && (
-				<Icon
-					name="info"
-					className="subtle"
-					placement="bottom"
-					style={{ transform: "scale(0.9)", display: "inline-block" }}
-					title={`Open a file in the editor to see data for a different repository`}
-				/>
+				<span className="subtle">
+					({props.serviceCount === 0 ? <>(No Services)</> : <>{props.serviceCount}</>})
+				</span>
 			)}
 		</CurrentRepoContainer>
 	);
