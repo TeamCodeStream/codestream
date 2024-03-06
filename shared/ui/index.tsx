@@ -760,6 +760,22 @@ function listenForEvents(store) {
 						break;
 					}
 
+					case "logs": {
+						const definedQuery = route as RouteWithQuery<{
+							entityId?: string;
+						}>;
+
+						HostApi.instance.notify(OpenEditorViewNotificationType, {
+							panel: "logs",
+							title: "Logs",
+							entryPoint: "apm_logs",
+							entityGuid: definedQuery.query.entityId,
+							ide: {},
+						});
+
+						break;
+					}
+
 					case "pixie": {
 						const { remote, file, line } = route.query;
 						let lineNumber = line ? parseInt(line, 0) : 0;

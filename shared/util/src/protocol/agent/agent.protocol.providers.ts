@@ -1556,6 +1556,21 @@ export const GetObservabilityReposRequestType = new RequestType<
 	void
 >("codestream/newrelic/repos");
 
+export interface GetObservabilityEntityByGuidRequest {
+	id: string;
+}
+
+export interface GetObservabilityEntityByGuidResponse {
+	entity: EntityAccount;
+}
+
+export const GetObservabilityEntityByGuidRequestType = new RequestType<
+	GetObservabilityEntityByGuidRequest,
+	GetObservabilityEntityByGuidResponse,
+	void,
+	void
+>("codestream/newrelic/entity");
+
 export interface GetObservabilityEntitiesRequest {
 	searchCharacters: string;
 	nextCursor?: string;
@@ -2730,7 +2745,7 @@ export interface NRQLRecentQuery {
 	/**
 	 * Recent, runnable, query from the current user
 	 */
-	query: string;	
+	query: string;
 	accounts: Account[];
 	createdAt: number;
 	dayString?: string;

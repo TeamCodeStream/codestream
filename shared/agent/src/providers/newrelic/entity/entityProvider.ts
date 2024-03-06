@@ -14,6 +14,9 @@ import {
 	GetObservabilityEntitiesRequest,
 	GetObservabilityEntitiesRequestType,
 	GetObservabilityEntitiesResponse,
+	GetObservabilityEntityByGuidRequest,
+	GetObservabilityEntityByGuidRequestType,
+	GetObservabilityEntityByGuidResponse,
 	RelatedEntity,
 } from "@codestream/protocols/agent";
 import { log } from "../../../system/decorators/log";
@@ -79,6 +82,54 @@ export class EntityProvider implements Disposable {
 			}
 			throw new ResponseError(ERROR_GENERIC_USE_ERROR_MESSAGE, ex.message);
 		}
+	}
+
+	@lspHandler(GetObservabilityEntityByGuidRequestType)
+	@log({ timed: true })
+	async getEntityByGuid(
+		request: GetObservabilityEntityByGuidRequest
+	): Promise<GetObservabilityEntityByGuidResponse> {
+		const query = `{
+			actor {
+				entity(guid: "${request.id}") {
+					account {
+						name
+						id
+					}
+					guid
+					name
+					entityType
+					tags {
+						key
+						values
+					}
+				}
+			}
+		}`;
+
+		const response = await this.graphqlClient.query<{
+			actor: {
+				entity: {
+					account: { name: string; id: number };
+					guid: string;
+					name: string;
+					entityType: EntityType;
+					tags: { key: string; values: string[] }[];
+				};
+			};
+		}>(query);
+		const entity = response.actor.entity;
+		return {
+			entity: {
+				accountId: entity.account.id,
+				accountName: entity.account.name,
+				entityGuid: entity.guid,
+				entityName: entity.name,
+				entityType: entity.entityType,
+				entityTypeDescription: EntityTypeMap[entity.entityType],
+				tags: entity.tags,
+			},
+		};
 	}
 
 	/**

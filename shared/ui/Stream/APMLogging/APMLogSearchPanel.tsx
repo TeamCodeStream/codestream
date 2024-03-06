@@ -3,6 +3,7 @@ import {
 	GetLogFieldDefinitionsRequestType,
 	GetLoggingEntitiesRequestType,
 	GetLogsRequestType,
+	GetObservabilityEntityByGuidRequestType,
 	GetObservabilityReposRequestType,
 	GetObservabilityReposResponse,
 	GetSurroundingLogsRequestType,
@@ -211,6 +212,18 @@ export const APMLogSearchPanel = (props: {
 			setQuery(props.suppliedQuery);
 		}
 
+		const finishHandlingEntityAccount = (entityAccount: EntityAccount) => {
+			handleSelectDropdownOption({
+				value: entityAccount.entityGuid,
+				label: entityAccount.entityName,
+				accountName: entityAccount.accountName,
+				entityType: entityAccount.entityTypeDescription,
+			});
+
+			fetchFieldDefinitions(entityAccount.entityGuid);
+			fetchLogs(entityAccount.entityGuid, props.suppliedQuery);
+		};
+
 		let entityAccounts: EntityAccount[] = [];
 
 		HostApi.instance
@@ -222,22 +235,25 @@ export const APMLogSearchPanel = (props: {
 
 				if (entityAccount) {
 					trackOpenTelemetry(props.entryPoint, entityAccount.entityGuid, entityAccount.accountId);
+					finishHandlingEntityAccount(entityAccount);
+				} else if (props.entityGuid) {
+					HostApi.instance
+						.send(GetObservabilityEntityByGuidRequestType, { id: props.entityGuid })
+						.then(({ entity }) => {
+							trackOpenTelemetry(props.entryPoint, entity.entityGuid, entity.accountId);
+							finishHandlingEntityAccount(entity);
+						})
+						.catch(ex => {
+							handleError(
+								"We ran into an error fetching a default service. Please select a service from the list above."
+							);
+							trackOpenTelemetry(props.entryPoint);
+						});
 				} else {
 					// its possible a race condition could get us here and the entity guid passed in doesn't match any in the list
 					// allow it, so the user can still use the panel - it just won't have a default selection/query/execution.
 					trackOpenTelemetry(props.entryPoint);
-					return;
 				}
-
-				handleSelectDropdownOption({
-					value: entityAccount.entityGuid,
-					label: entityAccount.entityName,
-					accountName: entityAccount.accountName,
-					entityType: entityAccount.entityTypeDescription,
-				});
-
-				fetchFieldDefinitions(entityAccount.entityGuid);
-				fetchLogs(entityAccount.entityGuid, props.suppliedQuery);
 			})
 			.catch(ex => {
 				handleError(
