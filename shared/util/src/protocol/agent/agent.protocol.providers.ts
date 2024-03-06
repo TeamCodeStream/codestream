@@ -2403,7 +2403,7 @@ export interface GoldenMetricsQueries {
 	default?: string;
 }
 
-export interface Pills {
+export interface DeploymentDiff {
 	errorRateData?: {
 		percentChange: number | undefined;
 		permalinkUrl: string;
@@ -2429,7 +2429,7 @@ export interface EntityGoldenMetrics {
 		value: number;
 		displayValue: string;
 	}[];
-	pillsData?: Pills;
+	pillsData?: DeploymentDiff;
 }
 
 export interface MethodGoldenMetrics {

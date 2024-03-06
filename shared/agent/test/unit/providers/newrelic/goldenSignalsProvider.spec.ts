@@ -7,7 +7,12 @@ import { EntityGoldenMetrics } from "../../../../../util/src/protocol/agent/agen
 
 describe("newRelicProvider", () => {
 	it("getBestEntity-basedOnTag", () => {
-		const goldenSignalsProvider = new GoldenSignalsProvider({} as any, {} as any, {} as any);
+		const goldenSignalsProvider = new GoldenSignalsProvider(
+			{} as any,
+			{} as any,
+			{} as any,
+			{} as any
+		);
 		const asdf = goldenSignalsProvider.getGoldenSignalsEntity({} as any, {
 			repoId: "123",
 			repoName: "repo1",
@@ -28,7 +33,12 @@ describe("newRelicProvider", () => {
 	});
 
 	it("getBestEntity-basedOnName", () => {
-		const goldenSignalsProvider = new GoldenSignalsProvider({} as any, {} as any, {} as any);
+		const goldenSignalsProvider = new GoldenSignalsProvider(
+			{} as any,
+			{} as any,
+			{} as any,
+			{} as any
+		);
 		const asdf = goldenSignalsProvider.getGoldenSignalsEntity({} as any, {
 			repoId: "123",
 			repoName: "repo1",
@@ -58,7 +68,12 @@ describe("newRelicProvider", () => {
 	});
 
 	it("getBestEntity-default", () => {
-		const goldenSignalsProvider = new GoldenSignalsProvider({} as any, {} as any, {} as any);
+		const goldenSignalsProvider = new GoldenSignalsProvider(
+			{} as any,
+			{} as any,
+			{} as any,
+			{} as any
+		);
 		const asdf = goldenSignalsProvider.getGoldenSignalsEntity({} as any, {
 			repoId: "123",
 			repoName: "repo1",
@@ -94,7 +109,12 @@ describe("newRelicProvider", () => {
 		expect(asdf.entityGuid).toEqual("012");
 	});
 	it("getBestEntity-basedOnpreferences", () => {
-		const goldenSignalsProvider = new GoldenSignalsProvider({} as any, {} as any, {} as any);
+		const goldenSignalsProvider = new GoldenSignalsProvider(
+			{} as any,
+			{} as any,
+			{} as any,
+			{} as any
+		);
 		const asdf = goldenSignalsProvider.getGoldenSignalsEntity(
 			{
 				preferences: {
@@ -189,14 +209,19 @@ describe("newRelicProvider", () => {
 			},
 		};
 
+		const deploymentProviderStub = {
+			getDeploymentDiff: async () => {
+				return { errorRateData: {}, responseTimeData: {} } as any;
+			},
+		};
+
 		const goldenSignalsProvider = new GoldenSignalsProvider(
 			graphqlClient as any,
 			{} as any,
-			{} as any
+			{} as any,
+			deploymentProviderStub as any
 		);
-		goldenSignalsProvider.getPillsData = async () => {
-			return { errorRateData: {}, responseTimeData: {} } as any;
-		};
+
 		const response = (await goldenSignalsProvider.getEntityLevelGoldenMetrics(
 			"123",
 			123

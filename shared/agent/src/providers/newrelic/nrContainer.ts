@@ -99,7 +99,7 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 
 	disposables.push(nrHttpClient);
 
-	const deploymentsProvider = new DeploymentsProvider(newRelicGraphqlClient);
+	const deploymentsProvider = new DeploymentsProvider(newRelicGraphqlClient, nrApiConfig);
 
 	const reposProvider = new ReposProvider(
 		newRelicGraphqlClient,
@@ -128,7 +128,8 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 	const goldenSignalsProvider = new GoldenSignalsProvider(
 		newRelicGraphqlClient,
 		reposProvider,
-		nrApiConfig
+		nrApiConfig,
+		deploymentsProvider
 	);
 
 	const entityAccountResolver = new EntityAccountResolver(
@@ -155,7 +156,7 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 		nrApiConfig,
 		newRelicGraphqlClient,
 		entityAccountResolver,
-		deploymentsProvider,
+		deploymentsProvider
 	);
 
 	disposables.push(clmManager);
