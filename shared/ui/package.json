@@ -7,9 +7,9 @@
 	"scripts": {
 		"clean:ci": "git clean -xdf",
 		"coverage": "jest --forceExit --coverage",
-		"test": "jest --forceExit",
-		"test:ci": "CI=true jest --forceExit --coverage",
-		"test:watch": "jest --watch",
+		"test": "jest --forceExit --testEnvironment jsdom",
+		"test:ci": "CI=true jest --testEnvironment jsdom --forceExit --coverage",
+		"test:watch": "jest --testEnvironment jsdom --watch",
 		"verify": "run-p verify:**",
 		"verify:compile": "npx tsc --noEmit",
 		"verify:lint": "eslint 'src/**' 'store/**' 'Stream/**' 'ipc/**' 'Authentication/**' 'Container/**' '@types/**' 'utilities/**'",

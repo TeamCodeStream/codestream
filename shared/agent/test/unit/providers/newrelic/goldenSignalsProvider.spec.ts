@@ -3,6 +3,7 @@
 import { describe, expect, it } from "@jest/globals";
 
 import { GoldenSignalsProvider } from "../../../../src/providers/newrelic/goldenSignals/goldenSignalsProvider";
+import { EntityGoldenMetrics } from "../../../../../util/src/protocol/agent/agent.protocol.providers";
 
 describe("newRelicProvider", () => {
 	it("getBestEntity-basedOnTag", () => {
@@ -156,5 +157,57 @@ describe("newRelicProvider", () => {
 			}
 		);
 		expect(asdf.entityGuid).toEqual("234");
+	});
+
+	it("getEntityLevelGoldenMetrics", async () => {
+		const graphqlClient = {
+			query: function () {
+				return new Promise(resolve => {
+					resolve({
+						actor: {
+							entity: {
+								goldenMetrics: {
+									metrics: [
+										{
+											definition: { from: "Transaction", select: "count(name)" },
+											name: "FooBar",
+											title: "FooBar",
+											unit: "any",
+										},
+										{
+											definition: { from: "Metric", select: "count(*)" },
+											name: "Baz",
+											title: "Baz",
+											unit: "any",
+										},
+									],
+								},
+							},
+						},
+					} as any);
+				});
+			},
+		};
+
+		const goldenSignalsProvider = new GoldenSignalsProvider(
+			graphqlClient as any,
+			{} as any,
+			{} as any
+		);
+		goldenSignalsProvider.getPillsData = async () => {
+			return { errorRateData: {}, responseTimeData: {} } as any;
+		};
+		const response = (await goldenSignalsProvider.getEntityLevelGoldenMetrics(
+			"123",
+			123
+		)) as EntityGoldenMetrics;
+
+		expect(response.since).toEqual("30 min");
+		expect(response.metrics[0].queries?.timeseries).toEqual(
+			`SELECT count(name) AS 'result' \nFROM Transaction \nWHERE entity.guid='123' \nSINCE 30 MINUTES AGO \nTIMESERIES`
+		);
+		expect(response.metrics[1].queries?.timeseries).toEqual(
+			`SELECT count(*) AS 'result' \nFROM Metric \nWHERE entity.guid='123' \nSINCE 30 MINUTES AGO \nTIMESERIES`
+		);
 	});
 });

@@ -9,7 +9,8 @@ import { useAppSelector, useAppDispatch } from "../utilities/hooks";
 import { CodeStreamState } from "@codestream/webview/store";
 import { setUserPreference } from "./actions";
 import { HostApi } from "../webview-api";
-import { OpenUrlRequestType } from "../ipc/host.protocol";
+import { OpenEditorViewNotificationType, OpenUrlRequestType } from "../ipc/host.protocol";
+import { parseId } from "../utilities/newRelic";
 
 interface Props {
 	entityGoldenMetrics: EntityGoldenMetrics | undefined;
@@ -25,11 +26,13 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 	const dispatch = useAppDispatch();
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
-		const { preferences } = state;
+		const { preferences, context, ide } = state;
 
 		const goldenMetricsDropdownIsExpanded = preferences?.goldenMetricsDropdownIsExpanded ?? false;
 
 		return {
+			currentEntityGuid: context.currentEntityGuid,
+			ideName: ide?.name,
 			goldenMetricsDropdownIsExpanded,
 		};
 	});
@@ -39,82 +42,37 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 
 	const pillsData = entityGoldenMetrics?.pillsData;
 
-	function getErrorPillsJSX(displayValue, displayUnits) {
+	const getTerminalIcon = (query: string) => {
+		if (!query) return null;
+
 		return (
-			<>
-				<span style={{ opacity: 1, color: "var(--text-color)" }}>
-					<>
-						{displayValue}
-						{displayUnits && <>{displayUnits} </>}
-					</>
+			<Icon
+				name="terminal"
+				className="clickable"
+				title="Explore this data"
+				placement="bottomLeft"
+				delay={1}
+				onClick={e => {
+					e.preventDefault();
+					e.stopPropagation();
 
-					{pillsData?.errorRateData?.percentChange && pillsData.errorRateData.percentChange >= 0 ? (
-						<span
-							style={
-								pillsData.errorRateData.percentChange >= 0 &&
-								pillsData.errorRateData.percentChange <= 5
-									? { color: "#FFD23D" }
-									: pillsData.errorRateData.percentChange > 5
-									? { color: "#DF2D24" }
-									: {}
-							}
-						>
-							<>
-								{pillsData.errorRateData.percentChange === 0 ? (
-									<>(+{"<"}1%)</>
-								) : (
-									<>(+{pillsData.errorRateData.percentChange}%)</>
-								)}
-							</>
-						</span>
-					) : (
-						<></>
-					)}
-				</span>
-				{pillsData?.errorRateData?.percentChange ? <>{getGlobeIcon()}</> : <></>}
-			</>
+					HostApi.instance.notify(OpenEditorViewNotificationType, {
+						panel: "nrql",
+						title: "NRQL",
+						entryPoint: "golden_metrics",
+						query: query,
+						accountId: parseId(derivedState.currentEntityGuid || "")?.accountId,
+						entityGuid: derivedState.currentEntityGuid!,
+						ide: {
+							name: derivedState.ideName,
+						},
+					});
+				}}
+			/>
 		);
-	}
+	};
 
-	function getResponseTimePillsJSX(displayValue, displayUnits) {
-		return (
-			<>
-				<span style={{ opacity: 1, color: "var(--text-color)" }}>
-					<>
-						{displayValue}
-						{displayUnits && <>{displayUnits} </>}
-					</>
-
-					{pillsData?.responseTimeData?.percentChange &&
-					pillsData.responseTimeData.percentChange >= 0 ? (
-						<span
-							style={
-								pillsData.responseTimeData.percentChange >= 0 &&
-								pillsData.responseTimeData.percentChange <= 5
-									? { color: "#FFD23D" }
-									: pillsData?.responseTimeData?.percentChange > 5
-									? { color: "#DF2D24" }
-									: {}
-							}
-						>
-							<>
-								{pillsData.responseTimeData.percentChange === 0 ? (
-									<>(+{"<"}1%)</>
-								) : (
-									<>(+{pillsData.responseTimeData.percentChange}%)</>
-								)}
-							</>
-						</span>
-					) : (
-						<></>
-					)}
-				</span>
-				{pillsData?.responseTimeData?.percentChange ? <>{getGlobeIcon()}</> : <></>}
-			</>
-		);
-	}
-
-	function getGlobeIcon() {
+	const getGlobeIcon = () => {
 		return (
 			<Icon
 				name="globe"
@@ -122,7 +80,6 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 				title="View on New Relic"
 				placement="bottomLeft"
 				delay={1}
-				style={{ padding: "5px 0 0 0" }}
 				onClick={e => {
 					e.preventDefault();
 					e.stopPropagation();
@@ -142,7 +99,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 				}}
 			/>
 		);
-	}
+	};
 
 	const errorTitle: string | undefined =
 		errors.length === 0 ? undefined : `Last request failed:\n${errors.join("\n")}`;
@@ -151,6 +108,12 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 		return (
 			<>
 				{entityGoldenMetrics?.metrics.map(gm => {
+					const percentChange =
+						gm.name === "errorRate"
+							? pillsData?.errorRateData?.percentChange
+							: gm.name === "responseTimeMs"
+							? pillsData?.responseTimeData?.percentChange
+							: undefined;
 					return (
 						<Row
 							className={"pr-row no-shrink"}
@@ -164,18 +127,34 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 								</Tooltip>
 							</div>
 
-							<span className={"icons"}>
+							<span className={"icons"} style={{ display: "flex", alignItems: "center" }}>
 								{gm.value || gm.value === 0 ? (
 									<>
-										{gm.name === "errorRate" ? (
-											<> {getErrorPillsJSX(gm.displayValue, gm.displayUnit)}</>
-										) : gm.name === "responseTimeMs" ? (
-											<> {getResponseTimePillsJSX(gm.displayValue, gm.displayUnit)}</>
-										) : (
+										<span style={{ opacity: 1, color: "var(--text-color)" }}>
 											<>
-												{gm.displayValue} {gm.displayUnit && <>{gm.displayUnit}</>}
+												{gm.displayValue}
+												{gm.displayUnit && <>{gm.displayUnit} </>}
 											</>
-										)}
+
+											{percentChange && percentChange >= 0 ? (
+												<span
+													style={
+														percentChange >= 0 && percentChange <= 5
+															? { color: "#FFD23D" }
+															: percentChange > 5
+															? { color: "#DF2D24" }
+															: {}
+													}
+												>
+													<>{percentChange === 0 ? <>(+{"<"}1%)</> : <>(+{percentChange}%)</>}</>
+												</span>
+											) : (
+												<></>
+											)}
+										</span>
+										{getTerminalIcon(gm.queries?.timeseries || "")}
+										{/* only show the globe on hover if percent change is there*/}
+										{percentChange ? <>{getGlobeIcon()}</> : <></>}
 									</>
 								) : (
 									<>No Data</>
