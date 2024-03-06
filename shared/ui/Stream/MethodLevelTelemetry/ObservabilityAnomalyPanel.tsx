@@ -23,14 +23,10 @@ import {
 } from "@codestream/protocols/agent";
 import styled from "styled-components";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
-import {
-	OpenUrlRequestType,
-} from "@codestream/webview/ipc/host.protocol";
+import { OpenUrlRequestType } from "@codestream/webview/ipc/host.protocol";
 import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
 import { CodeStreamState } from "@codestream/webview/store";
-import {
-	setCurrentObservabilityAnomaly,
-} from "@codestream/webview/store/context/actions";
+import { setCurrentObservabilityAnomaly } from "@codestream/webview/store/context/actions";
 import { useDidMount, usePrevious } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";
 import { closePanel } from "../actions";
@@ -43,6 +39,8 @@ import { ErrorRow } from "../Observability";
 import { openErrorGroup } from "@codestream/webview/store/codeErrors/thunks";
 import { CLMSettings } from "@codestream/protocols/api";
 import { Link } from "../Link";
+import { isEmpty as _isEmpty } from "lodash-es";
+import { Row } from "@codestream/webview/Stream/CrossPostIssueControls/IssuesPane";
 
 const Root = styled.div``;
 
@@ -79,6 +77,22 @@ const DataValue = styled.div`
 	color: var(--text-color-subtle);
 	word-wrap: break-word;
 	width: 92%;
+`;
+
+const CriticalPathSpanWrapper = styled.div`
+	display: flex;
+	align-items: baseline;
+`;
+
+const CriticalPathSpanMiddleSection = styled.span`
+	overflow: hidden;
+	height: inherit;
+	flex: 0 1 auto;
+	white-space: nowrap;
+	direction: rtl;
+	text-overflow: ellipsis;
+	text-overflow: "...";
+	min-width: 14px;
 `;
 
 const computedStyle = getComputedStyle(document.body);
@@ -512,37 +526,44 @@ interface CriticalPathProps {
 const CriticalPath = (props: CriticalPathProps) => {
 	return (
 		<div style={{ marginBottom: "30px" }}>
-			<br />
 			<MetaLabel>Slowest operations</MetaLabel>
 			<DataValue>Based on a sample of slowest transactions for the last 30 minutes.</DataValue>
 			<br />
-			<table style={{ borderCollapse: "collapse", width: "100%" }}>
-				{props.criticalPath.map(span => {
-					return (
-						<tr>
-							<td
-								style={{
-									width: "75%",
-									padding: "3px 1px",
-									whiteSpace: "nowrap",
-								}}
-							>
-								<DataValue>{span.name}</DataValue>
-							</td>
-							<td
-								style={{
-									width: "25%",
-									padding: "3px 1px",
-									whiteSpace: "nowrap",
-									textAlign: "right",
-								}}
-							>
-								<DataValue>{span.duration.toFixed(2)} ms</DataValue>
-							</td>
-						</tr>
-					);
-				})}
-			</table>
+			{props.criticalPath.map(span => {
+				return (
+					<Row>
+						<DataValue>{formatCriticalPathSpan(span.name)}</DataValue>
+						<DataValue>{span.duration.toFixed(2)} ms</DataValue>
+					</Row>
+				);
+			})}
+			{/*<table style={{ borderCollapse: "collapse", width: "100%" }}>*/}
+			{/*	{props.criticalPath.map(span => {*/}
+			{/*		return (*/}
+			{/*			<tr>*/}
+			{/*				<td*/}
+			{/*					style={{*/}
+			{/*						width: "75%",*/}
+			{/*						padding: "3px 1px",*/}
+			{/*						whiteSpace: "nowrap",*/}
+			{/*					}}*/}
+			{/*				>*/}
+			{/*					<DataValue>{formatCriticalPathSpan(span.name)}</DataValue>*/}
+			{/*				</td>*/}
+			{/*				<td*/}
+			{/*					style={{*/}
+			{/*						width: "25%",*/}
+			{/*						padding: "3px 1px",*/}
+			{/*						whiteSpace: "nowrap",*/}
+			{/*						textAlign: "right",*/}
+			{/*					}}*/}
+			{/*				>*/}
+			{/*					<DataValue>{span.duration.toFixed(2)} ms</DataValue>*/}
+			{/*				</td>*/}
+			{/*			</tr>*/}
+			{/*		);*/}
+			{/*	})}*/}
+			{/*</table>*/}
 		</div>
 	);
 };
@@ -558,7 +579,6 @@ const Errors = (props: ErrorsProps) => {
 
 	return (
 		<div style={{ marginBottom: "30px" }}>
-			<br />
 			<MetaLabel>Errors</MetaLabel>
 			<br />
 			<div>
@@ -661,5 +681,23 @@ const AvgDuration = (props: AvgDurationProps) => {
 				/>
 			)}
 		</>
+	);
+};
+
+const formatCriticalPathSpan = (span: String) => {
+	const sections = span.split("/");
+	const first = sections[0];
+	const middle = sections.slice(1, -1).join("/");
+	const last = sections[sections.length - 1];
+
+	return (
+		<CriticalPathSpanWrapper>
+			<span>
+				{first}
+				{!_isEmpty(middle) && <>/</>}
+			</span>
+			{!_isEmpty(middle) && <CriticalPathSpanMiddleSection>{middle}</CriticalPathSpanMiddleSection>}
+			<span>/{last}</span>
+		</CriticalPathSpanWrapper>
 	);
 };
