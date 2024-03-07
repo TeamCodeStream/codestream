@@ -2,13 +2,10 @@ Set-StrictMode -Version Latest
 
 New-Module -ScriptBlock {
 
-    function Get-SolutionInfoPath {
-        Join-Path $rootDirectory src\CodeStream.VisualStudio.Core\Properties\SolutionInfo.cs
-    }
+    $solutionInfo = Join-Path $rootDirectory src\CodeStream.VisualStudio.Core\SolutionInfo.cs
 
     function Read-VersionSolutionInfo {
-        $file = Get-SolutionInfoPath
-        $currentVersion = Get-Content $file | %{
+        $currentVersion = Get-Content $solutionInfo | %{
          $regex = "const string Version = `"(\d+\.\d+\.\d+.\d+\)`";"
             if ($_ -match $regex) {
                 $matches[1]
@@ -18,9 +15,8 @@ New-Module -ScriptBlock {
     }
 
     function Write-SolutionInfo([System.Version]$version, [System.String] $environment) {
-        $file = Get-SolutionInfoPath
         $numberOfReplacements = 0
-        $newContent = Get-Content $file | %{
+        $newContent = Get-Content $solutionInfo | %{
             $newString = $_
             
             $regex = "(string Version = `")\d+\.\d+\.\d+\.\d+"
@@ -35,11 +31,11 @@ New-Module -ScriptBlock {
             Die 1 "Expected to replace the version number in 1 place in SolutionInfo.cs (Version) but actually replaced it in $numberOfReplacements"
         }
 
-        $newContent | Set-Content $file
+        $newContent | Set-Content $solutionInfo
 
         $numberOfReplacements = 0
         $found = $False
-        $newContent = Get-Content $file | %{
+        $newContent = Get-Content $solutionInfo | %{
             $newString = $_
             if($found -eq $True) {
                 return $newstring;
@@ -58,8 +54,8 @@ New-Module -ScriptBlock {
         }
 
 
-        $newContent | Set-Content $file
+        $newContent | Set-Content $solutionInfo
     }
 
-    Export-ModuleMember -Function Get-SolutionInfoPath,Read-VersionSolutionInfo,Write-SolutionInfo
+    Export-ModuleMember -Function Write-SolutionInfo
 }
