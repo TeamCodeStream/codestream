@@ -40,7 +40,6 @@ import { openErrorGroup } from "@codestream/webview/store/codeErrors/thunks";
 import { CLMSettings } from "@codestream/protocols/api";
 import { Link } from "../Link";
 import { isEmpty as _isEmpty } from "lodash-es";
-import { Row } from "@codestream/webview/Stream/CrossPostIssueControls/IssuesPane";
 
 const Root = styled.div``;
 
@@ -523,51 +522,57 @@ interface CriticalPathProps {
 	criticalPath: CriticalPathSpan[];
 }
 
-const CriticalPath = (props: CriticalPathProps) => {
+const CriticalPath = props => {
+	const CriticalPathRoot = styled.div`
+		margin-bottom: "30px";
+	`;
+
+	const FlexContainer = styled.div`
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		position: relative;
+	`;
+
+	const Duration = styled.div`
+		white-space: nowrap;
+		position: absolute;
+		top: 0;
+		right: 0;
+		transform: translate(0%, 0);
+		z-index: 1;
+		background: var(--app-background-color);
+		padding-left: 2px;
+	`;
+
+	const Container = styled.div`
+		position: relative;
+	`;
+	const SpanName = styled.div`
+		color: var(--text-color-subtle);
+		word-wrap: break-word;
+		width: 75%;
+	`;
+
 	return (
-		<div style={{ marginBottom: "30px" }}>
+		<CriticalPathRoot>
 			<MetaLabel>Slowest operations</MetaLabel>
-			<DataValue>Based on a sample of slowest transactions for the last 30 minutes.</DataValue>
-			<br />
-			{props.criticalPath.map(span => {
+			<DataValue style={{ marginBottom: "10px" }}>
+				Based on a sample of slowest transactions for the last 30 minutes.
+			</DataValue>
+			{props.criticalPath.map((span, index) => {
 				return (
-					<Row>
-						<DataValue>{formatCriticalPathSpan(span.name)}</DataValue>
-						<DataValue>{span.duration.toFixed(2)} ms</DataValue>
-					</Row>
+					<Container key={index}>
+						<FlexContainer>
+							<SpanName>{formatCriticalPathSpan(span.name)}</SpanName>
+							<Duration>{span.duration.toFixed(2)} ms</Duration>
+						</FlexContainer>
+					</Container>
 				);
 			})}
-			{/*<table style={{ borderCollapse: "collapse", width: "100%" }}>*/}
-			{/*	{props.criticalPath.map(span => {*/}
-			{/*		return (*/}
-			{/*			<tr>*/}
-			{/*				<td*/}
-			{/*					style={{*/}
-			{/*						width: "75%",*/}
-			{/*						padding: "3px 1px",*/}
-			{/*						whiteSpace: "nowrap",*/}
-			{/*					}}*/}
-			{/*				>*/}
-			{/*					<DataValue>{formatCriticalPathSpan(span.name)}</DataValue>*/}
-			{/*				</td>*/}
-			{/*				<td*/}
-			{/*					style={{*/}
-			{/*						width: "25%",*/}
-			{/*						padding: "3px 1px",*/}
-			{/*						whiteSpace: "nowrap",*/}
-			{/*						textAlign: "right",*/}
-			{/*					}}*/}
-			{/*				>*/}
-			{/*					<DataValue>{span.duration.toFixed(2)} ms</DataValue>*/}
-			{/*				</td>*/}
-			{/*			</tr>*/}
-			{/*		);*/}
-			{/*	})}*/}
-			{/*</table>*/}
-		</div>
+		</CriticalPathRoot>
 	);
 };
-
 interface ErrorsProps {
 	errors: ObservabilityError[];
 	sessionStart: number | undefined;
