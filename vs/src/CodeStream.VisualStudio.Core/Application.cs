@@ -79,8 +79,8 @@ namespace CodeStream.VisualStudio.Core
 
 		public static DeveloperSettings DeveloperOptions = new DeveloperSettings();
 
-		public static string LogNameExtension { get; set; } = "vs-extension.log";
-		public static string LogNameAgent { get; set; } = "vs-agent.log";
+		public static string LogNameExtension { get; }
+		public static string LogNameAgent { get; }
 
 		private static readonly Regex VersionPathRegex = new Regex(
 			@"Microsoft Visual Studio\\(\w+)\\(\w+)\\Common7\\IDE\\devenv.exe$",
@@ -136,9 +136,6 @@ namespace CodeStream.VisualStudio.Core
 
 			switch (VisualStudioVersion.Major)
 			{
-				case 15:
-					VisualStudioVersionYear = "2017";
-					break;
 				case 16:
 					VisualStudioVersionYear = "2019";
 					break;
@@ -147,10 +144,8 @@ namespace CodeStream.VisualStudio.Core
 					break;
 			}
 
-#if DEBUG
 			LogNameExtension = $"vs-{VisualStudioVersionYear}-extension.log";
 			LogNameAgent = $"vs-{VisualStudioVersionYear}-agent.log";
-#endif
 
 			LogPath = Path.Combine(localApplicationData, "Logs") + @"\";
 			TempDataPath = Path.Combine(tempData, "Data") + @"\";

@@ -1,4 +1,4 @@
-import { initialize, setupCommunication } from "@codestream/webview/index";
+import { initialize, setupCommunication } from "@codestream/webview/sidebar";
 
 declare function acquireHostApi();
 

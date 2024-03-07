@@ -6,8 +6,7 @@
 			"@codestream/protocols/api": ["../../../../../shared/ui/protocols/agent/api.protocol.ts"],
 			"@codestream/protocols/webview": ["../../../../../shared/ui/ipc/sidebar.protocol.ts"],
 			"@codestream/webview/*": ["../../../../../shared/ui/*"],
-			"@codestream/editor/*": ["../../../../../shared/webviews/editor/*"],
-			"vscode-jsonrpc": ["../../../../../shared/webviews/vscode-jsonrpc.shim.ts"]
+			"vscode-jsonrpc": ["../../../../../shared/ui/vscode-jsonrpc.shim.ts"]
 		}
 	}
 }
