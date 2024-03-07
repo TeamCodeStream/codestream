@@ -72,11 +72,11 @@ abstract class BaseWebViewService(val project: Project) {
         tempDir.deleteOnExit()
         extractedTemplateHtmlFile = File(tempDir, WEBVIEW_TEMPLATE_HTML)
 
-        FileUtils.copyToFile(BaseWebViewService::class.java.getResourceAsStream("/webviews/$webviewName/index.js"), File(tempDir, "index.js"))
-        FileUtils.copyToFile(BaseWebViewService::class.java.getResourceAsStream("/webviews/$webviewName/index.js.map"), File(tempDir, "index.js.map"))
+        FileUtils.copyToFile(BaseWebViewService::class.java.getResourceAsStream("/webviews/$webviewName/$webviewName.js"), File(tempDir, "$webviewName.js"))
+        FileUtils.copyToFile(BaseWebViewService::class.java.getResourceAsStream("/webviews/$webviewName/$webviewName.js.map"), File(tempDir, "$webviewName.js.map"))
         FileUtils.copyToFile(
-            BaseWebViewService::class.java.getResourceAsStream("/webviews/$webviewName/styles/webview.css"),
-            File(tempDir.resolve("styles"), "webview.css")
+            BaseWebViewService::class.java.getResourceAsStream("/webviews/$webviewName/styles/$webviewName.css"),
+            File(tempDir.resolve("styles"), "$webviewName.css")
         )
         FileUtils.copyToFile(BaseWebViewService::class.java.getResourceAsStream("/webviews/$webviewName/${WEBVIEW_TEMPLATE_HTML}"), File(tempDir,
             WEBVIEW_TEMPLATE_HTML

@@ -1,4 +1,4 @@
-import { initialize, setupCommunication } from "@codestream/webview/index";
+import { initialize, setupCommunication } from "@codestream/webview/editor";
 
 declare function acquireHostApi();
 
@@ -8,10 +8,10 @@ declare function acquireHostApi();
 window.messageQueue = [];
 // @ts-ignore
 window.api = window.acquireHostApi ? acquireHostApi() : {
-    postMessage: function(data) {
-        // @ts-ignore
-        messageQueue.push(data);
-    }
+	postMessage: function(data) {
+		// @ts-ignore
+		messageQueue.push(data);
+	}
 }
 const channel = new MessageChannel();
 
