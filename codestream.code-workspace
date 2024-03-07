@@ -19,9 +19,6 @@
 			"path": "shared/build"
 		},
 		{
-			"path": "shared/webviews"
-		},
-		{
 			"path": "shared/ui"
 		}
 	],

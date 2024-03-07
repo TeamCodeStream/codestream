@@ -8,7 +8,7 @@ import { act } from "react-dom/test-utils";
 import { Provider } from "react-redux";
 import configureStore from "redux-mock-store";
 
-import { setupCommunication } from "../../index";
+import { setupCommunication } from "../../sidebar";
 import { CreatePullRequestPanel } from "../../Stream/CreatePullRequestPanel";
 
 import { HostApi } from "../../webview-api";

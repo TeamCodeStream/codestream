@@ -11,7 +11,7 @@ import { GetMethodLevelTelemetryResponse } from "@codestream/protocols/agent";
 import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
 import { waitFor } from "@testing-library/react";
 
-import { setupCommunication } from "../../index";
+import { setupCommunication } from "../../sidebar";
 import { MethodLevelTelemetryPanel } from "../../Stream/MethodLevelTelemetry/MethodLevelTelemetryPanel";
 import { HostApi } from "../../webview-api";
 

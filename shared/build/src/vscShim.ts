@@ -1,7 +1,7 @@
 import { PluginBuild } from "esbuild";
 import * as path from "path";
 
-const shimTarget = path.resolve(__dirname, "../../webviews/vscode-jsonrpc.shim.ts");
+const shimTarget = path.resolve(__dirname, "../../ui/vscode-jsonrpc.shim.ts");
 
 export const vscShimPlugin = {
 	name: "shimmy",

@@ -155,7 +155,10 @@ export interface MessageType {
 export abstract class AbstractMessageType implements MessageType {
 	// NOTE: Changes method to be a readonly prop to ensure serialization
 
-	constructor(public readonly method: string, private _numberOfParams: number) {}
+	constructor(
+		public readonly method: string,
+		private _numberOfParams: number
+	) {}
 
 	get numberOfParams(): number {
 		return this._numberOfParams;
@@ -264,7 +267,7 @@ export class RequestType9<
 	P9,
 	R,
 	E,
-	RO
+	RO,
 > extends AbstractMessageType {
 	public readonly _?: [P1, P2, P3, P4, P5, P6, P7, P8, P9, R, E, RO, _EM];
 	constructor(method: string) {

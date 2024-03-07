@@ -1,5 +1,5 @@
 "use strict";
-import { initialize, setupCommunication } from "@codestream/editor/index";
+import { initialize, setupCommunication } from "@codestream/webview/editor";
 import { initializeColorPalette } from "./theme";
 
 declare function acquireVsCodeApi();

@@ -9,7 +9,7 @@ import configureStore from "redux-mock-store";
 
 import { waitFor } from "@testing-library/react";
 
-import { setupCommunication } from "../../index";
+import { setupCommunication } from "../../sidebar";
 import { CreatePullRequestPanel } from "../../Stream/CreatePullRequestPanel";
 
 import { HostApi } from "../../webview-api";

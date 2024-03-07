@@ -50,7 +50,7 @@ export function commonEsbuildOptions(
 		bundle: true,
 		define: { "process.env.NODE_ENV": '"production"' },
 		loader: isWeb ? { ".js": "jsx", ".ttf": "file" } : undefined,
-		inject: isWeb ? [path.resolve(__dirname, "../../webviews/vscode-jsonrpc.shim.ts")] : undefined,
+		inject: isWeb ? [path.resolve(__dirname, "../../ui/vscode-jsonrpc.shim.ts")] : undefined,
 		minify: args.mode === "production",
 		// To support @log
 		keepNames: true,
