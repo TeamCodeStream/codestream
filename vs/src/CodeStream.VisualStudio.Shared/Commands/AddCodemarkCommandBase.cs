@@ -72,11 +72,11 @@ namespace CodeStream.VisualStudio.Shared.Commands
 							var toolWindowProvider =
 								Package.GetGlobalService(typeof(SToolWindowProvider))
 								as IToolWindowProvider;
-							if (!toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid))
+							if (!toolWindowProvider.IsVisible(Guids.SidebarControlWindowGuid))
 							{
 								if (
 									toolWindowProvider?.ShowToolWindowSafe(
-										Guids.WebViewToolWindowGuid
+										Guids.SidebarControlWindowGuid
 									) == true
 								) { }
 								else

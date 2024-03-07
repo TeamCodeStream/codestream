@@ -24,23 +24,23 @@ namespace CodeStream.VisualStudio.Shared.Packages
 	[Guid(Guids.CodeStreamWebViewPackageId)]
 	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
 	[ProvideToolWindow(
-		typeof(WebViewToolWindowPane),
+		typeof(SidebarControlWindowPane),
 		Orientation = ToolWindowOrientation.Right,
 		Window = EnvDTE.Constants.vsWindowKindSolutionExplorer,
 		Style = VsDockStyle.Tabbed
 	)]
-	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.NoSolution)]
-	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.EmptySolution)]
-	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.SolutionExists)]
+	[ProvideToolWindowVisibility(typeof(SidebarControlWindowPane), UIContextGuids.NoSolution)]
+	[ProvideToolWindowVisibility(typeof(SidebarControlWindowPane), UIContextGuids.EmptySolution)]
+	[ProvideToolWindowVisibility(typeof(SidebarControlWindowPane), UIContextGuids.SolutionExists)]
 	[ProvideToolWindowVisibility(
-		typeof(WebViewToolWindowPane),
+		typeof(SidebarControlWindowPane),
 		UIContextGuids.SolutionHasMultipleProjects
 	)]
 	[ProvideToolWindowVisibility(
-		typeof(WebViewToolWindowPane),
+		typeof(SidebarControlWindowPane),
 		UIContextGuids.SolutionHasSingleProject
 	)]
-	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.Debugging)]
+	[ProvideToolWindowVisibility(typeof(SidebarControlWindowPane), UIContextGuids.Debugging)]
 	public sealed class WebViewPackage : AsyncPackage
 	{
 		private static readonly ILogger Log = LogManager.ForContext<WebViewPackage>();

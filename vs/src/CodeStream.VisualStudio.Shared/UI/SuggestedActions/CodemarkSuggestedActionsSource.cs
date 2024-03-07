@@ -260,11 +260,12 @@ namespace CodeStream.VisualStudio.Shared.UI.SuggestedActions
 						var toolWindowProvider =
 							Package.GetGlobalService(typeof(SToolWindowProvider))
 							as IToolWindowProvider;
-						if (!toolWindowProvider?.IsVisible(Guids.WebViewToolWindowGuid) ?? false)
+						if (!toolWindowProvider?.IsVisible(Guids.SidebarControlWindowGuid) ?? false)
 						{
 							if (
-								toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid)
-								== true
+								toolWindowProvider?.ShowToolWindowSafe(
+									Guids.SidebarControlWindowGuid
+								) == true
 							) { }
 							else
 							{

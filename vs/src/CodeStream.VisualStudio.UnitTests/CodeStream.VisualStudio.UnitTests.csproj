@@ -70,11 +70,9 @@
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
-
   <ItemGroup>
     <Compile Include="$(SharedResources)\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-
   <ItemGroup>
     <Compile Include="Core\Logging\Sanitizer\SecretsSanitizingFormatRuleTests.cs" />
     <Compile Include="Events\EventAggregatorTests.cs" />
@@ -93,7 +91,7 @@
     <Compile Include="Models\CamelCaseStringEnumConverterTests.cs" />
     <Compile Include="Models\EditorSelectionTests.cs" />
     <Compile Include="Models\WebviewIpcMessageTest.cs" />
-    <Compile Include="Services\DotNetBrowserServiceTests.cs" />
+    <Compile Include="Services\SidebarBrowserServiceTests.cs" />
     <Compile Include="Services\MessageInterceptorServiceTests\DoesMessageContainTempFiles.cs" />
     <Compile Include="Services\MessageInterceptorServiceTests\GetUriTokens.cs" />
     <Compile Include="Services\MessageInterceptorServiceTests\InterceptAndModify.cs" />

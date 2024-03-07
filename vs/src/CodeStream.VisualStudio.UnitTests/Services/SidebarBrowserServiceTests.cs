@@ -15,12 +15,12 @@ using Xunit;
 
 namespace CodeStream.VisualStudio.UnitTests.Services
 {
-	public class DotNetBrowserServiceTests
+	public class SidebarBrowserServiceTests
 	{
-		private readonly DotNetBrowserServiceStub _browserService;
+		private readonly SidebarBrowserServiceStub _browserService;
 		private readonly EventAggregator _eventAggregator;
 
-		public DotNetBrowserServiceTests()
+		public SidebarBrowserServiceTests()
 		{
 			var serviceProviderMock = new Mock<IServiceProvider>();
 			var httpServiceMock = new Mock<IHttpClientService>();
@@ -32,7 +32,7 @@ namespace CodeStream.VisualStudio.UnitTests.Services
 
 			_eventAggregator = new EventAggregator();
 
-			_browserService = new DotNetBrowserServiceStub(
+			_browserService = new SidebarBrowserServiceStub(
 				serviceProviderMock.Object,
 				_eventAggregator,
 				httpServiceMock.Object,
@@ -99,9 +99,9 @@ namespace CodeStream.VisualStudio.UnitTests.Services
 		}
 	}
 
-	public class DotNetBrowserServiceStub : DotNetBrowserService
+	public class SidebarBrowserServiceStub : SidebarBrowserService
 	{
-		public DotNetBrowserServiceStub(
+		public SidebarBrowserServiceStub(
 			IServiceProvider serviceProvider,
 			IEventAggregator eventAggregator,
 			IHttpClientService httpClientService,

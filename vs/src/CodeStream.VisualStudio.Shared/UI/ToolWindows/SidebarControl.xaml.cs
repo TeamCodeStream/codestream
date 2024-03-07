@@ -18,9 +18,9 @@ namespace CodeStream.VisualStudio.Shared.UI.ToolWindows
 {
 	// ReSharper disable once RedundantExtendsListEntry
 	// ReSharper disable once ClassWithVirtualMembersNeverInherited.Global
-	public partial class WebViewControl : UserControl, IDisposable
+	public partial class SidebarControl : UserControl, IDisposable
 	{
-		private static readonly ILogger Log = LogManager.ForContext<WebViewControl>();
+		private static readonly ILogger Log = LogManager.ForContext<SidebarControl>();
 
 		private readonly IComponentModel _componentModel;
 		private readonly IEventAggregator _eventAggregator;
@@ -34,9 +34,9 @@ namespace CodeStream.VisualStudio.Shared.UI.ToolWindows
 		private static readonly object InitializeLock = new object();
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="WebViewControl"/> class.
+		/// Initializes a new instance of the <see cref="SidebarControl"/> class.
 		/// </summary>
-		public WebViewControl()
+		public SidebarControl()
 		{
 			try
 			{
@@ -93,7 +93,7 @@ namespace CodeStream.VisualStudio.Shared.UI.ToolWindows
 			}
 			catch (Exception ex)
 			{
-				Log.Fatal(ex.UnwrapCompositionException(), nameof(WebViewControl));
+				Log.Fatal(ex.UnwrapCompositionException(), nameof(SidebarControl));
 			}
 		}
 

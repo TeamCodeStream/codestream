@@ -32,7 +32,7 @@ namespace CodeStream.VisualStudio.Shared.Commands
 				var toolWindowProvider =
 					Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
 				var result = toolWindowProvider?.ToggleToolWindowVisibility(
-					Guids.WebViewToolWindowGuid
+					Guids.SidebarControlWindowGuid
 				);
 			}
 			catch (Exception ex)

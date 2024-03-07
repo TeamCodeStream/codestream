@@ -120,7 +120,8 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins
 				if (codeStreamService == null)
 					return;
 
-				if (toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid) == true) { }
+				if (toolWindowProvider?.ShowToolWindowSafe(Guids.SidebarControlWindowGuid) == true)
+				{ }
 				else
 				{
 					Log.Warning("Could not activate tool window");

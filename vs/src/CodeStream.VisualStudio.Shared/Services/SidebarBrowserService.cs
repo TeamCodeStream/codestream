@@ -77,7 +77,7 @@ namespace CodeStream.VisualStudio.Shared.Services
 	/// </summary>
 	[Export(typeof(IBrowserService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
-	public class DotNetBrowserService
+	public class SidebarBrowserService
 		: IBrowserService,
 			IDisposable,
 			DialogHandler,
@@ -118,7 +118,7 @@ namespace CodeStream.VisualStudio.Shared.Services
 		private IDisposable _disposable;
 
 		[ImportingConstructor]
-		public DotNetBrowserService(
+		public SidebarBrowserService(
 			[Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
 			IEventAggregator eventAggregator,
 			IHttpClientService httpClientService,
@@ -237,7 +237,7 @@ namespace CodeStream.VisualStudio.Shared.Services
 			}
 			catch (Exception ex)
 			{
-				Log.Fatal(ex, nameof(DotNetBrowserService));
+				Log.Fatal(ex, nameof(SidebarBrowserService));
 			}
 		}
 

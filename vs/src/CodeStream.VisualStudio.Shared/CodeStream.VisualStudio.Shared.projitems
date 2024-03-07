@@ -98,7 +98,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\CodeStreamAgentService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\CodeStreamAgentServiceFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\CodeStreamService.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Services\DotNetBrowserService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\SidebarBrowserService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\EditorService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\EventAggregator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\FileResolutionService.cs" />
@@ -176,10 +176,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)UI\TextViewCreationListener.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\TextViewExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\TextViewRoles.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)UI\ToolWindows\WebViewControl.xaml.cs">
-      <DependentUpon>WebViewControl.xaml</DependentUpon>
+    <Compile Include="$(MSBuildThisFileDirectory)UI\ToolWindows\SidebarControl.xaml.cs">
+      <DependentUpon>SidebarControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)UI\ToolWindows\WebViewToolWindowPane.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\ToolWindows\SidebarControlWindowPane.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\Wpf\KeyChordGesture.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SidebarRouter.cs" />
   </ItemGroup>
@@ -192,7 +192,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="$(MSBuildThisFileDirectory)UI\ToolWindows\WebViewControl.xaml">
+    <Page Include="$(MSBuildThisFileDirectory)UI\ToolWindows\SidebarControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

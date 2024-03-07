@@ -63,7 +63,7 @@ namespace CodeStream.VisualStudio.Shared.Commands
 					var toolWindowProvider =
 						Package.GetGlobalService(typeof(SToolWindowProvider))
 						as IToolWindowProvider;
-					toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
+					toolWindowProvider?.ShowToolWindowSafe(Guids.SidebarControlWindowGuid);
 				}
 			}
 			catch (Exception ex)

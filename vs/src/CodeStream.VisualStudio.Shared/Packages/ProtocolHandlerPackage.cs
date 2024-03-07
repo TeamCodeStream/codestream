@@ -63,7 +63,7 @@ namespace CodeStream.VisualStudio.Shared.Packages
 				//ensure the ToolWindow is visible
 				var toolWindowProvider =
 					GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
-				toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
+				toolWindowProvider?.ShowToolWindowSafe(Guids.SidebarControlWindowGuid);
 
 				await AsyncPackageHelper.TryTriggerLspActivationAsync(Log);
 				await InfoBarProvider.InitializeAsync(this);

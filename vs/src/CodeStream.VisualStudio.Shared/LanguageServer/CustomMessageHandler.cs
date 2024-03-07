@@ -219,10 +219,10 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 									_serviceProvider.GetService(typeof(SToolWindowProvider))
 									as IToolWindowProvider;
 								Assumes.Present(toolWindowProvider);
-								if (!toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid))
+								if (!toolWindowProvider.IsVisible(Guids.SidebarControlWindowGuid))
 								{
 									toolWindowProvider?.ShowToolWindowSafe(
-										Guids.WebViewToolWindowGuid
+										Guids.SidebarControlWindowGuid
 									);
 								}
 							}
@@ -311,9 +311,11 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 								_serviceProvider.GetService(typeof(SToolWindowProvider))
 								as IToolWindowProvider;
 							Assumes.Present(toolWindowProvider);
-							if (!toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid))
+							if (!toolWindowProvider.IsVisible(Guids.SidebarControlWindowGuid))
 							{
-								toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
+								toolWindowProvider?.ShowToolWindowSafe(
+									Guids.SidebarControlWindowGuid
+								);
 							}
 						}
 						catch (Exception ex)

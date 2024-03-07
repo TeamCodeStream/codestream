@@ -58,9 +58,13 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 						var toolWindowProvider =
 							Package.GetGlobalService(typeof(SToolWindowProvider))
 							as IToolWindowProvider;
-						if (!toolWindowProvider?.IsVisible(Guids.WebViewToolWindowGuid) ?? false)
+						if (!toolWindowProvider?.IsVisible(Guids.SidebarControlWindowGuid) ?? false)
 						{
-							if (!toolWindowProvider.ShowToolWindowSafe(Guids.WebViewToolWindowGuid))
+							if (
+								!toolWindowProvider.ShowToolWindowSafe(
+									Guids.SidebarControlWindowGuid
+								)
+							)
 							{
 								Log.Warning("Could not activate tool window");
 							}
