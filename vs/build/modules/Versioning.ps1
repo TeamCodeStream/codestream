@@ -46,9 +46,7 @@ New-Module -ScriptBlock {
         Write-VersionVsixManifest $version "x86"
 		Write-VersionVsixManifest $version "x64"
         Write-SolutionInfo $version $environment
-        Write-AssemblyInfo $version "CodeStream.VisualStudio.Vsix.x86"
-		Write-AssemblyInfo $version "CodeStream.VisualStudio.Vsix.x64"
-        Write-AssemblyInfo $version "CodeStream.VisualStudio.Core"
+        Write-AssemblyInfo $version
     }
 
     function Commit-Version([System.Version]$version) {

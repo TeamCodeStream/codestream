@@ -2,16 +2,10 @@ Set-StrictMode -Version Latest
 
 New-Module -ScriptBlock {
 
-    function Get-AssemblyInfoPath([System.string]$project) {
-        if($project -eq $null){
-            throw "missing project"
-        }
-        Join-Path $rootDirectory src\$project\Properties\AssemblyInfo.cs
-    }
+    $assemblyInfoFile = Join-Path $rootDirectory src\resources\AssemblyInfo.cs
 
-    function Read-VersionAssemblyInfo([System.string]$project) {
-        $file = Get-AssemblyInfoPath $project
-        $currentVersion = Get-Content $file | %{
+    function Read-VersionAssemblyInfo() {
+        $currentVersion = Get-Content $assemblyInfoFile | %{
         $regex = '\[assembly: AssemblyVersion\("(\d+\.\d+\.\d+.\d+)"\)]'
             if ($_ -match $regex) {
                 $matches[1]
@@ -20,10 +14,9 @@ New-Module -ScriptBlock {
         [System.Version] $currentVersion
     }
 
-    function Write-AssemblyInfo([System.Version]$version, [System.string]$project) {
-        $file = Get-AssemblyInfoPath $project
+    function Write-AssemblyInfo([System.Version]$version) {
         $numberOfReplacements = 0
-        $newContent = Get-Content $file | %{
+        $newContent = Get-Content $assemblyInfoFile | %{
             $newString = $_
             #$regex = "(string Version = `")\d+\.\d+\.\d+\.\d+"
             $regex = "\(`"(\d+\.\d+\.\d+.\d+)`"\)"
@@ -44,5 +37,5 @@ New-Module -ScriptBlock {
         $newContent | Set-Content $file
     }
 
-    Export-ModuleMember -Function Get-AssemblyInfoPath,Read-VersionAssemblyInfo,Write-AssemblyInfo
+    Export-ModuleMember -Function Write-AssemblyInfo
 }
