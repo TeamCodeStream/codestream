@@ -31,6 +31,7 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using static CodeStream.VisualStudio.Core.Extensions.FileSystemExtensions;
 using Application = CodeStream.VisualStudio.Core.Application;
 using Task = System.Threading.Tasks.Task;
+using System.Net.Http;
 
 namespace CodeStream.VisualStudio.Shared.Services
 {
@@ -495,7 +496,7 @@ namespace CodeStream.VisualStudio.Shared.Services
 					LoadHtml(
 						CreateWebViewHarness(
 							Assembly.GetAssembly(typeof(IBrowserService)),
-							"webview"
+							"sidebar"
 						)
 					);
 					_state = WebviewState.Restarting;
@@ -522,7 +523,7 @@ namespace CodeStream.VisualStudio.Shared.Services
 						LoadHtml(
 							CreateWebViewHarness(
 								Assembly.GetAssembly(typeof(IBrowserService)),
-								"webview"
+								"sidebar"
 							)
 						);
 						_state = WebviewState.Loaded;
@@ -750,65 +751,58 @@ namespace CodeStream.VisualStudio.Shared.Services
 		/// <returns></returns>
 		private string CreateWebViewHarness(Assembly assembly, string resourceName)
 		{
-			string harness = null;
+			string htmlContent = null;
 			try
 			{
 				ThreadHelper.ThrowIfNotOnUIThread();
 
-				var resourceManager = new ResourceManager(
-					"VSPackage",
-					Assembly.GetExecutingAssembly()
-				);
-				var dir = Path.GetDirectoryName(assembly.Location);
-				Debug.Assert(dir != null, nameof(dir) + " != null");
+				var rootDir = Path.GetDirectoryName(assembly.Location);
 
-				// ReSharper disable once ResourceItemNotResolved
-				harness = resourceManager.GetString(resourceName);
-				Debug.Assert(harness != null, nameof(harness) + " != null");
+				var htmlFilePath = $"{rootDir}/webviews/sidebar/{resourceName}.html";
+				htmlContent = System.IO.File.ReadAllText(htmlFilePath);
 
-				harness = harness.Replace("{root}", dir.Replace(@"\", "/"));
-				// ReSharper disable once ResourceItemNotResolved
-				var styleSheet = resourceManager.GetString("theme");
+				var themeFilePath = $"{rootDir}/webviews/sidebar/theme.css";
+				var themeContent = System.IO.File.ReadAllText(themeFilePath);
 
 				var theme = ThemeManager.Generate();
-				var isDebuggingEnabled = Log.IsDebugEnabled();
 
-				var outputDebug = new Dictionary<string, Tuple<string, string>>();
-				harness = harness.Replace(
+				htmlContent = htmlContent.Replace(
 					"{bodyClass}",
 					theme.IsDark ? "vscode-dark" : "vscode-light"
 				);
 
-				if (styleSheet != null)
+				htmlContent = htmlContent.Replace("{root}", rootDir.Replace(@"\", "/"));
+
+				var outputDebug = new Dictionary<string, Tuple<string, string>>();
+				var isDebuggingEnabled = Log.IsDebugEnabled();
+
+				foreach (var item in theme.ThemeResources)
 				{
-					foreach (var item in theme.ThemeResources)
+					themeContent = themeContent.Replace($"--cs--{item.Key}--", item.Value);
+
+					if (isDebuggingEnabled)
 					{
-						styleSheet = styleSheet.Replace($"--cs--{item.Key}--", item.Value);
-
-						if (isDebuggingEnabled)
-						{
-							outputDebug[item.Key] = Tuple.Create(item.Key, item.Value);
-						}
-					}
-
-					foreach (var item in theme.ThemeColors)
-					{
-						var color = theme.IsDark
-							? item.DarkModifier?.Invoke(item.Color) ?? item.Color
-							: item.LightModifier?.Invoke(item.Color) ?? item.Color;
-
-						styleSheet = styleSheet.Replace($"--cs--{item.Key}--", color.ToRgba());
-
-						if (isDebuggingEnabled)
-						{
-							outputDebug[item.Key] = Tuple.Create(item.Key, color.ToRgba());
-						}
+						outputDebug[item.Key] = Tuple.Create(item.Key, item.Value);
 					}
 				}
 
-				harness = harness.Replace(
+				foreach (var item in theme.ThemeColors)
+				{
+					var color = theme.IsDark
+						? item.DarkModifier?.Invoke(item.Color) ?? item.Color
+						: item.LightModifier?.Invoke(item.Color) ?? item.Color;
+
+					themeContent = themeContent.Replace($"--cs--{item.Key}--", color.ToRgba());
+
+					if (isDebuggingEnabled)
+					{
+						outputDebug[item.Key] = Tuple.Create(item.Key, color.ToRgba());
+					}
+				}
+
+				htmlContent = htmlContent.Replace(
 					@"<style id=""theme""></style>",
-					$@"<style id=""theme"">{styleSheet}</style>"
+					$@"<style id=""theme"">{themeContent}</style>"
 				);
 
 				//NR telemetry injection
@@ -816,7 +810,8 @@ namespace CodeStream.VisualStudio.Shared.Services
 				if (nrSettings.HasValidSettings)
 				{
 					var browserFile =
-						Path.GetDirectoryName(assembly.Location) + @"/webview/newrelic-browser.js";
+						Path.GetDirectoryName(assembly.Location)
+						+ "/webviews/sidebar/newrelic-browser.js";
 					var newRelicTelemetryJs = System.IO.File.ReadAllText(browserFile);
 					newRelicTelemetryJs = newRelicTelemetryJs
 						.Replace("{{accountID}}", nrSettings.AccountId)
@@ -824,33 +819,32 @@ namespace CodeStream.VisualStudio.Shared.Services
 						.Replace("{{licenseKey}}", nrSettings.BrowserLicenseKey)
 						.Replace("{{applicationID}}", nrSettings.ApplicationId);
 
-					harness = harness.Replace(
+					htmlContent = htmlContent.Replace(
 						@"<script id=""newrelic-browser""></script>",
 						$@"<script id=""newrelic-browser"">{newRelicTelemetryJs}</script>"
 					);
 				}
 				else
 				{
-					harness = harness.Replace(
+					htmlContent = htmlContent.Replace(
 						@"<script id=""newrelic-browser""></script>",
 						"<!-- No Telemetry -->"
 					);
 				}
 
-#if !DEBUG
 				if (isDebuggingEnabled)
 				{
-					Log.Debug(outputDebug.ToJson(format: true));
-					Log.Debug(styleSheet);
+					Log.Debug($"Theme Keys: {outputDebug.ToJson(format: true)}");
+					Log.Debug($"Theme Content: {themeContent}");
+					Log.Debug($"HTML Content: {htmlContent}");
 				}
-				Log.Verbose(harness);
-#endif
 			}
 			catch (Exception ex)
 			{
 				Log.Error(ex, nameof(CreateWebViewHarness));
 			}
-			return harness;
+
+			return htmlContent;
 		}
 
 		#region DialogHandlers

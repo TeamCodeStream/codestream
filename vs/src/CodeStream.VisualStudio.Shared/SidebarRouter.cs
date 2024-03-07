@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -17,21 +16,18 @@ using CodeStream.VisualStudio.Shared.LanguageServer;
 using CodeStream.VisualStudio.Shared.Models;
 using CodeStream.VisualStudio.Shared.Services;
 
-using EnvDTE;
-
 using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Text.Editor;
+
 using Newtonsoft.Json.Linq;
 using Serilog;
 using StreamJsonRpc;
 
 namespace CodeStream.VisualStudio.Shared
 {
-	public class WebViewRouter
+	public class SidebarRouter
 	{
-		private static readonly ILogger Log = LogManager.ForContext<WebViewRouter>();
+		private static readonly ILogger Log = LogManager.ForContext<SidebarRouter>();
 
 		private readonly IComponentModel _componentModel;
 		private readonly ICodeStreamService _codeStreamService;
@@ -48,7 +44,7 @@ namespace CodeStream.VisualStudio.Shared
 		private readonly ICredentialManager _credentialManager;
 		private readonly ISymbolService _symbolService;
 
-		public WebViewRouter(
+		public SidebarRouter(
 			IComponentModel componentModel,
 			ICodeStreamService codestreamService,
 			IWebviewUserSettingsService webviewUserSettingsService,
@@ -70,7 +66,7 @@ namespace CodeStream.VisualStudio.Shared
 			_webviewUserSettingsService = webviewUserSettingsService;
 			_sessionService = sessionService;
 			_codeStreamAgent = codeStreamAgent;
-			_codeStreamSettingsManager = settingsServiceFactory.GetOrCreate(nameof(WebViewRouter));
+			_codeStreamSettingsManager = settingsServiceFactory.GetOrCreate(nameof(SidebarRouter));
 			_eventAggregator = eventAggregator;
 			_browserService = browserService;
 			_ideService = ideService;

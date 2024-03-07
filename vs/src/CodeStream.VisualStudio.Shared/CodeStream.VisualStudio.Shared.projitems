@@ -181,7 +181,7 @@
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)UI\ToolWindows\WebViewToolWindowPane.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\Wpf\KeyChordGesture.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)WebViewRouter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SidebarRouter.cs" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="$(MSBuildThisFileDirectory)UI\CodeLevelMetrics\CodeLevelMetricsControl.xaml">
@@ -198,10 +198,6 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)UI\WebViews\styles\ui-variables.less" />
-    <None Include="$(MSBuildThisFileDirectory)UI\WebViews\styles\webview.less" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)LanguageServer\ContentDefinitions.tt">
       <LastGenOutput>ContentDefinitions1.cs</LastGenOutput>
       <Generator>TextTemplatingFileGenerator</Generator>
@@ -209,10 +205,6 @@
     <Content Include="$(MSBuildThisFileDirectory)LanguageServer\ContentTypesVisualStudio.txt" />
     <Content Include="$(MSBuildThisFileDirectory)LanguageServer\FileExtensionExclusions.txt" />
     <Content Include="$(MSBuildThisFileDirectory)LanguageServer\FileExtensionsGeneric.txt" />
-    <Content Include="$(MSBuildThisFileDirectory)UI\WebViews\index.html" />
-    <Content Include="$(MSBuildThisFileDirectory)UI\WebViews\index.ts" />
-    <Content Include="$(MSBuildThisFileDirectory)UI\WebViews\theme.css" />
-    <Content Include="$(MSBuildThisFileDirectory)UI\WebViews\waiting.html" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Authentication\" />

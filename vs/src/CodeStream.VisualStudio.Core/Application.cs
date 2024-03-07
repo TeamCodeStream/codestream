@@ -16,6 +16,9 @@ namespace CodeStream.VisualStudio.Core
 		public const string FullName = "New Relic CodeStream";
 		public const string ShortName = "CodeStream";
 
+		public const string ProductionDescription =
+			"Shift left by making code performance, code quality and code discussion part of the earliest stages of the development process.";
+
 		/// <summary>
 		/// Returns Major.Minor.Build for the Extension
 		/// </summary>

@@ -193,7 +193,7 @@ namespace CodeStream.VisualStudio.Shared.UI.ToolWindows
 								)
 							)
 							{
-								var router = new WebViewRouter(
+								var router = new SidebarRouter(
 									_componentModel,
 									_componentModel.GetService<ICodeStreamService>(),
 									_componentModel.GetService<IWebviewUserSettingsService>(),

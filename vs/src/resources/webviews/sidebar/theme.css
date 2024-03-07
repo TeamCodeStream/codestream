@@ -1,0 +1,68 @@
+﻿body {
+	--font-family: --cs--font-family--;
+	--font-size: --cs--font-size--px;
+	--font-weight: normal;
+
+	--text-color: --cs--text-color--;
+	--text-color-highlight: --cs--text-color-highlight--;
+	--text-color-subtle: --cs--text-color-subtle--;
+	--text-color-subtle-extra: --cs--text-color-subtle-extra--;
+
+	--text-color-info: --cs--text-color-info--;
+	--text-color-info-muted: --cs--text-color-info-muted--;
+
+	--text-color-filename-highlight: --cs--text-color-filename-highlight--;
+
+	--text-focus-border-color: --cs--text-focus-border-color--;
+
+	--app-background-color: --cs--app-background-color--;
+	--app-background-color-darker: --cs--app-background-color-darker--;
+	--app-background-color-hover: --cs--app-background-color-hover--;
+	--app-tab-backgound: --cs--sidebar-background--;
+	--sidebar-background: --cs--sidebar-background--;
+
+	--base-background-color: --cs--base-background-color--;
+	--base-border-color: --cs--base-border-color--;
+
+	--panel-tool-background-color: --cs--panel-tool-background-color--;
+	--panel-section-foreground-color: --cs--panel-section-foreground-color--;
+	--panel-section-header-background-color: --cs--panel-section-header-background-color--;
+	--panel-section-header-foreground-color: --cs--panel-section-header-foreground-color--;
+
+	--line-numbers-foreground-color: --cs--line-numbers-foreground-color--;
+
+	--button-foreground-color: --cs--button-foreground-color--;
+	--button-background-color: --cs--button-background-color--;
+	--button-background-color-hover: --cs--button-background-color-hover--;
+
+	--scrollbar-thumb: --cs--scrollbar-color--;
+	--scrollbar-thumb-hover: --cs--scrollbar-color-hover--;
+
+	--list-active-background: --cs--list-active-background--;
+	--list-active-foreground: --cs--list-active-foreground--;
+	--list-active-outline: --cs--list-active-outline--;
+	--list-inactive-background: --cs--list-inactive-background--;
+	--list-inactive-foreground: --cs--list-inactive-foreground--;
+}
+
+.menu-popup .menu-popup-body .compact .menu-item span.shortcut {
+	display: none;
+}
+
+.no-codemarks-container .no-codemarks .keybindings {
+	display: none;
+}
+
+.codestream #app .stream nav.inline {
+	padding-top: 6px;
+}
+
+/* style overrides & polyfills */
+.floating-loading-message {
+	background-color: var(--app-background-color-darker);
+}
+.floating-loading-message div {
+	box-shadow: none;
+	border-radius: 0px !important;
+}
+

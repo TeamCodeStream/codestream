@@ -10,7 +10,6 @@ using CodeStream.VisualStudio.Core.Enums;
 using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Shared.Controllers;
-using CodeStream.VisualStudio.Shared.Events;
 using CodeStream.VisualStudio.Shared.Interfaces;
 using CodeStream.VisualStudio.Shared.Models;
 using CodeStream.VisualStudio.Shared.Services;
@@ -18,10 +17,9 @@ using CodeStream.VisualStudio.Shared.UI.Settings;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft;
 using Task = System.Threading.Tasks.Task;
-using System.Security.Policy;
-using System.Collections.ObjectModel;
+
 using System.Collections.Generic;
-using CodeStream.VisualStudio.Core.Extensions;
+
 using CodeStream.VisualStudio.Shared.Authentication;
 
 namespace CodeStream.VisualStudio.Shared.Packages
@@ -29,7 +27,11 @@ namespace CodeStream.VisualStudio.Shared.Packages
 	[ProvideService(typeof(SSettingsManagerAccessor))]
 	[ProvideOptionPage(typeof(OptionsDialogPage), Application.ShortName, "Settings", 0, 0, true)]
 	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
-	[InstalledProductRegistration("#110", "#112", SolutionInfo.Version)]
+	[InstalledProductRegistration(
+		Application.FullName,
+		Application.ProductionDescription,
+		SolutionInfo.Version
+	)]
 	[Guid(Guids.CodeStreamSettingsPackageId)]
 	public sealed class SettingsPackage : AsyncPackage
 	{

@@ -3,15 +3,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32616.157
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{5BFDF0EC-9F77-4ED8-A7C9-BDED85BD3239}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.Core", "CodeStream.VisualStudio.Core\CodeStream.VisualStudio.Core.csproj", "{1A29B558-C55A-4769-AD37-69F903ED6EB3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9478D8FC-611C-4663-9953-2284BAE2545F}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		..\docs\dev.md = ..\docs\dev.md
+		Directory.Build.props = Directory.Build.props
+		..\esbuild.ts = ..\esbuild.ts
 		..\package.json = ..\package.json
+		..\tsconfig.json = ..\tsconfig.json
 	EndProjectSection
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CodeStream.VisualStudio.Shared", "CodeStream.VisualStudio.Shared\CodeStream.VisualStudio.Shared.shproj", "{85C56160-88EA-4BBF-ACFD-62045E76ADCD}"
@@ -21,6 +22,37 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.Vsix.x64", "CodeStream.VisualStudio.Vsix.x64\CodeStream.VisualStudio.Vsix.x64.csproj", "{A97D7813-7B1A-4369-98A3-80F5721C1831}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.UnitTests", "CodeStream.VisualStudio.UnitTests\CodeStream.VisualStudio.UnitTests.csproj", "{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Webviews", "Webviews", "{4CA5E5C8-D3A2-4F08-9C40-FD7BFA4366D8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sidebar", "sidebar", "{BC11CE57-B07C-4E7E-8E13-960418CD145A}"
+	ProjectSection(SolutionItems) = preProject
+		resources\webviews\sidebar\sidebar.html = resources\webviews\sidebar\sidebar.html
+		resources\webviews\sidebar\sidebar.ts = resources\webviews\sidebar\sidebar.ts
+		resources\webviews\sidebar\theme.css = resources\webviews\sidebar\theme.css
+		resources\webviews\sidebar\tsconfig.json = resources\webviews\sidebar\tsconfig.json
+		resources\webviews\sidebar\waiting.html = resources\webviews\sidebar\waiting.html
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "editor", "editor", "{AE426EFC-AA8F-429A-B836-78D62A70CA93}"
+	ProjectSection(SolutionItems) = preProject
+		resources\webviews\editor\editor.html = resources\webviews\editor\editor.html
+		resources\webviews\editor\editor.ts = resources\webviews\editor\editor.ts
+		resources\webviews\editor\theme.css = resources\webviews\editor\theme.css
+		resources\webviews\editor\tsconfig.json = resources\webviews\editor\tsconfig.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "styles", "styles", "{C762C157-F032-4162-856E-D7BDFE646D55}"
+	ProjectSection(SolutionItems) = preProject
+		resources\webviews\editor\styles\editor.less = resources\webviews\editor\styles\editor.less
+		resources\webviews\editor\styles\ui-variables.less = resources\webviews\editor\styles\ui-variables.less
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "styles", "styles", "{4D8808CE-98C9-49E1-974C-E0ADEF769D66}"
+	ProjectSection(SolutionItems) = preProject
+		resources\webviews\sidebar\styles\sidebar.less = resources\webviews\sidebar\styles\sidebar.less
+		resources\webviews\sidebar\styles\ui-variables.less = resources\webviews\sidebar\styles\ui-variables.less
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -62,7 +94,10 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3} = {5BFDF0EC-9F77-4ED8-A7C9-BDED85BD3239}
+		{BC11CE57-B07C-4E7E-8E13-960418CD145A} = {4CA5E5C8-D3A2-4F08-9C40-FD7BFA4366D8}
+		{AE426EFC-AA8F-429A-B836-78D62A70CA93} = {4CA5E5C8-D3A2-4F08-9C40-FD7BFA4366D8}
+		{C762C157-F032-4162-856E-D7BDFE646D55} = {AE426EFC-AA8F-429A-B836-78D62A70CA93}
+		{4D8808CE-98C9-49E1-974C-E0ADEF769D66} = {BC11CE57-B07C-4E7E-8E13-960418CD145A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CA2F01D3-69DD-4FEE-B239-775F5C1DFA2F}

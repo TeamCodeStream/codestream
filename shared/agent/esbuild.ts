@@ -40,8 +40,8 @@ function getPostBuildCopy(args: Args): CopyStuff[] {
 			to: outputDir,
 		},
 		{
-			from: path.join(__dirname, "../../WhatsNew.*"),
-			to: outputDir,
+			from: path.join(__dirname, "../../WhatsNew.json"),
+			to: path.join(outputDir, "WhatsNew.json"),
 		},
 	];
 	if (!args.watchMode) {

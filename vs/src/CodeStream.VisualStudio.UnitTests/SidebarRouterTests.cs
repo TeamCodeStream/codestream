@@ -15,7 +15,7 @@ using Xunit;
 
 namespace CodeStream.VisualStudio.UnitTests
 {
-	public class WebViewRouterTests
+	public class SidebarRouterTests
 	{
 		[Fact]
 		public async Task HandleAsyncTest()
@@ -55,7 +55,7 @@ namespace CodeStream.VisualStudio.UnitTests
 
 			var mockCodeStreamAgentServiceObject = mockCodeStreamAgentService.Object;
 
-			var router = new WebViewRouter(
+			var router = new SidebarRouter(
 				mockComponentModelObject,
 				mockCodeStreamServiceObject,
 				mockWebviewUserSettingsServiceObject,
