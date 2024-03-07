@@ -335,7 +335,8 @@ export const Observability = React.memo((props: Props) => {
 	const [repoForEntityAssociator, setRepoForEntityAssociator] = useState<
 		ObservabilityRepo | undefined
 	>(undefined);
-	const [loadingEntities, setLoadingEntities] = useState<boolean>(false);
+	const [loadingEntities, setLoadingEntities] = useState<string | undefined>(undefined);
+	const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 	const [didMount, setDidMount] = useState<boolean>(false);
 	const [observabilityAnomalies, setObservabilityAnomalies] =
 		useState<GetObservabilityAnomaliesResponse>({
@@ -427,21 +428,21 @@ export const Observability = React.memo((props: Props) => {
 	const doRefresh = async (force = false) => {
 		if (!derivedState.newRelicIsConnected) return;
 
-		console.debug(`o11y: doRefresh called`);
-
 		setGenericError(undefined);
-		setLoadingEntities(true);
+		setLoadingEntities(currentRepoId);
+		setIsRefreshing(true);
 
 		try {
 			await Promise.all([loadAssignments(), fetchObservabilityRepos(force), getEntityCount(true)]);
 		} finally {
-			setLoadingEntities(false);
 		}
 
 		await getObservabilityErrors();
 		if (expandedEntity && currentRepoId) {
 			fetchAnomalies(expandedEntity, currentRepoId);
 		}
+		setLoadingEntities(undefined);
+		setIsRefreshing(false);
 	};
 
 	const getObservabilityErrors = async () => {
@@ -503,7 +504,7 @@ export const Observability = React.memo((props: Props) => {
 		}
 
 		setGenericError(undefined);
-		setLoadingEntities(true);
+		setLoadingEntities(currentRepoId);
 		try {
 			await Promise.all([
 				loadAssignments(),
@@ -513,7 +514,7 @@ export const Observability = React.memo((props: Props) => {
 			]);
 			console.debug(`o11y: Promise.all finished`);
 		} finally {
-			setLoadingEntities(false);
+			setLoadingEntities(undefined);
 			setDidMount(true);
 		}
 	};
@@ -732,7 +733,7 @@ export const Observability = React.memo((props: Props) => {
 	]);
 
 	async function fetchObservabilityRepos(force: boolean, repoId?: string, entityGuid?: string) {
-		setLoadingEntities(true);
+		setLoadingEntities(currentRepoId);
 		console.debug(
 			`o11y: fetchObservabilityRepos started force ${force} repoId ${repoId} entityGuid ${entityGuid}`
 		);
@@ -1151,7 +1152,7 @@ export const Observability = React.memo((props: Props) => {
 		<Root>
 			{observabilityRepos.map(repo => {
 				const repoIsCollapsed = currentRepoId !== repo.repoId;
-
+				const isLoadingCurrentRepo = loadingEntities === repo.repoId;
 				return (
 					<>
 						<div style={{ padding: "0 10px 0 20px" }}></div>
@@ -1164,6 +1165,7 @@ export const Observability = React.memo((props: Props) => {
 											<CurrentRepoContext
 												observabilityRepos={observabilityRepos}
 												currentRepoCallback={setCurrentRepoId}
+												suppressCallback={isRefreshing}
 												isHeaderText={true}
 												repoName={repo.repoName}
 												serviceCount={repo.entityAccounts.length}
@@ -1173,12 +1175,14 @@ export const Observability = React.memo((props: Props) => {
 										labelIsFlex={true}
 										onClick={e => {
 											if (repo.repoId === currentRepoId) {
+												e.preventDefault();
+												e.stopPropagation();
 												setCurrentRepoId(undefined);
 											} else {
 												setCurrentRepoId(repo.repoId);
 											}
 										}}
-										collapsed={repoIsCollapsed}
+										collapsed={repoIsCollapsed && !isLoadingCurrentRepo}
 										showChildIconOnCollapse={true}
 										actionsVisibleIfOpen={true}
 										customPadding="2px 10px 2px 4px"
@@ -1190,6 +1194,8 @@ export const Observability = React.memo((props: Props) => {
 												placement="bottom"
 												delay={1}
 												onClick={e => {
+													e.preventDefault();
+													e.stopPropagation();
 													doRefresh(true);
 												}}
 											/>
@@ -1197,7 +1203,7 @@ export const Observability = React.memo((props: Props) => {
 											<>&nbsp;</>
 										)}
 									</PaneNodeName>
-									{loadingEntities ? (
+									{isLoadingCurrentRepo ? (
 										<ObservabilityLoadingServiceEntities />
 									) : (
 										<>

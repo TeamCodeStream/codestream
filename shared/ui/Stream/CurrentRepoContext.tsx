@@ -24,6 +24,7 @@ interface Props {
 	isHeaderText?: boolean;
 	repoName?: string;
 	serviceCount?: number;
+	suppressCallback?: boolean;
 }
 
 interface CurrentRepoContainerProps {
@@ -79,20 +80,22 @@ export const CurrentRepoContext = React.memo((props: Props) => {
 		};
 
 		const setCurrentRepo = (repo: ReposScm, scmInfo: GetFileScmInfoResponse | undefined) => {
-			const repoName = getRepoName(repo, scmInfo);
-			const currentRepoId = repo.id || scmInfo?.scm?.repoId;
+			if (!props.suppressCallback) {
+				const repoName = getRepoName(repo, scmInfo);
+				const currentRepoId = repo.id || scmInfo?.scm?.repoId;
 
-			setCurrentRepoName(repoName);
-			console.debug(
-				`o11y: currentRepoContext: setting currentRepoCallback currentRepo?.id  ${repo.id} scmInfo?.scm?.repoId ${scmInfo?.scm?.repoId}`
-			);
-			props.currentRepoCallback(currentRepoId);
-			dispatch(
-				setUserPreference({
-					prefPath: ["currentO11yRepoId"],
-					value: currentRepoId,
-				})
-			);
+				setCurrentRepoName(repoName);
+				console.debug(
+					`o11y: currentRepoContext: setting currentRepoCallback currentRepo?.id  ${repo.id} scmInfo?.scm?.repoId ${scmInfo?.scm?.repoId}`
+				);
+				props.currentRepoCallback(currentRepoId);
+				dispatch(
+					setUserPreference({
+						prefPath: ["currentO11yRepoId"],
+						value: currentRepoId,
+					})
+				);
+			}
 		};
 
 		// case: no file open, or non-file document open, and no previous repo set
