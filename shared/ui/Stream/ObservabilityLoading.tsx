@@ -45,6 +45,10 @@ export const ObservabilityLoadingServiceEntities = () => {
 			<SkeletonLoader style={{ width: "35%", marginLeft: "20px" }} />
 			<SkeletonLoader style={{ width: "60%", marginLeft: "20px" }} />
 			<SkeletonLoader style={{ width: "70%", marginLeft: "20px" }} />
+			<SkeletonLoader style={{ width: "45%", marginLeft: "20px" }} />
+			<SkeletonLoader style={{ width: "35%", marginLeft: "20px" }} />
+			<SkeletonLoader style={{ width: "60%", marginLeft: "20px" }} />
+			<SkeletonLoader style={{ width: "70%", marginLeft: "20px" }} />
 		</>
 	);
 };
