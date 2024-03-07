@@ -313,7 +313,7 @@ import {
 
 import { HttpsProxyAgent } from "https-proxy-agent";
 import { ServerError } from "../../agentError";
-import { Team, User } from "../../api/extensions";
+import { Team, User } from "../extensions";
 import { HistoryFetchInfo } from "../../broadcaster/broadcaster";
 import { Container, SessionContainer } from "../../container";
 import { Logger } from "../../logger";
@@ -337,6 +337,7 @@ import { CodeStreamUnreads } from "./unreads";
 import { clearResolvedFlag } from "@codestream/utils/api/codeErrorCleanup";
 import { ResponseError } from "vscode-jsonrpc/lib/messages";
 import { parseId } from "../../providers/newrelic/utils";
+import { getClientUuid } from "./clientId";
 
 @lsp
 export class CodeStreamApiProvider implements ApiProvider {
@@ -369,6 +370,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private _usingServiceGatewayAuth: boolean = false;
 	private _refreshNRTokenPromise: Promise<CSNewRelicProviderInfo> | undefined;
 	private _refreshTokenFailed: boolean = false;
+	private _clientUuid = "";
 
 	readonly capabilities: Capabilities = {
 		channelMute: true,
@@ -384,7 +386,16 @@ export class CodeStreamApiProvider implements ApiProvider {
 		private readonly _version: VersionInfo,
 		private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent<string> | HttpAgent | undefined,
 		private readonly _strictSSL: boolean
-	) {}
+	) {
+		getClientUuid()
+			.then(clientUuid => {
+				Logger.log(`Got clientUuid ${clientUuid}`);
+				this._clientUuid = clientUuid;
+			})
+			.catch(e => {
+				Logger.warn("Error getting clientUuid", e);
+			});
+	}
 
 	get teamId(): string {
 		return this._teamId!;
@@ -2760,6 +2771,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 				if (init.headers instanceof Headers) {
 					init.headers.append("Accept", "application/json");
 					init.headers.append("Content-Type", "application/json");
+					if (!isEmpty(this._clientUuid)) {
+						init.headers.append("X-CS-Client-Machine-ID", this._clientUuid);
+					}
 
 					if (token !== undefined) {
 						if (tokenType) {
