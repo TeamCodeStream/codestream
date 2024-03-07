@@ -8,7 +8,13 @@ import { describe, expect, it } from "@jest/globals";
 
 describe("NewRelicGraphqlClient", () => {
 	it("throws GraphqlNrqlTimeoutError for matching response", () => {
-		const newRelicGraphqlClient = new NewRelicGraphqlClient({} as any, {} as any, {} as any, false);
+		const newRelicGraphqlClient = new NewRelicGraphqlClient(
+			{} as any,
+			{} as any,
+			{} as any,
+			{} as any,
+			false
+		);
 		const responseBody: GraphqlNrqlErrorResponse = {
 			errors: [
 				{
@@ -36,7 +42,13 @@ describe("NewRelicGraphqlClient", () => {
 	});
 
 	it("throws GraphqlNrqlError for other gql errors", () => {
-		const newRelicGraphqlClient = new NewRelicGraphqlClient({} as any, {} as any, {} as any, false);
+		const newRelicGraphqlClient = new NewRelicGraphqlClient(
+			{} as any,
+			{} as any,
+			{} as any,
+			{} as any,
+			false
+		);
 		const responseBody: GraphqlNrqlErrorResponse = {
 			errors: [
 				{

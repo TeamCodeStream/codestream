@@ -65,19 +65,18 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 		throw new Error("New Relic provider info not found");
 	}
 
+	const nrApiConfig = new NrApiConfig(session);
 	const newRelicProviderConfig: NewThirdPartyProviderConfig = {
 		id: "newrelic*com",
-		apiUrl: session.newRelicApiUrl ?? "https://api.newrelic.com",
+		apiUrl: nrApiConfig.apiUrl,
 		name,
-		baseHeaders: {
-			"Content-Type": "application/json",
-			"newrelic-requesting-services": "CodeStream",
-		},
+		baseHeaders: nrApiConfig.baseHeaders,
 	};
 
 	const versionInfo = session.versionInfo;
 
 	const newRelicGraphqlClient = new NewRelicGraphqlClient(
+		nrApiConfig,
 		session,
 		newRelicProviderInfo,
 		versionInfo,
@@ -87,7 +86,7 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 	disposables.push(newRelicGraphqlClient);
 
 	const apiProvider = session.api;
-	const nrApiConfig = new NrApiConfig(session);
+
 	const nrOrgProvider = new NrOrgProvider(newRelicGraphqlClient, apiProvider, nrApiConfig);
 
 	// Avoid circular dependency between NewRelicGraphqlClient and NrOrgProvider
@@ -177,12 +176,9 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 
 	const newRelicVulnProviderConfig: NewThirdPartyProviderConfig = {
 		id: "newrelic*com",
-		apiUrl: session.newRelicSecApiUrl ?? "https://nrsec-workflow-api.staging-service.newrelic.com",
+		apiUrl: nrApiConfig.newRelicSecApiUrl,
 		name: "newrelic-vulnerabilities",
-		baseHeaders: {
-			"Content-Type": "application/json",
-			"newrelic-requesting-services": "CodeStream",
-		},
+		baseHeaders: nrApiConfig.baseHeaders,
 	};
 
 	const vulnHttpClient = new HttpClient(newRelicVulnProviderConfig, session, newRelicProviderInfo);

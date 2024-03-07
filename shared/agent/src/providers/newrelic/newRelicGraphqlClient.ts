@@ -26,6 +26,7 @@ import {
 import * as Dom from "graphql-request/dist/types.dom";
 import { ContextLogger } from "../contextLogger";
 import { Disposable } from "../../system/disposable";
+import { NrApiConfig } from "./nrApiConfig";
 
 const PRODUCTION_US_GRAPHQL_URL = "https://api.newrelic.com/graphql";
 const PRODUCTION_EU_GRAPHQL_URL = "https://api-eu.newrelic.com/graphql";
@@ -84,6 +85,7 @@ export class NewRelicGraphqlClient implements Disposable {
 	private _onGraphqlClientConnected = new Array<OnGraphqlClientConnected>();
 
 	constructor(
+		private nrApiConfig: NrApiConfig,
 		private session: CodeStreamSession,
 		private providerInfo: CSNewRelicProviderInfo | undefined,
 		private versionInfo: VersionInfo,
@@ -91,14 +93,7 @@ export class NewRelicGraphqlClient implements Disposable {
 	) {}
 
 	get apiUrl() {
-		return this.session.newRelicApiUrl ?? "https://api.newrelic.com";
-	}
-	get baseUrl() {
-		return this.apiUrl;
-	}
-
-	get coreUrl() {
-		return this.apiUrl.replace("api.", "one.");
+		return this.nrApiConfig.apiUrl;
 	}
 
 	get accessToken() {
@@ -107,9 +102,9 @@ export class NewRelicGraphqlClient implements Disposable {
 
 	get graphQlBaseUrl() {
 		if (this.providerInfo?.bearerToken) {
-			return `${this.coreUrl}/graphql`;
+			return `${this.nrApiConfig.productUrl}/graphql`;
 		} else {
-			return `${this.baseUrl}/graphql`;
+			return `${this.apiUrl}/graphql`;
 		}
 	}
 
@@ -118,10 +113,7 @@ export class NewRelicGraphqlClient implements Disposable {
 	}
 
 	get headers() {
-		const headers: { [key: string]: string } = {
-			"Content-Type": "application/json",
-			"newrelic-requesting-services": "CodeStream",
-		};
+		const headers: { [key: string]: string } = this.nrApiConfig.baseHeaders;
 
 		const token = this.providerInfo?.accessToken;
 		if (token) {
