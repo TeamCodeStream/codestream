@@ -13,7 +13,6 @@ import {
 	TextDocument
 } from "vscode";
 import {
-	Entity,
 	FileLevelTelemetryRequestOptions,
 	MetricTimesliceNameMapping,
 	ObservabilityAnomaly
@@ -147,9 +146,8 @@ export interface ExecuteNrqlCommandArgs {
 }
 
 export interface ExecuteLogCommandArgs {
-	entity?: Entity;
+	entityGuid?: string;
 	lineNumber?: number;
-	entityTypeDescription?: string;
 	entryPoint?: "context_menu" | "entity_guid_finder";
 	ignoreSearch?: boolean;
 }
@@ -728,8 +726,8 @@ export class Commands implements Disposable {
 		}
 
 		let currentEntityGuid: string | undefined;
-		if (args?.entity?.guid) {
-			currentEntityGuid = args.entity.guid;
+		if (args?.entityGuid) {
+			currentEntityGuid = args.entityGuid;
 		} else {
 			const currentRepoId = Container.session.user?.preferences?.currentO11yRepoId;
 			currentEntityGuid = currentRepoId
@@ -739,8 +737,6 @@ export class Commands implements Disposable {
 
 		Container.panel.initializeOrShowEditor({
 			panelLocation: ViewColumn.Active,
-			entity: args.entity,
-			entityTypeDescription: args.entityTypeDescription,
 			entityGuid: currentEntityGuid!,
 			panel: "logs",
 			title: "Logs",

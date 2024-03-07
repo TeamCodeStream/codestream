@@ -2,7 +2,6 @@ import {
 	ApiVersionCompatibility,
 	Capabilities,
 	CodeStreamEnvironmentInfo,
-	Entity,
 	ThirdPartyProviders,
 	Unreads,
 	VersionCompatibility,
@@ -341,8 +340,6 @@ export interface OpenEditorViewNotification {
 		name?: IdeNames;
 		browserEngine?: BrowserEngines;
 	};
-	entity?: Entity;
-	entityTypeDescription?: string;
 	accountId?: number;
 	panelLocation?: ViewColumn;
 	entityGuid?: string;

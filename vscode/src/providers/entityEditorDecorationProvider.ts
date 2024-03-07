@@ -1,6 +1,5 @@
 import {
 	EntityGuidToken,
-	EntityTypeMap,
 	GetEditorEntityGuidsRequestType
 } from "@codestream/protocols/agent";
 import {
@@ -141,10 +140,7 @@ export class EntityEditorDecorationProvider implements Disposable {
 		markdownLinks.push(
 			`[__Logs__](command:codestream.logSearch?${encodeURIComponent(
 				JSON.stringify({
-					entity: item.entity,
-					entityTypeDescription: item.entity.entityType
-						? EntityTypeMap[item.entity.entityType]
-						: "",
+					entityGuid: item.entity.guid,
 					entryPoint: "entity_guid_finder",
 					ignoreSearch: true
 				} as ExecuteLogCommandArgs)

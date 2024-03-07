@@ -1,5 +1,4 @@
 import {
-	Entity,
 	EntityAccount,
 	GetLogFieldDefinitionsRequestType,
 	GetLoggingEntitiesRequestType,
@@ -152,9 +151,7 @@ const Option = (props: OptionProps) => {
 export const APMLogSearchPanel = (props: {
 	entryPoint: string;
 	entityGuid?: string;
-	entity?: Entity;
 	suppliedQuery?: string;
-	entityTypeDescription?: string;
 	ide?: { name?: IdeNames };
 }) => {
 	const [fieldDefinitions, setFieldDefinitions] = useState<LogFieldDefinition[]>([]);
@@ -224,7 +221,8 @@ export const APMLogSearchPanel = (props: {
 				value: entityAccount.entityGuid,
 				label: entityAccount.entityName,
 				accountName: entityAccount.accountName,
-				entityType: entityAccount.entityTypeDescription,
+				entityTypeDescription: entityAccount.entityTypeDescription,
+				accountId: entityAccount.accountId,
 			});
 
 			fetchFieldDefinitions(entityAccount.entityGuid);
@@ -285,6 +283,7 @@ export const APMLogSearchPanel = (props: {
 	}) => {
 		if (!entityAccount) {
 			setSelectedEntityAccount(null);
+			return;
 		}
 
 		const customLabel = (
