@@ -34,7 +34,7 @@ New-Module -ScriptBlock {
     #     # ($version.Patch, 0 -ne $null)[0]
     #     Write-Host "$($version.Major).$($version.Minor).$(($version.Patch, 0 -ne $null)[0])"
     # throw $file
-        $newContent | Set-Content $file
+        $newContent | Set-Content $assemblyInfoFile
     }
 
     Export-ModuleMember -Function Write-AssemblyInfo
