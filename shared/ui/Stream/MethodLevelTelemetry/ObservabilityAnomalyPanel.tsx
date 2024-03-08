@@ -607,17 +607,21 @@ const Errors = (props: ErrorsProps) => {
 										{ errorGroupGuid: _.errorGroupGuid }
 									)) as GetObservabilityErrorGroupMetadataResponse;
 									dispatch(
-										openErrorGroup(_.errorGroupGuid, _.occurrenceId, {
-											multipleRepos: response?.relatedRepos?.length > 1,
-											relatedRepos: response?.relatedRepos || undefined,
-											timestamp: _.lastOccurrence,
-											sessionStart: props.sessionStart,
-											pendingEntityId: response?.entityId || _.entityId,
-											occurrenceId: response?.occurrenceId || _.occurrenceId,
-											pendingErrorGroupGuid: _.errorGroupGuid,
-											openType: "CLM Details",
-											remote: _?.remote || undefined,
-											stackSourceMap: response?.stackSourceMap,
+										openErrorGroup({
+											errorGroupGuid: _.errorGroupGuid,
+											occurrenceId: _.occurrenceId,
+											data: {
+												multipleRepos: response?.relatedRepos?.length > 1,
+												relatedRepos: response?.relatedRepos || undefined,
+												timestamp: _.lastOccurrence,
+												sessionStart: props.sessionStart,
+												pendingEntityId: response?.entityId || _.entityId,
+												occurrenceId: response?.occurrenceId || _.occurrenceId,
+												pendingErrorGroupGuid: _.errorGroupGuid,
+												openType: "CLM Details",
+												remote: _?.remote || undefined,
+												stackSourceMap: response?.stackSourceMap,
+											},
 										})
 									);
 								} catch (ex) {
