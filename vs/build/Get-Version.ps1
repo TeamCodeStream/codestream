@@ -6,4 +6,4 @@ Set-StrictMode -Version Latest
 . $scriptsDirectory\Modules\AssemblyInfo.ps1 | out-null
 . $scriptsDirectory\Modules\SolutionInfo.ps1 | out-null
  
-Read-Version "x86"
+Read-Version "x64"

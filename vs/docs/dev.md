@@ -9,7 +9,7 @@ git clone https://github.com/TeamCodeStream/codestream.git
 ## Prerequisites
 
 - Windows 10
-- [Visual Studio 2019 or 2022](https://visualstudio.microsoft.com/downloads/)
+- [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/)
   - Various workloads including:
     - Visual Studio extension development
     - .NET Framework 4.8
@@ -64,11 +64,6 @@ It will do an initial full build of the webview and then watch for file changes,
 
 >NOTE: you cannot have the CodeStream for VS extension installed from the marketplace AND run an experimental debugging instance of VS (you have to uninstall the version from the marketplace first)
 
-The `CodeStream.VisualStudio.CodeLens` project runs out of process from the main extension, and must be debugged slightly differently.
-
-1. This project will run under the guise of a `ServiceHub` executable, and figuring out exactly which one is difficult. The easiest path (right now) is to add a `Debugger.Launch();` into the codebase for local development until we can instrument a better solution.
-1. The `ServiceHub` / `CodeLens` project will write its own log file to `%HOME%\AppData\Local\Temp\servicehub\logs` with `CodeLens` in the filename. Very useful for debugging.
-
 All of the C# code is formatted with [CSharpier (an OSS, opinionated code formatter)](https://csharpier.com/), and is triggered using a pre-commit git hook. To ensure this works correctly, you must -
 
 From a terminal, where you have cloned the `codestream` repository, cd to `vs/src` execute the following command:
@@ -96,8 +91,6 @@ To debug the CodeStream LSP agent you will need both Visual Studio and VS Code.
 ## Builds
 
 In Visual Studio, certain Solution/Project Configurations and Platforms have been configured.
-
-Using 'Debug' and 'x86' will produce a Visual Studio 2019 compatible artifact at `.\vs\src\CodeStream.VisualStudio.Vsix.x86/bin/x86/Debug/codestream-vs.vsix` and can be debugged directly using the Visual Studio 2019 experimental instance.
 
 Using 'Debug' and 'x64' will produce a Visual Studio 2022 compatible artifact at `.\vs\src\CodeStream.VisualStudio.Vsix.x64/bin/x64/Debug/codestream-vs-22.vsix` and can be debugged directly using the Visual Studio 2022 experimental instance.
 

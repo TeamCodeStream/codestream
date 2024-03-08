@@ -77,33 +77,33 @@ function Build-Extension {
 
 	# validation only allows 17.0 and is defaulted to 17.0, so it can't be anything else anyway
 	$msbuild = "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/MSBuild/Current/Bin/MSBuild.exe"
-    $xunit = "C:/.nuget/xunit.runner.console/2.4.2/tools/net472/xunit.console.x86.exe"	
+    $xunit = "C:/.nuget/xunit.runner.console/2.4.2/tools/net472/xunit.console.x64.exe"	
 
 	if ($CI) {
 		Write-Host "Running UnitTests..."
 
-		& $msbuild './src/CodeStream.VisualStudio.sln' /t:restore,$target /p:Configuration=Debug /p:AllowUnsafeBlocks=true /verbosity:$Verbosity /p:Platform='x86' /p:DeployExtension=False
+		& $msbuild './src/CodeStream.VisualStudio.sln' /t:restore,$target /p:Configuration=Debug /p:AllowUnsafeBlocks=true /verbosity:$Verbosity /p:Platform='x64' /p:DeployExtension=False
 
-		if((Test-Path -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/.codestream-out") -eq $True) {
-			Remove-Item -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/.codestream-out" -Force -Recurse
+		if((Test-Path -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x64/Debug/.codestream-out") -eq $True) {
+			Remove-Item -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x64/Debug/.codestream-out" -Force -Recurse
 		}
 
-		if((Test-Path -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/codestream-vs.zip") -eq $True) {
-			Remove-Item -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/codestream-vs.zip" -Force
+		if((Test-Path -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x64/Debug/codestream-vs.zip") -eq $True) {
+			Remove-Item -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x64/Debug/codestream-vs.zip" -Force
 		}
 
-		Copy-Item -Path "./src/CodeStream.VisualStudio.Vsix.x86/bin/x86/Debug/codestream-vs.vsix" -Destination "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/codestream-vs.zip"
-		Expand-Archive -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/codestream-vs.zip" -DestinationPath "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/.codestream-out/"
-		Copy-Item -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/.codestream-out/CodeStream.VisualStudio.*.pdb" -Destination "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/"
+		Copy-Item -Path "./src/CodeStream.VisualStudio.Vsix.x64/bin/x64/Debug/codestream-vs-22.vsix" -Destination "./src/CodeStream.VisualStudio.UnitTests/bin/x64/Debug/codestream-vs-22.zip"
+		Expand-Archive -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x64/Debug/codestream-vs-22.zip" -DestinationPath "./src/CodeStream.VisualStudio.UnitTests/bin/x64/Debug/.codestream-out/"
+		Copy-Item -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x64/Debug/.codestream-out/CodeStream.VisualStudio.*.pdb" -Destination "./src/CodeStream.VisualStudio.UnitTests/bin/x64/Debug/"
 		
-		Remove-Item -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/.codestream-out/" -Force -Recurse
-		Remove-Item -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/codestream-vs.zip" -Force
+		Remove-Item -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x64/Debug/.codestream-out/" -Force -Recurse
+		Remove-Item -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x64/Debug/codestream-vs-22.zip" -Force
 		
 		Push-Location "./src"
 		& dotnet tool restore --ignore-failed-sources
 		Pop-Location
 
-		Push-Location "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/"
+		Push-Location "./src/CodeStream.VisualStudio.UnitTests/bin/x64/Debug/"
 		& dotnet coverlet "CodeStream.VisualStudio.UnitTests.dll" --target "$xunit" --targetargs "CodeStream.VisualStudio.UnitTests.dll" --exclude-by-file "**/Annotations/Annotations.cs" --format cobertura 
 		& dotnet reportgenerator "-reports:coverage.cobertura.xml" "-targetdir:coveragereport" "-reporttypes:Html;TeamCitySummary"
 		Compress-Archive -Path coveragereport\* -DestinationPath CoverageReport.zip
@@ -122,13 +122,9 @@ function Build-Extension {
 	    Remove-Item $("$($baseOutputDir)/*") -Recurse -Force
     }
 
-	$x86OutputDir = $(Join-Path $baseOutputDir "$($Mode)/x86")
 	$x64OutputDir = $(Join-Path $baseOutputDir "$($Mode)/x64")
-	Try-Create-Directory($x86OutputDir)
 	Try-Create-Directory($x64OutputDir)
 
-	Write-Log "Running MSBuild (x86)..."
-	& $msbuild './src/CodeStream.VisualStudio.Vsix.x86/CodeStream.VisualStudio.Vsix.x86.csproj' /t:restore,$target /p:Configuration=$Mode /p:AllowUnsafeBlocks=true /verbosity:$Verbosity /p:Platform='x86' /p:OutputPath=$x86OutputDir /p:DeployExtension=False
 	Write-Log "Running MSBuild (x64)..."
 	& $msbuild './src/CodeStream.VisualStudio.Vsix.x64/CodeStream.VisualStudio.Vsix.x64.csproj' /t:restore,$target /p:Configuration=$Mode /p:AllowUnsafeBlocks=true /verbosity:$Verbosity /p:Platform='x64' /p:OutputPath=$x64OutputDir /p:DeployExtension=False
 
@@ -137,7 +133,6 @@ function Build-Extension {
 	}
 
 	Write-Log "Build-Extension completed in {$(Get-ElapsedTime($timer))}"
-	Write-Log "x86 Artifacts: $($x86OutputDir) at $(Get-Date)"    
 	Write-Log "x64 Artifacts: $($x64OutputDir) at $(Get-Date)"    
 }
 

@@ -25,8 +25,8 @@
 		"rebuild": "npm install --no-save && npm run agent:rebuild && npm run build",
 		"verify": "run-p verify:**",
 		"verify:compile": "tsc --noEmit",
-		"verify:lint": "npx eslint  src/CodeStream.VisualStudio.Shared/UI/WebViews/**/*.ts *.js *.ts",
-		"verify:prettier": "prettier --check src/CodeStream.VisualStudio.Shared/UI/WebViews/** docs/** *.ts *.js *.md package.json .prettierrc",
+		"verify:lint": "npx eslint  src/resources/webviews/**/*.ts *.js *.ts",
+		"verify:prettier": "prettier --check src/resources/webviews/** docs/** *.ts *.js *.md package.json .prettierrc",
 		"watch": "tsx esbuild.ts --watch",
 		"webview:clean:ci": "pushd \"../shared/ui\" && npm run clean:ci && popd",
 		"webview:verify": "pushd \"../shared/ui\" && npm run verify:compile && popd"

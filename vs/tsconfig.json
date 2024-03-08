@@ -22,5 +22,5 @@
 		"tsBuildInfoFile": ".tsbuildinfo",
 		"resolveJsonModule": false
 	},
-	"include": ["src/CodeStream.VisualStudio.Shared/UI/WebViews/*.ts", "../shared/util/src/**/*", "../shared/build/src/**/*"]
+	"include": ["src/resources/webviews/**/*.ts", "../shared/util/src/**/*", "../shared/build/src/**/*"]
 }

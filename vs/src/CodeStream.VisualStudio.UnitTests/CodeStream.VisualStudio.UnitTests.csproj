@@ -107,9 +107,9 @@
       <Project>{1a29b558-c55a-4769-ad37-69f903ed6eb3}</Project>
       <Name>CodeStream.VisualStudio.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\CodeStream.VisualStudio.Vsix.x86\CodeStream.VisualStudio.Vsix.x86.csproj">
-      <Project>{eb360d87-8769-44a4-b837-8bc3279070c9}</Project>
-      <Name>CodeStream.VisualStudio.Vsix.x86</Name>
+    <ProjectReference Include="..\CodeStream.VisualStudio.Vsix.x64\CodeStream.VisualStudio.Vsix.x64.csproj">
+      <Project>{a97d7813-7b1a-4369-98a3-80f5721c1831}</Project>
+      <Name>CodeStream.VisualStudio.Vsix.x64</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -22,20 +22,9 @@ Get-SCPFile -ComputerName $computer -LocalFile $localVSCETokenFile -RemoteFile $
 $exception = $False
 $vsDir = $checkoutDir + '\vs'
 $buildDir = $vsDir + '\build'
-$x86AssetDir = $buildDir + '\artifacts\Release\x86'
 $x64AssetDir = $buildDir + '\artifacts\Release\x64'
 
-$x86Asset = $x86AssetDir + '\codestream-vs-' + $buildNumber + '-x86.vsix'
 $x64Asset = $x64AssetDir + '\codestream-vs-' + $buildNumber + '-x64.vsix'
-
-Write-Host 'Here is the x86 VSIX file (' $x86Asset '):'
-Get-ChildItem $x86Asset
-if ($LastExitCode -ne $null -and $LastExitCode -ne 0) {
-    if((Test-Path -Path $localVSCETokenFile) -eq $True){
-        Remove-Item $localVSCETokenFile
-    }
-    exit 1
-}
 
 Write-Host 'Here is the x64 VSIX file (' $x64Asset '):'
 Get-ChildItem $x64Asset
@@ -62,7 +51,6 @@ $exe = (-join($path, "\VSSDK\VisualStudioIntegration\Tools\Bin\VsixPublisher.exe
 Write-Host "VsixPublish path... $($exe)"
 
 if ($WhatIfPreference.IsPresent -eq $True) {
-    Write-Host "Would have published $($x86Asset)"
     Write-Host "Would have published $($x64Asset)"
 }
 else {
@@ -70,11 +58,6 @@ else {
     # https://docs.microsoft.com/en-us/visualstudio/extensibility/walkthrough-publishing-a-visual-studio-extension-via-command-line?view=vs-2019
     #  -ignoreWarnings "VSIXValidatorWarning01,VSIXValidatorWarning02"
     try{
-        & $exe publish -payload $x86Asset -publishManifest "$($vsDir)\src\CodeStream.VisualStudio.Vsix.x86\publish\publishManifest.json" -personalAccessToken $pat
-        if ($LastExitCode -ne $null -and $LastExitCode -ne 0) {
-            throw "Failed to publish $($x86Asset) to marketplace"
-        }
-    
         & $exe publish -payload $x64Asset -publishManifest "$($vsDir)\src\CodeStream.VisualStudio.Vsix.x64\publish\publishManifest.json" -personalAccessToken $pat
         if ($LastExitCode -ne $null -and $LastExitCode -ne 0) {
             throw "Failed to publish $($x64Asset) to marketplace"
