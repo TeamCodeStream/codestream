@@ -88,7 +88,6 @@
     <StartProgram Condition="'$(DevEnvDir)' != ''">$(DevEnvDir)devenv.exe</StartProgram>
     <StartArguments>/rootsuffix Exp</StartArguments>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Include="CodeStreamPackage.cs">
       <AutoGen>True</AutoGen>
@@ -101,19 +100,15 @@
       <LastGenOutput>CodeStreamPackage.cs</LastGenOutput>
     </VSCTCompile>
   </ItemGroup>
-
   <ItemGroup Condition="'$(Configuration)' == 'Release'">
     <Content Include="agent\node.exe" IncludeInVSIX="True" />
   </ItemGroup>
-
   <ItemGroup>
     <EmbeddedResource Include="$(Licenses)\$(Configuration)\teamdev.licenses" Link="teamdev.licenses" />
   </ItemGroup>
-  
   <ItemGroup>
     <Compile Include="$(SharedResources)\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-
   <ItemGroup>
     <Content Include="$(WebviewDirectory)\newrelic-browser.js" Link="webviews\sidebar\newrelic-browser.js" IncludeInVSIX="True" />
     <Content Include="$(SharedResources)\webviews\sidebar\sidebar.html" Link="webviews\sidebar\sidebar.html" IncludeInVSIX="True" />
@@ -124,7 +119,6 @@
     <Content Include="$(SharedResources)\webviews\sidebar\dist\styles\sidebar.css" Link="webviews\sidebar\sidebar.css" IncludeInVSIX="True" />
     <Content Include="$(SharedResources)\webviews\sidebar\dist\styles\sidebar.css.map" Link="webviews\sidebar\sidebar.css.map" IncludeInVSIX="True" />
   </ItemGroup>
-
   <ItemGroup>
     <Content Include="$(SharedResources)\webviews\editor\editor.html" Link="webviews\editor\editor.html" IncludeInVSIX="True" />
     <Content Include="$(SharedResources)\webviews\editor\theme.css" Link="webviews\editor\theme.css" IncludeInVSIX="True" />
@@ -133,7 +127,6 @@
     <Content Include="$(SharedResources)\webviews\editor\dist\styles\editor.css" Link="webviews\editor\editor.css" IncludeInVSIX="True" />
     <Content Include="$(SharedResources)\webviews\editor\dist\styles\editor.css.map" Link="webviews\editor\editor.css.map" IncludeInVSIX="True" />
   </ItemGroup>
-
   <ItemGroup>
     <Content Include="$(AgentDistDirectory)\node_modules\**\*.*" Link="agent\node_modules\%(RecursiveDir)%(Filename)%(Extension)" IncludeInVSIX="True" />
     <Content Include="$(AgentDistDirectory)\agent.js" Link="agent\agent.js" IncludeInVSIX="True" />
@@ -144,12 +137,9 @@
     <Content Include="$(SharedResources)\CodestreamPackage.ico" Link="resources\CodestreamPackage.ico" IncludeInVSIX="True" />
     <Content Include="$(SharedResources)\codestream.codestream" Link="resources\codestream.codestream" IncludeInVSIX="True" />
     <Content Include="$(SharedResources)\assets\README.md" Link="resources\assets\README.md" IncludeInVSIX="True" />
-
     <ContentManifest Include="$(SharedResources)\ContentManifest.json" Link="ContentManifest.json" />
-
     <None Include="$(SharedResources)\CodeStream.VisualStudio.Settings.json" Link="CodeStream.VisualStudio.Settings.json" />
   </ItemGroup>
-
   <ItemGroup>
     <None Include="publish\publishManifest.json" />
     <None Include="publish\README.md" />
@@ -157,7 +147,6 @@
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
-
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualBasic" />
@@ -247,6 +236,9 @@
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.SDK">
       <Version>17.2.32505.173</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Validation">
+      <Version>17.6.11</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.VSSDK.BuildTools">
       <Version>17.6.2164</Version>
