@@ -674,7 +674,8 @@ function listenForEvents(store) {
 							{ entityGuid: definedQuery.query.entityId || "" }
 						)) as GetObservabilityErrorGroupMetadataResponse;
 
-						definedQuery.query.multipleRepos = response?.relatedRepos?.length > 1;
+						definedQuery.query.multipleRepos =
+							!!response?.relatedRepos?.length && response?.relatedRepos?.length > 1;
 
 						store.dispatch(
 							openErrorGroup(definedQuery.query.errorGroupGuid, definedQuery.query.occurrenceId, {
