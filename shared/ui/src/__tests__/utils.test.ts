@@ -3,6 +3,7 @@
  */
 import { describe, expect } from "@jest/globals";
 import { arrayDiff, asPastedText, escapeHtml, replaceHtml } from "../../utils";
+import { parseId } from "@codestream/webview/utilities/newRelic";
 
 describe("utils", () => {
 	test.each([
@@ -118,5 +119,49 @@ describe("utils", () => {
 		],
 	])(".arrayDiff(%j, %j)", (a, b, expected) => {
 		expect(arrayDiff(a, b)).toStrictEqual(expected);
+	});
+
+	test.each([
+		["", undefined],
+		[undefined, undefined],
+		[
+			"MXxBUE18QVBQTElDQVRJT058MjM",
+			{
+				accountId: 1,
+				domain: "APM",
+				identifier: "23",
+				type: "APPLICATION",
+			},
+		],
+	])(".parseId(%s) (strict=false)", (a, expected) => {
+		expect(parseId(a!)).toEqual(expected);
+	});
+
+	test.each([
+		["", undefined],
+		[undefined, undefined],
+		[
+			"MXxBUE18QVBQTElDQVRJT058MjM",
+			{
+				accountId: 1,
+				domain: "APM",
+				identifier: "23",
+				type: "APPLICATION",
+			},
+		],
+	])(".parseId(%s) (strict=true)", (a, expected) => {
+		expect(parseId(a!, true)).toEqual(expected);
+	});
+
+	test(".parseId(%s) (strict=true)", () => {
+		expect(parseId("MXxBUE18QVBQTElDQVRJT058MjM", true)?.accountId).toEqual(1);
+	});
+	test(".parseId(%s) (strict=true) (bad input)", () => {
+		// missing the last chars
+		expect(parseId("MXxBUE18QVBQTElDQVRJT05", true)).toEqual(undefined);
+	});
+	test(".parseId(%s) (strict=false) (bad input)", () => {
+		// missing the last char, but still works for accountId
+		expect(parseId("MXxBUE18QVBQTElDQVRJT058Mj", false)?.accountId).toEqual(1);
 	});
 });
