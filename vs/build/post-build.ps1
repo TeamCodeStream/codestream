@@ -38,6 +38,6 @@ $assetInfo | ConvertTo-Json | Out-File $x64InfoFileName
 
 $x64AssetName = $assetsBaseName + '-x64.vsix'
 
-Write-Host '********** Renaming vsix to ' $x86AssetName ' & ' $x64AssetName
+Write-Host '********** Renaming vsix to ' $x64AssetName
 cd $x64AssetDir
 mv codestream-vs-22.vsix $x64AssetName
