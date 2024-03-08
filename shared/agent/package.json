@@ -74,6 +74,7 @@
 		"lodash": "4.17.21",
 		"lz-string": "1.4.4",
 		"newrelic": "11.6.0",
+		"node-machine-id": "1.1.12",
 		"oauth": "0.9.15",
 		"object-sizeof": "1.5.3",
 		"opn": "5.4.0",
