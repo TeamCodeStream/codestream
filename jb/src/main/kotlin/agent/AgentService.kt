@@ -327,7 +327,7 @@ class AgentService(private val project: Project) : Disposable {
         }
 
         val agentJsDestFile = File(agentDir, "agent-$agentVersion.js")
-        val webJsMap = File(agentDir, "index.js.map")
+        val sidebarJsMap = File(agentDir, "sidebar.js.map")
         val agentJsMap = File(agentDir, "agent.js.map")
         val whatsNewJson = File(agentDir, "WhatsNew.json")
 
@@ -336,7 +336,7 @@ class AgentService(private val project: Project) : Disposable {
         FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/agent/agent.js"), agentJsDestFile)
         FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/agent/agent.js.map"), agentJsMap)
         FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/agent/WhatsNew.json"), whatsNewJson)
-        FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/webviews/sidebar/index.js.map"), webJsMap)
+        FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/webviews/sidebar/sidebar.js.map"), sidebarJsMap)
 
         val targetDir = userHomeDir.resolve(".codestream").resolve("agent")
         extractExtraLibs(targetDir)
@@ -389,7 +389,7 @@ class AgentService(private val project: Project) : Disposable {
 
         val agentJs = File(agentDir, "agent.js")
         val agentJsMap = File(agentDir, "agent.js.map")
-        val webJsMap = File(agentDir, "index.js.map")
+        val sidebarJsMap = File(agentDir, "sidebar.js.map")
         val whatsNewJson = File(agentDir, "WhatsNew.json")
 
         if (AGENT_PATH == null) {
@@ -398,7 +398,7 @@ class AgentService(private val project: Project) : Disposable {
 
             try {
                 FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/agent/agent.js.map"), agentJsMap)
-                FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/webviews/sidebar/index.js.map"), webJsMap)
+                FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/webviews/sidebar/sidebar.js.map"), sidebarJsMap)
             } catch (ex: Exception) {
                 logger.warn("Could not extract agent.js.map", ex)
             }
