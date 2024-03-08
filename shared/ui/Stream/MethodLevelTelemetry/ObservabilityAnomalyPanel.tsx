@@ -524,7 +524,7 @@ interface CriticalPathProps {
 
 const CriticalPath = props => {
 	const CriticalPathRoot = styled.div`
-		margin-bottom: "30px";
+		margin-bottom: 20px;
 	`;
 
 	const FlexContainer = styled.div`
@@ -550,7 +550,7 @@ const CriticalPath = props => {
 	`;
 	const SpanName = styled.div`
 		color: var(--text-color-subtle);
-		word-wrap: break-word;
+		word-wrap: normal;
 		width: 75%;
 	`;
 
@@ -558,7 +558,7 @@ const CriticalPath = props => {
 		<CriticalPathRoot>
 			<MetaLabel>Slowest operations</MetaLabel>
 			<DataValue style={{ marginBottom: "10px" }}>
-				Based on a sample of slowest transactions for the last 30 minutes.
+				Based on a sample of the slowest transactions for the last 30 minutes.
 			</DataValue>
 			{props.criticalPath.map((span, index) => {
 				return (
