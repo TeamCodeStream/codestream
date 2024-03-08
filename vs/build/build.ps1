@@ -77,7 +77,7 @@ function Build-Extension {
 
 	# validation only allows 17.0 and is defaulted to 17.0, so it can't be anything else anyway
 	$msbuild = "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/MSBuild/Current/Bin/MSBuild.exe"
-    $xunit = "C:/.nuget/xunit.runner.console/2.4.2/tools/net472/xunit.console.x64.exe"	
+    $xunit = "C:/.nuget/xunit.runner.console/2.7.0/tools/net481/xunit.console.x86.exe"	
 
 	if ($CI) {
 		Write-Host "Running UnitTests..."
