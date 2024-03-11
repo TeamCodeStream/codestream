@@ -122,6 +122,28 @@ type PromiseType<T> = T extends Promise<infer U> ? U : T;
 // 	} = { timed: true }
 // ) {
 
+const determineTimingDescription = (milliseconds: number) =>
+	milliseconds >= 10000
+		? "SLOWWWWW"
+		: milliseconds >= 5000
+		? "SLOWWWW"
+		: milliseconds >= 2000
+		? "SLOWWW"
+		: milliseconds >= 1000
+		? "SLOWW"
+		: milliseconds >= 500
+		? "SLOW"
+		: "";
+
+const getTimingString = (start: [number, number] | undefined) => {
+	if (start == null || !start || start.length !== 2) return "";
+
+	const ms = start !== undefined ? Strings.getDurationMilliseconds(start) : 0;
+	const timing = ms ? ` \u2022 ${ms} ms ${determineTimingDescription(ms)}` : "";
+
+	return timing;
+};
+
 export function log<T, F extends (this: T, ...args: any[]) => any>(
 	options: {
 		args?: false | { [arg: number]: (arg: any) => string | false };
@@ -249,8 +271,7 @@ export function log<T, F extends (this: T, ...args: any[]) => any>(
 				const start = options.timed ? process.hrtime() : undefined;
 
 				const logError = (ex: Error) => {
-					const timing =
-						start !== undefined ? ` \u2022 ${Strings.getDurationMilliseconds(start)} ms` : "";
+					const timing = getTimingString(start);
 					if (options.singleLine) {
 						Logger.error(
 							ex,
@@ -288,8 +309,7 @@ export function log<T, F extends (this: T, ...args: any[]) => any>(
 				}
 
 				const logResult = (r: any) => {
-					const timing =
-						start !== undefined ? ` \u2022 ${Strings.getDurationMilliseconds(start)} ms` : "";
+					const timing = getTimingString(start);
 					let exit;
 					if (options.exit != null) {
 						try {
