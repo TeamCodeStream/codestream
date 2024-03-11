@@ -38,13 +38,12 @@ New-Module -ScriptBlock {
         }
     }
 
-    function Read-Version([string] $architecture) {
-       Read-CurrentVersionVsix $architecture
+    function Read-Version() {
+       Read-CurrentVersionVsix
     }
 
     function Write-Version([System.Version]$version, [string] $environment) {
-        Write-VersionVsixManifest $version "x86"
-		Write-VersionVsixManifest $version "x64"
+		Write-VersionVsixManifest $version
         Write-SolutionInfo $version $environment
         Write-AssemblyInfo $version
     }

@@ -196,7 +196,7 @@ namespace CodeStream.VisualStudio.Core
 		/// Tries to get the actual VS version (edition/year) from vswhere.exe, falls back on parsing the currently
 		/// running productPath
 		/// </summary>
-		/// <param name="productPath">is a string like C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\Common7\\IDE\\devenv.exe</param>
+		/// <param name="productPath">is a string like C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\devenv.exe</param>
 		/// <returns></returns>
 		private static string TryGetDisplayNameFromProcess(string productPath)
 		{

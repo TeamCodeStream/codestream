@@ -116,17 +116,6 @@ namespace CodeStream.VisualStudio.Shared.Services
 					}
 				}
 
-#if X86
-				try
-				{
-					await CodeStreamAgentService.LogoutAsync(newServerUrl);
-				}
-				catch (Exception ex)
-				{
-					Log.Error(ex, $"{nameof(LogoutAsync)} - agent");
-				}
-#endif
-
 				if (
 					reason == SessionSignedOutReason.UserSignedOutFromWebview
 					|| reason == SessionSignedOutReason.UserSignedOutFromExtension

@@ -5,9 +5,8 @@ Write-Host '**** The script is running in directory' (Get-Location)
 $vsDir = $checkoutDir + '\vs'
 $buildDir = $vsDir + '\build'
 
-# using the x86 info file for all of this, but its the same content as the x64, so it doesn't really matter
-$assetDir = $buildDir + '\artifacts\Release\x86'
-$assetInfo = $assetDir + '\codestream-vs-' + $buildNumber + '.info'
+$assetDir = $buildDir + '\artifacts\Release\x64'
+F$assetInfo = $assetDir + '\codestream-vs-' + $buildNumber + '.info'
 
 Write-Host 'Here is the VSIX asset file (' $assetInfo '):'
 Get-ChildItem $assetInfo

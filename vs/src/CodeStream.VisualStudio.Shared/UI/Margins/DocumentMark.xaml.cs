@@ -43,14 +43,8 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins
 			var markerType = _viewModel.Marker?.Type.ToString();
 
 			var markerImage = $"marker-{markerType}-{markerColor}.png";
-
-#if X86
-			ImageUri =
-				$"pack://application:,,,/CodeStream.VisualStudio.Vsix.x86;component/resources/assets/{markerImage}";
-#else
 			ImageUri =
 				$"pack://application:,,,/CodeStream.VisualStudio.Vsix.x64;component/resources/assets/{markerImage}";
-#endif
 		}
 
 		protected override void OnMouseEnter(MouseEventArgs e)

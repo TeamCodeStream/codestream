@@ -56,20 +56,9 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 			var root = tree.GetCompilationUnitRoot();
 			var solution = new Uri(_vsSolution.GetSolutionFile());
 
-			// uses Microsoft.CodeAnalysis.*
-#if X86
-			// VS2019 won't handle file-scoped namespaces because of
-			// specific assembly versions we are tied to
-			var namespaceDeclarations = root.DescendantNodes()
-				.OfType<NamespaceDeclarationSyntax>()
-				.ToList();
-#elif X64
-			// VS2022+ can handle both types since we can use a newer
-			// version of the assemblies
 			var namespaceDeclarations = root.DescendantNodes()
 				.OfType<BaseNamespaceDeclarationSyntax>()
 				.ToList();
-#endif
 
 			foreach (var namespaceDeclaration in namespaceDeclarations)
 			{

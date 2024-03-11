@@ -11,12 +11,7 @@ using CodeStream.VisualStudio.Shared.Events;
 using CodeStream.VisualStudio.Shared.Models;
 using CodeStream.VisualStudio.Shared.Packages;
 using CodeStream.VisualStudio.Shared.Services;
-
-#if X86
-using CodeStream.VisualStudio.Vsix.x86;
-#else
 using CodeStream.VisualStudio.Vsix.x64;
-#endif
 
 namespace CodeStream.VisualStudio.Shared.Commands
 {

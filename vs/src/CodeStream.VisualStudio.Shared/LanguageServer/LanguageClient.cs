@@ -34,11 +34,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 		: LanguageServerClientBase,
 			ILanguageClient,
 			ICodestreamLanguageClient,
-#if X86
-			ILanguageClientCustomMessage,
-#else
 			ILanguageClientCustomMessage2,
-#endif
 			IDisposable
 	{
 		private static readonly ILogger Log = LogManager.ForContext<LanguageClient>();
@@ -90,7 +86,6 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 			_middleLayerProvider = new MiddleLayerProvider(Log, messageInterceptorService);
 		}
 
-#if X64
 		public Task<InitializationFailureContext> OnServerInitializeFailedAsync(
 			ILanguageClientInitializationInfo initializationState
 		)
@@ -102,21 +97,6 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 				}
 			);
 		}
-#else
-		public Task OnServerInitializeFailedAsync(Exception ex)
-		{
-			if (_hasStartedOnce)
-			{
-				Log.Warning(ex, nameof(OnServerInitializeFailedAsync));
-			}
-			else
-			{
-				Log.Fatal(ex, nameof(OnServerInitializeFailedAsync));
-			}
-
-			return Task.FromResult(0);
-		}
-#endif
 
 		public string Name => Application.ShortName;
 
@@ -192,14 +172,6 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 				OnStopped();
 				await StartAsync?.InvokeAsync(this, EventArgs.Empty);
 
-#if X86
-				var componentModel =
-					ServiceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
-				Assumes.Present(componentModel);
-				var agentService = componentModel.GetService<ICodeStreamAgentService>();
-				await agentService.ReinitializeAsync();
-#endif
-
 				Interlocked.Exchange(ref _state, 1);
 				Log.Debug($"SetState={_state}");
 			}
@@ -256,20 +228,6 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 		{
 			await Task.Yield();
 			_rpc = rpc;
-
-#if X86
-			// Slight hack to use camelCased properties when serializing requests
-			_rpc.JsonSerializer.ContractResolver = new CustomCamelCasePropertyNamesContractResolver(
-				new HashSet<Type> { typeof(TelemetryProperties) }
-			);
-			_rpc.JsonSerializer.NullValueHandling = NullValueHandling.Ignore;
-#else
-			//var messageFormatter = new JsonMessageFormatter();
-			//messageFormatter.JsonSerializer.ContractResolver = new CustomCamelCasePropertyNamesContractResolver(new HashSet<Type> { typeof(TelemetryProperties) });
-			//messageFormatter.JsonSerializer.NullValueHandling = NullValueHandling.Ignore;
-			//var handler = new HeaderDelimitedMessageHandler()
-			//NOW WHAT?
-#endif
 
 			await OnAttachedForCustomMessageAsync();
 			Log.Debug(nameof(AttachForCustomMessageAsync));

@@ -83,11 +83,6 @@ namespace CodeStream.VisualStudio.Shared.Services
 
 			try
 			{
-#if X86
-				var initializationResult = await InitializeAsync();
-				Log.Verbose(initializationResult?.ToString());
-#endif
-
 				_sessionService.SetAgentConnected();
 			}
 			catch (Exception ex)

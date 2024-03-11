@@ -17,12 +17,7 @@ using CodeStream.VisualStudio.Shared.Events;
 using CodeStream.VisualStudio.Shared.Services;
 using CodeStream.VisualStudio.Shared.UI;
 using Task = System.Threading.Tasks.Task;
-
-#if X86
-using CodeStream.VisualStudio.Vsix.x86;
-#else
 using CodeStream.VisualStudio.Vsix.x64;
-#endif
 
 namespace CodeStream.VisualStudio.Shared.Packages
 {

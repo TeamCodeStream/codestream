@@ -6,12 +6,7 @@ using System;
 using System.ComponentModel.Design;
 
 using CodeStream.VisualStudio.Shared.Packages;
-
-#if X86
-using CodeStream.VisualStudio.Vsix.x86;
-#else
 using CodeStream.VisualStudio.Vsix.x64;
-#endif
 
 namespace CodeStream.VisualStudio.Shared.Commands
 {
