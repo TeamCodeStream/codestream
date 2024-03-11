@@ -152,7 +152,7 @@ export function GlobalNav() {
 		else if (activePanel === WebviewPanels.OnboardNewRelic) return null;
 		else {
 			return (
-				<nav className="inline" id="global-nav">
+				<nav style={{ borderBottom: "none" }} className="inline" id="global-nav">
 					<label
 						onClick={toggleEllipsisMenu}
 						className={cx({ active: false && ellipsisMenuOpen })}

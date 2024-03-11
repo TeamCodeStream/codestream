@@ -447,7 +447,6 @@ export function PaneBody(props: PropsWithChildren<PaneBodyProps>) {
 const Root = styled.div`
 	padding: 22px 0 0px 0;
 	// border: 1px solid transparent;
-	// border-bottom: 1px solid var(--sidebar-header-border);
 	&.open {
 		// border: 3px solid green;
 	}
