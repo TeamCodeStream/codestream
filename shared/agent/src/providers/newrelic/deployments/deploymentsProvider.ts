@@ -20,7 +20,7 @@ export class DeploymentsProvider {
 		private nrApiConfig: NrApiConfig
 	) {}
 
-	@log({ timed: true })
+	@log()
 	public async getLatestDeployment(
 		request: GetLatestDeploymentRequest
 	): Promise<GetLatestDeploymentResponse | undefined> {
@@ -47,7 +47,7 @@ export class DeploymentsProvider {
 	}
 
 	@lspHandler(GetDeploymentsRequestType)
-	@log({ timed: true })
+	@log()
 	public async getDeployments(request: GetDeploymentsRequest): Promise<GetDeploymentsResponse> {
 		const { entityGuid, since } = {
 			since: "30 days ago",

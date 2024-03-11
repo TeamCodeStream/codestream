@@ -9,7 +9,7 @@ export class NraiProvider {
 	constructor(private graphqlClient: NewRelicGraphqlClient) {}
 
 	@lspHandler(GetNewRelicAIEligibilityRequestType)
-	@log({ timed: true })
+	@log()
 	async getAIEligibility(): Promise<boolean> {
 		const ffOverrideQuery = `query getAIFeatureFlag {
 			currentUser {

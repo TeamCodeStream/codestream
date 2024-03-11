@@ -72,9 +72,7 @@ export class AnomaliesProvider implements Disposable {
 	}
 
 	@lspHandler(GetObservabilityAnomaliesRequestType)
-	@log({
-		timed: true,
-	})
+	@log()
 	async getObservabilityAnomalies(
 		request: GetObservabilityAnomaliesRequest
 	): Promise<GetObservabilityAnomaliesResponse> {
@@ -95,7 +93,12 @@ export class AnomaliesProvider implements Disposable {
 		let lastEx;
 		const fn = async () => {
 			try {
-				const anomalyDetector = new AnomalyDetectorDrillDown(request, this.deploymentsProvider, this.graphqlClient, this.reposProvider);
+				const anomalyDetector = new AnomalyDetectorDrillDown(
+					request,
+					this.deploymentsProvider,
+					this.graphqlClient,
+					this.reposProvider
+				);
 				const promise = anomalyDetector.execute();
 				this._observabilityAnomaliesTimedCache.put(cacheKey, promise);
 				const response = await promise;
@@ -122,9 +125,7 @@ export class AnomaliesProvider implements Disposable {
 	}
 
 	@lspHandler(GetObservabilityResponseTimesRequestType)
-	@log({
-		timed: true,
-	})
+	@log()
 	getObservabilityResponseTimes(
 		request: GetObservabilityResponseTimesRequest
 	): Promise<GetObservabilityResponseTimesResponse> {

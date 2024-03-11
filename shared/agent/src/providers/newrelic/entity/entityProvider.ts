@@ -112,7 +112,7 @@ export class EntityProvider implements Disposable {
 	}
 
 	@lspHandler(GetObservabilityEntityByGuidRequestType)
-	@log({ timed: true })
+	@log()
 	async getEntityByGuid(
 		request: GetObservabilityEntityByGuidRequest
 	): Promise<GetObservabilityEntityByGuidResponse> {
@@ -170,7 +170,7 @@ export class EntityProvider implements Disposable {
 	 * @memberof NewRelicProvider
 	 */
 	@lspHandler(GetObservabilityEntitiesRequestType)
-	@log({ timed: true })
+	@log()
 	async getEntities(
 		request: GetObservabilityEntitiesRequest
 	): Promise<GetObservabilityEntitiesResponse> {
@@ -361,7 +361,7 @@ export class EntityProvider implements Disposable {
 	}
 
 	@lspHandler(GetObservabilityEntitiesByIdRequestType)
-	@log({ timed: true })
+	@log()
 	async getEntitiesById(
 		request: GetObservabilityEntitiesByIdRequest
 	): Promise<GetObservabilityEntitiesByIdResponse> {

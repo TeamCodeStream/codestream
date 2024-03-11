@@ -34,7 +34,7 @@ export class NrqlCodeLensProvider implements CodeLensProvider {
 	// Expose the event emitter as a property
 	readonly onDidChangeCodeLenses: vscode.Event<void> = this._onDidChangeCodeLenses.event;
 
-	@log({ timed: true })
+	@log()
 	public async provideCodeLenses(
 		document: TextDocument,
 		token: CancellationToken

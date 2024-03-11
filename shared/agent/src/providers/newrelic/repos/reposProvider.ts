@@ -95,9 +95,7 @@ export class ReposProvider implements Disposable {
 	 * @memberof NewRelicProvider
 	 */
 	@lspHandler(GetObservabilityReposRequestType)
-	@log({
-		timed: true,
-	})
+	@log()
 	async getObservabilityRepos(
 		request: GetObservabilityReposRequest
 	): Promise<GetObservabilityReposResponse> {
@@ -374,7 +372,7 @@ export class ReposProvider implements Disposable {
 		);
 	}
 
-	@log({ timed: true })
+	@log()
 	async findRelatedEntityByRepositoryGuid(repositoryGuid: string): Promise<{
 		actor: {
 			entity: {

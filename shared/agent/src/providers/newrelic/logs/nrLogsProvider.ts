@@ -43,7 +43,7 @@ export class NrLogsProvider {
 	}
 
 	@lspHandler(GetLoggingEntitiesRequestType)
-	@log({ timed: true })
+	@log()
 	async getLoggingEntities(
 		request: GetObservabilityEntitiesRequest
 	): Promise<GetObservabilityEntitiesResponse> {

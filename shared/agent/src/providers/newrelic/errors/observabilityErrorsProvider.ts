@@ -64,9 +64,7 @@ export class ObservabilityErrorsProvider {
 	 * @memberof NewRelicProvider
 	 */
 	@lspHandler(GetObservabilityErrorsRequestType)
-	@log({
-		timed: true,
-	})
+	@log()
 	async getObservabilityErrors(
 		request: GetObservabilityErrorsRequest
 	): Promise<GetObservabilityErrorsResponse> {
@@ -215,7 +213,7 @@ export class ObservabilityErrorsProvider {
 	 * @param applicationGuid the entityGuid for the application to query for
 	 * @returns list of most recent error traces for each unique fingerprint
 	 */
-	@log({ timed: true })
+	@log()
 	private async findFingerprintedErrorTraces(
 		accountId: number,
 		applicationGuid: string,
@@ -246,11 +244,9 @@ export class ObservabilityErrorsProvider {
 		return results;
 	}
 
-	@log({ timed: true })
+	@log()
 	async getErrorGroupFromNameMessageEntity(name: string, message: string, entityGuid: string) {
 		try {
-
-
 			return this.graphqlClient.query(
 				`query getErrorGroupGuid($name: String!, $message:String!, $entityGuid:EntityGuid!) {
 				actor {
@@ -279,7 +275,7 @@ export class ObservabilityErrorsProvider {
 		}
 	}
 
-	@log({ timed: true })
+	@log()
 	private async getErrorsInboxAssignments(
 		emailAddress: string,
 		userId?: number
@@ -996,9 +992,7 @@ export class ObservabilityErrorsProvider {
 	}
 
 	@lspHandler(GetObservabilityErrorGroupMetadataRequestType)
-	@log({
-		timed: true,
-	})
+	@log()
 	async getErrorGroupMetadata(
 		request: GetObservabilityErrorGroupMetadataRequest
 	): Promise<GetObservabilityErrorGroupMetadataResponse | undefined> {
@@ -1047,9 +1041,7 @@ export class ObservabilityErrorsProvider {
 	 * @memberof NewRelicProvider
 	 */
 	@lspHandler(GetObservabilityErrorAssignmentsRequestType)
-	@log({
-		timed: true,
-	})
+	@log()
 	async getObservabilityErrorAssignments(
 		request: GetObservabilityErrorAssignmentsRequest
 	): Promise<GetObservabilityErrorAssignmentsResponse> {

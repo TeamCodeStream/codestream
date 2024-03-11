@@ -378,9 +378,7 @@ export class ClmProvider implements Disposable {
 	}
 
 	@lspHandler(GetClmRequestType)
-	@log({
-		timed: true,
-	})
+	@log()
 	async getClm(request: GetClmRequest): Promise<GetClmResponse> {
 		const cached = this._clmTimedCache.get(request);
 		if (cached) {
