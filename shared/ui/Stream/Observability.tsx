@@ -1493,71 +1493,6 @@ export const Observability = React.memo((props: Props) => {
 																		)}
 																	</>
 																);
-<<<<<<< HEAD
-															} else {
-																return null;
-															}
-														})}
-													<>
-														{currentObsRepo && (
-															<ObservabilityAddAdditionalService
-																onSuccess={async e => {
-																	console.debug(
-																		`o11y: ObservabilityAddAdditionalService calling doRefresh(force)`
-																	);
-																	doRefresh(true);
-																	HostApi.instance.track(
-																		"codestream/entity_association succeeded",
-																		{
-																			entity_guid: e?.entityGuid,
-																			account_id: parseId(e?.entityGuid)?.accountId,
-																			event_type: "response",
-																			meta_data: "first_association: false",
-																		}
-																	);
-																}}
-																remote={currentObsRepo.repoRemote}
-																remoteName={currentObsRepo.repoName}
-																servicesToExcludeFromSearch={currentEntityAccounts}
-															/>
-														)}
-													</>
-												</>
-											)}
-										{hasEntities && (
-											<>
-												{repoForEntityAssociator && (
-													<>
-														<EntityAssociator
-															isSidebarView={true}
-															label={
-																<span>
-																	Select the service on New Relic that is built from this repository
-																	to see how it's performing. Or,{" "}
-																	<Link
-																		onClick={() => {
-																			dispatch(openPanel(WebviewPanels.OnboardNewRelic));
-																		}}
-																	>
-																		set up instrumentation.
-																	</Link>
-																</span>
-															}
-															onSuccess={async e => {
-																HostApi.instance.track("codestream/entity_association succeeded", {
-																	entity_guid: e?.entityGuid,
-																	account_id: parseId(e?.entityGuid)?.accountId,
-																	event_type: "response",
-																	meta_data: "first_association: true",
-																});
-
-																_useDidMount(true);
-															}}
-															remote={repoForEntityAssociator.repoRemote}
-															remoteName={repoForEntityAssociator.repoName}
-														/>
-														<ObservabilityPreview />
-=======
 															})}
 														<>
 															{currentObsRepo && (
@@ -1583,7 +1518,6 @@ export const Observability = React.memo((props: Props) => {
 																/>
 															)}
 														</>
->>>>>>> ab782e5b1 (repo top level dropdown initial setup)
 													</>
 												)}
 											{hasEntities && (

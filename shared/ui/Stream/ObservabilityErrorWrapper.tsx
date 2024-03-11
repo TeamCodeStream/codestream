@@ -15,7 +15,7 @@ import {
 
 interface Props {
 	observabilityErrors: ObservabilityRepoError[];
-	observabilityRepo: ObservabilityRepo;
+	observabilityRepo?: ObservabilityRepo;
 	observabilityAssignments: ObservabilityErrorCore[];
 	entityGuid: string;
 	noAccess?: string;
