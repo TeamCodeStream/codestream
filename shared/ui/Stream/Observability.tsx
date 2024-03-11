@@ -338,6 +338,7 @@ export const Observability = React.memo((props: Props) => {
 	const [loadingEntities, setLoadingEntities] = useState<string | undefined>(undefined);
 	const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 	const [didMount, setDidMount] = useState<boolean>(false);
+	const [observabilityReposLoaded, setObservabilityReposLoaded] = useState<boolean>(false);
 	const [observabilityAnomalies, setObservabilityAnomalies] =
 		useState<GetObservabilityAnomaliesResponse>({
 			responseTime: [],
@@ -734,6 +735,7 @@ export const Observability = React.memo((props: Props) => {
 
 	async function fetchObservabilityRepos(force: boolean, repoId?: string, entityGuid?: string) {
 		setLoadingEntities(currentRepoId);
+		setObservabilityReposLoaded(false);
 		console.debug(
 			`o11y: fetchObservabilityRepos started force ${force} repoId ${repoId} entityGuid ${entityGuid}`
 		);
@@ -760,6 +762,7 @@ export const Observability = React.memo((props: Props) => {
 					console.debug(`o11y: fetchObservabilityRepos calling setObservabilityRepos (response)`);
 					setObservabilityRepos(response.repos);
 				}
+				setObservabilityReposLoaded(true);
 			}
 		} catch (ex) {
 			console.debug(`o11y: fetchObservabilityRepos nope`, ex);
@@ -772,6 +775,7 @@ export const Observability = React.memo((props: Props) => {
 			} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
 				setNoErrorsAccess(ex.message || GENERIC_ERROR_MESSAGE);
 			}
+			setObservabilityReposLoaded(true);
 		}
 	}
 
@@ -1065,7 +1069,7 @@ export const Observability = React.memo((props: Props) => {
 					doSetDemoMode(true);
 				}
 			}
-			setLoadingEntities(undefined);
+			// setLoadingEntities(undefined);
 		}
 	}, [currentRepoId, observabilityRepos]);
 
@@ -1115,6 +1119,7 @@ export const Observability = React.memo((props: Props) => {
 	// If a user adds a newly cloned repo into their IDE, we need to refetch observability Repos
 	useEffect(() => {
 		if (!_isEmpty(currentRepoId) && !_isEmpty(observabilityRepos)) {
+			setObservabilityReposLoaded(false);
 			const currentRepo = _head(observabilityRepos.filter(_ => _.repoId === currentRepoId));
 			if (!currentRepo) {
 				HostApi.instance
@@ -1124,6 +1129,7 @@ export const Observability = React.memo((props: Props) => {
 							`o11y: useEffect on scmInfo calling setObservabilityRepos ${JSON.stringify(_.repos)}`
 						);
 						setObservabilityRepos(_.repos || []);
+						setObservabilityReposLoaded(true);
 					});
 			}
 		}
@@ -1152,9 +1158,27 @@ export const Observability = React.memo((props: Props) => {
 
 	return (
 		<Root>
+			<div style={{ overflowY: "hidden" }}>
+				{observabilityReposLoaded &&
+					_isEmpty(currentRepoId) &&
+					_isEmpty(repoForEntityAssociator) &&
+					_isEmpty(observabilityRepos) &&
+					!genericError && (
+						<NoContent>
+							<p>
+								Open a repository to see how your code is performing.{" "}
+								<a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#observability-in-IDE">
+									Learn more.
+								</a>
+							</p>
+						</NoContent>
+					)}
+			</div>
+
 			{observabilityRepos.map(repo => {
 				const repoIsCollapsed = currentRepoId !== repo.repoId;
-				const isLoadingCurrentRepo = loadingEntities === repo.repoId;
+				const isLoadingCurrentRepo =
+					loadingEntities === repo.repoId || (isRefreshing && !repoIsCollapsed);
 				return (
 					<>
 						<div style={{ padding: "0 10px 0 20px" }}></div>
@@ -1199,6 +1223,8 @@ export const Observability = React.memo((props: Props) => {
 												onClick={e => {
 													e.preventDefault();
 													e.stopPropagation();
+													setCurrentRepoId(repo.repoId);
+													setLoadingEntities(repo.repoId);
 													doRefresh(true);
 												}}
 											/>
