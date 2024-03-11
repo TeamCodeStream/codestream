@@ -1065,6 +1065,7 @@ export const Observability = React.memo((props: Props) => {
 					doSetDemoMode(true);
 				}
 			}
+			setLoadingEntities(undefined);
 		}
 	}, [currentRepoId, observabilityRepos]);
 
@@ -1106,6 +1107,7 @@ export const Observability = React.memo((props: Props) => {
 
 			if (currentRepo) {
 				setCurrentObsRepo(currentRepo);
+				setLoadingEntities(undefined);
 			}
 		}
 	}, [currentRepoId, observabilityRepos, loadingEntities, derivedState.textEditorUri]);
@@ -1180,6 +1182,7 @@ export const Observability = React.memo((props: Props) => {
 												setCurrentRepoId(undefined);
 											} else {
 												setCurrentRepoId(repo.repoId);
+												setLoadingEntities(repo.repoId);
 											}
 										}}
 										collapsed={repoIsCollapsed && !isLoadingCurrentRepo}
