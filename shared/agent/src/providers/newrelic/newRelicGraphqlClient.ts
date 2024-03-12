@@ -2,6 +2,7 @@ import { GraphQLClient } from "graphql-request";
 import { ResponseError } from "vscode-jsonrpc/lib/messages";
 import {
 	ERROR_LOGGED_OUT,
+	ERROR_NRQL_INVALID_INPUT,
 	ERROR_NR_CONNECTION_INVALID_API_KEY,
 	ERROR_NR_CONNECTION_MISSING_API_KEY,
 	ERROR_NR_CONNECTION_MISSING_URL,
@@ -40,6 +41,14 @@ export interface HttpErrorResponse {
 	response: {
 		status: number;
 		error: string;
+		errors?: [
+			{
+				extensions?: {
+					errorClass?: string;
+				};
+				message?: string;
+			},
+		];
 		headers: Dom.Headers;
 	};
 	request: {
@@ -70,6 +79,14 @@ function isHttpErrorResponse(ex: unknown): ex is HttpErrorResponse {
 		httpErrorResponse?.response?.status !== undefined &&
 		httpErrorResponse?.response?.headers !== undefined &&
 		httpErrorResponse?.request?.query !== undefined
+	);
+}
+
+export function isInvalidInputErrorResponse(ex: unknown): ex is HttpErrorResponse {
+	const httpErrorResponse = ex as HttpErrorResponse;
+	const errors = httpErrorResponse?.response?.errors;
+	return (
+		Array.isArray(errors) && errors.length && errors[0]?.extensions?.errorClass === "INVALID_INPUT"
 	);
 }
 
@@ -279,6 +296,11 @@ export class NewRelicGraphqlClient implements Disposable {
 				resp = await client.request<T>(query, variables);
 				// fetchCore will have retried 3 times by now
 			} catch (ex) {
+				if (triedRefresh) {
+					if (isInvalidInputErrorResponse(ex)) {
+						throw ex;
+					}
+				}
 				if (
 					this.session.api.usingServiceGatewayAuth &&
 					!triedRefresh &&
@@ -420,6 +442,14 @@ export class NewRelicGraphqlClient implements Disposable {
 				}
 				return true;
 			} catch (potentialEx) {
+				if (isInvalidInputErrorResponse(potentialEx)) {
+					const message = potentialEx.response.errors![0].message || "NRQL Syntax Error";
+					Logger.warn(message);
+					ex = new ResponseError(ERROR_NRQL_INVALID_INPUT, message);
+					response = undefined;
+					return true;
+				}
+
 				if (isHttpErrorResponse(potentialEx)) {
 					const contentType = potentialEx.response.headers.get("content-type");
 					const niceText = contentType?.toLocaleLowerCase()?.includes("text/html")
