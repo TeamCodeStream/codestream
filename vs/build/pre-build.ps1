@@ -41,10 +41,10 @@ Write-Host '************ npm install -g lightercollective'
 
 Write-Host 'DISABLE_OPENCOLLECTIVE is set to' $env:DISABLE_OPENCOLLECTIVE
 
-if((Test-Path "$checkoutDir\vs\src\CodeStream.VisualStudio.Vsix.x64\agent\") -eq $False){
-    mkdir "$checkoutDir\vs\src\CodeStream.VisualStudio.Vsix.x64\agent\"
+if((Test-Path "$checkoutDir\vs\src\CodeStream.VisualStudio.Vsix.x64\dist\agent\") -eq $False){
+    mkdir "$checkoutDir\vs\src\CodeStream.VisualStudio.Vsix.x64\dist\agent\"
 }
 
-Copy-Item "$supplmentalSoftwarePath\node\node-v18.15.0-win-x64\node.exe" -Destination "$checkoutDir\vs\src\CodeStream.VisualStudio.Vsix.x64\agent\node.exe"
+Copy-Item "$supplmentalSoftwarePath\node\node-v18.15.0-win-x64\node.exe" -Destination "$checkoutDir\vs\src\CodeStream.VisualStudio.Vsix.x64\dist\agent\node.exe"
 
 . $PSScriptRoot\Bump-Version.ps1 -BumpBuild -BuildNumber $env:BUILD_NUMBER -Environment $assetEnv
