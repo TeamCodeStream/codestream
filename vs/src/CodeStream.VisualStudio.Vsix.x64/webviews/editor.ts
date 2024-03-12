@@ -1,8 +1,5 @@
 import { polyfills } from "../vs-polyfills";
 import { initialize, setupCommunication } from "@codestream/webview/editor";
-import { polyfills } from "./vs-polyfills";
-
-polyfills();
 
 polyfills();
 
