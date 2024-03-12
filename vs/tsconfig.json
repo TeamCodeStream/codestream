@@ -2,25 +2,36 @@
 	"extends": "../tsconfig.json",
 	"compilerOptions": {
 		"allowJs": true,
-		"jsx": "react",
-		"lib": ["es2019", "dom", "dom.iterable"],
-		"noImplicitAny": false,
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"experimentalDecorators": true,
 		"incremental": true,
+		"jsx": "react",
+		"lib": [ "es2019", "dom", "dom.iterable" ],
 		"module": "esnext",
 		"moduleResolution": "node",
+		"noFallthroughCasesInSwitch": true,
 		"noEmit": true,
-		"paths": {
-			"@codestream/protocols/agent": ["../shared/util/src/protocol/agent/agent.protocol.ts"],
-			"@codestream/protocols/api": ["../shared/util/src/protocol/agent/api.protocol.ts"],
-			"@codestream/protocols/webview": ["../shared/ui/ipc/webview.protocol.ts"],
-			"@codestream/utils/*": ["../shared/util/src/utils/*"],
-			"@codestream/webview/*": ["../shared/ui/*"],
-			"vscode-jsonrpc": ["../shared/ui/vscode-jsonrpc.shim.ts"]
-		},
+		"noImplicitReturns": false,
+		"noImplicitAny": false,
+		"noUnusedLocals": false,
+		"resolveJsonModule": false,
 		"rootDir": "../",
+		"skipDefaultLibCheck": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
 		"target": "es2017",
 		"tsBuildInfoFile": ".tsbuildinfo",
-		"resolveJsonModule": false
+		"useUnknownInCatchVariables": false,
+		"paths": {
+			"@codestream/protocols/agent": [ "../shared/util/src/protocol/agent/agent.protocol.ts" ],
+			"@codestream/protocols/api": [ "../shared/util/src/protocol/agent/api.protocol.ts" ],
+			"@codestream/protocols/webview": [ "../shared/ui/ipc/webview.protocol.ts" ],
+			"@codestream/utils/*": [ "../shared/util/src/utils/*" ],
+			"@codestream/webview/*": [ "../shared/ui/*" ],
+			"vscode-jsonrpc": [ "../shared/ui/vscode-jsonrpc.shim.ts" ]
+		}
 	},
-	"include": ["src/resources/webviews/**/*.ts", "../shared/util/src/**/*", "../shared/build/src/**/*"]
+	"include": ["src/**/*.ts", "../shared/util/src/**/*", "../shared/build/src/**/*"]
 }

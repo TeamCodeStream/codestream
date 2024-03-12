@@ -756,12 +756,16 @@ namespace CodeStream.VisualStudio.Shared.Services
 			{
 				ThreadHelper.ThrowIfNotOnUIThread();
 
-				var rootDir = Path.GetDirectoryName(assembly.Location);
+				var rootDir = Path.GetDirectoryName(assembly.Location).Replace(@"\", "/");
 
-				var htmlFilePath = $"{rootDir}/webviews/sidebar/{resourceName}.html";
+				var htmlFilePath = $"{rootDir}/dist/webviews/{resourceName}.html";
 				htmlContent = System.IO.File.ReadAllText(htmlFilePath);
 
-				var themeFilePath = $"{rootDir}/webviews/sidebar/theme.css";
+				var themeFilePath = $"{rootDir}/dist/webviews/{resourceName}-overrides.css";
+				if (string.Equals(resourceName, "waiting", StringComparison.OrdinalIgnoreCase))
+				{
+					themeFilePath = $"{rootDir}/dist/webviews/sidebar-overrides.css";
+				}
 				var themeContent = System.IO.File.ReadAllText(themeFilePath);
 
 				var theme = ThemeManager.Generate();
@@ -771,7 +775,7 @@ namespace CodeStream.VisualStudio.Shared.Services
 					theme.IsDark ? "vscode-dark" : "vscode-light"
 				);
 
-				htmlContent = htmlContent.Replace("{root}", rootDir.Replace(@"\", "/"));
+				htmlContent = htmlContent.Replace("{root}", rootDir);
 
 				var outputDebug = new Dictionary<string, Tuple<string, string>>();
 				var isDebuggingEnabled = Log.IsDebugEnabled();
@@ -809,9 +813,7 @@ namespace CodeStream.VisualStudio.Shared.Services
 				var nrSettings = _httpClientService.GetNREnvironmentSettings();
 				if (nrSettings.HasValidSettings)
 				{
-					var browserFile =
-						Path.GetDirectoryName(assembly.Location)
-						+ "/webviews/sidebar/newrelic-browser.js";
+					var browserFile = $"{rootDir}/dist/webviews/newrelic-browser.js";
 					var newRelicTelemetryJs = System.IO.File.ReadAllText(browserFile);
 					newRelicTelemetryJs = newRelicTelemetryJs
 						.Replace("{{accountID}}", nrSettings.AccountId)

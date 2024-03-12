@@ -106,7 +106,7 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 
 			bitmapImage.BeginInit();
 			bitmapImage.UriSource = new Uri(
-				Path.GetDirectoryName(assembly.Location) + $"/resources/assets/{iconToUse}",
+				Path.GetDirectoryName(assembly.Location) + $"/dist/assets/{iconToUse}",
 				UriKind.Absolute
 			);
 			bitmapImage.CacheOption = BitmapCacheOption.OnLoad;

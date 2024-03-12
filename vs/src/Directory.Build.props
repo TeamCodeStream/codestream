@@ -6,7 +6,6 @@
   <PropertyGroup>
     <AgentDistDirectory>..\..\..\shared\agent\dist</AgentDistDirectory>
     <WebviewDirectory>..\..\..\shared\ui</WebviewDirectory>
-    <SharedResources>..\resources</SharedResources>
     <Licenses>..\..\licenses</Licenses>
   </PropertyGroup>
 </Project>

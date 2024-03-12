@@ -188,9 +188,9 @@
 		</Buttons>
 
 		<Bitmaps>
-			<Bitmap guid="NewRelicLogoGuid" href="..\resources\assets\new-relic-logo-small.png" usedList="logo"/>
-			<Bitmap guid="guidImages" href="..\resources\Sprites.png" usedList="empty1, auth, user, empty4, empty5, empty6" />
-			<Bitmap guid="guidImagesCommands" href="..\resources\CommandsSprites.png" usedList="comment, issue" />
+			<Bitmap guid="NewRelicLogoGuid" href="dist\assets\new-relic-logo-small.png" usedList="logo"/>
+			<Bitmap guid="guidImages" href="dist\assets\Sprites.png" usedList="empty1, auth, user, empty4, empty5, empty6" />
+			<Bitmap guid="guidImagesCommands" href="dist\assets\CommandsSprites.png" usedList="comment, issue" />
 		</Bitmaps>
 	</Commands>
 

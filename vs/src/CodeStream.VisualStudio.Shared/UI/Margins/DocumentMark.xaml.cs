@@ -44,7 +44,7 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins
 
 			var markerImage = $"marker-{markerType}-{markerColor}.png";
 			ImageUri =
-				$"pack://application:,,,/CodeStream.VisualStudio.Vsix.x64;component/resources/assets/{markerImage}";
+				$"pack://application:,,,/CodeStream.VisualStudio.Vsix.x64;component/dist/assets/{markerImage}";
 		}
 
 		protected override void OnMouseEnter(MouseEventArgs e)

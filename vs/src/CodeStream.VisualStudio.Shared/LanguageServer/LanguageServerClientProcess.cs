@@ -23,7 +23,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 			string exe = null;
 			var logPath = $"{Application.LogPath}{Application.LogNameAgent}";
 
-			var path = Path.GetDirectoryName(assembly.Location) + @"\agent\agent.js";
+			var path = Path.GetDirectoryName(assembly.Location) + @"\dist\agent\agent.js";
 
 #if DEBUG
 			// globally installed node
@@ -31,7 +31,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 			arguments = $@"--nolazy --inspect=6009 ""{path}"" --stdio --log={logPath}";
 #else
 			// the specific version we ship in the VSIX
-			exe = Path.GetDirectoryName(assembly.Location) + @"\agent\node.exe";
+			exe = Path.GetDirectoryName(assembly.Location) + @"\dist\agent\node.exe";
 			arguments = $@"--nolazy ""{path}"" --stdio --log={logPath}";
 #endif
 

@@ -1,9 +1,12 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Shared.Services;
+
 using EnvDTE;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using Constants = CodeStream.VisualStudio.Core.Constants;
 
@@ -25,11 +28,8 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 			{
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 				path = Path.Combine(
-					Path.GetDirectoryName(
-						System.Reflection.Assembly.GetExecutingAssembly().Location
-					),
-					"Resources",
-					Constants.CodeStreamCodeStream
+					Path.GetDirectoryName(Assembly.GetAssembly(typeof(IBrowserService)).Location),
+					$"dist/assets/{Constants.CodeStreamCodeStream}"
 				);
 				var window = dte.OpenFile(EnvDTE.Constants.vsViewKindCode, path);
 				window.Visible = true;

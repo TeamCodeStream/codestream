@@ -166,7 +166,6 @@ DocProject/Help/html
 
 # Click-Once directory
 publish/
-!src/**/publish/
 
 # Publish Web Output
 *.[Pp]ublish.xml
@@ -187,7 +186,7 @@ PublishScripts/
 **/[Pp]ackages/*
 # except build/, which is used as an MSBuild target.
 !**/[Pp]ackages/build/
-!**/CodeStream.VisualStudio.Shared/[Pp]ackages/*
+
 # Uncomment if necessary however generally it will be regenerated when needed
 #!**/[Pp]ackages/repositories.config
 # NuGet v3's project.json files produces more ignorable files
@@ -341,8 +340,17 @@ ASALocalRun/
 
 # CodeStream stuff
 **/teamdev.licenses
-src/protocols/
 stats.json
-src/**/agent/
-src/resources/webview/
+
+!**/CodeStream.VisualStudio.Vsix.x64/dist/
+!**/CodeStream.VisualStudio.Vsix.x64/dist/publish
+!**/CodeStream.VisualStudio.Shared/[Pp]ackages/*
+
+**/CodeStream.VisualStudio.Vsix.x64/dist/agent/*
+**/CodeStream.VisualStudio.Vsix.x64/dist/webviews/*.js
+**/CodeStream.VisualStudio.Vsix.x64/dist/webviews/*.map
+
+**/CodeStream.VisualStudio.Vsix.x64/dist/webviews/*.css
+!**/CodeStream.VisualStudio.Vsix.x64/dist/webviews/*-overrides.css
+
 .tsbuildinfo

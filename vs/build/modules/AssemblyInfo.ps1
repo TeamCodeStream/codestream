@@ -2,7 +2,7 @@ Set-StrictMode -Version Latest
 
 New-Module -ScriptBlock {
 
-    $assemblyInfoFile = Join-Path $rootDirectory src\resources\AssemblyInfo.cs
+    $assemblyInfoFile = Join-Path $rootDirectory src\AssemblyInfo.cs
 
     function Read-VersionAssemblyInfo() {
         $currentVersion = Get-Content $assemblyInfoFile | %{

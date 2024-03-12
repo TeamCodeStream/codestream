@@ -21,37 +21,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.Vsi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.UnitTests", "CodeStream.VisualStudio.UnitTests\CodeStream.VisualStudio.UnitTests.csproj", "{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Webviews", "Webviews", "{4CA5E5C8-D3A2-4F08-9C40-FD7BFA4366D8}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sidebar", "sidebar", "{BC11CE57-B07C-4E7E-8E13-960418CD145A}"
-	ProjectSection(SolutionItems) = preProject
-		resources\webviews\sidebar\sidebar.html = resources\webviews\sidebar\sidebar.html
-		resources\webviews\sidebar\sidebar.ts = resources\webviews\sidebar\sidebar.ts
-		resources\webviews\sidebar\theme.css = resources\webviews\sidebar\theme.css
-		resources\webviews\sidebar\tsconfig.json = resources\webviews\sidebar\tsconfig.json
-		resources\webviews\sidebar\waiting.html = resources\webviews\sidebar\waiting.html
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "editor", "editor", "{AE426EFC-AA8F-429A-B836-78D62A70CA93}"
-	ProjectSection(SolutionItems) = preProject
-		resources\webviews\editor\editor.html = resources\webviews\editor\editor.html
-		resources\webviews\editor\editor.ts = resources\webviews\editor\editor.ts
-		resources\webviews\editor\theme.css = resources\webviews\editor\theme.css
-		resources\webviews\editor\tsconfig.json = resources\webviews\editor\tsconfig.json
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "styles", "styles", "{C762C157-F032-4162-856E-D7BDFE646D55}"
-	ProjectSection(SolutionItems) = preProject
-		resources\webviews\editor\styles\editor.less = resources\webviews\editor\styles\editor.less
-		resources\webviews\editor\styles\ui-variables.less = resources\webviews\editor\styles\ui-variables.less
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "styles", "styles", "{4D8808CE-98C9-49E1-974C-E0ADEF769D66}"
-	ProjectSection(SolutionItems) = preProject
-		resources\webviews\sidebar\styles\sidebar.less = resources\webviews\sidebar\styles\sidebar.less
-		resources\webviews\sidebar\styles\ui-variables.less = resources\webviews\sidebar\styles\ui-variables.less
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -73,12 +42,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{BC11CE57-B07C-4E7E-8E13-960418CD145A} = {4CA5E5C8-D3A2-4F08-9C40-FD7BFA4366D8}
-		{AE426EFC-AA8F-429A-B836-78D62A70CA93} = {4CA5E5C8-D3A2-4F08-9C40-FD7BFA4366D8}
-		{C762C157-F032-4162-856E-D7BDFE646D55} = {AE426EFC-AA8F-429A-B836-78D62A70CA93}
-		{4D8808CE-98C9-49E1-974C-E0ADEF769D66} = {BC11CE57-B07C-4E7E-8E13-960418CD145A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CA2F01D3-69DD-4FEE-B239-775F5C1DFA2F}
