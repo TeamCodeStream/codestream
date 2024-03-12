@@ -395,6 +395,7 @@ export interface CSCodeError extends CSEntity {
 	objectType?: "errorGroup";
 	objectInfo?: { [key: string]: string | boolean };
 	accountId?: number;
+	traceId?: string;
 }
 
 export interface Attachment {

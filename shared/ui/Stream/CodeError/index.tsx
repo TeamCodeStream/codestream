@@ -18,7 +18,7 @@ import React, {
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
 
-import { OpenUrlRequestType } from "@codestream/protocols/webview";
+import { OpenEditorViewNotificationType, OpenUrlRequestType } from "@codestream/protocols/webview";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { Loading } from "@codestream/webview/Container/Loading";
 import { Button } from "@codestream/webview/src/components/Button";
@@ -1213,6 +1213,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			replies: props.collapsed
 				? emptyArray
 				: getThreadPosts(state, codeError.streamId, codeError.postId),
+			traceId: currentCodeErrorData.traceId,
 		};
 	}, shallowEqual);
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
@@ -1509,6 +1510,33 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 		}
 	};
 
+	const renderLogsIcon = () => {
+		return (
+			<MetaSection>
+				<Meta
+					id="view-related-logs"
+					onClick={e => {
+						e.preventDefault, openLogs();
+					}}
+				>
+					<MetaLabel>
+						<Icon name="logs"></Icon> View related logs
+					</MetaLabel>
+				</Meta>
+			</MetaSection>
+		);
+	};
+
+	const openLogs = () => {
+		HostApi.instance.notify(OpenEditorViewNotificationType, {
+			panel: "logs",
+			title: "Logs",
+			entryPoint: "code_error",
+			entityGuid: props.errorGroup?.entityGuid,
+			traceId: currentCodeErrorData.traceId,
+			ide: {},
+		});
+	};
 	const renderStackTrace = () => {
 		if (stackTrace?.length) {
 			return (
@@ -1676,6 +1704,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			)}
 
 			{renderStackTrace()}
+			{currentCodeErrorData.traceId && renderLogsIcon()}
 			{props.collapsed && renderMetaSectionCollapsed(props)}
 			{!props.collapsed &&
 				props &&

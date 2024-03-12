@@ -1184,6 +1184,7 @@ export interface NewRelicErrorGroup {
 	entityName?: string;
 
 	occurrenceId?: string;
+	traceId?: string;
 
 	entityUrl?: string;
 	errorGroupUrl?: string;
@@ -1371,6 +1372,8 @@ export interface ObservabilityError extends ObservabilityErrorCore {
 	appName: string;
 	remote: string;
 	occurrenceId: string;
+	traceId?: string;
+	id?: string;
 	count: number;
 	lastOccurrence: number;
 	releaseTag?: number;
@@ -1679,6 +1682,7 @@ export const GetObservabilityErrorAssignmentsRequestType = new RequestType<
 export interface GetObservabilityErrorGroupMetadataRequest {
 	errorGroupGuid?: string;
 	entityGuid?: string;
+	traceId?: string;
 }
 
 export interface GetObservabilityErrorGroupMetadataResponse {
@@ -1687,6 +1691,7 @@ export interface GetObservabilityErrorGroupMetadataResponse {
 	remote?: string;
 	relatedRepos: RelatedRepository;
 	stackSourceMap?: any;
+	traceId?: string;
 }
 
 export const GetObservabilityErrorGroupMetadataRequestType = new RequestType<
@@ -2675,6 +2680,7 @@ export const GetLoggingEntitiesRequestType = new RequestType<
 
 export interface GetLogsRequest {
 	entityGuid: string;
+	traceId?: string;
 	filterText: string;
 	order: {
 		field: string;
@@ -2725,6 +2731,7 @@ export const GetSurroundingLogsRequestType = new RequestType<
 
 export interface GetLogFieldDefinitionsRequest {
 	entityGuid: string;
+	traceId?: string;
 }
 
 export interface LogFieldDefinition {

@@ -238,6 +238,7 @@ export class ClmProvider implements Disposable {
 				account: {
 					nrql: {
 						results: {
+							traceId: string;
 							lastOccurrence: number;
 							occurrenceId: string;
 							appName: string;
@@ -284,6 +285,7 @@ export class ClmProvider implements Disposable {
 									count: errorTrace.length,
 									lastOccurrence: errorTrace.lastOccurrence,
 									errorGroupUrl: response.actor.errorsInbox.errorGroup.url,
+									traceId: errorTrace.traceId,
 								};
 							}
 							return undefined;
@@ -367,6 +369,7 @@ export class ClmProvider implements Disposable {
 			"latest(error.class) AS 'errorClass',",
 			"latest(message) AS 'message',",
 			"latest(entityGuid) AS 'entityGuid'",
+			"latest(traceId) AS 'traceId'",
 			"FROM ErrorTrace",
 			"WHERE ",
 			whereClause,

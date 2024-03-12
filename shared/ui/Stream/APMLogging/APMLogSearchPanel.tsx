@@ -152,6 +152,7 @@ export const APMLogSearchPanel = (props: {
 	entryPoint: string;
 	entityGuid?: string;
 	suppliedQuery?: string;
+	traceId?: string;
 	ide?: { name?: IdeNames };
 }) => {
 	const [fieldDefinitions, setFieldDefinitions] = useState<LogFieldDefinition[]>([]);
@@ -188,7 +189,7 @@ export const APMLogSearchPanel = (props: {
 			HostApi.instance.on(OpenEditorViewNotificationType, e => {
 				if (e.query && e.query !== query) {
 					setQuery(e.query!);
-					fetchLogs(e.entityGuid, e.query);
+					fetchLogs(e.entityGuid, e.query, e.traceId);
 				}
 			})
 		);
@@ -225,8 +226,8 @@ export const APMLogSearchPanel = (props: {
 				accountId: entityAccount.accountId,
 			});
 
-			fetchFieldDefinitions(entityAccount.entityGuid);
-			fetchLogs(entityAccount.entityGuid, props.suppliedQuery);
+			fetchFieldDefinitions(entityAccount.entityGuid, props.traceId);
+			fetchLogs(entityAccount.entityGuid, props.suppliedQuery, props.traceId);
 		};
 
 		let entityAccounts: EntityAccount[] = [];
@@ -306,10 +307,11 @@ export const APMLogSearchPanel = (props: {
 		console.error(message);
 	};
 
-	const fetchFieldDefinitions = async (entityGuid: string) => {
+	const fetchFieldDefinitions = async (entityGuid: string, traceId?: string) => {
 		try {
 			const response = await HostApi.instance.send(GetLogFieldDefinitionsRequestType, {
 				entityGuid,
+				traceId,
 			});
 
 			if (!response) {
@@ -404,7 +406,7 @@ export const APMLogSearchPanel = (props: {
 		}
 	};
 
-	const fetchLogs = async (entityGuid?: string, suppliedQuery?: string) => {
+	const fetchLogs = async (entityGuid?: string, suppliedQuery?: string, traceId?: string) => {
 		try {
 			setLogError(undefined);
 			setHasSearched(true);
@@ -423,6 +425,7 @@ export const APMLogSearchPanel = (props: {
 
 			const response = await HostApi.instance.send(GetLogsRequestType, {
 				entityGuid,
+				traceId,
 				filterText,
 				limit: "MAX",
 				since: selectedSinceOption?.value || "30 MINUTES AGO",
@@ -668,7 +671,7 @@ export const APMLogSearchPanel = (props: {
 							<Button
 								data-testid="query-btn"
 								className="query"
-								onClick={() => fetchLogs(selectedEntityAccount?.value)}
+								onClick={() => fetchLogs(selectedEntityAccount?.value, undefined, props.traceId)}
 								loading={isLoading}
 								tabIndex={4}
 							>
