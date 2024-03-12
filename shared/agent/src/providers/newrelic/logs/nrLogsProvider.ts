@@ -115,6 +115,7 @@ export class NrLogsProvider {
 	public async getLogs(request: GetLogsRequest): Promise<GetLogsResponse> {
 		const entityGuid = request.entityGuid;
 		const accountId = parseId(entityGuid)!.accountId;
+		const traceId = request.traceId;
 
 		try {
 			const { since, limit, order, filterText } = {
@@ -153,6 +154,10 @@ export class NrLogsProvider {
 						queryWhere += ` AND message LIKE '%${this.escapeSearchTerm(st)}%'`;
 					});
 				}
+			}
+
+			if (traceId) {
+				queryWhere += ` AND trace.id = '${traceId}'`;
 			}
 
 			const query = `SELECT * FROM Log ${queryWhere} ${querySince} ${queryOrder} ${queryLimit}`;
@@ -294,12 +299,17 @@ export class NrLogsProvider {
 		request: GetLogFieldDefinitionsRequest
 	): Promise<GetLogFieldDefinitionsResponse> {
 		try {
-			const { entityGuid } = {
+			const { entityGuid, traceId } = {
 				...request,
 			};
 
 			const parsedId = parseId(entityGuid)!;
-			const query = `SELECT keyset() FROM Log WHERE entity.guid = '${entityGuid}'`;
+
+			let query = `SELECT keyset() FROM Log WHERE entity.guid = '${entityGuid}'`;
+			if (traceId) {
+				query = `SELECT keyset() FROM Log WHERE entity.guid = '${entityGuid}' AND trace.id = '${traceId}'`;
+			}
+
 			let logDefinitions = await this.graphqlClient.runNrql<LogFieldDefinition>(
 				parsedId.accountId,
 				query,
