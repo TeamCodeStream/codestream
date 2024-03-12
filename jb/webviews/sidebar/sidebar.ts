@@ -1,4 +1,7 @@
+import { polyfills } from "../jb-polyfills";
 import { initialize, setupCommunication } from "@codestream/webview/sidebar";
+
+polyfills();
 
 declare function acquireHostApi();
 
