@@ -12,7 +12,7 @@ import { NrAiFeedback } from "./NrAiFeedback";
 import { replaceSymbol } from "@codestream/webview/store/codeErrors/thunks";
 import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
 import { NrAiCodeBlockLoading, NrAiLoading } from "./NrAiLoading";
-import { DiffEditor } from "@monaco-editor/react";
+import { DiffEditor, useMonaco } from "@monaco-editor/react";
 import { isDarkTheme } from "@codestream/webview/src/themes";
 import { HostApi } from "@codestream/webview/webview-api";
 import { URI } from "vscode-uri";
@@ -51,6 +51,7 @@ function Markdown(props: { text: string }) {
 export function NrAiComponent(props: NrAiComponentProps) {
 	// console.debug("NrAiComponent", props);
 	const dispatch = useAppDispatch();
+	const monaco = useMonaco();
 	const isGrokLoading = useAppSelector(isGrokStreamLoading);
 	const demoMode = useAppSelector((state: CodeStreamState) => state.codeErrors.demoMode);
 	const hasIntro = useMemo(
@@ -132,6 +133,15 @@ export function NrAiComponent(props: NrAiComponentProps) {
 		}
 	}, [applyFix]);
 
+	const linesChanged = useMemo(() => {
+		if (monaco && monaco.editor.getDiffEditors().length > 0) {
+			const lineChanges = monaco.editor.getDiffEditors()[0].getLineChanges();
+			// console.log(`*** lineChanges: ${lineChanges?.length}`);
+			return lineChanges?.length ?? 0;
+		}
+		return 0;
+	}, [monaco?.editor.getDiffEditors()]);
+
 	return (
 		<section className="nrai-post">
 			{showGrokLoader && <NrAiLoading />}
@@ -141,7 +151,7 @@ export function NrAiComponent(props: NrAiComponentProps) {
 				props.file &&
 				props.functionToEdit?.codeBlock &&
 				normalizedCodeFix && (
-					<DiffSection>
+					<DiffSection hidden={linesChanged === 0}>
 						<DiffEditor
 							original={props.functionToEdit?.codeBlock}
 							modified={normalizedCodeFix}
@@ -162,6 +172,7 @@ export function NrAiComponent(props: NrAiComponentProps) {
 						</ButtonRow>
 					</DiffSection>
 				)}
+			{linesChanged === 0 && <div style={{ marginTop: "10px" }}></div>}
 			<Markdown text={parts?.description ?? ""} />
 			{showFeedback && (
 				<>

@@ -9,3 +9,5 @@
 /dataSources*.xml
 # CodeStream ignored files
 /codestream.xml
+# GitHub Copilot persisted chat sessions
+/copilot/chatSessions
