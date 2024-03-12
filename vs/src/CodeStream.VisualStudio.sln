@@ -12,7 +12,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Directory.Build.props = Directory.Build.props
 		..\esbuild.ts = ..\esbuild.ts
 		..\package.json = ..\package.json
-		..\tsconfig.json = ..\tsconfig.json
 	EndProjectSection
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CodeStream.VisualStudio.Shared", "CodeStream.VisualStudio.Shared\CodeStream.VisualStudio.Shared.shproj", "{85C56160-88EA-4BBF-ACFD-62045E76ADCD}"
