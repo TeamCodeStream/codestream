@@ -43,8 +43,8 @@ export class SegmentTelemetryService {
 
 		const props = {
 			...opts,
-			Endpoint: session.versionInfo.ide.name,
-			"Endpoint Detail": session.versionInfo.ide.detail,
+			//Endpoint: session.versionInfo.ide.name,
+			//"Endpoint Detail": session.versionInfo.ide.detail,
 		};
 		this._superProps = props;
 		this._hasOptedOut = hasOptedOut;

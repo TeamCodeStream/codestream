@@ -1201,6 +1201,9 @@ export class CodeStreamSession {
 							properties: {
 								meta_data: `error: ${ex.info && ex.info.error}`,
 								event_type: "response",
+								platform: "codestream",
+								path: "N/A (codestream)",
+								section: "N/A (codestream)",
 							},
 						});
 						// map the reason for provider auth failure

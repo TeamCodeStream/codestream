@@ -260,6 +260,9 @@ export const authenticate =
 		api.track("codestream/user/login succeeded", {
 			meta_data: `source: ${context.pendingProtocolHandlerQuery?.src}`,
 			event_type: "response",
+			platform: "codestream",
+			path: "N/A (codestream)",
+			section: "N/A (codestream)",
 		});
 
 		return dispatch(onLogin(response));
@@ -588,6 +591,9 @@ export const validateSignup =
 				meta_data_4: `openinide_flow: false`,
 				meta_data: `source: ${context.pendingProtocolHandlerQuery?.src}`,
 				event_type: "response",
+				platform: "codestream",
+				path: "N/A (codestream)",
+				section: "N/A (codestream)",
 			} as TelemetryData;
 			if (signupStatus === "teamCreated") {
 				trackingInfo["meta_data_2"] = `org_created: true`;

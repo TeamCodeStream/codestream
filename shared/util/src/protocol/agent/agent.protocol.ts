@@ -354,6 +354,9 @@ export interface TelemetryData {
 	session_id?: string;
 	target?: string;
 	target_text?: string;
+	platform?: string;
+	path?: string;
+	section?: string;
 }
 
 /**
