@@ -1,12 +1,13 @@
 {
-	"extends": "../../../tsconfig.json",
-	"compilerOptions": {
-		"paths": {
-			"@codestream/protocols/agent": ["../../../shared/ui/protocols/agent/agent.protocol.ts"],
-			"@codestream/protocols/api": ["../../../shared/ui/protocols/agent/api.protocol.ts"],
-			"@codestream/protocols/webview": ["../../../shared/ui/ipc/sidebar.protocol.ts"],
-			"@codestream/webview/*": ["../../../shared/ui/*"],
-			"vscode-jsonrpc": ["../../../shared/ui/vscode-jsonrpc.shim.ts"]
-		}
-	}
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+	  "@codestream/protocols/agent": ["../../../shared/util/src/protocol/agent/agent.protocol.ts"],
+	  "@codestream/protocols/api": ["../../../shared/util/src/protocol/agent/api.protocol.ts"],
+	  "@codestream/protocols/webview": ["../../../shared/ui/ipc/webview.protocol.ts"],
+	  "@codestream/utils/*": ["../../../shared/util/src/utils/*"],
+	  "@codestream/webview/*": ["../../../shared/ui/*"],
+	  "vscode-jsonrpc": ["../../../shared/ui/vscode-jsonrpc.shim.ts"]
+    }
+  }
 }

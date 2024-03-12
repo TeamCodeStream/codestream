@@ -28,8 +28,6 @@
 		"webview:clean:ci": "pushd \"../shared/ui\" && npm run clean:ci && popd",
 		"webview:verify": "pushd \"../shared/ui\" && npm run verify:compile && popd"
 	},
-	"dependencies": {
-	},
 	"devDependencies": {
 		"@types/keytar": "4.4.2",
 		"@types/lodash-es": "4.17.7",
@@ -39,6 +37,8 @@
 		"@typescript-eslint/eslint-plugin": "6.19.1",
 		"@typescript-eslint/eslint-plugin-tslint": "6.19.1",
 		"@typescript-eslint/parser": "6.19.1",
+		"@ungap/structured-clone": "1.2.0",
+		"core-js": "3.36.0",
 		"esbuild": "0.20.1",
 		"esbuild-plugin-alias": "0.2.1",
 		"esbuild-plugin-less": "1.3.2",
