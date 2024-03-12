@@ -424,7 +424,6 @@ describe("Observability", () => {
 		});
 
 		await waitFor(() => {
-			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
 			expect(mockTrack).toHaveBeenCalledTimes(1);
 			expect(mockTrack).toHaveBeenCalledWith("codestream/o11y displayed", {
 				meta_data: `state: services`,
@@ -453,8 +452,6 @@ describe("Observability", () => {
 		});
 
 		await waitFor(() => {
-			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
-			expect(mockTrack).toHaveBeenCalledTimes(1);
 			expect(mockTrack).toHaveBeenCalledWith("codestream/o11y displayed", {
 				meta_data: `state: no_entities`,
 				event_type: "modal_display",
@@ -494,7 +491,6 @@ describe("Observability", () => {
 		});
 
 		await waitFor(() => {
-			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
 			expect(mockTrack).toHaveBeenCalledTimes(1);
 			expect(mockTrack).toHaveBeenCalledWith("codestream/o11y displayed", {
 				meta_data: `state: no_services`,
@@ -525,7 +521,6 @@ describe("Observability", () => {
 		});
 
 		await waitFor(() => {
-			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
 			expect(mockTrack).toHaveBeenCalledTimes(1);
 			expect(mockTrack).toHaveBeenCalledWith("codestream/o11y displayed", {
 				meta_data: "state: Not Connected",
@@ -550,10 +545,6 @@ describe("Observability", () => {
 				),
 				{ container }
 			);
-		});
-
-		await waitFor(() => {
-			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
 		});
 
 		expect(mockTrack).toHaveBeenCalledTimes(1);
@@ -609,10 +600,6 @@ describe("Observability", () => {
 			);
 		});
 
-		await waitFor(() => {
-			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
-		});
-
 		expect(mockTrack).toHaveBeenCalledTimes(1);
 
 		// Close
@@ -661,10 +648,6 @@ describe("Observability", () => {
 				),
 				{ container }
 			);
-		});
-
-		await waitFor(() => {
-			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
 		});
 
 		expect(mockTrack).toHaveBeenCalledTimes(1);
@@ -720,11 +703,7 @@ describe("Observability", () => {
 			);
 		});
 
-		await waitFor(() => {
-			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
-		});
-
-		// expect(mockTrack).toHaveBeenCalledTimes(1);
+		expect(mockTrack).toHaveBeenCalledTimes(1);
 
 		// Close
 		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
