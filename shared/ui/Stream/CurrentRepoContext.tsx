@@ -138,10 +138,12 @@ export const CurrentRepoContext = React.memo((props: Props) => {
 	return (
 		<CurrentRepoContainer isHeaderText={props.isHeaderText ? true : false}>
 			<Icon style={{ transform: "scale(0.7)", display: "inline-block" }} name="repo" />{" "}
-			<span style={{ margin: props.isHeaderText ? "0px 2px 0px 0px" : "0" }}>{props.repoName}</span>
+			<span style={{ fontWeight: "bold", margin: props.isHeaderText ? "0px 2px 0px 0px" : "0" }}>
+				{props.repoName?.toUpperCase()}
+			</span>
 			{props.isHeaderText && (
 				<span className="subtle">
-					({props.serviceCount === 0 ? <>(No Services)</> : <>{props.serviceCount}</>})
+					{props.serviceCount === 0 ? "" : <>({props.serviceCount})</>}
 				</span>
 			)}
 		</CurrentRepoContainer>

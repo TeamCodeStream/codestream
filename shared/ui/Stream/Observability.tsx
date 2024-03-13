@@ -1215,6 +1215,9 @@ export const Observability = React.memo((props: Props) => {
 										title="Refresh"
 										placement="bottom"
 										delay={1}
+										className={cx("clickable", {
+											"icon-override-actions-visible": true,
+										})}
 										onClick={e => {
 											e.preventDefault();
 											e.stopPropagation();
@@ -1540,7 +1543,7 @@ export const Observability = React.memo((props: Props) => {
 												</>
 											</>
 										)}
-									{hasEntities && (
+									{hasEntities && !repoIsCollapsed && (
 										<>
 											{repoForEntityAssociator && (
 												<>
