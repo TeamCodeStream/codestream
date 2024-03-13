@@ -131,7 +131,7 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 														? ({} as GetObservabilityErrorGroupMetadataResponse)
 														: await HostApi.instance.send(
 																GetObservabilityErrorGroupMetadataRequestType,
-																{ errorGroupGuid: err.errorGroupGuid }
+																{ entityGuid: err.entityId }
 														  );
 													await dispatch(
 														openErrorGroup({
