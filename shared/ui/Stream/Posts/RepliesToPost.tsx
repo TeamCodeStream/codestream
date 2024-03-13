@@ -10,7 +10,7 @@ import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview
 import { mapFilter, replaceHtml } from "@codestream/webview/utils";
 import cx from "classnames";
 import { groupBy } from "lodash-es";
-import React, { RefObject, useEffect } from "react";
+import React, { RefObject, useCallback, useEffect } from "react";
 import styled from "styled-components";
 import { createPost, deletePost, fetchThread, markItemRead } from "../actions";
 import Button from "../Button";
@@ -111,42 +111,49 @@ export const RepliesToPost = (props: {
 		setReplyingToPostId(undefined);
 	};
 
-	const getMenuItems = (reply: PostPlus) => {
-		const menuItems: MenuItem[] = [];
+	const getMenuItems = useCallback(
+		(reply: PostPlus) => {
+			const menuItems: MenuItem[] = [];
 
-		if (!props.noReply) {
-			menuItems.push({ label: "Reply", key: "reply", action: () => setReplyingToPostId(reply.id) });
-		}
-		if (reply.creatorId === currentUserId) {
-			menuItems.push({ label: "Edit", key: "edit", action: () => setEditingPostId(reply.id) });
-		}
-		if (reply.creatorId === currentUserId || currentUserIsAdmin) {
-			menuItems.push({
-				label: "Delete",
-				key: "delete",
-				action: () => {
-					confirmPopup({
-						title: "Are you sure?",
-						message: "Deleting a post cannot be undone.",
-						centered: true,
-						buttons: [
-							{ label: "Go Back", className: "control-button" },
-							{
-								label: "Delete Post",
-								className: "delete",
-								wait: true,
-								action: () => {
-									dispatch(deletePost(reply.streamId, reply.id, reply.sharedTo));
+			if (!props.noReply) {
+				menuItems.push({
+					label: "Reply",
+					key: "reply",
+					action: () => setReplyingToPostId(reply.id),
+				});
+			}
+			if (reply.creatorId === currentUserId) {
+				menuItems.push({ label: "Edit", key: "edit", action: () => setEditingPostId(reply.id) });
+			}
+			if (reply.creatorId === currentUserId || currentUserIsAdmin) {
+				menuItems.push({
+					label: "Delete",
+					key: "delete",
+					action: () => {
+						confirmPopup({
+							title: "Are you sure?",
+							message: "Deleting a post cannot be undone.",
+							centered: true,
+							buttons: [
+								{ label: "Go Back", className: "control-button" },
+								{
+									label: "Delete Post",
+									className: "delete",
+									wait: true,
+									action: () => {
+										dispatch(deletePost(reply.streamId, reply.id, reply.sharedTo));
+									},
 								},
-							},
-						],
-					});
-				},
-			});
-		}
+							],
+						});
+					},
+				});
+			}
 
-		return menuItems;
-	};
+			return menuItems;
+		},
+		[props.noReply, replies, currentUserId, currentUserIsAdmin]
+	);
 
 	let idx = 0;
 
@@ -157,6 +164,12 @@ export const RepliesToPost = (props: {
 				if (reply.parentPostId != null && nestedRepliesByParent.hasOwnProperty(reply.parentPostId))
 					return null;
 				const menuItems = getMenuItems(reply);
+				const renderMenu =
+					menuItems.length === 0
+						? undefined
+						: (target, close) => {
+								return <Menu target={target} action={close} items={menuItems} />;
+						  };
 				return (
 					<React.Fragment key={reply.id}>
 						<Reply
@@ -169,9 +182,7 @@ export const RepliesToPost = (props: {
 							nestedReplies={nestedRepliesByParent[reply.id]}
 							codeErrorId={props.codeErrorId}
 							errorGroup={props.errorGroup}
-							renderMenu={(target, close) => (
-								<Menu target={target} action={close} items={menuItems} />
-							)}
+							renderMenu={renderMenu}
 							noReply={props.noReply}
 						/>
 
