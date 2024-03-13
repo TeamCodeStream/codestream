@@ -1,4 +1,4 @@
-import { polyfills } from "../vs-polyfills";
+import { polyfills } from "./vs-polyfills";
 import { initialize, setupCommunication } from "@codestream/webview/sidebar";
 
 polyfills();
