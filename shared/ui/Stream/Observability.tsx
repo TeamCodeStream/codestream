@@ -522,7 +522,7 @@ export const Observability = React.memo((props: Props) => {
 		_useDidMount(false);
 
 		const disposable = HostApi.instance.on(HostDidChangeWorkspaceFoldersNotificationType, () => {
-			_useDidMount();
+			_useDidMount(true);
 		});
 		const disposable1 = HostApi.instance.on(
 			DidChangeObservabilityDataNotificationType,
@@ -741,6 +741,7 @@ export const Observability = React.memo((props: Props) => {
 		const hasFilter = entityGuid && repoId;
 		const filters = hasFilter ? [{ repoId, entityGuid }] : undefined;
 
+		//@TODO eric check to see if repo is in workspace, filter if not
 		try {
 			const response = await HostApi.instance.send(GetObservabilityReposRequestType, {
 				filters,
