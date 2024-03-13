@@ -741,7 +741,6 @@ export const Observability = React.memo((props: Props) => {
 		const hasFilter = entityGuid && repoId;
 		const filters = hasFilter ? [{ repoId, entityGuid }] : undefined;
 
-		//@TODO eric check to see if repo is in workspace, filter if not
 		try {
 			const response = await HostApi.instance.send(GetObservabilityReposRequestType, {
 				filters,
