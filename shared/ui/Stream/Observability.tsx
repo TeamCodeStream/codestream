@@ -1089,7 +1089,6 @@ export const Observability = React.memo((props: Props) => {
 			callObservabilityTelemetry();
 			// Expand top repo by default if no currentRepoId is set from editor context
 			setTimeout(() => {
-				console.warn("eric _useDidMount timeout observabilityRepos", observabilityRepos);
 				if (!currentRepoId && !_isEmpty(observabilityRepos) && observabilityRepos[0]?.repoId) {
 					setCurrentRepoId(observabilityRepos[0].repoId);
 				}
@@ -1160,7 +1159,6 @@ export const Observability = React.memo((props: Props) => {
 	};
 
 	const { activeO11y } = derivedState;
-	console.warn("eric return observabilityRepos", observabilityRepos);
 
 	return (
 		<Root>
