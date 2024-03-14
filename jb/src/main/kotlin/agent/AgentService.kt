@@ -137,7 +137,7 @@ val serverUrlMigrations = hashMapOf(
 class AgentService(private val project: Project) : Disposable {
 
     companion object {
-        private var debugPortSeed = AtomicInteger(6010)
+        private var debugPortSeed = AtomicInteger(1337)
         private val debugPort get() = debugPortSeed.getAndAdd(1)
     }
 
@@ -409,7 +409,7 @@ class AgentService(private val project: Project) : Disposable {
         val port = if (AGENT_PATH == null) {
             debugPort
         } else {
-            debugPortSeed // fixed on 6010 so we can just keep "Attach to agent" running
+            debugPortSeed // fixed on 1337 so we can just keep "Attach to agent" running
         }
         lastLaunchedNodePath = "node"
         return GeneralCommandLine(

@@ -344,7 +344,7 @@ export class CodeStreamAgentConnection implements Disposable {
 				module: context.asAbsolutePath("../shared/agent/dist/agent.js"),
 				transport: TransportKind.ipc,
 				options: {
-					execArgv: ["--nolazy", breakOnStart ? "--inspect-brk=6009" : "--inspect=6009"],
+					execArgv: ["--nolazy", breakOnStart ? "--inspect-brk=1337" : "--inspect=1337"],
 					env: agentEnv
 				}
 			}

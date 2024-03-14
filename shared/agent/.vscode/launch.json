@@ -5,7 +5,7 @@
 			"type": "node",
 			"request": "attach",
 			"name": "Attach to Agent",
-			"port": 6009,
+			"port": 1337,
 			"cwd": "${workspaceFolder}",
 			"outFiles": ["${workspaceFolder}/dist/agent.js"],
 			"skipFiles": ["<node_internals>/**", "**/node_modules/**", "**/resources/app/out/vs/**"],
@@ -16,7 +16,7 @@
 			"type": "node",
 			"request": "attach",
 			"name": "Attach to Agent VS",
-			"port": 6009,
+			"port": 1337,
 			"cwd": "${workspaceFolder}",
 			"outFiles": [
 				"${userHome}/AppData/Local/Microsoft/VisualStudio/**/Extensions/New Relic/**/agent/agent.js"
@@ -29,7 +29,7 @@
 			"type": "node",
 			"request": "attach",
 			"name": "Attach to Agent (debug node_modules)",
-			"port": 6009,
+			"port": 1337,
 			"cwd": "${workspaceFolder}",
 			"outFiles": ["${workspaceFolder}/dist/agent.js"],
 			"smartStep": true,

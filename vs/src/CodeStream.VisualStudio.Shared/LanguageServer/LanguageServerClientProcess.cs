@@ -1,4 +1,4 @@
-﻿using System.Collections.Specialized;
+using System.Collections.Specialized;
 using System.IO;
 using System.Reflection;
 using CodeStream.VisualStudio.Core;
@@ -28,7 +28,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 #if DEBUG
 			// globally installed node
 			exe = "node.exe";
-			arguments = $@"--nolazy --inspect=6009 ""{path}"" --stdio --log={logPath}";
+			arguments = $@"--nolazy --inspect=1337 ""{path}"" --stdio --log={logPath}";
 #else
 			// the specific version we ship in the VSIX
 			exe = Path.GetDirectoryName(assembly.Location) + @"\dist\agent\node.exe";
