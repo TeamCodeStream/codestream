@@ -277,7 +277,9 @@ export class HostApi extends EventEmitter {
 		this.port = port;
 
 		port.onmessage = ({ data }: { data: WebviewIpcMessage }) => {
-			const dataSnapshot = structuredClone(data); // For logging
+			// For accurate debug logging use structuredClone but mind the high memory usage
+			// const dataSnapshot = structuredClone(data);
+			const dataSnapshot = data;
 			if (isIpcResponseMessage(data)) {
 				const pending = this.apiManager.get(data.id);
 				if (!pending) {
