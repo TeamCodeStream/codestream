@@ -481,7 +481,7 @@ export const APMLogSearchPanel = (props: {
 
 	const trackOpenTelemetry = (entryPoint: string, entityGuid?: string, accountId?: number) => {
 		const payload = {
-			event_type: "click",
+			event_type: "modal_display",
 			meta_data: `entry_point: ${entryPoint}`,
 		} as TelemetryData;
 

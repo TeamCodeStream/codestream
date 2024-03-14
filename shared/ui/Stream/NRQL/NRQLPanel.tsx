@@ -195,7 +195,7 @@ export const NRQLPanel = (props: {
 
 	useEffect(() => {
 		HostApi.instance.track("codestream/nrql/webview displayed", {
-			event_type: "click",
+			event_type: "modal_display",
 			meta_data: `entry_point: ${props.entryPoint}`,
 		});
 
