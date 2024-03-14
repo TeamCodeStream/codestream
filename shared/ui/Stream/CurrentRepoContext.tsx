@@ -138,7 +138,13 @@ export const CurrentRepoContext = React.memo((props: Props) => {
 	return (
 		<CurrentRepoContainer isHeaderText={props.isHeaderText ? true : false}>
 			<Icon style={{ transform: "scale(0.7)", display: "inline-block" }} name="repo" />{" "}
-			<span style={{ fontWeight: "bold", margin: props.isHeaderText ? "0px 2px 0px 0px" : "0" }}>
+			<span
+				style={{
+					fontSize: "11px",
+					fontWeight: "bold",
+					margin: props.isHeaderText ? "1px 2px 0px 0px" : "0",
+				}}
+			>
 				{props.repoName?.toUpperCase()}
 			</span>
 			{props.isHeaderText && (
