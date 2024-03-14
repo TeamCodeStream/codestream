@@ -19,12 +19,19 @@ import {
 	isNRErrorResponse,
 	GetIssuesResponse,
 	TelemetryData,
+	GetFileScmInfoRequestType,
+	GetFileScmInfoResponse,
+	GetReposScmRequestType,
+	ReposScm,
 } from "@codestream/protocols/agent";
 import cx from "classnames";
 import { head as _head, isEmpty as _isEmpty, isNil as _isNil } from "lodash-es";
 import React, { useEffect, useMemo, useState } from "react";
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
+import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
+import { setEditorContext } from "../store/editorContext/actions";
+import { isNotOnDisk } from "../utils";
 
 import { ObservabilityRelatedWrapper } from "@codestream/webview/Stream/ObservabilityRelatedWrapper";
 import { ObservabilityPreview } from "@codestream/webview/Stream/ObservabilityPreview";
@@ -69,7 +76,6 @@ import { EntityAssociator } from "./EntityAssociator";
 import Icon from "./Icon";
 import { Link } from "./Link";
 import { ObservabilityAddAdditionalService } from "./ObservabilityAddAdditionalService";
-import { CurrentRepoContext } from "./CurrentRepoContext";
 import { ObservabilityErrorWrapper } from "./ObservabilityErrorWrapper";
 import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
 import Timestamp from "./Timestamp";
@@ -179,6 +185,11 @@ const SubtleRight = styled.time`
 	&.no-padding {
 		padding-left: 0;
 	}
+`;
+const RepoHeader = styled.span`
+	color: var(--text-color-highlight);
+	display: flex;
+	margin-left: -4px;
 `;
 
 type TelemetryState = "no_entities" | "no_services" | "services" | "Not Connected";
@@ -376,6 +387,7 @@ export const Observability = React.memo((props: Props) => {
 	const previousNewRelicIsConnected = usePrevious(derivedState.newRelicIsConnected);
 	const [anomalyDetectionSupported, setAnomalyDetectionSupported] = useState<boolean>(true);
 	const [isVulnPresent, setIsVulnPresent] = useState(false);
+	const { activeO11y } = derivedState;
 
 	const buildFilters = (repoIds: string[]) => {
 		return repoIds.map(repoId => {
@@ -1158,7 +1170,86 @@ export const Observability = React.memo((props: Props) => {
 		dispatch(openPanel(WebviewPanels.OnboardNewRelic));
 	};
 
-	const { activeO11y } = derivedState;
+	useEffect(() => {
+		if (String(derivedState.textEditorUri).length > 0) {
+			onFileChanged();
+		}
+	}, [observabilityRepos, derivedState.textEditorUri]);
+
+	const onFileChanged = async (checkBranchUpdate = false) => {
+		let { scmInfo, textEditorUri } = derivedState;
+
+		const getRepoName = (repo: ReposScm, scmInfo: GetFileScmInfoResponse | undefined) => {
+			let repoName;
+			if (repo.folder.name) {
+				repoName = repo.folder.name;
+			}
+
+			if (!repoName && repo.path) {
+				repoName = repo.path.substring(repo.path.lastIndexOf("/") + 1);
+			}
+
+			if (!repoName && scmInfo?.scm?.repoPath) {
+				repoName = scmInfo?.scm?.repoPath.substring(scmInfo?.scm?.repoPath.lastIndexOf("/") + 1);
+			}
+
+			return repoName;
+		};
+
+		const setCurrentRepo = (repo: ReposScm, scmInfo: GetFileScmInfoResponse | undefined) => {
+			if (!isRefreshing) {
+				const repoName = getRepoName(repo, scmInfo);
+				const currentRepoId = repo.id || scmInfo?.scm?.repoId;
+
+				console.debug(
+					`o11y: currentRepoContext: setting currentRepoCallback currentRepo?.id  ${repo.id} scmInfo?.scm?.repoId ${scmInfo?.scm?.repoId}`
+				);
+				setCurrentRepoId(currentRepoId);
+				dispatch(
+					setUserPreference({
+						prefPath: ["currentO11yRepoId"],
+						value: currentRepoId,
+					})
+				);
+			}
+		};
+
+		// case: no file open, or non-file document open, and no previous repo set
+		if (textEditorUri === undefined || isNotOnDisk(textEditorUri)) {
+			if (currentRepoId === undefined) {
+				const reposResponse = await HostApi.instance.send(GetReposScmRequestType, {
+					inEditorOnly: true,
+				});
+				if (reposResponse.repositories) {
+					const currentRepo = reposResponse.repositories[0];
+					setCurrentRepo(currentRepo, scmInfo);
+				}
+			}
+			return;
+		}
+
+		// case: file opened from different repo
+		if (!scmInfo || scmInfo.uri !== textEditorUri || checkBranchUpdate) {
+			if (textEditorUri) {
+				scmInfo = await HostApi.instance.send(GetFileScmInfoRequestType, {
+					uri: textEditorUri,
+				});
+			}
+
+			const reposResponse = await HostApi.instance.send(GetReposScmRequestType, {
+				inEditorOnly: true,
+			});
+			const currentRepo = reposResponse.repositories?.find(
+				repo => repo.id === scmInfo?.scm?.repoId
+			);
+			await dispatch(setEditorContext({ scmInfo }));
+			if (currentRepo) {
+				setCurrentRepo(currentRepo, scmInfo);
+			}
+		}
+
+		await fetchDocumentMarkers(textEditorUri);
+	};
 
 	return (
 		<Root>
@@ -1189,14 +1280,31 @@ export const Observability = React.memo((props: Props) => {
 							<PaneNodeName
 								data-testid={`observability-repo-id-${repo.repoId}`}
 								title={
-									<CurrentRepoContext
-										observabilityRepos={observabilityRepos}
-										currentRepoCallback={setCurrentRepoId}
-										suppressCallback={isRefreshing}
-										isHeaderText={true}
-										repoName={repo.repoName}
-										serviceCount={repo.entityAccounts.length}
-									/>
+									<RepoHeader>
+										<Icon
+											style={{ transform: "scale(0.7)", display: "inline-block" }}
+											name="repo"
+										/>{" "}
+										<span
+											style={{
+												fontSize: "11px",
+												fontWeight: "bold",
+												margin: "1px 2px 0px 0px",
+											}}
+										>
+											{repo.repoName?.toUpperCase()}
+										</span>
+										<span
+											style={{
+												fontSize: "11px",
+												marginTop: "1px",
+												paddingLeft: "2px",
+											}}
+											className="subtle"
+										>
+											{repo.entityAccounts.length === 0 ? "" : <>({repo.entityAccounts.length})</>}
+										</span>
+									</RepoHeader>
 								}
 								id={repo.repoId}
 								labelIsFlex={true}
