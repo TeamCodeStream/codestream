@@ -1,16 +1,16 @@
 import { lsp, lspHandler } from "../../../system/decorators/lsp";
 import {
-	EntityType,
+	EntityAccount,
 	EntityTypeMap,
 	GetLogFieldDefinitionsRequest,
 	GetLogFieldDefinitionsRequestType,
 	GetLogFieldDefinitionsResponse,
 	GetLoggingEntitiesRequestType,
+	GetLoggingEntitiesResponse,
 	GetLogsRequest,
 	GetLogsRequestType,
 	GetLogsResponse,
 	GetObservabilityEntitiesRequest,
-	GetObservabilityEntitiesResponse,
 	GetSurroundingLogsRequest,
 	GetSurroundingLogsRequestType,
 	GetSurroundingLogsResponse,
@@ -21,13 +21,19 @@ import {
 import { log } from "../../../system/decorators/log";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 import { ContextLogger } from "../../contextLogger";
-import { mapNRErrorResponse, parseId } from "../utils";
+import { mapNRErrorResponse } from "../utils";
 import { Strings } from "../../../system";
-import { EntitySearchResult } from "../newrelic.types";
+import { LogEntityResult, LogEntitySearchResult } from "./logging.types";
+import { escapeNrql } from "@codestream/utils/system/string";
+import { EntityAttributeMapper } from "./entityAttributeMapper";
 
 @lsp
-export class NrLogsProvider {
-	constructor(private graphqlClient: NewRelicGraphqlClient) {}
+export class LoggingProvider {
+	entityLogAttributeMapper: EntityAttributeMapper;
+
+	constructor(private graphqlClient: NewRelicGraphqlClient) {
+		this.entityLogAttributeMapper = new EntityAttributeMapper();
+	}
 
 	/**
 	 * Escapes slashes and single quotes (in that order)
@@ -46,14 +52,14 @@ export class NrLogsProvider {
 	@log()
 	async getLoggingEntities(
 		request: GetObservabilityEntitiesRequest
-	): Promise<GetObservabilityEntitiesResponse> {
+	): Promise<GetLoggingEntitiesResponse> {
 		const { limit = 50 } = request;
 		try {
 			const query = `query search($cursor:String){
 				actor {
 				  entitySearch(query: "name LIKE '%${Strings.sanitizeGraphqlValue(
 						request.searchCharacters
-					)}%' AND domain IN ('APM', 'EXT') AND type IN ('APPLICATION', 'SERVICE')",
+					)}%' AND (type IN ('APPLICATION', 'CONTAINER', 'HOST', 'SERVICE', 'AWSLAMBDAFUNCTION', 'SWITCH', 'ROUTER', 'KUBERNETESCLUSTER', 'KUBERNETES_POD') OR type LIKE 'AZURE%')",
 				  sortByWithDirection: { attribute: NAME, direction: ASC },
 				  options: { limit: ${limit} }) {
 					count
@@ -63,29 +69,41 @@ export class NrLogsProvider {
 						guid
 						name
 						entityType
+						type
+						tags {
+							key
+							values
+						}
 						account {
 							name
-						  }
+							id
 						}
 					  }
 					}
 				  }
-			  }`;
+			  }
+			}`;
 
-			const response: EntitySearchResult = await this.graphqlClient.query<EntitySearchResult>(
-				query,
+			ContextLogger.log(`getLoggingEntities query: ${query}`);
+
+			const response: LogEntitySearchResult = await this.graphqlClient.query<LogEntitySearchResult>(
+				escapeNrql(query),
 				{
 					cursor: request.nextCursor ?? null,
 				}
 			);
-			const entities = response.actor.entitySearch.results.entities.map(
-				(_: { guid: string; name: string; account: { name: string }; entityType: EntityType }) => {
+
+			const entities: EntityAccount[] = response.actor.entitySearch.results.entities.map(
+				(ea: LogEntityResult) => {
 					return {
-						guid: _.guid,
-						name: _.name,
-						account: _.account.name,
-						entityType: _.entityType,
-						entityTypeDescription: EntityTypeMap[_.entityType],
+						entityGuid: ea.guid,
+						entityName: ea.name,
+						entityType: ea.entityType,
+						tags: ea.tags,
+						accountId: ea.account.id,
+						accountName: ea.account.name,
+						type: ea.type,
+						entityTypeDescription: EntityTypeMap[ea.entityType],
 					};
 				}
 			);
@@ -113,15 +131,15 @@ export class NrLogsProvider {
 	@lspHandler(GetLogsRequestType)
 	@log()
 	public async getLogs(request: GetLogsRequest): Promise<GetLogsResponse> {
-		const entityGuid = request.entityGuid;
-		const accountId = parseId(entityGuid)!.accountId;
+		const accountId = request.entity.accountId;
 
 		try {
 			const { since, limit, order, filterText } = {
 				...request,
 			};
 
-			let queryWhere = `WHERE entity.guid = '${entityGuid}'`;
+			const entityWhere = this.entityLogAttributeMapper.getWhereClauseForEntity(request.entity);
+			let queryWhere = `WHERE ${entityWhere}`;
 			const querySince = `SINCE ${since}`;
 			const queryOrder = `ORDER BY ${order.field} ${order.direction}`;
 			const queryLimit = `LIMIT ${limit}`;
@@ -199,11 +217,11 @@ export class NrLogsProvider {
 		request: GetSurroundingLogsRequest
 	): Promise<GetSurroundingLogsResponse> {
 		try {
-			const { entityGuid, since, messageId } = {
+			const { entity, since, messageId } = {
 				...request,
 			};
 
-			const parsedId = parseId(entityGuid)!;
+			const accountId = entity.accountId;
 
 			const ONE_SECOND = 1000;
 			const ONE_MINUTE = ONE_SECOND * 60;
@@ -212,7 +230,8 @@ export class NrLogsProvider {
 			const beforeTime = since - TEN_MINUTES;
 			const afterTime = since + TEN_MINUTES;
 
-			const queryWhere = `WHERE entity.guid = '${entityGuid}' AND messageId != '${messageId}'`;
+			const entityWhere = this.entityLogAttributeMapper.getWhereClauseForEntity(entity);
+			const queryWhere = `WHERE ${entityWhere} AND messageId != '${messageId}'`;
 			const queryOrder = `ORDER BY timestamp ASC`;
 
 			const beforeQuerySince = `SINCE ${beforeTime}`;
@@ -226,16 +245,8 @@ export class NrLogsProvider {
 			ContextLogger.log(`getSurroundingLogs beforeQuery: ${beforeQuery}`);
 			ContextLogger.log(`getSurroundingLogs afterQuery: ${afterQuery}`);
 
-			const beforeLogs = await this.graphqlClient.runNrql<LogResult>(
-				parsedId.accountId,
-				beforeQuery,
-				400
-			);
-			const afterLogs = await this.graphqlClient.runNrql<LogResult>(
-				parsedId.accountId,
-				afterQuery,
-				400
-			);
+			const beforeLogs = await this.graphqlClient.runNrql<LogResult>(accountId, beforeQuery, 400);
+			const afterLogs = await this.graphqlClient.runNrql<LogResult>(accountId, afterQuery, 400);
 
 			beforeLogs.map(lr => {
 				const myKeys = Object.keys(lr);
@@ -294,14 +305,11 @@ export class NrLogsProvider {
 		request: GetLogFieldDefinitionsRequest
 	): Promise<GetLogFieldDefinitionsResponse> {
 		try {
-			const { entityGuid } = {
-				...request,
-			};
-
-			const parsedId = parseId(entityGuid)!;
-			const query = `SELECT keyset() FROM Log WHERE entity.guid = '${entityGuid}'`;
+			const accountId = request.entity.accountId;
+			const queryWhere = this.entityLogAttributeMapper.getWhereClauseForEntity(request.entity);
+			const query = `SELECT keyset() FROM Log WHERE ${queryWhere}`;
 			let logDefinitions = await this.graphqlClient.runNrql<LogFieldDefinition>(
-				parsedId.accountId,
+				accountId,
 				query,
 				400
 			);

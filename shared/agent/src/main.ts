@@ -33,7 +33,7 @@ export * from "./providers/trunk";
 export * from "./providers/youtrack";
 
 export * from "./providers/newrelic/clm/clmProvider";
-export * from "./providers/newrelic/logs/nrLogsProvider";
+export * from "./providers/newrelic/logs/loggingProvider";
 export * from "./providers/newrelic/slo/sloProvider";
 export * from "./providers/newrelic/anomalies/anomaliesProvider";
 export * from "./providers/newrelic/errors/observabilityErrorsProvider";

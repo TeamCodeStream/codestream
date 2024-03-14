@@ -1534,6 +1534,7 @@ export interface EntityAccount {
 	entityGuid: string;
 	entityName: string;
 	entityType?: EntityType;
+	type?: string;
 	entityTypeDescription?: string;
 	domain?: string;
 	url?: string;
@@ -2665,16 +2666,22 @@ export const DidDetectObservabilityAnomaliesNotificationType = new NotificationT
 	void
 >("codestream/didDetectObservabilityAnomalies");
 
-// reusing request/response types - internally we're just omitting a filter
+export interface GetLoggingEntitiesResponse {
+	totalResults: number;
+	entities: EntityAccount[];
+	nextCursor?: string;
+}
+
+// reusing request type - internally we're just omitting a filter
 export const GetLoggingEntitiesRequestType = new RequestType<
 	GetObservabilityEntitiesRequest,
-	GetObservabilityEntitiesResponse,
+	GetLoggingEntitiesResponse,
 	void,
 	void
 >("codestream/newrelic/logs/entities");
 
 export interface GetLogsRequest {
-	entityGuid: string;
+	entity: EntityAccount;
 	filterText: string;
 	order: {
 		field: string;
@@ -2705,7 +2712,7 @@ export const GetLogsRequestType = new RequestType<GetLogsRequest, GetLogsRespons
 );
 
 export interface GetSurroundingLogsRequest {
-	entityGuid: string;
+	entity: EntityAccount;
 	messageId: string;
 	since: number;
 }
@@ -2724,7 +2731,7 @@ export const GetSurroundingLogsRequestType = new RequestType<
 >("codestream/newrelic/logs/surrounding");
 
 export interface GetLogFieldDefinitionsRequest {
-	entityGuid: string;
+	entity: EntityAccount;
 }
 
 export interface LogFieldDefinition {

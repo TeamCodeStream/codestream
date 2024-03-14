@@ -90,6 +90,7 @@ interface EntityAccountOption {
 	value: string;
 	accountName: string;
 	entityTypeDescription: string;
+	entityAccount: EntityAccount;
 }
 
 const OptionName = styled.div`
@@ -188,7 +189,7 @@ export const APMLogSearchPanel = (props: {
 			HostApi.instance.on(OpenEditorViewNotificationType, e => {
 				if (e.query && e.query !== query) {
 					setQuery(e.query!);
-					fetchLogs(e.entityGuid, e.query);
+					fetchLogs(selectedEntityAccount.entityAccount, e.query);
 				}
 			})
 		);
@@ -217,16 +218,10 @@ export const APMLogSearchPanel = (props: {
 		}
 
 		const finishHandlingEntityAccount = (entityAccount: EntityAccount) => {
-			handleSelectDropdownOption({
-				value: entityAccount.entityGuid,
-				label: entityAccount.entityName,
-				accountName: entityAccount.accountName,
-				entityTypeDescription: entityAccount.entityTypeDescription,
-				accountId: entityAccount.accountId,
-			});
+			handleSelectDropdownOption(entityAccount);
 
-			fetchFieldDefinitions(entityAccount.entityGuid);
-			fetchLogs(entityAccount.entityGuid, props.suppliedQuery);
+			fetchFieldDefinitions(entityAccount);
+			fetchLogs(entityAccount, props.suppliedQuery);
 		};
 
 		let entityAccounts: EntityAccount[] = [];
@@ -274,13 +269,7 @@ export const APMLogSearchPanel = (props: {
 		};
 	});
 
-	const handleSelectDropdownOption = (entityAccount: {
-		entityTypeDescription?: string;
-		label: string;
-		value: string;
-		accountId: number;
-		accountName: string;
-	}) => {
+	const handleSelectDropdownOption = (entityAccount: EntityAccount) => {
 		if (!entityAccount) {
 			setSelectedEntityAccount(null);
 			return;
@@ -288,16 +277,17 @@ export const APMLogSearchPanel = (props: {
 
 		const customLabel = (
 			<>
-				<span>Service: {entityAccount.label}</span>
+				<span>Service: {entityAccount.entityName}</span>
 				<span className="subtle"> ({entityAccount.entityTypeDescription})</span>
 			</>
 		);
 
 		setSelectedEntityAccount({
-			value: entityAccount.value,
+			value: entityAccount.entityGuid,
 			label: customLabel,
 			accountName: entityAccount.accountName,
 			entityTypeDescription: entityAccount.entityTypeDescription,
+			entityAccount: entityAccount,
 		});
 	};
 
@@ -306,10 +296,10 @@ export const APMLogSearchPanel = (props: {
 		console.error(message);
 	};
 
-	const fetchFieldDefinitions = async (entityGuid: string) => {
+	const fetchFieldDefinitions = async (entityAccount: EntityAccount) => {
 		try {
 			const response = await HostApi.instance.send(GetLogFieldDefinitionsRequestType, {
-				entityGuid,
+				entity: entityAccount,
 			});
 
 			if (!response) {
@@ -335,7 +325,7 @@ export const APMLogSearchPanel = (props: {
 	const checkKeyPress = (e: { keyCode: Number }) => {
 		const { keyCode } = e;
 		if (keyCode === 13) {
-			fetchLogs(props.entityGuid!);
+			fetchLogs(selectedEntityAccount.entityAccount);
 		}
 	};
 
@@ -343,12 +333,16 @@ export const APMLogSearchPanel = (props: {
 	 * Given properties of a specific log entry, querys for logs that occurred BEFORE it
 	 * and logs that occured AFTER it
 	 */
-	const fetchSurroundingLogs = async (entityGuid: string, messageId: string, since: number) => {
+	const fetchSurroundingLogs = async (
+		entityAccount: EntityAccount,
+		messageId: string,
+		since: number
+	) => {
 		try {
 			setSearchResults([]);
 			setIsLoading(true);
 			const response = await HostApi.instance.send(GetSurroundingLogsRequestType, {
-				entityGuid,
+				entity: entityAccount,
 				messageId,
 				since,
 			});
@@ -393,8 +387,8 @@ export const APMLogSearchPanel = (props: {
 			setSearchResults(surroundingLogs);
 
 			HostApi.instance.track("codestream/logs/show_surrounding_button clicked", {
-				entity_guid: `${entityGuid}`,
-				account_id: parseId(entityGuid)?.accountId,
+				entity_guid: `${entityAccount.entityGuid}`,
+				account_id: entityAccount.accountId,
 				event_type: "click",
 			});
 		} catch (ex) {
@@ -404,7 +398,7 @@ export const APMLogSearchPanel = (props: {
 		}
 	};
 
-	const fetchLogs = async (entityGuid?: string, suppliedQuery?: string) => {
+	const fetchLogs = async (entityAccount: EntityAccount, suppliedQuery?: string) => {
 		try {
 			setLogError(undefined);
 			setHasSearched(true);
@@ -416,13 +410,13 @@ export const APMLogSearchPanel = (props: {
 
 			const filterText = suppliedQuery || query;
 
-			if (!entityGuid) {
+			if (!entityAccount) {
 				handleError("Please select a service from the drop down before searching.");
 				return;
 			}
 
 			const response = await HostApi.instance.send(GetLogsRequestType, {
-				entityGuid,
+				entity: entityAccount,
 				filterText,
 				limit: "MAX",
 				since: selectedSinceOption?.value || "30 MINUTES AGO",
@@ -458,7 +452,11 @@ export const APMLogSearchPanel = (props: {
 				setTotalItems(response.logs.length);
 			}
 
-			trackSearchTelemetry(entityGuid, response.accountId, (response?.logs?.length ?? 0) > 0);
+			trackSearchTelemetry(
+				entityAccount.entityGuid,
+				entityAccount.accountId,
+				(response?.logs?.length ?? 0) > 0
+			);
 		} catch (ex) {
 			handleError(ex);
 		} finally {
@@ -504,10 +502,11 @@ export const APMLogSearchPanel = (props: {
 
 		const options = result.entities.map(e => {
 			return {
-				label: e.name,
-				value: e.guid,
-				accountName: e.account,
+				label: e.entityName,
+				value: e.entityGuid,
+				accountName: e.accountName,
 				entityTypeDescription: e.entityTypeDescription,
+				entityAccount: e,
 			};
 		}) as EntityAccountOption[];
 
@@ -551,7 +550,7 @@ export const APMLogSearchPanel = (props: {
 		} else {
 			const pinnedLog = searchResults[index];
 			await fetchSurroundingLogs(
-				selectedEntityAccount?.value,
+				selectedEntityAccount.entityAccount,
 				pinnedLog.messageId,
 				parseInt(pinnedLog.timestamp)
 			);
@@ -668,7 +667,7 @@ export const APMLogSearchPanel = (props: {
 							<Button
 								data-testid="query-btn"
 								className="query"
-								onClick={() => fetchLogs(selectedEntityAccount?.value)}
+								onClick={() => fetchLogs(selectedEntityAccount.entityAccount)}
 								loading={isLoading}
 								tabIndex={4}
 							>

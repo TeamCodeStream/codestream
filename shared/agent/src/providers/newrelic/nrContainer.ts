@@ -25,7 +25,7 @@ import { ReposProvider } from "./repos/reposProvider";
 import { SloProvider } from "./slo/sloProvider";
 import { SpansProvider } from "./spans/spansProvider";
 import { NraiProvider } from "./nrai/nraiProvider";
-import { NrLogsProvider } from "./logs/nrLogsProvider";
+import { LoggingProvider } from "./logs/loggingProvider";
 import { NrNRQLProvider } from "./nrql/nrqlProvider";
 import { NewRelicVulnerabilitiesProvider } from "./vuln/nrVulnerability";
 import { NrqlCompletionProvider } from "./nrql/nrqlCompletionProvider";
@@ -195,7 +195,7 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 
 	disposables.push(newRelicVulnerabilitiesProvider);
 
-	const logsProvider = new NrLogsProvider(newRelicGraphqlClient);
+	const logsProvider = new LoggingProvider(newRelicGraphqlClient);
 	const nrqlProvider = new NrNRQLProvider(newRelicGraphqlClient);
 
 	nrDirectives = new NrDirectives(
