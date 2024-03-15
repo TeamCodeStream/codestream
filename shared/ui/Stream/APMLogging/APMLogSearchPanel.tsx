@@ -180,6 +180,7 @@ export const APMLogSearchPanel = (props: {
 	const { height, ref } = useResizeDetector();
 	const trimmedListHeight: number = (height ?? 0) - (height ?? 0) * 0.08;
 	const disposables: Disposable[] = [];
+	const [currentTraceId, setTraceId] = useState<string>();
 
 	useDidMount(() => {
 		setIsInitializing(true);
@@ -187,11 +188,14 @@ export const APMLogSearchPanel = (props: {
 		disposables.push(
 			// only utilized for code searches so we can re-use search windows
 			HostApi.instance.on(OpenEditorViewNotificationType, e => {
+				setSelectSinceOptions(sinceOptions);
+				setSelectedSinceOption(defaultOption);
 				if (e.query && e.query !== query) {
 					setQuery(e.query!);
-					fetchLogs(e.entityGuid, e.query, e.traceId);
+					fetchLogs(e.entityGuid, e.query);
 				}
 				if (e.traceId) {
+					setTraceId(e.traceId!);
 					fetchLogs(e.entityGuid, undefined, e.traceId);
 				}
 			})
@@ -218,6 +222,10 @@ export const APMLogSearchPanel = (props: {
 		// possible there is no searchTerm
 		if (props.suppliedQuery) {
 			setQuery(props.suppliedQuery);
+		}
+
+		if (props.traceId) {
+			setTraceId(props.traceId);
 		}
 
 		const finishHandlingEntityAccount = (entityAccount: EntityAccount) => {
@@ -418,6 +426,7 @@ export const APMLogSearchPanel = (props: {
 			setOriginalSearchResults([]);
 			setTotalItems(0);
 			setCurrentShowSurroundingIndex(undefined);
+			setTraceId(traceId);
 
 			const filterText = suppliedQuery || query;
 
@@ -674,7 +683,7 @@ export const APMLogSearchPanel = (props: {
 							<Button
 								data-testid="query-btn"
 								className="query"
-								onClick={() => fetchLogs(selectedEntityAccount?.value, undefined, props.traceId)}
+								onClick={() => fetchLogs(selectedEntityAccount?.value, undefined, currentTraceId)}
 								loading={isLoading}
 								tabIndex={4}
 							>
