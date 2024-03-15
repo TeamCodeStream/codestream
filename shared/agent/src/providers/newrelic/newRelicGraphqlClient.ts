@@ -296,11 +296,10 @@ export class NewRelicGraphqlClient implements Disposable {
 				resp = await client.request<T>(query, variables);
 				// fetchCore will have retried 3 times by now
 			} catch (ex) {
-				if (triedRefresh) {
-					if (isInvalidInputErrorResponse(ex)) {
-						throw ex;
-					}
+				if (isInvalidInputErrorResponse(ex)) {
+					throw ex;
 				}
+
 				if (
 					this.session.api.usingServiceGatewayAuth &&
 					!triedRefresh &&
