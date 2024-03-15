@@ -138,12 +138,20 @@ const MessageHeader = styled.div`
 `;
 
 const Option = (props: OptionProps) => {
+	let subtleLabel = `${props.data?.entityTypeDescription} | `;
+	subtleLabel += props.data?.entityAccount.type ? `${props.data?.entityAccount.type} | ` : "";
+	subtleLabel += props.data?.entityAccount.entityGuid;
+	subtleLabel = ` (${subtleLabel})`;
+
 	const children = (
 		<>
 			<OptionName>
-				{props.data?.label} <OptionType>{props.data?.entityTypeDescription}</OptionType>
+				{props.data?.label}
+				<OptionType>{subtleLabel}</OptionType>
 			</OptionName>
-			<OptionAccount>{props.data?.accountName}</OptionAccount>
+			<OptionAccount>
+				{props.data?.accountName} ({props.data?.entityAccount.accountId})
+			</OptionAccount>
 		</>
 	);
 	return <components.Option {...props} children={children} />;
@@ -218,7 +226,7 @@ export const APMLogSearchPanel = (props: {
 		}
 
 		const finishHandlingEntityAccount = (entityAccount: EntityAccount) => {
-			handleSelectDropdownOption(entityAccount);
+			handleDefaultEntitySelection(entityAccount);
 
 			fetchFieldDefinitions(entityAccount);
 			fetchLogs(entityAccount, props.suppliedQuery);
@@ -269,16 +277,21 @@ export const APMLogSearchPanel = (props: {
 		};
 	});
 
-	const handleSelectDropdownOption = (entityAccount: EntityAccount) => {
+	const handleDefaultEntitySelection = (entityAccount: EntityAccount) => {
 		if (!entityAccount) {
 			setSelectedEntityAccount(null);
 			return;
 		}
 
+		let subtleLabel = `${entityAccount.entityTypeDescription} | `;
+		subtleLabel += entityAccount.type ? `${entityAccount.type} | ` : "";
+		subtleLabel += entityAccount.entityGuid;
+		subtleLabel = ` (${subtleLabel})`;
+
 		const customLabel = (
 			<>
 				<span>Service: {entityAccount.entityName}</span>
-				<span className="subtle"> ({entityAccount.entityTypeDescription})</span>
+				<span className="subtle">{subtleLabel}</span>
 			</>
 		);
 
@@ -288,6 +301,33 @@ export const APMLogSearchPanel = (props: {
 			accountName: entityAccount.accountName,
 			entityTypeDescription: entityAccount.entityTypeDescription,
 			entityAccount: entityAccount,
+		});
+	};
+
+	const handleSelectDropdownOption = (optionProps: OptionProps) => {
+		if (!optionProps) {
+			setSelectedEntityAccount(null);
+			return;
+		}
+
+		let subtleLabel = `${optionProps.entityTypeDescription} | `;
+		subtleLabel += optionProps.entityAccount.type ? `${optionProps.entityAccount.type} | ` : "";
+		subtleLabel += optionProps.entityAccount.entityGuid;
+		subtleLabel = ` (${subtleLabel})`;
+
+		const customLabel = (
+			<>
+				<span>Service: {optionProps.entityAccount.entityName}</span>
+				<span className="subtle">{subtleLabel}</span>
+			</>
+		);
+
+		setSelectedEntityAccount({
+			value: optionProps.entityGuid,
+			label: customLabel,
+			accountName: optionProps.accountName,
+			entityTypeDescription: optionProps.entityTypeDescription,
+			entityAccount: optionProps.entityAccount,
 		});
 	};
 

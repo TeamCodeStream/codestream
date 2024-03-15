@@ -126,6 +126,7 @@ export class EntityProvider implements Disposable {
 					guid
 					name
 					entityType
+					type
 					tags {
 						key
 						values
@@ -141,6 +142,7 @@ export class EntityProvider implements Disposable {
 					guid: string;
 					name: string;
 					entityType: EntityType;
+					type: string;
 					tags: { key: string; values: string[] }[];
 				};
 			};
@@ -152,6 +154,7 @@ export class EntityProvider implements Disposable {
 				accountName: entity.account.name,
 				entityGuid: entity.guid,
 				entityName: entity.name,
+				type: entity.type,
 				entityType: entity.entityType,
 				entityTypeDescription: EntityTypeMap[entity.entityType],
 				tags: entity.tags,

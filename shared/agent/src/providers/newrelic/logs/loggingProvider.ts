@@ -24,7 +24,6 @@ import { ContextLogger } from "../../contextLogger";
 import { mapNRErrorResponse } from "../utils";
 import { Strings } from "../../../system";
 import { LogEntityResult, LogEntitySearchResult } from "./logging.types";
-import { escapeNrql } from "@codestream/utils/system/string";
 import { EntityAttributeMapper } from "./entityAttributeMapper";
 
 @lsp
@@ -84,10 +83,8 @@ export class LoggingProvider {
 			  }
 			}`;
 
-			ContextLogger.log(`getLoggingEntities query: ${query}`);
-
 			const response: LogEntitySearchResult = await this.graphqlClient.query<LogEntitySearchResult>(
-				escapeNrql(query),
+				query,
 				{
 					cursor: request.nextCursor ?? null,
 				}
@@ -177,7 +174,7 @@ export class LoggingProvider {
 
 			ContextLogger.log(`getLogs query: ${query}`);
 
-			const logs = await this.graphqlClient.runNrql<LogResult>(accountId, query, 400);
+			const logs = await this.graphqlClient.runNrql<LogResult>(accountId, query, 100000);
 
 			logs.map(lr => {
 				const myKeys = Object.keys(lr);

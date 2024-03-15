@@ -257,6 +257,7 @@ export class ReposProvider implements Disposable {
 							entityGuid: entity.guid,
 							entityName: entity.name,
 							entityType: entity.entityType,
+							type: entity.type,
 							entityTypeDescription: entity.entityType
 								? EntityTypeMap[entity.entityType]
 								: undefined,

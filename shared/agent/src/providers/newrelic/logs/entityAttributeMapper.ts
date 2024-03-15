@@ -116,8 +116,8 @@ export class EntityAttributeMapper {
 	}
 
 	getWhereClauseForEntity(entity: EntityAccount): string {
-		const { entityType, entityGuid, entityName, tags } = entity;
-		const entityTypeInUpperCase: string | null = entityType ? entityType.toUpperCase() : null;
+		const { type, entityGuid, entityName, tags } = entity;
+		const entityTypeInUpperCase: string | null = type ? type.toUpperCase() : null;
 		const logAttributeValue = entityName;
 
 		let whereClause = this.constructWhereConditionsWithLogAttributes({
