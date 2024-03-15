@@ -37,16 +37,6 @@
 		},
 		{
 			"type": "node",
-			"request": "attach",
-			"name": "Attach to Unit Tests",
-			"port": 9229,
-			"cwd": "${workspaceFolder}",
-			"outFiles": ["${workspaceFolder}/dist/agent.js"],
-			"smartStep": true,
-			"sourceMaps": true
-		},
-		{
-			"type": "node",
 			"request": "launch",
 			"runtimeExecutable": "npx",
 			"name": "Run UnitTests for File",
