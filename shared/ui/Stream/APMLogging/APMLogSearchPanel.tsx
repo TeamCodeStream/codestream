@@ -191,6 +191,9 @@ export const APMLogSearchPanel = (props: {
 					setQuery(e.query!);
 					fetchLogs(e.entityGuid, e.query, e.traceId);
 				}
+				if (e.traceId) {
+					fetchLogs(e.entityGuid, undefined, e.traceId);
+				}
 			})
 		);
 
