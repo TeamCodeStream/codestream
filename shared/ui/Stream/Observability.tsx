@@ -1417,7 +1417,7 @@ export const Observability = React.memo((props: Props) => {
 											<>
 												{repo.entityAccounts
 													.filter(_ => _)
-													.map((ea, index) => {
+													.map(ea => {
 														const _observabilityRepo = observabilityRepos.find(
 															_ => _.repoId === currentRepoId
 														);
@@ -1425,10 +1425,6 @@ export const Observability = React.memo((props: Props) => {
 														const _alertSeverity = ea?.alertSeverity || "";
 														const alertSeverityColor = ALERT_SEVERITY_COLORS[_alertSeverity];
 														const collapsed = expandedEntity !== ea.entityGuid;
-														const currentObservabilityRepoEntity =
-															derivedState.observabilityRepoEntities.find(ore => {
-																return ore.repoId === currentRepoId;
-															});
 														const showErrors = ea?.domain
 															? ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS.includes(ea.domain)
 															: false;
@@ -1648,6 +1644,7 @@ export const Observability = React.memo((props: Props) => {
 																	event_type: "response",
 																	meta_data: "first_association: false",
 																});
+																setExpandedEntity(e?.entityGuid);
 															}}
 															remote={currentObsRepo.repoRemote}
 															remoteName={currentObsRepo.repoName}
@@ -1683,8 +1680,8 @@ export const Observability = React.memo((props: Props) => {
 																event_type: "response",
 																meta_data: "first_association: true",
 															});
-
 															_useDidMount(true);
+															setExpandedEntity(e?.entityGuid);
 														}}
 														remote={repoForEntityAssociator.repoRemote}
 														remoteName={repoForEntityAssociator.repoName}
