@@ -180,7 +180,7 @@ export const APMLogSearchPanel = (props: {
 	const { height, ref } = useResizeDetector();
 	const trimmedListHeight: number = (height ?? 0) - (height ?? 0) * 0.08;
 	const disposables: Disposable[] = [];
-	const [currentTraceId, setTraceId] = useState<string>();
+	const [currentTraceId, setTraceId] = useState<string | undefined>(props.traceId);
 
 	useDidMount(() => {
 		setIsInitializing(true);
@@ -190,30 +190,50 @@ export const APMLogSearchPanel = (props: {
 			HostApi.instance.on(OpenEditorViewNotificationType, e => {
 				setSelectSinceOptions(sinceOptions);
 				setSelectedSinceOption(defaultOption);
-				if (e.query && e.query !== query) {
-					setQuery(e.query!);
-					fetchLogs(e.entityGuid, e.query);
-				}
+
 				if (e.traceId) {
 					setTraceId(e.traceId!);
 					fetchLogs(e.entityGuid, undefined, e.traceId);
+				}
+
+				if (e.query && e.query !== query) {
+					setQuery(e.query!);
+					fetchLogs(e.entityGuid, e.query);
 				}
 			})
 		);
 
 		const defaultOption: SelectedOption = {
-			value: "30 MINUTES AGO",
-			label: "30 Minutes Ago",
+			value: props.traceId || currentTraceId ? "7 DAYS AGO" : "30 MINUTES AGO",
+			label: props.traceId || currentTraceId ? "7 Days Ago" : "30 Minutes Ago",
 		};
 
 		const sinceOptions: SelectedOption[] = [
 			defaultOption,
-			{ value: "60 MINUTES AGO", label: "60 Minutes Ago" },
-			{ value: "3 HOURS AGO", label: "3 Hours Ago" },
-			{ value: "8 HOURS AGO", label: "8 Hours Ago" },
-			{ value: "1 DAY AGO", label: "1 Day Ago" },
-			{ value: "3 DAYS AGO", label: "3 Days Ago" },
-			{ value: "7 DAYS AGO", label: "7 Days Ago" },
+			{
+				value: props.traceId || currentTraceId ? "30 MINUTES AGO" : "60 MINUTES AGO",
+				label: props.traceId || currentTraceId ? "30 Minutes Ago" : "60 Minutes Ago",
+			},
+			{
+				value: props.traceId || currentTraceId ? "60 MINUTES AGO" : "3 HOURS AGO",
+				label: props.traceId || currentTraceId ? "60 Minutes Ago" : "3 Hours Ago",
+			},
+			{
+				value: props.traceId || currentTraceId ? "3 HOURS AGO" : "8 HOURS AGO",
+				label: props.traceId || currentTraceId ? "3 Hours Ago" : "8 Hours Ago",
+			},
+			{
+				value: props.traceId || currentTraceId ? "8 HOURS AGO" : "1 DAY AGO",
+				label: props.traceId || currentTraceId ? "8 Hours Ago" : "1 Day Ago",
+			},
+			{
+				value: props.traceId || currentTraceId ? "1 DAY AGO" : "3 DAYS AGO",
+				label: props.traceId || currentTraceId ? "1 Day Ago" : "3 Days Ago",
+			},
+			{
+				value: props.traceId || currentTraceId ? "3 DAYS AGO" : "7 DAYS AGO",
+				label: props.traceId || currentTraceId ? "3 Days Ago" : "7 Days Ago",
+			},
 		];
 
 		setSelectSinceOptions(sinceOptions);
@@ -440,7 +460,11 @@ export const APMLogSearchPanel = (props: {
 				traceId,
 				filterText,
 				limit: "MAX",
-				since: selectedSinceOption?.value || "30 MINUTES AGO",
+				since: traceId
+					? "7 DAYS AGO"
+					: selectedSinceOption?.value
+					? selectedSinceOption.value
+					: "30 MINUTES AGO",
 				order: {
 					field: "timestamp",
 					direction: "DESC",
