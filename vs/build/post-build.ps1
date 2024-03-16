@@ -21,9 +21,6 @@ $assetVer = $codeVer.ToString()
 Write-Host '***** asset version: ' $assetVer
 $assetsBaseName = 'codestream-vs-' + $assetVer
 
-# Make TCBUILD_ASSET_FULL_NAME available to track step
-Write-Host "##teamcity[setParameter name='env.TCBUILD_ASSET_FULL_NAME' value='$assetsBaseName']"
-
 $commitIds = @{}
 cd $codestreamVsDir
 $commitIds.codestream_vs = git rev-parse HEAD
