@@ -81,10 +81,7 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 			>
 				{expanded && <Icon name="chevron-down-thin" />}
 				{!expanded && <Icon name="chevron-right-thin" />}
-				<span
-					data-testid={`recent-errors-${props.entityGuid}`}
-					style={{ marginLeft: "2px", marginRight: "5px" }}
-				>
+				<span data-testid={`recent-errors`} style={{ marginLeft: "2px", marginRight: "5px" }}>
 					Recent
 				</span>
 				<InlineMenu
@@ -106,7 +103,7 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 								customPadding={"0 10px 0 50px"}
 								title={"No recent errors"}
 								icon="thumbsup"
-								dataTestId={`no-recent-errors-${props.entityGuid}`}
+								dataTestId={`no-recent-errors`}
 							></ErrorRow>
 						</>
 					) : (
