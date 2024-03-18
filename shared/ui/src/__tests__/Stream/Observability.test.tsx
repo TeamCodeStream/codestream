@@ -550,15 +550,15 @@ describe("Observability", () => {
 		expect(mockTrack).toHaveBeenCalledTimes(1);
 
 		// Close
-		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		fireEvent.click(screen.getByTestId("entity-name"));
 		await waitFor(() => {
-			expect(screen.queryByTestId("entity-name-abcd1234-collapsed")).toBeInTheDocument();
+			expect(screen.queryByTestId("entity-name-collapsed")).toBeInTheDocument();
 		});
 
 		// And expand to trigger service clicked
-		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		fireEvent.click(screen.getByTestId("entity-name"));
 		await waitFor(() => {
-			expect(screen.getByTestId("entity-name-abcd1234-expanded")).toBeInTheDocument();
+			expect(screen.getByTestId("entity-name-expanded")).toBeInTheDocument();
 		});
 
 		await waitFor(() => {
@@ -603,15 +603,15 @@ describe("Observability", () => {
 		expect(mockTrack).toHaveBeenCalledTimes(1);
 
 		// Close
-		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		fireEvent.click(screen.getByTestId("entity-name"));
 		await waitFor(() => {
-			expect(screen.queryByTestId("entity-name-abcd1234-collapsed")).toBeInTheDocument();
+			expect(screen.queryByTestId("entity-name-collapsed")).toBeInTheDocument();
 		});
 
 		// And expand to trigger service clicked
-		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		fireEvent.click(screen.getByTestId("entity-name"));
 		await waitFor(() => {
-			expect(screen.getByTestId("entity-name-abcd1234-expanded")).toBeInTheDocument();
+			expect(screen.getByTestId("entity-name-expanded")).toBeInTheDocument();
 		});
 
 		// await waitFor(() => {
@@ -653,15 +653,15 @@ describe("Observability", () => {
 		expect(mockTrack).toHaveBeenCalledTimes(1);
 
 		// Close
-		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		fireEvent.click(screen.getByTestId("entity-name"));
 		await waitFor(() => {
-			expect(screen.queryByTestId("entity-name-abcd1234-collapsed")).toBeInTheDocument();
+			expect(screen.queryByTestId("entity-name-collapsed")).toBeInTheDocument();
 		});
 
 		// And expand to trigger service clicked
-		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		fireEvent.click(screen.getByTestId("entity-name"));
 		await waitFor(() => {
-			expect(screen.getByTestId("entity-name-abcd1234-expanded")).toBeInTheDocument();
+			expect(screen.getByTestId("entity-name-expanded")).toBeInTheDocument();
 		});
 
 		// await waitFor(() => {
@@ -706,15 +706,15 @@ describe("Observability", () => {
 		expect(mockTrack).toHaveBeenCalledTimes(1);
 
 		// Close
-		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		fireEvent.click(screen.getByTestId("entity-name"));
 		await waitFor(() => {
-			expect(screen.queryByTestId("entity-name-abcd1234-collapsed")).toBeInTheDocument();
+			expect(screen.queryByTestId("entity-name-collapsed")).toBeInTheDocument();
 		});
 
 		// And expand to trigger service clicked
-		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		fireEvent.click(screen.getByTestId("entity-name"));
 		await waitFor(() => {
-			expect(screen.getByTestId("entity-name-abcd1234-expanded")).toBeInTheDocument();
+			expect(screen.getByTestId("entity-name-expanded")).toBeInTheDocument();
 		});
 
 		// await waitFor(() => {

@@ -106,8 +106,8 @@ describe("ObservabilityGoldenMetricDropdown", () => {
 			);
 		});
 
-		expect(screen.queryByTestId("golden-metrics-entity-guid")).toHaveTextContent("Golden Metrics");
-		expect(screen.queryByTestId("responseTimeMs-entity-guid")).toHaveTextContent("Response Time");
+		expect(screen.queryByTestId("golden-metrics")).toHaveTextContent("Golden Metrics");
+		expect(screen.queryByTestId("responseTimeMs")).toHaveTextContent("Response Time");
 	});
 
 	it("renders the golden metrics section but not expanded", async () => {
@@ -121,7 +121,7 @@ describe("ObservabilityGoldenMetricDropdown", () => {
 			);
 		});
 
-		expect(screen.queryByTestId("golden-metrics-entity-guid")).toHaveTextContent("Golden Metrics");
-		expect(screen.queryByTestId("responseTimeMs-entity-guid")).toBeNull();
+		expect(screen.queryByTestId("golden-metrics")).toHaveTextContent("Golden Metrics");
+		expect(screen.queryByTestId("responseTimeMs")).toBeNull();
 	});
 });
