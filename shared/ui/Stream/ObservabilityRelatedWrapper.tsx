@@ -49,7 +49,7 @@ export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 			>
 				{derivedState.relatedServicesIsExpanded && <Icon name="chevron-down-thin" />}
 				{!derivedState.relatedServicesIsExpanded && <Icon name="chevron-right-thin" />}
-				<span data-testid={`related-services-${props.entityGuid}`} style={{ marginLeft: "2px" }}>
+				<span data-testid={`related-services`} style={{ marginLeft: "2px" }}>
 					Related Services
 				</span>
 			</Row>

@@ -122,7 +122,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 								padding: noDropdown ? "0 10px 0 60px" : "0 10px 0 42px",
 							}}
 						>
-							<div data-testid={`${gm.name}-${entityGuid}`}>
+							<div data-testid={`${gm.name}`}>
 								<Tooltip placement="topRight" title={gm.title} delay={1}>
 									<span style={{ marginRight: "5px" }}>{gm.title}</span>
 								</Tooltip>
@@ -195,7 +195,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 					>
 						{derivedState.goldenMetricsDropdownIsExpanded && <Icon name="chevron-down-thin" />}
 						{!derivedState.goldenMetricsDropdownIsExpanded && <Icon name="chevron-right-thin" />}
-						<span data-testid={`golden-metrics-${entityGuid}`} style={{ margin: "0 5px 0 2px" }}>
+						<span data-testid={`golden-metrics`} style={{ margin: "0 5px 0 2px" }}>
 							Golden Metrics
 						</span>
 						{entityGoldenMetrics?.lastUpdated && (

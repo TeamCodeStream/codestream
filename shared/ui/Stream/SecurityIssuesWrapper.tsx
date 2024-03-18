@@ -388,10 +388,7 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 			>
 				{derivedState.securityIssuesDropdownIsExpanded && <Icon name="chevron-down-thin" />}
 				{!derivedState.securityIssuesDropdownIsExpanded && <Icon name="chevron-right-thin" />}
-				<span
-					data-testid={`vulnerabilities-${props.entityGuid}`}
-					style={{ marginLeft: "2px", marginRight: "5px" }}
-				>
+				<span data-testid={`vulnerabilities`} style={{ marginLeft: "2px", marginRight: "5px" }}>
 					Vulnerabilities
 				</span>
 

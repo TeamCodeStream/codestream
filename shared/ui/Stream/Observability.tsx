@@ -1435,7 +1435,7 @@ export const Observability = React.memo((props: Props) => {
 														return (
 															<>
 																<PaneNodeName
-																	data-testid={`entity-name-${ea.entityGuid}`}
+																	data-testid={`entity-name`}
 																	title={
 																		<div
 																			style={{
@@ -1445,16 +1445,14 @@ export const Observability = React.memo((props: Props) => {
 																		>
 																			<HealthIcon color={alertSeverityColor} />
 																			<div>
-																				<span data-testid={`entity-name-${ea.entityGuid}`}>
-																					{ea.entityName}
-																				</span>
+																				<span data-testid={`entity-name`}>{ea.entityName}</span>
 																				<span
 																					className="subtle"
 																					style={{
 																						fontSize: "11px",
 																						verticalAlign: "bottom",
 																					}}
-																					data-testid={`entity-account-name-${ea.entityGuid}`}
+																					data-testid={`entity-account-name`}
 																				>
 																					{ea.accountName && ea.accountName.length > 25
 																						? ea.accountName.substr(0, 25) + "..."
@@ -1614,7 +1612,7 @@ export const Observability = React.memo((props: Props) => {
 																								}}
 																							>
 																								<span
-																									data-testid={`view-logs-${ea.entityGuid}`}
+																									data-testid={`view-logs`}
 																									style={{ marginLeft: "2px" }}
 																								>
 																									<Icon
