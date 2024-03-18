@@ -18,7 +18,7 @@ export default function (vsRootPath: string) {
   const assetBaseName = `codestream-vs-${whereAreWe}-${version}`;
 
   const assetInfo: AssetInfo = {
-    Name: "codestream-vs",
+    Name: assetBaseName,
     AssetEnvironment: whereAreWe,
     Version: version,
     CommitId: revision,
