@@ -1,6 +1,6 @@
-import * as consoul from "./src/lib/Consoul.ts";
-import { isTeamCity } from "./src/lib/TeamCity.ts";
-import * as vs from "./src/vs/PreBuild.ts";
+import * as consoul from "./lib/Consoul.ts";
+import { isTeamCity } from "./lib/TeamCity.ts";
+import * as vs from "./vs/PreBuild.ts";
 import path from "path";
 
 const args = process.argv.slice(2);

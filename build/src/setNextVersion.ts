@@ -1,6 +1,6 @@
-import * as consoul from "./src/lib/Consoul.ts";
-import { isTeamCity } from "./src/lib/TeamCity.ts";
-import { setVersion, validateVersion } from "./src/lib/Versioning.ts";
+import * as consoul from "./lib/Consoul.ts";
+import { isTeamCity } from "./lib/TeamCity.ts";
+import { setVersion, validateVersion } from "./lib/Versioning.ts";
 import path from "path";
 
 const args = process.argv.slice(2);
@@ -9,7 +9,7 @@ if (args.length !== 1) {
 	consoul.error(`Incorrect number of parameters to script`);
 	consoul.error();
 	consoul.error(`Example Usage`);
-	consoul.error(`  node setNextVersion.mjs 15.0.5`);
+	consoul.error(`  npx tsx setNextVersion.ts 15.0.5`);
 	consoul.error();
 	process.exit(1);
 }
