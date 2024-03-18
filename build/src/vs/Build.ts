@@ -35,14 +35,15 @@ export default function (vsRootPath: string) {
 
   execSync(`dotnet tool restore --ignore-failed-sources`, {
     cwd: `${vsRootPath}\\src`,
+    stdio: "inherit"
   });
   execSync(
     `dotnet coverlet "CodeStream.VisualStudio.UnitTests.dll" --target "${xunit}" --targetargs "CodeStream.VisualStudio.UnitTests.dll" --exclude-by-file "**/Annotations/Annotations.cs" --format cobertura`,
-    { cwd: `${vsRootPath}\\src` },
+    { cwd: `${vsRootPath}\\src`,stdio: "inherit" },
   );
   execSync(
     `dotnet reportgenerator "-reports:coverage.cobertura.xml" "-targetdir:coveragereport" "-reporttypes:Html;TeamCitySummary"`,
-    { cwd: `${vsRootPath}\\src` },
+    { cwd: `${vsRootPath}\\src`,stdio: "inherit" },
   );
 
   const x64OutputPath = `${vsRootPath}\\artifacts\\x64`;
