@@ -307,7 +307,7 @@ export class NrLogsProvider {
 
 			let query = `SELECT keyset() FROM Log WHERE entity.guid = '${entityGuid}'`;
 			if (traceId) {
-				query = `SELECT keyset() FROM Log WHERE entity.guid = '${entityGuid}' AND trace.id = '${traceId}'`;
+				query += " AND trace.id = '${traceId}'";
 			}
 
 			let logDefinitions = await this.graphqlClient.runNrql<LogFieldDefinition>(
