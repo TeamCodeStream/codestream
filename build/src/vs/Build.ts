@@ -36,13 +36,20 @@ export default function (vsRootPath: string) {
     cwd: `${vsRootPath}\\src`,
     stdio: "inherit",
   });
+  
   execSync(
     `dotnet coverlet "CodeStream.VisualStudio.UnitTests.dll" --target "${xunit}" --targetargs "CodeStream.VisualStudio.UnitTests.dll" --exclude-by-file "**/Annotations/Annotations.cs" --format cobertura`,
-    { cwd: `${vsRootPath}\\src`, stdio: "inherit" },
+    {
+      cwd: `${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x64\\Debug`,
+      stdio: "inherit",
+    },
   );
   execSync(
     `dotnet reportgenerator "-reports:coverage.cobertura.xml" "-targetdir:coveragereport" "-reporttypes:Html;TeamCitySummary"`,
-    { cwd: `${vsRootPath}\\src`, stdio: "inherit" },
+    {
+      cwd: `${vsRootPath}\\src\\CodeStream.VisualStudio.UnitTests\\bin\\x64\\Debug`,
+      stdio: "inherit",
+    },
   );
 
   const x64OutputPath = `${vsRootPath}\\artifacts\\`;
