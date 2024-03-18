@@ -7,7 +7,6 @@ export default function (vsRootPath: string) {
 	const remoteLicenseFile = "/home/web/.codestream/licenses/teamdev.DotNetBrowser.licenses.txt";
 	const localReleaseLicenseFile = `${vsRootPath}/licenses/Release/teamdev.licenses`;
 	const localDebugLicenseFile = `${vsRootPath}/licenses/Debug/teamdev.licenses`;
-	const supplementalSoftwarePath = "C:/supplemental-build-software";
 
 	ssh.copyRemoteFile(remoteLicenseFile, localDebugLicenseFile);
 	ssh.copyRemoteFile(remoteLicenseFile, localReleaseLicenseFile);
@@ -25,6 +24,8 @@ export default function (vsRootPath: string) {
 			recursive: true
 		});
 	}
+
+	const supplementalSoftwarePath = teamCity.getSupplmentalSoftwareDirectory();
 
 	fs.copyFileSync(
 		`${supplementalSoftwarePath}/node/node-v18.15.0-win-x64/node.exe`,

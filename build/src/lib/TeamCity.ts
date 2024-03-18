@@ -1,5 +1,16 @@
 import * as consoul from "./Consoul.ts";
 
+export function getSupplmentalSoftwareDirectory(): string {
+	const softwareDirectory = process.env.TCBUILD_SUPPLEMENTAL_SOFTWARE_PATH;
+
+	if(softwareDirectory){
+		return softwareDirectory;
+	}
+
+	consoul.error(`Unable to locate process.env.TCBUILD_SUPPLEMENTAL_SOFTWARE_PATH`);
+	process.exit(1);
+}
+
 export function getCheckoutDirectory(): string {
 	const checkoutDirectory = process.env.TC_CHECKOUT_DIR;
 
