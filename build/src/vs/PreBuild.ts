@@ -31,19 +31,9 @@ export default function (vsRootPath: string) {
     fs.mkdirSync(`${vsRootPath}/src/CodeStream.VisualStudio.Vsix.x64/agent`);
   }
 
-  if (
-    !fs.existsSync(`${vsRootPath}/src/CodeStream.VisualStudio.Vsix.x86/agent`)
-  ) {
-    fs.mkdirSync(`${vsRootPath}/src/CodeStream.VisualStudio.Vsix.x86/agent`);
-  }
-
   fs.copyFileSync(
     `${supplementalSoftwarePath}/node/node-v18.15.0-win-x64/node.exe`,
-    `${vsRootPath}/src/CodeStream.VisualStudio.Vsix.x64/agent/node.exe`,
-  );
-  fs.copyFileSync(
-    `${supplementalSoftwarePath}/node/node-v18.15.0-win-x86/node.exe`,
-    `${vsRootPath}/src/CodeStream.VisualStudio.Vsix.x86/agent/node.exe`,
+    `${vsRootPath}/src/CodeStream.VisualStudio.Vsix.x64/dist/agent/node.exe`,
   );
 
   const buildNumber = process.env.build_number;
