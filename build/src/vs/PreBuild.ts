@@ -26,9 +26,9 @@ export default function (vsRootPath: string) {
   }
 
   if (
-    !fs.existsSync(`${vsRootPath}/src/CodeStream.VisualStudio.Vsix.x64/agent`)
+    !fs.existsSync(`${vsRootPath}/src/CodeStream.VisualStudio.Vsix.x64/dist/agent`)
   ) {
-    fs.mkdirSync(`${vsRootPath}/src/CodeStream.VisualStudio.Vsix.x64/agent`);
+    fs.mkdirSync(`${vsRootPath}/src/CodeStream.VisualStudio.Vsix.x64/dist/agent`, { recursive: true});
   }
 
   fs.copyFileSync(

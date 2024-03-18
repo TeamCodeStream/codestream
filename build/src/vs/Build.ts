@@ -8,6 +8,14 @@ export default function (vsRootPath: string) {
     "C:\\.nuget\\xunit.runner.console\\2.7.0\\tools\\net472\\xunit.console.exe";
 
   try {
+    execSync("npm run build:ci", { stdio: "inherit"});
+  }
+  catch(error){
+    console.error("Error executing command:", error);
+    process.exit(1);
+  }
+  
+  try {
     execFileSync(
       msbuild,
       [
@@ -22,6 +30,7 @@ export default function (vsRootPath: string) {
     );
   } catch (error) {
     console.error("Error executing command:", error);
+    process.exit(1);
   }
 
   execSync(`dotnet tool restore --ignore-failed-sources`, {
