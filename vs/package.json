@@ -12,14 +12,12 @@
 	"scripts": {
 		"agent:build": "pushd \"../shared/agent\" && tsx esbuild.ts -- --ide vs && popd",
 		"agent:bundle": "pushd \"../shared/agent\" && npm run bundle && popd",
-		"agent:clean:ci": "pushd \"../shared/agent\" && npm run clean:ci && popd",
 		"agent:rebuild": "pushd \"../shared/agent\" && npm run clean && npm install --no-save && tsx esbuild -- --ide vs && popd",
 		"agent:test": "pushd \"../shared/agent\" && npm run test && popd",
 		"agent:watch": "pushd \"../shared/agent\" && npm run watch -- --ide vs && popd",
 		"build": "npm run agent:build && tsx esbuild.ts -- --ide vs",
+		"build:ci": "npm install --no-save --loglevel=error && npm run build --loglevel=error",
 		"bundle": "npm install --no-save && npm run verify:compile && npm run webview:verify && npm run agent:bundle && tsx esbuild.ts --prod",
-		"bundle:ci": "npm run clean:ci && npm run bundle",
-		"clean:ci": "git clean -xdf -e vs/licenses/**/* && npm run webview:clean:ci && npm run agent:clean:ci",
 		"mwatch": "tmux new-session 'npm run watch' \\; split-window -h 'npm run agent:watch'",
 		"preinstall": "pushd \"../shared/ui\" && npm install --no-save && popd && pushd \"../shared/agent\" && npm install --no-save && popd && pushd \"../shared/util\" && npm install --no-save && popd && pushd \"../shared/build\" && npm install --no-save && popd",
 		"rebuild": "npm install --no-save && npm run agent:rebuild && npm run build",
@@ -28,7 +26,6 @@
 		"verify:lint": "npx eslint  src/resources/webviews/**/*.ts *.js *.ts",
 		"verify:prettier": "prettier --check src/resources/webviews/** docs/** *.ts *.js *.md package.json .prettierrc",
 		"watch": "tsx esbuild.ts --watch",
-		"webview:clean:ci": "pushd \"../shared/ui\" && npm run clean:ci && popd",
 		"webview:verify": "pushd \"../shared/ui\" && npm run verify:compile && popd"
 	},
 	"devDependencies": {
