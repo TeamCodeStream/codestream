@@ -11,13 +11,11 @@ import {
 	ObservabilityAnomaly,
 	ObservabilityRepo,
 	SpanWithCodeAttrs,
-	TelemetryData,
 } from "@codestream/protocols/agent";
 import { Logger } from "../../logger";
 import { getStorage } from "../../storage";
 import { getAnomalyDetectionMockResponse } from "./anomalyDetectionMockResults";
 import { getLanguageSupport, LanguageSupport } from "./clm/languageSupport";
-import { flatten } from "lodash";
 import { DeploymentsProvider } from "./deployments/deploymentsProvider";
 import { parseId } from "./utils";
 import { NewRelicGraphqlClient, escapeNrql } from "./newRelicGraphqlClient";
@@ -136,33 +134,6 @@ export class AnomalyDetectorDrillDown {
 		// 	errorRateAnomalies.push(...scoped.errorRateAnomalies);
 		// 	durationAnomalies.push(...scoped.durationAnomalies);
 		// }
-
-		try {
-			const telemetry = Container.instance().telemetry;
-			const children = [
-				...flatten(durationAnomalies.map(_ => _.children || [])),
-				...flatten(errorRateAnomalies.map(_ => _.children || [])),
-			];
-			const durationMetrics = children.filter(_ => _.type === "duration");
-			const errorRateMetrics = children.filter(_ => _.type === "duration");
-
-			const event: TelemetryData = {
-				entity_guid: this._request.entityGuid,
-				account_id: this._accountId,
-				meta_data: `language: ${languageSupport.language ?? "<unknown>"}`,
-				meta_data_2: `anomalous_duration_transactions: ${durationAnomalies.length || 0}`,
-				meta_data_3: `anomalous_error_transactions: ${errorRateAnomalies.length || 0}`,
-				meta_data_4: `anomalous_duration_metrics: ${durationMetrics.length || 0}`,
-				meta_data_5: `anomalous_error_metrics: ${errorRateMetrics.length || 0}`,
-				event_type: "state_load",
-			};
-			telemetry?.track({
-				eventName: "codestream/transaction_anomaly_async_calculation succeeded",
-				properties: event,
-			});
-		} catch (e) {
-			Logger.warn("Error generating anomaly detection telemetry", e);
-		}
 
 		let didNotifyNewAnomalies = false;
 		if (this._request.notifyNewAnomalies) {

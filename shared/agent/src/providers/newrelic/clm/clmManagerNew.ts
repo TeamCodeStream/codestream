@@ -1,4 +1,3 @@
-import { Container } from "../../../container";
 import {
 	CodeLevelMetrics,
 	EntityAccount,
@@ -7,9 +6,7 @@ import {
 	NameValue,
 	ObservabilityRepo,
 	SpanWithCodeAttrs,
-	TelemetryData,
 } from "@codestream/protocols/agent";
-import { Logger } from "../../../logger";
 import { getLanguageSupport, LanguageSupport } from "./languageSupport";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 import { ReposProvider } from "../repos/reposProvider";
@@ -56,35 +53,6 @@ export class ClmManagerNew {
 				duration: duration.value,
 			};
 			codeLevelMetrics.push(metric);
-		}
-
-		try {
-			const telemetry = Container.instance().telemetry;
-			const event = {
-				entity_guid: this._request.entityGuid,
-				account_id: this._accountId,
-				meta_data: `language: ${languageSupport.language ?? "<unknown>"}`,
-
-				meta_data_2: `anomalous_duration_transactions: ${
-					!codeLevelMetrics[0].scope ? codeLevelMetrics[0].duration : 0
-				}`,
-				meta_data_3: `anomalous_error_transactions: ${
-					!codeLevelMetrics[0].scope ? codeLevelMetrics[0].errorRate : 0
-				}`,
-				meta_data_4: `anomalous_duration_metrics: ${
-					codeLevelMetrics[0].scope ? codeLevelMetrics[0].duration : 0
-				}`,
-				meta_data_5: `anomalous_error_metrics: ${
-					codeLevelMetrics[0].scope ? codeLevelMetrics[0].errorRate : 0
-				}`,
-				event_type: "state_load",
-			} as TelemetryData;
-			telemetry?.track({
-				eventName: "codestream/transaction_anomaly_async_calculation succeeded",
-				properties: event,
-			});
-		} catch (e) {
-			Logger.warn("Error generating anomaly detection telemetry", e);
 		}
 
 		return {
