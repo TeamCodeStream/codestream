@@ -16,7 +16,7 @@ if (args.length !== 1) {
 
 const product = args[0];
 
-if (isTeamCity()) {
+if (!isTeamCity()) {
   consoul.error(
     "Unable to run build scripts locally; must be run on CI server",
   );
