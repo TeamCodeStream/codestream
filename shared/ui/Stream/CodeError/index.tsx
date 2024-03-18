@@ -66,7 +66,9 @@ import {
 	BigTitle,
 	Header,
 	HeaderActions,
+	LinkForExternalUrl,
 	Meta,
+	MetaDescription,
 	MetaLabel,
 	MetaSection,
 	MetaSectionCollapsed,
@@ -1512,18 +1514,23 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 
 	const renderLogsIcon = () => {
 		return (
-			<MetaSection>
-				<Meta
-					id="view-related-logs"
-					onClick={e => {
-						e.preventDefault, openLogs();
-					}}
-				>
-					<MetaLabel>
-						<Icon name="logs"></Icon> View related logs
-					</MetaLabel>
-				</Meta>
-			</MetaSection>
+			<Meta>
+				<LinkForExternalUrl href="#">
+					<MetaDescription>
+						<span
+							onClick={e => {
+								e.preventDefault(), openLogs();
+							}}
+							style={{ opacity: 0.5 }}
+						>
+							<span>
+								<Icon name="logs" />
+							</span>
+							View related logs
+						</span>
+					</MetaDescription>
+				</LinkForExternalUrl>
+			</Meta>
 		);
 	};
 
