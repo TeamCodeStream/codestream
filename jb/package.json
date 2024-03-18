@@ -1,6 +1,6 @@
 {
 	"name": "codestream.intellij",
-	"version": "16.0.0",
+	"version": "1.0.0",
 	"description": "CodeStream for IntelliJ",
 	"main": "index.js",
 	"author": "",

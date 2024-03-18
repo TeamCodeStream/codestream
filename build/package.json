@@ -1,25 +1,25 @@
 {
-  "name": "codestream-ci-builds",
-  "type": "module",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "directories": {
-    "lib": "lib"
-  },
-  "scripts": {
-    "prettier": "prettier --write \"./**/*.ts\" \"./**/*.js\" \"./**/*.json\""
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "adm-zip": "^0.5.10",
-    "cpy": "^11.0.0",
-    "tsx": "^4.7.0"
-  },
-  "devDependencies": {
-    "@types/adm-zip": "^0.5.5",
-    "@types/node": "^20.11.5",
-    "prettier": "^3.2.4"
-  }
+	"name": "codestream-ci-builds",
+	"type": "module",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"directories": {
+		"lib": "lib"
+	},
+	"scripts": {
+		"prettier": "prettier --write \"./**/*.ts\" \"./**/*.js\" \"./**/*.json\""
+	},
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"adm-zip": "^0.5.10",
+		"cpy": "^11.0.0",
+		"tsx": "^4.7.0"
+	},
+	"devDependencies": {
+		"@types/adm-zip": "^0.5.5",
+		"@types/node": "^20.11.5",
+		"prettier": "^3.2.4"
+	}
 }

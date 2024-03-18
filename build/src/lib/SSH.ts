@@ -6,10 +6,9 @@ const username = "web";
 const keyfile = "C:/Users/Administrator/.ssh/id_rsa";
 
 export function copyRemoteFile(remoteFile: string, localFile: string) {
-  consoul.info(`Downloading ${remoteFile} to ${localFile}...`);
+	consoul.info(`Downloading ${remoteFile} to ${localFile}...`);
 
-  execSync(
-    `scp -i ${keyfile} ${username}@${server}:${remoteFile} ${localFile}`,
-    { stdio: "inherit" },
-  );
+	execSync(`scp -i ${keyfile} ${username}@${server}:${remoteFile} ${localFile}`, {
+		stdio: "inherit"
+	});
 }

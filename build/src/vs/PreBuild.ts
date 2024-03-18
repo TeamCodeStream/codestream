@@ -4,46 +4,36 @@ import * as teamCity from "../lib/TeamCity.ts";
 import fs from "fs";
 
 export default function (vsRootPath: string) {
-  const remoteLicenseFile =
-    "/home/web/.codestream/licenses/teamdev.DotNetBrowser.licenses.txt";
-  const localReleaseLicenseFile = `${vsRootPath}/licenses/Release/teamdev.licenses`;
-  const localDebugLicenseFile = `${vsRootPath}/licenses/Debug/teamdev.licenses`;
-  const supplementalSoftwarePath = "C:/supplemental-build-software";
+	const remoteLicenseFile = "/home/web/.codestream/licenses/teamdev.DotNetBrowser.licenses.txt";
+	const localReleaseLicenseFile = `${vsRootPath}/licenses/Release/teamdev.licenses`;
+	const localDebugLicenseFile = `${vsRootPath}/licenses/Debug/teamdev.licenses`;
+	const supplementalSoftwarePath = "C:/supplemental-build-software";
 
-  ssh.copyRemoteFile(remoteLicenseFile, localDebugLicenseFile);
-  ssh.copyRemoteFile(remoteLicenseFile, localReleaseLicenseFile);
+	ssh.copyRemoteFile(remoteLicenseFile, localDebugLicenseFile);
+	ssh.copyRemoteFile(remoteLicenseFile, localReleaseLicenseFile);
 
-  if (!fs.existsSync(localDebugLicenseFile)) {
-    throw new Error(
-      `localDebugLicenseFile Not Found - ${localDebugLicenseFile}`,
-    );
-  }
+	if (!fs.existsSync(localDebugLicenseFile)) {
+		throw new Error(`localDebugLicenseFile Not Found - ${localDebugLicenseFile}`);
+	}
 
-  if (!fs.existsSync(localReleaseLicenseFile)) {
-    throw new Error(
-      `localReleaseLicenseFile Not Found - ${localReleaseLicenseFile}`,
-    );
-  }
+	if (!fs.existsSync(localReleaseLicenseFile)) {
+		throw new Error(`localReleaseLicenseFile Not Found - ${localReleaseLicenseFile}`);
+	}
 
-  if (
-    !fs.existsSync(
-      `${vsRootPath}/src/CodeStream.VisualStudio.Vsix.x64/dist/agent`,
-    )
-  ) {
-    fs.mkdirSync(
-      `${vsRootPath}/src/CodeStream.VisualStudio.Vsix.x64/dist/agent`,
-      { recursive: true },
-    );
-  }
+	if (!fs.existsSync(`${vsRootPath}/src/CodeStream.VisualStudio.Vsix.x64/dist/agent`)) {
+		fs.mkdirSync(`${vsRootPath}/src/CodeStream.VisualStudio.Vsix.x64/dist/agent`, {
+			recursive: true
+		});
+	}
 
-  fs.copyFileSync(
-    `${supplementalSoftwarePath}/node/node-v18.15.0-win-x64/node.exe`,
-    `${vsRootPath}/src/CodeStream.VisualStudio.Vsix.x64/dist/agent/node.exe`,
-  );
+	fs.copyFileSync(
+		`${supplementalSoftwarePath}/node/node-v18.15.0-win-x64/node.exe`,
+		`${vsRootPath}/src/CodeStream.VisualStudio.Vsix.x64/dist/agent/node.exe`
+	);
 
-  const buildNumber = teamCity.getBuildNumber();
-  const currentVersion = versioning.getVersionVS();
+	const buildNumber = teamCity.getBuildNumber();
+	const currentVersion = versioning.getVersionVS();
 
-  teamCity.setVersion(`${currentVersion}.${buildNumber}`);
-  versioning.setVersion(vsRootPath, "vs", `${currentVersion}.${buildNumber}`); // ALL VS files will now have major.minor.patch.build
+	teamCity.setVersion(`${currentVersion}.${buildNumber}`);
+	versioning.setVersion(vsRootPath, "vs", `${currentVersion}.${buildNumber}`); // ALL VS files will now have major.minor.patch.build
 }
