@@ -36,7 +36,7 @@ export default function (vsRootPath: string) {
     cwd: `${vsRootPath}\\src`,
     stdio: "inherit",
   });
-  
+
   execSync(
     `dotnet coverlet "CodeStream.VisualStudio.UnitTests.dll" --target "${xunit}" --targetargs "CodeStream.VisualStudio.UnitTests.dll" --exclude-by-file "**/Annotations/Annotations.cs" --format cobertura`,
     {

@@ -8,7 +8,7 @@
     "lib": "lib"
   },
   "scripts": {
-    "prettier": "prettier --write \"./**/*.ts\""
+    "prettier": "prettier --write \"./**/*.ts\" \"./**/*.js\" \"./**/*.json\""
   },
   "author": "",
   "license": "ISC",

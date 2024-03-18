@@ -1,15 +1,13 @@
 {
-	"compilerOptions": {
-	  "target": "es6",
-	  "module": "commonjs",
-	  "rootDir": "src",
-	  "outDir": "dist",
-	  "strict": true,
-	  "esModuleInterop": true,
-	  "allowImportingTsExtensions": true,
-	  "noEmit": true
-	},
-	"exclude": [
-	  "node_modules"
-	]
-  }
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "rootDir": ".",
+    "outDir": "dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+  },
+  "exclude": ["node_modules"],
+}
