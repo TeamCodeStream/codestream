@@ -342,7 +342,6 @@ export interface OpenEditorViewNotification {
 		browserEngine?: BrowserEngines;
 	};
 
-	params?: {};
 	accountId?: number;
 	panelLocation?: ViewColumn;
 	entityGuid?: string;
