@@ -594,6 +594,7 @@ export class ThirdPartyProviderRegistry {
 	})
 	@lspHandler(ExecuteThirdPartyRequestUntypedType)
 	async executeMethod(request: ExecuteThirdPartyRequest) {
+		Logger.log(`ThirdPartyProviderRegistry.executeMethod ${JSON.stringify(request)}`);
 		if (request.providerId === "newrelic*com") {
 			const nrDirectives = getNrDirectives();
 			if (nrDirectives) {
