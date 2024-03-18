@@ -53,6 +53,6 @@ export default function (vsRootPath: string) {
 
   fs.copyFileSync(
     `${vsRootPath}\\src\\CodeStream.VisualStudio.Vsix.x64\\bin\\x64\\Debug\\codestream-vs-22.vsix`,
-    `${vsRootPath}\\artifacts\\`,
+    `${vsRootPath}\\artifacts\\codestream-vs-22.vsix`,
   );
 }
