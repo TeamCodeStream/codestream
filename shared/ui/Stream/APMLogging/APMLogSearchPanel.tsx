@@ -192,7 +192,7 @@ export const APMLogSearchPanel = (props: {
 				setSelectedSinceOption(defaultOption);
 
 				if (e.traceId) {
-					setTraceId(e.traceId!);
+					setTraceId(e.traceId);
 					fetchLogs(e.entityGuid, undefined, e.traceId);
 				}
 
@@ -236,16 +236,16 @@ export const APMLogSearchPanel = (props: {
 			},
 		];
 
+		if (props.traceId) {
+			setTraceId(props.traceId);
+		}
+
 		setSelectSinceOptions(sinceOptions);
 		setSelectedSinceOption(defaultOption);
 
 		// possible there is no searchTerm
 		if (props.suppliedQuery) {
 			setQuery(props.suppliedQuery);
-		}
-
-		if (props.traceId) {
-			setTraceId(props.traceId);
 		}
 
 		const finishHandlingEntityAccount = (entityAccount: EntityAccount) => {
@@ -460,10 +460,10 @@ export const APMLogSearchPanel = (props: {
 				traceId,
 				filterText,
 				limit: "MAX",
-				since: traceId
-					? "7 DAYS AGO"
-					: selectedSinceOption?.value
+				since: selectedSinceOption?.value
 					? selectedSinceOption.value
+					: traceId
+					? "7 DAYS AGO"
 					: "30 MINUTES AGO",
 				order: {
 					field: "timestamp",
