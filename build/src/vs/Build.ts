@@ -8,7 +8,7 @@ export default function (vsRootPath: string) {
     "C:\\.nuget\\xunit.runner.console\\2.7.0\\tools\\net472\\xunit.console.exe";
 
   try {
-    execSync("npm run build:ci", { stdio: "inherit"});
+    execSync("npm run build:ci", { stdio: "inherit", cwd: `${vsRootPath}`});
   }
   catch(error){
     console.error("Error executing command:", error);
