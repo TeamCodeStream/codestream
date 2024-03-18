@@ -1,6 +1,6 @@
 import * as consoul from "./src/lib/Consoul.ts";
 import { isTeamCity } from "./src/lib/TeamCity.ts";
-import * as vs from "./src/vs/Build.ts";
+import * as vs from "./src/vs/PostBuild.ts";
 import path from "path";
 
 const args = process.argv.slice(2);
@@ -9,7 +9,7 @@ if (args.length !== 1) {
   consoul.error(`Incorrect number of parameters to script`);
   consoul.error();
   consoul.error(`Example Usage`);
-  consoul.error(`  npx tsx Build.ts vs`);
+  consoul.error(`  npx tsx PostBuild.ts vs`);
   consoul.error();
   process.exit(1);
 }

@@ -1,4 +1,5 @@
 import * as consoul from "./src/lib/Consoul.ts";
+import { isTeamCity } from "./src/lib/TeamCity.ts";
 import * as vs from "./src/vs/PreBuild.ts";
 import path from "path";
 
@@ -15,7 +16,7 @@ if (args.length !== 1) {
 
 const product = args[0];
 
-if (process.env.IS_CI !== "1") {
+if (isTeamCity()) {
   consoul.error(
     "Unable to run build scripts locally; must be run on CI server",
   );

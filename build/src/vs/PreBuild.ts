@@ -26,9 +26,14 @@ export default function (vsRootPath: string) {
   }
 
   if (
-    !fs.existsSync(`${vsRootPath}/src/CodeStream.VisualStudio.Vsix.x64/dist/agent`)
+    !fs.existsSync(
+      `${vsRootPath}/src/CodeStream.VisualStudio.Vsix.x64/dist/agent`,
+    )
   ) {
-    fs.mkdirSync(`${vsRootPath}/src/CodeStream.VisualStudio.Vsix.x64/dist/agent`, { recursive: true});
+    fs.mkdirSync(
+      `${vsRootPath}/src/CodeStream.VisualStudio.Vsix.x64/dist/agent`,
+      { recursive: true },
+    );
   }
 
   fs.copyFileSync(
@@ -36,9 +41,9 @@ export default function (vsRootPath: string) {
     `${vsRootPath}/src/CodeStream.VisualStudio.Vsix.x64/dist/agent/node.exe`,
   );
 
-  const buildNumber = process.env.build_number;
-  const currentVersion = versioning.getVersion(`${vsRootPath}/package.json`); // fresh package.json will only have major.minor.patch as we start the build
+  const buildNumber = teamCity.getBuildNumber();
+  const currentVersion = versioning.getVersionVS();
 
   teamCity.setVersion(`${currentVersion}.${buildNumber}`);
-  versioning.setVersion(vsRootPath, "vs", `${currentVersion}.${buildNumber}`); // ALL VS files will now have major.minor.patch.build; FYI if you use getVersion again
+  versioning.setVersion(vsRootPath, "vs", `${currentVersion}.${buildNumber}`); // ALL VS files will now have major.minor.patch.build
 }

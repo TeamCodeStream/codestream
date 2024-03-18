@@ -8,13 +8,12 @@ export default function (vsRootPath: string) {
     "C:\\.nuget\\xunit.runner.console\\2.7.0\\tools\\net472\\xunit.console.exe";
 
   try {
-    execSync("npm run build:ci", { stdio: "inherit", cwd: `${vsRootPath}`});
-  }
-  catch(error){
+    execSync("npm run build:ci", { stdio: "inherit", cwd: `${vsRootPath}` });
+  } catch (error) {
     console.error("Error executing command:", error);
     process.exit(1);
   }
-  
+
   try {
     execFileSync(
       msbuild,
@@ -35,21 +34,25 @@ export default function (vsRootPath: string) {
 
   execSync(`dotnet tool restore --ignore-failed-sources`, {
     cwd: `${vsRootPath}\\src`,
-    stdio: "inherit"
+    stdio: "inherit",
   });
   execSync(
     `dotnet coverlet "CodeStream.VisualStudio.UnitTests.dll" --target "${xunit}" --targetargs "CodeStream.VisualStudio.UnitTests.dll" --exclude-by-file "**/Annotations/Annotations.cs" --format cobertura`,
-    { cwd: `${vsRootPath}\\src`,stdio: "inherit" },
+    { cwd: `${vsRootPath}\\src`, stdio: "inherit" },
   );
   execSync(
     `dotnet reportgenerator "-reports:coverage.cobertura.xml" "-targetdir:coveragereport" "-reporttypes:Html;TeamCitySummary"`,
-    { cwd: `${vsRootPath}\\src`,stdio: "inherit" },
+    { cwd: `${vsRootPath}\\src`, stdio: "inherit" },
   );
 
-  const x64OutputPath = `${vsRootPath}\\artifacts\\x64`;
+  const x64OutputPath = `${vsRootPath}\\artifacts\\`;
 
   if (!fs.existsSync(x64OutputPath)) {
     fs.mkdirSync(x64OutputPath, { recursive: true });
   }
 
+  fs.copyFileSync(
+    `${vsRootPath}\\src\\CodeStream.VisualStudio.Vsix.x64\\bin\\x64\\Debug\\codestream-vs-22.vsix`,
+    `${vsRootPath}\\artifacts\\`,
+  );
 }

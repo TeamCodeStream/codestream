@@ -1,8 +1,24 @@
 import fs from "fs";
 import * as consoul from "./Consoul.ts";
 import path from "path";
+import { getCheckoutDirectory } from "./TeamCity.ts";
 
-export function getVersion(packageJsonFile: string): string | undefined {
+export function getVersionVS(): string | undefined {
+  const rootCheckoutDirectory = getCheckoutDirectory();
+  return _getVersion(`${rootCheckoutDirectory}\\vs\\package.json`);
+}
+
+export function getVersionVSCode(): string | undefined {
+  const rootCheckoutDirectory = getCheckoutDirectory();
+  return _getVersion(`${rootCheckoutDirectory}\\vscode\\package.json`);
+}
+
+export function getVersionJB(): string | undefined {
+  const rootCheckoutDirectory = getCheckoutDirectory();
+  return _getVersion(`${rootCheckoutDirectory}\\jb\\package.json`);
+}
+
+function _getVersion(packageJsonFile: string): string | undefined {
   try {
     const fileContents = fs.readFileSync(packageJsonFile, "utf-8");
     const versionRegEx = /"version":\s*"([^"]+)",/g;
