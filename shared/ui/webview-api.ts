@@ -40,7 +40,9 @@ type Listener<NT extends NotificationType<any, any> = NotificationType<any, any>
 
 const ALERT_THRESHOLD = 20;
 
-const STALE_THRESHOLD = 60; // 1 minute
+// TODO NR-248533: Configurable from Logs Provider or by message type?
+const STALE_THRESHOLD = 600; // 10 minutes
+// const STALE_THRESHOLD = 60; // 1 minute
 
 class StaleRequestGroup {
 	private _oldestDate: number | undefined = undefined;

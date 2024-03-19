@@ -660,6 +660,81 @@ export class NewRelicGraphqlClient implements Disposable {
 		return results.actor.account.nrql.results;
 	}
 
+	async runAsyncNrql<T>(accountId: number, nrql: string): Promise<T[]> {
+		const query = `query Nrql($accountId:Int!) {
+			actor {
+				account(id: $accountId) {
+					nrql(query: "${nrql}", timeout: 1, async: true) {
+						results
+						queryProgress {
+							completed
+							queryId
+						}
+					}
+				}
+			}
+		}`;
+
+		const queryResults = await this.query<{
+			actor: {
+				account: {
+					nrql: {
+						results: T[];
+						queryProgress: {
+							completed: boolean;
+							queryId: string;
+						};
+					};
+				};
+			};
+		}>(query, { accountId });
+
+		//bail out early if, for some reason, we got something back that quickly
+		if (queryResults.actor.account.nrql.queryProgress.completed) {
+			return queryResults.actor.account.nrql.results;
+		}
+
+		const queryId = queryResults.actor.account.nrql.queryProgress.queryId;
+
+		const queryProgress = `query Nrql($accountId:Int!) {
+			actor {
+			  account(id: $accountId) {
+				nrqlQueryProgress( queryId: "${queryId}") {
+				  results
+				  queryProgress {
+					completed
+				  }
+				}
+			  }
+			}
+		  }`;
+
+		let completed = false;
+		let results: T[] = [];
+
+		while (!completed) {
+			setTimeout(async () => {
+				const queryProgressResults = await this.query<{
+					actor: {
+						account: {
+							nrqlQueryProgress: {
+								results: T[];
+								queryProgress: {
+									completed: boolean;
+								};
+							};
+						};
+					};
+				}>(queryProgress, { accountId });
+
+				completed = queryProgressResults.actor.account.nrqlQueryProgress.queryProgress.completed;
+				results = queryProgressResults.actor.account.nrqlQueryProgress.results;
+			}, 5000);
+		}
+
+		return results;
+	}
+
 	errorLogIfNotIgnored(ex: Error, message: string, ...params: any[]): void {
 		const match = ignoredErrors.find(ignored => ex instanceof ignored);
 		if (!match) {

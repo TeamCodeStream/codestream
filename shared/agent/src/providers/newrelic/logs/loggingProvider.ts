@@ -174,7 +174,7 @@ export class LoggingProvider {
 
 			ContextLogger.log(`getLogs query: ${query}`);
 
-			const logs = await this.graphqlClient.runNrql<LogResult>(accountId, query, 100000);
+			const logs = await this.graphqlClient.runAsyncNrql<LogResult>(accountId, query);
 
 			logs.map(lr => {
 				const myKeys = Object.keys(lr);
