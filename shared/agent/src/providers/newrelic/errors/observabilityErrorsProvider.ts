@@ -458,7 +458,7 @@ export class ObservabilityErrorsProvider {
 					}
 					return {
 						entityGuid: entityGuid || errorGroupResponse.entityGuid,
-						traceId: returnTraceId || errorTraceResponse.actor.account.nrql.results[0].traceId,
+						traceId: returnTraceId || errorTraceResult.traceId,
 						stackSourceMap,
 					};
 				}

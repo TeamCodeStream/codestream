@@ -1373,7 +1373,6 @@ export interface ObservabilityError extends ObservabilityErrorCore {
 	remote: string;
 	occurrenceId: string;
 	traceId?: string;
-	id?: string;
 	count: number;
 	lastOccurrence: number;
 	releaseTag?: number;

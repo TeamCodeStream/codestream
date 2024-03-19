@@ -1520,7 +1520,8 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 					<MetaDescription>
 						<span
 							onClick={e => {
-								e.preventDefault(), openLogs();
+								e.preventDefault();
+								openLogs();
 							}}
 							style={{ opacity: 0.5 }}
 						>
