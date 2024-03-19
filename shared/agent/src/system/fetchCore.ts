@@ -75,10 +75,6 @@ export async function fetchCore(
 	let timeout: NodeJS.Timeout | undefined = undefined;
 	// Make sure original init is not modified
 	const init = { ...initIn };
-
-	// TODO NR-248533: Configurable through initIn from Logs Provider?
-	init.timeout = 600000;
-
 	try {
 		handleLimit(origin);
 		const controller = new AbortController();
