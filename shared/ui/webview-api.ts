@@ -38,11 +38,8 @@ type Listener<NT extends NotificationType<any, any> = NotificationType<any, any>
 	event: NotificationParamsOf<NT>
 ) => void;
 
-const ALERT_THRESHOLD = 20;
-
-// TODO NR-248533: Configurable from Logs Provider or by message type?
-const STALE_THRESHOLD = 600; // 10 minutes
-// const STALE_THRESHOLD = 60; // 1 minute
+const DEFAULT_ALERT_THRESHOLD_SECONDS = 20;
+const DEFAULT_TIMEOUT_THRESHOLD_SECONDS = 60;
 
 class StaleRequestGroup {
 	private _oldestDate: number | undefined = undefined;
@@ -173,6 +170,7 @@ export function nextId() {
 type WebviewApiRequest = {
 	method: string;
 	providerId?: string;
+	timeoutMs?: number;
 	resolve: (value?: any | PromiseLike<any>) => void;
 	reject: (reason?: unknown) => void;
 };
@@ -217,8 +215,8 @@ export class RequestApiManager {
 				continue;
 			}
 			const timestamp = parseInt(parts[3]);
-			const timeAgo = (now - timestamp) / 1000;
-			if (timeAgo > STALE_THRESHOLD) {
+			const timeAgoMs = (now - timestamp) / 1000;
+			if (timeAgoMs > (value.timeoutMs ?? DEFAULT_TIMEOUT_THRESHOLD_SECONDS)) {
 				const staleGroup = staleRequests.get(value.method) ?? new StaleRequestGroup();
 				staleRequests.set(value.method, staleGroup);
 				staleGroup.addRequest(key, timestamp);
@@ -239,8 +237,8 @@ export class RequestApiManager {
 		const identifier = value.providerId ? `${value.method}:${value.providerId}` : value.method;
 		const count = this.historyCounter.countAndGet(identifier);
 		// A rounded error allows the count to stay the same and the duplicate error suppression to work in the agent
-		const rounded = roundDownExponentially(count, ALERT_THRESHOLD);
-		if (count > ALERT_THRESHOLD && identifier != "codestream/reporting/message") {
+		const rounded = roundDownExponentially(count, DEFAULT_ALERT_THRESHOLD_SECONDS);
+		if (count > DEFAULT_ALERT_THRESHOLD_SECONDS && identifier != "codestream/reporting/message") {
 			logError(new Error(`More than ${rounded} calls pending for ${identifier}`));
 		}
 		return this.pendingRequests.set(key, value);
@@ -329,14 +327,20 @@ export class HostApi extends EventEmitter {
 	send<RT extends RequestType<any, any, any, any>>(
 		type: RT,
 		params: RequestParamsOf<RT>,
-		options?: { alternateReject?: (error) => {} }
+		options?: { alternateReject?: (error) => {}; timeoutMs?: number }
 	): Promise<RequestResponseOf<RT>> {
 		const id = nextId();
 
 		return new Promise((resolve, reject) => {
 			reject = (options && options.alternateReject) || reject;
 			const providerId: string | undefined = params?.providerId ? params.providerId : undefined;
-			this.apiManager.set(id, { resolve, reject, method: type.method, providerId });
+			this.apiManager.set(id, {
+				resolve,
+				reject,
+				method: type.method,
+				providerId,
+				timeoutMs: options?.timeoutMs,
+			});
 
 			const payload = {
 				id,

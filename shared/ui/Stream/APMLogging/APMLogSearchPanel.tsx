@@ -455,16 +455,22 @@ export const APMLogSearchPanel = (props: {
 				return;
 			}
 
-			const response = await HostApi.instance.send(GetLogsRequestType, {
-				entity: entityAccount,
-				filterText,
-				limit: "MAX",
-				since: selectedSinceOption?.value || "30 MINUTES AGO",
-				order: {
-					field: "timestamp",
-					direction: "DESC",
+			const response = await HostApi.instance.send(
+				GetLogsRequestType,
+				{
+					entity: entityAccount,
+					filterText,
+					limit: "MAX",
+					since: selectedSinceOption?.value || "30 MINUTES AGO",
+					order: {
+						field: "timestamp",
+						direction: "DESC",
+					},
 				},
-			});
+				{
+					timeoutMs: 660000, // 11 minutes. NR1/GraphQL should timeout at 10 minutes, but we'll give it a little extra
+				}
+			);
 
 			setQueriedWithNonEmptyString(!_isEmpty(filterText));
 
