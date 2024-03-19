@@ -713,23 +713,23 @@ export class NewRelicGraphqlClient implements Disposable {
 		let results: T[] = [];
 
 		while (!completed) {
-			setTimeout(async () => {
-				const queryProgressResults = await this.query<{
-					actor: {
-						account: {
-							nrqlQueryProgress: {
-								results: T[];
-								queryProgress: {
-									completed: boolean;
-								};
+			const queryProgressResults = await this.query<{
+				actor: {
+					account: {
+						nrqlQueryProgress: {
+							results: T[];
+							queryProgress: {
+								completed: boolean;
 							};
 						};
 					};
-				}>(queryProgress, { accountId });
+				};
+			}>(queryProgress, { accountId });
 
-				completed = queryProgressResults.actor.account.nrqlQueryProgress.queryProgress.completed;
-				results = queryProgressResults.actor.account.nrqlQueryProgress.results;
-			}, 5000);
+			completed = queryProgressResults.actor.account.nrqlQueryProgress.queryProgress.completed;
+			results = queryProgressResults.actor.account.nrqlQueryProgress.results;
+
+			await Functions.wait(5000);
 		}
 
 		return results;
