@@ -1216,6 +1216,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 				? emptyArray
 				: getThreadPosts(state, codeError.streamId, codeError.postId),
 			traceId: currentCodeErrorData.traceId,
+			ideName: state.ide.name,
 		};
 	}, shallowEqual);
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
@@ -1541,7 +1542,9 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			entryPoint: "code_error",
 			entityGuid: props.errorGroup?.entityGuid,
 			traceId: currentCodeErrorData.traceId,
-			ide: {},
+			ide: {
+				name: derivedState.ideName || undefined,
+			},
 		});
 	};
 	const renderStackTrace = () => {
