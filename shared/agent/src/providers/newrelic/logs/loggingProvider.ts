@@ -87,7 +87,7 @@ export class LoggingProvider {
 			}>(query, { accountId });
 
 			const partitions = queryResults.actor.account.logConfigurations.dataPartitionRules
-				//.filter(dpr => dpr.enabled && !dpr.deleted)
+				.filter(dpr => dpr.enabled && !dpr.deleted)
 				.map(dpr => dpr.targetDataPartition)
 				.sort();
 
