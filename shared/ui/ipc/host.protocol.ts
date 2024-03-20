@@ -327,6 +327,7 @@ export interface OpenEditorViewNotification {
 		| "context_menu"
 		| "tree_view"
 		| "apm_logs"
+		| "code_error"
 		// nrql
 		| "query_builder"
 		| "recent_queries"
@@ -345,6 +346,7 @@ export interface OpenEditorViewNotification {
 	entityGuid?: string;
 	query?: string;
 	hash?: string;
+	traceId?: string;
 }
 
 export const OpenEditorViewNotificationType = new NotificationType<

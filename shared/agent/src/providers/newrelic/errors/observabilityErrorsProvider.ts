@@ -168,6 +168,7 @@ export class ObservabilityErrorsProvider {
 											remote: application.urlValue!,
 											errorGroupGuid: response.actor.errorsInbox.errorGroup.id,
 											occurrenceId: errorTrace.occurrenceId,
+											traceId: errorTrace.traceId,
 											count: errorTrace.count,
 											lastOccurrence: errorTrace.lastOccurrence,
 											errorGroupUrl: response.actor.errorsInbox.errorGroup.url,
@@ -389,6 +390,7 @@ export class ObservabilityErrorsProvider {
 							results: {
 								entityGuid: string;
 								id?: string;
+								traceId?: string;
 								stackHash?: string;
 								stackTrace?: string;
 								monitorAccountId?: string;
@@ -407,6 +409,7 @@ export class ObservabilityErrorsProvider {
 					stackHash?: string | number;
 					browserStackHash?: string | number;
 					id?: string;
+					traceId?: string;
 					stackTrace?: string;
 					monitorAccountId?: string;
 					appId?: number;
@@ -455,7 +458,7 @@ export class ObservabilityErrorsProvider {
 					}
 					return {
 						entityGuid: entityGuid || errorGroupResponse.entityGuid,
-						traceId: returnTraceId,
+						traceId: returnTraceId || errorTraceResult.traceId,
 						stackSourceMap,
 					};
 				}
@@ -531,6 +534,7 @@ export class ObservabilityErrorsProvider {
 			"latest(message) AS 'message',",
 			"latest(entityGuid) AS 'entityGuid',",
 			"latest(fingerprint) AS 'fingerprintId',",
+			"latest(traceId) AS 'traceId',",
 			"count(id) AS 'length'",
 			"FROM ErrorTrace",
 			`WHERE fingerprint IS NOT NULL AND NOT error.expected AND entityGuid='${applicationGuid}'`,
@@ -548,6 +552,7 @@ export class ObservabilityErrorsProvider {
 			"latest(errorClass) AS 'errorClass',",
 			"latest(errorMessage) AS 'message',",
 			"latest(entityGuid) AS 'entityGuid',",
+			"latest(traceId) AS 'traceId',",
 			"count(guid) as 'length'",
 			"FROM JavaScriptError",
 			`WHERE stackHash IS NOT NULL AND entityGuid='${applicationGuid}'`,
@@ -565,6 +570,7 @@ export class ObservabilityErrorsProvider {
 			"latest(crashLocationClass) AS 'errorClass',",
 			"latest(crashMessage) AS 'message',",
 			"latest(entityGuid) AS 'entityGuid',",
+			"latest(traceId) AS 'traceId',",
 			"count(occurrenceId) as 'length'",
 			"FROM MobileCrash",
 			`WHERE entityGuid='${applicationGuid}'`,
@@ -582,6 +588,7 @@ export class ObservabilityErrorsProvider {
 			"latest(exceptionLocationClass) AS 'errorClass',",
 			"latest(exceptionMessage) AS 'message',",
 			"latest(entityGuid) AS 'entityGuid',",
+			"latest(traceId) AS 'traceId',",
 			"count(handledExceptionUuid) as 'length'",
 			"FROM MobileHandledException",
 			`WHERE entityGuid='${applicationGuid}'`,
@@ -1008,6 +1015,7 @@ export class ObservabilityErrorsProvider {
 				);
 				return {
 					entityId: metricResponse?.entityGuid,
+					traceId: metricResponse?.traceId,
 					occurrenceId: metricResponse?.traceId,
 					stackSourceMap: metricResponse?.stackSourceMap,
 					relatedRepos: mappedRepoEntities || [],
@@ -1167,6 +1175,7 @@ export class ObservabilityErrorsProvider {
 							if (result.length) {
 								errorGroup.releaseTag = result[0]["tags.releaseTag"];
 								errorGroup.commit = result[0]["tags.commit"];
+								errorGroup.traceId = errorGroup.traceId;
 							}
 						} catch (e) {
 							// This query is fragile with invalid nrql escape characters - Strings.escapeNrql

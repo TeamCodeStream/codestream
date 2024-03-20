@@ -518,7 +518,7 @@ export const MetaAssignee = styled.div`
 	}
 `;
 
-const LinkForExternalUrl = styled(Link)`
+export const LinkForExternalUrl = styled(Link)`
 	color: var(--text-color);
 	text-decoration: none !important;
 	&:hover {

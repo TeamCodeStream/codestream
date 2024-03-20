@@ -989,6 +989,7 @@ function listenForEvents(store) {
 		const props: OpenEditorViewNotification = {
 			panelLocation: ViewColumn.Active,
 			entityGuid: currentEntityGuid!,
+			traceId: params.traceId,
 			panel: "logs",
 			title: "Logs",
 			query: params.query,

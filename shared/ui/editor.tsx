@@ -25,6 +25,7 @@ function App() {
 						entityGuid={codestreamProps.entityGuid}
 						suppliedQuery={codestreamProps.query}
 						entryPoint={codestreamProps.entryPoint}
+						traceId={codestreamProps.traceId}
 						ide={codestreamProps.ide}
 					></APMLogSearchPanel>
 				)}

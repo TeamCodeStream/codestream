@@ -160,6 +160,7 @@ const Option = (props: OptionProps) => {
 export const APMLogSearchPanel = (props: {
 	entryPoint: string;
 	entityGuid?: string;
+	traceId?: string;
 	suppliedQuery?: string;
 	ide?: { name?: IdeNames };
 }) => {
@@ -188,6 +189,7 @@ export const APMLogSearchPanel = (props: {
 	const { height, ref } = useResizeDetector();
 	const trimmedListHeight: number = (height ?? 0) - (height ?? 0) * 0.08;
 	const disposables: Disposable[] = [];
+	const [currentTraceId, setTraceId] = useState<string | undefined>(props.traceId);
 
 	useDidMount(() => {
 		setIsInitializing(true);
@@ -195,6 +197,12 @@ export const APMLogSearchPanel = (props: {
 		disposables.push(
 			// only utilized for code searches so we can re-use search windows
 			HostApi.instance.on(OpenEditorViewNotificationType, e => {
+				setSelectSinceOptions(sinceOptions);
+				setSelectedSinceOption(defaultOption);
+				if (e.traceId) {
+					setTraceId(e.traceId);
+					fetchLogs(selectedEntityAccount.entityAccount, undefined, e.traceId);
+				}
 				if (e.query && e.query !== query) {
 					setQuery(e.query!);
 					fetchLogs(selectedEntityAccount.entityAccount, e.query);
@@ -203,12 +211,12 @@ export const APMLogSearchPanel = (props: {
 		);
 
 		const defaultOption: SelectedOption = {
-			value: "30 MINUTES AGO",
-			label: "30 Minutes Ago",
+			value: props.traceId || currentTraceId ? "7 DAYS AGO" : "30 MINUTES AGO",
+			label: props.traceId || currentTraceId ? "7 Days Ago" : "30 Minutes Ago",
 		};
 
 		const sinceOptions: SelectedOption[] = [
-			defaultOption,
+			{ value: "30 MINUTES AGO", label: "30 Minutes Ago" },
 			{ value: "60 MINUTES AGO", label: "60 Minutes Ago" },
 			{ value: "3 HOURS AGO", label: "3 Hours Ago" },
 			{ value: "8 HOURS AGO", label: "8 Hours Ago" },
@@ -216,6 +224,10 @@ export const APMLogSearchPanel = (props: {
 			{ value: "3 DAYS AGO", label: "3 Days Ago" },
 			{ value: "7 DAYS AGO", label: "7 Days Ago" },
 		];
+
+		if (props.traceId) {
+			setTraceId(props.traceId);
+		}
 
 		setSelectSinceOptions(sinceOptions);
 		setSelectedSinceOption(defaultOption);
@@ -228,8 +240,8 @@ export const APMLogSearchPanel = (props: {
 		const finishHandlingEntityAccount = (entityAccount: EntityAccount) => {
 			handleDefaultEntitySelection(entityAccount);
 
-			fetchFieldDefinitions(entityAccount);
-			fetchLogs(entityAccount, props.suppliedQuery);
+			fetchFieldDefinitions(entityAccount, props.traceId);
+			fetchLogs(entityAccount, props.suppliedQuery, props.traceId);
 		};
 
 		let entityAccounts: EntityAccount[] = [];
@@ -336,10 +348,11 @@ export const APMLogSearchPanel = (props: {
 		console.error(message);
 	};
 
-	const fetchFieldDefinitions = async (entityAccount: EntityAccount) => {
+	const fetchFieldDefinitions = async (entityAccount: EntityAccount, traceId?: string) => {
 		try {
 			const response = await HostApi.instance.send(GetLogFieldDefinitionsRequestType, {
 				entity: entityAccount,
+				traceId,
 			});
 
 			if (!response) {
@@ -438,7 +451,11 @@ export const APMLogSearchPanel = (props: {
 		}
 	};
 
-	const fetchLogs = async (entityAccount: EntityAccount, suppliedQuery?: string) => {
+	const fetchLogs = async (
+		entityAccount: EntityAccount,
+		suppliedQuery?: string,
+		traceId?: string
+	) => {
 		try {
 			setLogError(undefined);
 			setHasSearched(true);
@@ -447,6 +464,7 @@ export const APMLogSearchPanel = (props: {
 			setOriginalSearchResults([]);
 			setTotalItems(0);
 			setCurrentShowSurroundingIndex(undefined);
+			setTraceId(traceId);
 
 			const filterText = suppliedQuery || query;
 
@@ -459,9 +477,14 @@ export const APMLogSearchPanel = (props: {
 				GetLogsRequestType,
 				{
 					entity: entityAccount,
+					traceId,
 					filterText,
 					limit: "MAX",
-					since: selectedSinceOption?.value || "30 MINUTES AGO",
+					since: selectedSinceOption?.value
+						? selectedSinceOption.value
+						: traceId
+						? "7 DAYS AGO"
+						: "30 MINUTES AGO",
 					order: {
 						field: "timestamp",
 						direction: "DESC",
@@ -717,7 +740,9 @@ export const APMLogSearchPanel = (props: {
 							<Button
 								data-testid="query-btn"
 								className="query"
-								onClick={() => fetchLogs(selectedEntityAccount.entityAccount)}
+								onClick={() =>
+									fetchLogs(selectedEntityAccount.entityAccount, undefined, currentTraceId)
+								}
 								loading={isLoading}
 								tabIndex={4}
 							>

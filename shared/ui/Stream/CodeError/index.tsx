@@ -18,7 +18,7 @@ import React, {
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
 
-import { OpenUrlRequestType } from "@codestream/protocols/webview";
+import { OpenEditorViewNotificationType, OpenUrlRequestType } from "@codestream/protocols/webview";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { Loading } from "@codestream/webview/Container/Loading";
 import { Button } from "@codestream/webview/src/components/Button";
@@ -66,7 +66,9 @@ import {
 	BigTitle,
 	Header,
 	HeaderActions,
+	LinkForExternalUrl,
 	Meta,
+	MetaDescription,
 	MetaLabel,
 	MetaSection,
 	MetaSectionCollapsed,
@@ -1213,6 +1215,8 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			replies: props.collapsed
 				? emptyArray
 				: getThreadPosts(state, codeError.streamId, codeError.postId),
+			traceId: currentCodeErrorData.traceId,
+			ideName: state.ide.name,
 		};
 	}, shallowEqual);
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
@@ -1509,6 +1513,42 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 		}
 	};
 
+	const renderLogsIcon = () => {
+		return (
+			<Meta>
+				<LinkForExternalUrl href="#">
+					<MetaDescription>
+						<span
+							onClick={e => {
+								e.preventDefault();
+								openLogs();
+							}}
+							style={{ opacity: 0.5 }}
+						>
+							<span>
+								<Icon name="logs" />
+							</span>
+							View related logs
+						</span>
+					</MetaDescription>
+				</LinkForExternalUrl>
+			</Meta>
+		);
+	};
+
+	const openLogs = () => {
+		HostApi.instance.notify(OpenEditorViewNotificationType, {
+			panel: "logs",
+			title: "Logs",
+			entryPoint: "code_error",
+			entityGuid: props.errorGroup?.entityGuid,
+			traceId: currentCodeErrorData.traceId,
+			ide: {
+				name: derivedState.ideName || undefined,
+			},
+		});
+	};
+
 	const renderStackTrace = () => {
 		if (stackTrace?.length) {
 			return (
@@ -1676,6 +1716,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			)}
 
 			{renderStackTrace()}
+			{currentCodeErrorData.traceId && renderLogsIcon()}
 			{props.collapsed && renderMetaSectionCollapsed(props)}
 			{!props.collapsed &&
 				props &&
