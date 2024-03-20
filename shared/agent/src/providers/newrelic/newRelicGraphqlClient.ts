@@ -661,10 +661,10 @@ export class NewRelicGraphqlClient implements Disposable {
 	}
 
 	async runAsyncNrql<T>(accountId: number, nrql: string): Promise<T[]> {
-		const query = `query Nrql($accountId:Int!) {
+		const query = `query Nrql($accountId:Int!, $nrql:Nrql!) {
 			actor {
 				account(id: $accountId) {
-					nrql(query: "${nrql}", timeout: 1, async: true) {
+					nrql(query: $nrql, timeout: 1, async: true) {
 						results
 						queryProgress {
 							completed
@@ -687,7 +687,7 @@ export class NewRelicGraphqlClient implements Disposable {
 					};
 				};
 			};
-		}>(query, { accountId });
+		}>(query, { accountId, nrql });
 
 		//bail out early if, for some reason, we got something back that quickly
 		if (queryResults.actor.account.nrql.queryProgress.completed) {
@@ -696,10 +696,10 @@ export class NewRelicGraphqlClient implements Disposable {
 
 		const queryId = queryResults.actor.account.nrql.queryProgress.queryId;
 
-		const queryProgress = `query Nrql($accountId:Int!) {
+		const queryProgress = `query Nrql($accountId:Int!, $queryId:Id!) {
 			actor {
 			  account(id: $accountId) {
-				nrqlQueryProgress( queryId: "${queryId}") {
+				nrqlQueryProgress( queryId: $queryId) {
 				  results
 				  queryProgress {
 					completed
@@ -724,7 +724,7 @@ export class NewRelicGraphqlClient implements Disposable {
 						};
 					};
 				};
-			}>(queryProgress, { accountId });
+			}>(queryProgress, { accountId, queryId });
 
 			completed = queryProgressResults.actor.account.nrqlQueryProgress.queryProgress.completed;
 			results = queryProgressResults.actor.account.nrqlQueryProgress.results;
