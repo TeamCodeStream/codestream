@@ -486,6 +486,10 @@ export const APMLogSearchPanel = (props: {
 					handleError(
 						"Please check your syntax and try again. Note that you do not have to escape special characters. We'll do that for you!"
 					);
+				} else if (response?.error?.error?.message?.includes("NRDB:1101002")) {
+					handleError(
+						"Unfortunately, this query has timed out. Please try a shorter time range, more specific search criteria, or navigate to New Relic One to run this query."
+					);
 				} else {
 					handleError(response.error?.error?.message ?? response.error?.error?.type);
 				}
