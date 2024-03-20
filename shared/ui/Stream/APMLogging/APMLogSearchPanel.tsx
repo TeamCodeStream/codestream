@@ -186,7 +186,7 @@ export const APMLogSearchPanel = (props: {
 
 	const [hasPartitions, setHasPartitions] = useState<boolean>(false);
 	const [selectPartitionOptions, setSelectPartitionOptions] = useState<SelectedOption[]>([]);
-	const [selectedPartition, setSelectedPartition] = useState<SelectedOption[]>([]);
+	const [selectedPartitions, setSelectedPartitions] = useState<SelectedOption[]>([]);
 
 	const [originalSearchResults, setOriginalSearchResults] = useState<LogResult[]>([]);
 	const [searchResults, setSearchResults] = useState<LogResult[]>([]);
@@ -496,7 +496,7 @@ export const APMLogSearchPanel = (props: {
 				setHasPartitions(true);
 			}
 
-			setSelectedPartition([defaultPartition]);
+			setSelectedPartitions([defaultPartition]);
 		} catch (ex) {
 			handleError(ex);
 		}
@@ -524,11 +524,11 @@ export const APMLogSearchPanel = (props: {
 				return;
 			}
 
-			const selectedPartitions = defaultPartition
+			const partitions = defaultPartition
 				? [defaultPartition]
-				: selectedPartition.map(p => p.value);
+				: selectedPartitions.map(p => p.value);
 
-			if (selectedPartitions.length === 0) {
+			if (partitions.length === 0) {
 				handleError("Please select at least one partition from the drop down before searching.");
 				return;
 			}
@@ -539,7 +539,7 @@ export const APMLogSearchPanel = (props: {
 					entity: entityAccount,
 					traceId,
 					filterText,
-					partitions: selectedPartitions,
+					partitions: partitions,
 					limit: "MAX",
 					since: selectedSinceOption?.value ?? "30 MINUTES AGO",
 					order: {
@@ -706,7 +706,10 @@ export const APMLogSearchPanel = (props: {
 				const isShowSurrounding = r?.isShowSurrounding ?? false;
 				const entityGuid = selectedEntityAccount?.value;
 				const accountId = parseId(entityGuid);
-				const enableShowSurrounding = queriedWithNonEmptyString && !currentShowSurroundingIndex;
+				const enableShowSurrounding =
+					queriedWithNonEmptyString &&
+					!currentShowSurroundingIndex &&
+					selectedPartitions.length === 1;
 
 				return (
 					<APMLogRow
@@ -779,11 +782,11 @@ export const APMLogSearchPanel = (props: {
 									id="input-partition"
 									name="partition"
 									classNamePrefix="react-select"
-									value={selectedPartition}
+									value={selectedPartitions}
 									placeholder="Partition"
 									isMulti
 									options={selectPartitionOptions}
-									onChange={values => setSelectedPartition(values)}
+									onChange={values => setSelectedPartitions(values)}
 									tabIndex={2}
 								/>
 							</div>
