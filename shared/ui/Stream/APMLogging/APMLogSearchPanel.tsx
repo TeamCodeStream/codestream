@@ -2,6 +2,7 @@ import {
 	EntityAccount,
 	GetLogFieldDefinitionsRequestType,
 	GetLoggingEntitiesRequestType,
+	GetLoggingPartitionsRequestType,
 	GetLogsRequestType,
 	GetObservabilityEntityByGuidRequestType,
 	GetObservabilityReposRequestType,
@@ -49,6 +50,12 @@ const LogFilterBarContainer = styled.div`
 		}
 
 		.log-filter-bar-since {
+			padding-left: 10px;
+			flex: 2;
+			justify-content: flex-end;
+		}
+
+		.log-filter-bar-partition {
 			padding-left: 10px;
 			flex: 2;
 			justify-content: flex-end;
@@ -177,6 +184,10 @@ export const APMLogSearchPanel = (props: {
 		undefined
 	);
 
+	const [hasPartitions, setHasPartitions] = useState<boolean>(false);
+	const [selectPartitionOptions, setSelectPartitionOptions] = useState<SelectedOption[]>([]);
+	const [selectedPartition, setSelectedPartition] = useState<SelectedOption[]>([]);
+
 	const [originalSearchResults, setOriginalSearchResults] = useState<LogResult[]>([]);
 	const [searchResults, setSearchResults] = useState<LogResult[]>([]);
 
@@ -240,8 +251,8 @@ export const APMLogSearchPanel = (props: {
 		const finishHandlingEntityAccount = (entityAccount: EntityAccount) => {
 			handleDefaultEntitySelection(entityAccount);
 
-			fetchFieldDefinitions(entityAccount, props.traceId);
-			fetchLogs(entityAccount, props.suppliedQuery, props.traceId);
+			fetchFieldDefinitions(entityAccount);
+			fetchLogs(entityAccount, props.suppliedQuery);
 		};
 
 		let entityAccounts: EntityAccount[] = [];
@@ -451,10 +462,51 @@ export const APMLogSearchPanel = (props: {
 		}
 	};
 
+	const fetchPartitions = async (entityAccount: EntityAccount) => {
+		try {
+			const response = await HostApi.instance.send(GetLoggingPartitionsRequestType, {
+				accountId: entityAccount.accountId,
+			});
+
+			if (!response) {
+				handleError(
+					"An unexpected error occurred while fetching your available log partitions; please contact support."
+				);
+				return;
+			}
+
+			if (isNRErrorResponse(response?.error)) {
+				handleError(response.error?.error?.message ?? response.error?.error?.type);
+				return;
+			}
+
+			// partition query doesn't bring back the default partition, so we'll add it here
+			const defaultPartition = { label: "Log", value: "Log" };
+
+			if (response.partitions && response.partitions.length > 0) {
+				const partitionOptions = response.partitions.map(p => {
+					return {
+						label: p,
+						value: p,
+					};
+				});
+
+				partitionOptions.unshift(defaultPartition);
+				setSelectPartitionOptions(partitionOptions);
+				setHasPartitions(true);
+			}
+
+			setSelectedPartition([defaultPartition]);
+		} catch (ex) {
+			handleError(ex);
+		}
+	};
+
 	const fetchLogs = async (
 		entityAccount: EntityAccount,
 		suppliedQuery?: string,
-		traceId?: string
+        traceId?: string,
+		defaultPartition?: string
 	) => {
 		try {
 			setLogError(undefined);
@@ -464,12 +516,20 @@ export const APMLogSearchPanel = (props: {
 			setOriginalSearchResults([]);
 			setTotalItems(0);
 			setCurrentShowSurroundingIndex(undefined);
-			setTraceId(traceId);
 
 			const filterText = suppliedQuery || query;
 
 			if (!entityAccount) {
 				handleError("Please select a service from the drop down before searching.");
+				return;
+			}
+
+			const selectedPartitions = defaultPartition
+				? [defaultPartition]
+				: selectedPartition.map(p => p.value);
+
+			if (selectedPartitions.length === 0) {
+				handleError("Please select at least one partition from the drop down before searching.");
 				return;
 			}
 
@@ -479,12 +539,9 @@ export const APMLogSearchPanel = (props: {
 					entity: entityAccount,
 					traceId,
 					filterText,
+					partitions: selectedPartitions,
 					limit: "MAX",
-					since: selectedSinceOption?.value
-						? selectedSinceOption.value
-						: traceId
-						? "7 DAYS AGO"
-						: "30 MINUTES AGO",
+					since: selectedSinceOption?.value ?? "30 MINUTES AGO",
 					order: {
 						field: "timestamp",
 						direction: "DESC",
@@ -715,6 +772,22 @@ export const APMLogSearchPanel = (props: {
 								tabIndex={2}
 							/>
 						</div>
+
+						{hasPartitions && (
+							<div className="log-filter-bar-partition">
+								<Select
+									id="input-partition"
+									name="partition"
+									classNamePrefix="react-select"
+									value={selectedPartition}
+									placeholder="Partition"
+									isMulti
+									options={selectPartitionOptions}
+									onChange={values => setSelectedPartition(values)}
+									tabIndex={2}
+								/>
+							</div>
+						)}
 					</div>
 
 					<div className="log-filter-bar-row">

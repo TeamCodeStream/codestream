@@ -2686,6 +2686,7 @@ export const GetLoggingEntitiesRequestType = new RequestType<
 export interface GetLogsRequest {
 	entity: EntityAccount;
 	traceId?: string;
+	partitions: string[];
 	filterText: string;
 	order: {
 		field: string;
@@ -2755,6 +2756,22 @@ export const GetLogFieldDefinitionsRequestType = new RequestType<
 	void,
 	void
 >("codestream/newrelic/logs/fieldDefinitions");
+
+export interface GetLoggingPartitionsRequest {
+	accountId: number;
+}
+
+export interface GetLoggingPartitionsResponse {
+	partitions?: string[];
+	error?: NRErrorResponse;
+}
+
+export const GetLoggingPartitionsRequestType = new RequestType<
+	GetLoggingPartitionsRequest,
+	GetLoggingPartitionsResponse,
+	void,
+	void
+>("codestream/newrelic/logs/partitions");
 
 export interface SaveRecentQueryRequest {
 	accountId?: number;

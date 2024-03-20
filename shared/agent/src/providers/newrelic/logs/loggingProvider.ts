@@ -7,6 +7,9 @@ import {
 	GetLogFieldDefinitionsResponse,
 	GetLoggingEntitiesRequestType,
 	GetLoggingEntitiesResponse,
+	GetLoggingPartitionsRequest,
+	GetLoggingPartitionsRequestType,
+	GetLoggingPartitionsResponse,
 	GetLogsRequest,
 	GetLogsRequestType,
 	GetLogsResponse,
@@ -45,6 +48,59 @@ export class LoggingProvider {
 	 */
 	private escapeSearchTerm(searchTerm: string): string {
 		return searchTerm.replace("\\", "\\\\\\\\").replace("'", "\\'");
+	}
+
+	@lspHandler(GetLoggingPartitionsRequestType)
+	@log()
+	async getLoggingPartitions(
+		request: GetLoggingPartitionsRequest
+	): Promise<GetLoggingPartitionsResponse> {
+		const { accountId } = { ...request };
+
+		try {
+			const query = `query LogDataPartitionRules($accountId: Int!) {
+				actor {
+				  account(id: $accountId) {
+					logConfigurations {
+					  dataPartitionRules {
+						deleted
+						enabled
+						targetDataPartition
+					  }
+					}
+				  }
+				}
+			  }`;
+
+			const queryResults = await this.graphqlClient.query<{
+				actor: {
+					account: {
+						logConfigurations: {
+							dataPartitionRules: {
+								deleted: boolean;
+								enabled: boolean;
+								targetDataPartition: string;
+							}[];
+						};
+					};
+				};
+			}>(query, { accountId });
+
+			const partitions = queryResults.actor.account.logConfigurations.dataPartitionRules
+				//.filter(dpr => dpr.enabled && !dpr.deleted)
+				.map(dpr => dpr.targetDataPartition)
+				.sort();
+
+			return {
+				partitions,
+			};
+		} catch (ex) {
+			ContextLogger.warn("getLoggingPartitions failure", {
+				request,
+				error: ex,
+			});
+			return { error: mapNRErrorResponse(ex) };
+		}
 	}
 
 	@lspHandler(GetLoggingEntitiesRequestType)
@@ -132,7 +188,7 @@ export class LoggingProvider {
 		const traceId = request.traceId;
 
 		try {
-			const { since, limit, order, filterText } = {
+			const { since, limit, order, filterText, partitions } = {
 				...request,
 			};
 
@@ -141,6 +197,7 @@ export class LoggingProvider {
 			const querySince = `SINCE ${since}`;
 			const queryOrder = `ORDER BY ${order.field} ${order.direction}`;
 			const queryLimit = `LIMIT ${limit}`;
+			const queryFrom = `FROM ${partitions.join(",")}`;
 
 			//filtering is optional
 			var searchTerms = filterText
@@ -175,7 +232,7 @@ export class LoggingProvider {
 				queryWhere += ` AND trace.id = '${traceId}`;
 			}
 
-			const query = `SELECT * FROM Log ${queryWhere} ${querySince} ${queryOrder} ${queryLimit}`;
+			const query = `SELECT * ${queryFrom} ${queryWhere} ${querySince} ${queryOrder} ${queryLimit}`;
 
 			ContextLogger.log(`getLogs query: ${query}`);
 
