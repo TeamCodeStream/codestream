@@ -2737,7 +2737,6 @@ export const GetSurroundingLogsRequestType = new RequestType<
 
 export interface GetLogFieldDefinitionsRequest {
 	entity: EntityAccount;
-	traceId?: string;
 }
 
 export interface LogFieldDefinition {

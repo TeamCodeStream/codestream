@@ -229,7 +229,7 @@ export class LoggingProvider {
 			}
 
 			if (traceId) {
-				queryWhere += ` AND trace.id = '${traceId}`;
+				queryWhere += ` AND trace.id = '${traceId}'`;
 			}
 
 			const query = `SELECT * ${queryFrom} ${queryWhere} ${querySince} ${queryOrder} ${queryLimit}`;
@@ -365,12 +365,9 @@ export class LoggingProvider {
 	): Promise<GetLogFieldDefinitionsResponse> {
 		try {
 			const accountId = request.entity.accountId;
-			const traceId = request.traceId;
 			let queryWhere = this.entityLogAttributeMapper.getWhereClauseForEntity(request.entity);
 			const query = `SELECT keyset() FROM Log WHERE ${queryWhere}`;
-			if (traceId) {
-				queryWhere += ` AND trace.id = '${traceId}'"`;
-			}
+
 			let logDefinitions = await this.graphqlClient.runNrql<LogFieldDefinition>(
 				accountId,
 				query,

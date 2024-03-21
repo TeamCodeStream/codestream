@@ -16,7 +16,7 @@ import {
 } from "@codestream/protocols/agent";
 import { IdeNames, OpenEditorViewNotificationType } from "@codestream/protocols/webview";
 import { parseId } from "@codestream/webview/utilities/newRelic";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import Select, { components, OptionProps } from "react-select";
 import { AsyncPaginate } from "react-select-async-paginate";
@@ -33,6 +33,7 @@ import { Disposable } from "@codestream/webview/utils";
 import { isEmpty as _isEmpty } from "lodash";
 import { APMLogTableLoading } from "./APMLogTableLoading";
 import { TableWindow } from "../TableWindow";
+import { debounce } from "lodash-es";
 
 interface SelectedOption {
 	value: string;
@@ -146,8 +147,7 @@ const MessageHeader = styled.div`
 
 const Option = (props: OptionProps) => {
 	let subtleLabel = `${props.data?.entityTypeDescription} | `;
-	subtleLabel += props.data?.entityAccount.type ? `${props.data?.entityAccount.type} | ` : "";
-	subtleLabel += props.data?.entityAccount.entityGuid;
+	subtleLabel += props.data?.entityAccount.type ? `${props.data?.entityAccount.type}` : "";
 	subtleLabel = ` (${subtleLabel})`;
 
 	const children = (
@@ -175,7 +175,9 @@ export const APMLogSearchPanel = (props: {
 	const [isInitializing, setIsInitializing] = useState<boolean>();
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [query, setQuery] = useState<string>("");
+	const [searchTerm, setSearchTerm] = useState<string>("");
 	const [hasSearched, setHasSearched] = useState<boolean>(false);
+
 	const [selectedSinceOption, setSelectedSinceOption] = useState<SelectedOption | undefined>(
 		undefined
 	);
@@ -202,57 +204,99 @@ export const APMLogSearchPanel = (props: {
 	const disposables: Disposable[] = [];
 	const [currentTraceId, setTraceId] = useState<string | undefined>(props.traceId);
 
+	const defaultSinceOption: SelectedOption = {
+		value: "30 MINUTES AGO",
+		label: "30 Minutes Ago",
+	};
+
+	const maxSinceOption: SelectedOption = {
+		value: "7 DAYS AGO",
+		label: "7 Days Ago",
+	};
+
+	const sinceOptions: SelectedOption[] = [
+		{ value: "30 MINUTES AGO", label: "30 Minutes Ago" },
+		{ value: "60 MINUTES AGO", label: "60 Minutes Ago" },
+		{ value: "3 HOURS AGO", label: "3 Hours Ago" },
+		{ value: "8 HOURS AGO", label: "8 Hours Ago" },
+		{ value: "1 DAY AGO", label: "1 Day Ago" },
+		{ value: "3 DAYS AGO", label: "3 Days Ago" },
+		{ value: "7 DAYS AGO", label: "7 Days Ago" },
+	];
+
+	const defaultPartition: SelectedOption = {
+		value: "Log",
+		label: "Log",
+	};
+
+	useEffect(() => {
+		const debouncedSave = debounce(nextValue => {
+			setQuery(nextValue);
+		}, 500);
+
+		debouncedSave(searchTerm);
+	}, [searchTerm]);
+
+	useEffect(() => {
+		if (isInitializing) {
+			return;
+		}
+
+		fetchLogs();
+	}, [currentTraceId, query, selectedEntityAccount, selectedPartitions, selectedSinceOption]);
+
 	useDidMount(() => {
 		setIsInitializing(true);
 
 		disposables.push(
-			// only utilized for code searches so we can re-use search windows
 			HostApi.instance.on(OpenEditorViewNotificationType, e => {
-				setSelectSinceOptions(sinceOptions);
-				setSelectedSinceOption(defaultOption);
-				if (e.traceId) {
+				if (e.traceId && e.traceId !== currentTraceId) {
 					setTraceId(e.traceId);
-					fetchLogs(selectedEntityAccount.entityAccount, undefined, e.traceId);
+					setSelectedSinceOption(maxSinceOption);
 				}
+
 				if (e.query && e.query !== query) {
-					setQuery(e.query!);
-					fetchLogs(selectedEntityAccount.entityAccount, e.query);
+					setSearchTerm(e.query!);
 				}
 			})
 		);
-
-		const defaultOption: SelectedOption = {
-			value: props.traceId || currentTraceId ? "7 DAYS AGO" : "30 MINUTES AGO",
-			label: props.traceId || currentTraceId ? "7 Days Ago" : "30 Minutes Ago",
-		};
-
-		const sinceOptions: SelectedOption[] = [
-			{ value: "30 MINUTES AGO", label: "30 Minutes Ago" },
-			{ value: "60 MINUTES AGO", label: "60 Minutes Ago" },
-			{ value: "3 HOURS AGO", label: "3 Hours Ago" },
-			{ value: "8 HOURS AGO", label: "8 Hours Ago" },
-			{ value: "1 DAY AGO", label: "1 Day Ago" },
-			{ value: "3 DAYS AGO", label: "3 Days Ago" },
-			{ value: "7 DAYS AGO", label: "7 Days Ago" },
-		];
 
 		if (props.traceId) {
 			setTraceId(props.traceId);
 		}
 
 		setSelectSinceOptions(sinceOptions);
-		setSelectedSinceOption(defaultOption);
+		// if we have a traceId, we'll default to 7 days ago
+		props.traceId
+			? setSelectedSinceOption(maxSinceOption)
+			: setSelectedSinceOption(defaultSinceOption);
+
+		setSelectedPartitions([defaultPartition]);
 
 		// possible there is no searchTerm
 		if (props.suppliedQuery) {
-			setQuery(props.suppliedQuery);
+			setSearchTerm(props.suppliedQuery);
 		}
 
 		const finishHandlingEntityAccount = (entityAccount: EntityAccount) => {
-			handleDefaultEntitySelection(entityAccount);
+			handleSelectDropdownOption({
+				entityGuid: entityAccount.entityGuid,
+				accountName: entityAccount.accountName,
+				entityTypeDescription: entityAccount.entityTypeDescription,
+				entityAccount: entityAccount,
+			});
 
 			fetchFieldDefinitions(entityAccount);
-			fetchLogs(entityAccount, props.suppliedQuery);
+			fetchPartitions(entityAccount);
+
+			// not trusting state to be fully set here, so we'll pass everything in as overrides
+			fetchLogs({
+				overrideEntityAccount: entityAccount,
+				overrideQuery: props.suppliedQuery,
+				overrideTraceId: props.traceId,
+				overridePartitions: [defaultPartition],
+				overrideSince: props.traceId ? maxSinceOption : defaultSinceOption,
+			});
 		};
 
 		let entityAccounts: EntityAccount[] = [];
@@ -300,42 +344,14 @@ export const APMLogSearchPanel = (props: {
 		};
 	});
 
-	const handleDefaultEntitySelection = (entityAccount: EntityAccount) => {
-		if (!entityAccount) {
-			setSelectedEntityAccount(null);
-			return;
-		}
-
-		let subtleLabel = `${entityAccount.entityTypeDescription} | `;
-		subtleLabel += entityAccount.type ? `${entityAccount.type} | ` : "";
-		subtleLabel += entityAccount.entityGuid;
-		subtleLabel = ` (${subtleLabel})`;
-
-		const customLabel = (
-			<>
-				<span>Service: {entityAccount.entityName}</span>
-				<span className="subtle">{subtleLabel}</span>
-			</>
-		);
-
-		setSelectedEntityAccount({
-			value: entityAccount.entityGuid,
-			label: customLabel,
-			accountName: entityAccount.accountName,
-			entityTypeDescription: entityAccount.entityTypeDescription,
-			entityAccount: entityAccount,
-		});
-	};
-
-	const handleSelectDropdownOption = (optionProps: OptionProps) => {
+	const handleSelectDropdownOption = (optionProps?: OptionProps) => {
 		if (!optionProps) {
-			setSelectedEntityAccount(null);
+			setSelectedEntityAccount(undefined);
 			return;
 		}
 
 		let subtleLabel = `${optionProps.entityTypeDescription} | `;
-		subtleLabel += optionProps.entityAccount.type ? `${optionProps.entityAccount.type} | ` : "";
-		subtleLabel += optionProps.entityAccount.entityGuid;
+		subtleLabel += optionProps.entityAccount.type ? `${optionProps.entityAccount.type}` : "";
 		subtleLabel = ` (${subtleLabel})`;
 
 		const customLabel = (
@@ -359,11 +375,10 @@ export const APMLogSearchPanel = (props: {
 		console.error(message);
 	};
 
-	const fetchFieldDefinitions = async (entityAccount: EntityAccount, traceId?: string) => {
+	const fetchFieldDefinitions = async (entityAccount: EntityAccount) => {
 		try {
 			const response = await HostApi.instance.send(GetLogFieldDefinitionsRequestType, {
 				entity: entityAccount,
-				traceId,
 			});
 
 			if (!response) {
@@ -389,7 +404,7 @@ export const APMLogSearchPanel = (props: {
 	const checkKeyPress = (e: { keyCode: Number }) => {
 		const { keyCode } = e;
 		if (keyCode === 13) {
-			fetchLogs(selectedEntityAccount.entityAccount);
+			fetchLogs();
 		}
 	};
 
@@ -502,12 +517,13 @@ export const APMLogSearchPanel = (props: {
 		}
 	};
 
-	const fetchLogs = async (
-		entityAccount: EntityAccount,
-		suppliedQuery?: string,
-        traceId?: string,
-		defaultPartition?: string
-	) => {
+	const fetchLogs = async (options?: {
+		overrideEntityAccount?: EntityAccount;
+		overrideQuery?: string;
+		overrideTraceId?: string;
+		overridePartitions?: SelectedOption[];
+		overrideSince?: SelectedOption;
+	}) => {
 		try {
 			setLogError(undefined);
 			setHasSearched(true);
@@ -517,31 +533,37 @@ export const APMLogSearchPanel = (props: {
 			setTotalItems(0);
 			setCurrentShowSurroundingIndex(undefined);
 
-			const filterText = suppliedQuery || query;
+			const filterText = options?.overrideQuery || query;
+			const entityAccount = options?.overrideEntityAccount || selectedEntityAccount?.entityAccount;
 
 			if (!entityAccount) {
 				handleError("Please select a service from the drop down before searching.");
 				return;
 			}
 
-			const partitions = defaultPartition
-				? [defaultPartition]
-				: selectedPartitions.map(p => p.value);
+			const partitions =
+				options?.overridePartitions?.length ?? 0 > 0
+					? options?.overridePartitions!
+					: selectedPartitions;
 
+			// you can clear the list entirely, but we must have at least one
 			if (partitions.length === 0) {
 				handleError("Please select at least one partition from the drop down before searching.");
 				return;
 			}
 
+			const since = options?.overrideSince?.value || selectedSinceOption?.value || "30 MINUTES AGO";
+			const traceId = options?.overrideTraceId || currentTraceId;
+
 			const response = await HostApi.instance.send(
 				GetLogsRequestType,
 				{
 					entity: entityAccount,
-					traceId,
+					traceId: traceId,
 					filterText,
-					partitions: partitions,
+					partitions: partitions.map(p => p.value),
 					limit: "MAX",
-					since: selectedSinceOption?.value ?? "30 MINUTES AGO",
+					since: since,
 					order: {
 						field: "timestamp",
 						direction: "DESC",
@@ -787,7 +809,7 @@ export const APMLogSearchPanel = (props: {
 									isMulti
 									options={selectPartitionOptions}
 									onChange={values => setSelectedPartitions(values)}
-									tabIndex={2}
+									tabIndex={3}
 								/>
 							</div>
 						)}
@@ -799,15 +821,15 @@ export const APMLogSearchPanel = (props: {
 							<input
 								data-testid="query-text"
 								name="q"
-								value={query}
+								value={searchTerm}
 								className="input-text control"
 								type="text"
 								onChange={e => {
-									setQuery(e.target.value);
+									setSearchTerm(e.target.value);
 								}}
 								onKeyDown={checkKeyPress}
 								placeholder="Query logs in the selected service"
-								tabIndex={3}
+								tabIndex={hasPartitions ? 4 : 3}
 								autoFocus
 							/>
 						</div>
@@ -816,11 +838,9 @@ export const APMLogSearchPanel = (props: {
 							<Button
 								data-testid="query-btn"
 								className="query"
-								onClick={() =>
-									fetchLogs(selectedEntityAccount.entityAccount, undefined, currentTraceId)
-								}
+								onClick={() => fetchLogs()}
 								loading={isLoading}
-								tabIndex={4}
+								tabIndex={hasPartitions ? 5 : 4}
 							>
 								Query Logs
 							</Button>
@@ -907,7 +927,7 @@ export const APMLogSearchPanel = (props: {
 						</div>
 					)}
 
-					{logError && (
+					{logError && !isInitializing && (
 						<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
 							<h4>Uh oh, we've encounted an error!</h4>
 							<span>{logError}</span>
