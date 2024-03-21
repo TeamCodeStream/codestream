@@ -28,6 +28,7 @@ import { ObservabilityLoadingVulnerabilities } from "@codestream/webview/Stream/
 import { setUserPreference } from "./actions";
 import { useAppSelector, useAppDispatch } from "../utilities/hooks";
 import { CodeStreamState } from "@codestream/webview/store";
+import { setPreferences } from "../store/preferences/actions";
 
 interface Props {
 	currentRepoId: string;
@@ -276,11 +277,6 @@ function LibraryRow(props: { accountId: number; entityGuid: string; library: Lib
 }
 
 export const SecurityIssuesWrapper = React.memo((props: Props) => {
-	const [expanded, setExpanded] = useState<boolean>(false);
-	const [selectedItems, setSelectedItems] = useState<RiskSeverity[]>(["CRITICAL", "HIGH"]);
-	const [rows, setRows] = useState<number | undefined | "all">(undefined);
-	const dispatch = useAppDispatch();
-
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 
@@ -288,8 +284,15 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 
 		return {
 			securityIssuesDropdownIsExpanded,
+			preferences,
 		};
 	});
+	const [expanded, setExpanded] = useState<boolean>(false);
+	const [selectedItems, setSelectedItems] = useState<RiskSeverity[]>(
+		derivedState.preferences.vulnerabilitySeverityFilter || ["CRITICAL", "HIGH"]
+	);
+	const [rows, setRows] = useState<number | undefined | "all">(undefined);
+	const dispatch = useAppDispatch();
 
 	const { loading, data, error } = useRequestType<
 		typeof GetLibraryDetailsType,
@@ -309,8 +312,18 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 	function handleSelect(severity: RiskSeverity) {
 		if (selectedItems.includes(severity)) {
 			setSelectedItems(selectedItems.filter(_ => _ !== severity));
+			dispatch(
+				setPreferences({
+					vulnerabilitySeverityFilter: selectedItems.filter(_ => _ !== severity),
+				})
+			);
 		} else {
 			setSelectedItems([...selectedItems, severity]);
+			dispatch(
+				setPreferences({
+					vulnerabilitySeverityFilter: [...selectedItems, severity],
+				})
+			);
 		}
 	}
 
