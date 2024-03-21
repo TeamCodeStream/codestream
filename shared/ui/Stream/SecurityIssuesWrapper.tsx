@@ -282,14 +282,16 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 
 		const securityIssuesDropdownIsExpanded = preferences?.securityIssuesDropdownIsExpanded ?? false;
 
+		const vulnerabilitySeverityFilter = preferences?.vulnerabilitySeverityFilter;
+
 		return {
 			securityIssuesDropdownIsExpanded,
-			preferences,
+			vulnerabilitySeverityFilter,
 		};
 	});
 	const [expanded, setExpanded] = useState<boolean>(false);
 	const [selectedItems, setSelectedItems] = useState<RiskSeverity[]>(
-		derivedState.preferences.vulnerabilitySeverityFilter || ["CRITICAL", "HIGH"]
+		derivedState.vulnerabilitySeverityFilter || ["CRITICAL", "HIGH"]
 	);
 	const [rows, setRows] = useState<number | undefined | "all">(undefined);
 	const dispatch = useAppDispatch();
@@ -310,21 +312,18 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 	);
 
 	function handleSelect(severity: RiskSeverity) {
+		let itemsToSelect;
 		if (selectedItems.includes(severity)) {
-			setSelectedItems(selectedItems.filter(_ => _ !== severity));
-			dispatch(
-				setPreferences({
-					vulnerabilitySeverityFilter: selectedItems.filter(_ => _ !== severity),
-				})
-			);
+			itemsToSelect = selectedItems.filter(_ => _ !== severity);
 		} else {
-			setSelectedItems([...selectedItems, severity]);
-			dispatch(
-				setPreferences({
-					vulnerabilitySeverityFilter: [...selectedItems, severity],
-				})
-			);
+			itemsToSelect = [...selectedItems, severity];
 		}
+		setSelectedItems(itemsToSelect);
+		dispatch(
+			setPreferences({
+				vulnerabilitySeverityFilter: itemsToSelect,
+			})
+		);
 	}
 
 	const additional = data ? data.totalRecords - data.recordCount : undefined;
