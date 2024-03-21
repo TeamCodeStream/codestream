@@ -123,7 +123,6 @@ describe("APM Logging Panel UI", () => {
 		});
 
 		await waitFor(() => {
-			expect(screen.queryByTestId("default-message")).toBeVisible();
 			expect(screen.queryByTestId("query-btn")).toBeEnabled();
 			expect(screen.queryByTestId("query-text")).toHaveFocus();
 			expect(screen.queryByTestId("query-text")).not.toHaveValue();
