@@ -6,6 +6,7 @@ import com.codestream.extensions.selectionOrCurrentLine
 import com.codestream.protocols.webview.LogsNotifications
 import com.codestream.sessionService
 import com.codestream.webViewService
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.util.DocumentUtil
@@ -44,5 +45,9 @@ class LogSearch: DumbAwareAction() {
             }
         }
         e.project?.webViewService?.postNotification(LogsNotifications.Search(query))
+    }
+
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.EDT
     }
 }

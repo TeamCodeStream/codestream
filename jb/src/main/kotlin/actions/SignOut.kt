@@ -5,6 +5,7 @@ import com.codestream.appDispatcher
 import com.codestream.authentication.CSLogoutReason
 import com.codestream.authenticationService
 import com.codestream.webViewService
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.DumbAwareAction
 import kotlinx.coroutines.launch
@@ -19,5 +20,9 @@ class SignOut : DumbAwareAction() {
                 }
             }
         }
+    }
+
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.EDT
     }
 }
