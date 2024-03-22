@@ -716,7 +716,6 @@ function listenForEvents(store) {
 							lineno?: string;
 							commitSha?: string;
 							releaseTag?: string;
-							traceId?: string;
 						}>;
 
 						if (!definedQuery.query.spanId || !definedQuery.query.accountId) break;
@@ -754,7 +753,6 @@ function listenForEvents(store) {
 								lineNumber: definedQuery.query.lineno,
 								commitSha: definedQuery.query.commitSha,
 								releaseTag: definedQuery.query.releaseTag,
-								traceId: definedQuery.query.traceId,
 							})
 						);
 

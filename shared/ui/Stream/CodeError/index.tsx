@@ -1215,7 +1215,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			replies: props.collapsed
 				? emptyArray
 				: getThreadPosts(state, codeError.streamId, codeError.postId),
-			traceId: currentCodeErrorData.traceId,
+			traceId: currentCodeErrorData?.traceId,
 			ideName: state.ide.name,
 		};
 	}, shallowEqual);
@@ -1542,7 +1542,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			title: "Logs",
 			entryPoint: "code_error",
 			entityGuid: props.errorGroup?.entityGuid,
-			traceId: currentCodeErrorData.traceId,
+			traceId: currentCodeErrorData?.traceId,
 			ide: {
 				name: derivedState.ideName || undefined,
 			},
@@ -1716,7 +1716,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			)}
 
 			{renderStackTrace()}
-			{currentCodeErrorData.traceId && renderLogsIcon()}
+			{currentCodeErrorData?.traceId && renderLogsIcon()}
 			{props.collapsed && renderMetaSectionCollapsed(props)}
 			{!props.collapsed &&
 				props &&
