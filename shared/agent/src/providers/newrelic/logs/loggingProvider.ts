@@ -55,7 +55,7 @@ export class LoggingProvider {
 	async getLoggingPartitions(
 		request: GetLoggingPartitionsRequest
 	): Promise<GetLoggingPartitionsResponse> {
-		const { accountId } = { ...request };
+		const accountId = request.accountId;
 
 		try {
 			const query = `query LogDataPartitionRules($accountId: Int!) {

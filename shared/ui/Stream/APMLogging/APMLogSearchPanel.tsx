@@ -164,6 +164,16 @@ const Option = (props: OptionProps) => {
 	return <components.Option {...props} children={children} />;
 };
 
+const sinceOptions: SelectedOption[] = [
+	{ value: "30 MINUTES AGO", label: "30 Minutes Ago" },
+	{ value: "60 MINUTES AGO", label: "60 Minutes Ago" },
+	{ value: "3 HOURS AGO", label: "3 Hours Ago" },
+	{ value: "8 HOURS AGO", label: "8 Hours Ago" },
+	{ value: "1 DAY AGO", label: "1 Day Ago" },
+	{ value: "3 DAYS AGO", label: "3 Days Ago" },
+	{ value: "7 DAYS AGO", label: "7 Days Ago" },
+];
+
 export const APMLogSearchPanel = (props: {
 	entryPoint: string;
 	entityGuid?: string;
@@ -181,7 +191,6 @@ export const APMLogSearchPanel = (props: {
 	const [selectedSinceOption, setSelectedSinceOption] = useState<SelectedOption | undefined>(
 		undefined
 	);
-	const [selectSinceOptions, setSelectSinceOptions] = useState<SelectedOption[]>([]);
 	const [selectedEntityAccount, setSelectedEntityAccount] = useState<OptionProps | undefined>(
 		undefined
 	);
@@ -213,16 +222,6 @@ export const APMLogSearchPanel = (props: {
 		value: "7 DAYS AGO",
 		label: "7 Days Ago",
 	};
-
-	const sinceOptions: SelectedOption[] = [
-		{ value: "30 MINUTES AGO", label: "30 Minutes Ago" },
-		{ value: "60 MINUTES AGO", label: "60 Minutes Ago" },
-		{ value: "3 HOURS AGO", label: "3 Hours Ago" },
-		{ value: "8 HOURS AGO", label: "8 Hours Ago" },
-		{ value: "1 DAY AGO", label: "1 Day Ago" },
-		{ value: "3 DAYS AGO", label: "3 Days Ago" },
-		{ value: "7 DAYS AGO", label: "7 Days Ago" },
-	];
 
 	const defaultPartition: SelectedOption = {
 		value: "Log",
@@ -265,7 +264,6 @@ export const APMLogSearchPanel = (props: {
 			setTraceId(props.traceId);
 		}
 
-		setSelectSinceOptions(sinceOptions);
 		// if we have a traceId, we'll default to 7 days ago
 		props.traceId
 			? setSelectedSinceOption(maxSinceOption)
@@ -792,7 +790,7 @@ export const APMLogSearchPanel = (props: {
 								classNamePrefix="react-select"
 								value={selectedSinceOption}
 								placeholder="Since"
-								options={selectSinceOptions}
+								options={sinceOptions}
 								onChange={value => setSelectedSinceOption(value)}
 								tabIndex={2}
 							/>
