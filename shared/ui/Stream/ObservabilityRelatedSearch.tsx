@@ -105,7 +105,7 @@ export const ObservabilityRelatedSearch = React.memo((props: Props) => {
 		if (!_isEmpty(selectedOption)) {
 			fetchGoldenMetrics(selectedOption?.value);
 		}
-	}, 300000);
+	}, 600000);
 
 	const fetchGoldenMetrics = async (entityGuid?: string | null) => {
 		if (entityGuid) {

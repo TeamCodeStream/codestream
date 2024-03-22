@@ -1,12 +1,16 @@
 import { isEmpty } from "lodash";
-import { errors, fetch, Request, RequestInfo, RequestInit, Response } from "undici";
+import { errors, fetch, Headers, Request, RequestInfo, RequestInit, Response } from "undici";
 import { Logger } from "../logger";
 import { Functions } from "./function";
 import { handleLimit, InternalRateError } from "../rateLimits";
-import { ReportSuppressedMessages } from "../agentError";
+import { tokenHolder } from "../providers/newrelic/TokenHolder";
+import { CSAccessTokenType } from "@codestream/protocols/api";
+import { SessionContainer } from "../container";
+import { Mutex } from "async-mutex";
 
 export interface ExtraRequestInit extends RequestInit {
 	timeout?: number;
+	skipInterceptors?: boolean;
 }
 
 const noLogRetries = [
@@ -20,179 +24,260 @@ const noLogRetries = [
 	"ECONNRESET",
 ];
 
-function isUndiciError(error: unknown): error is errors.UndiciError {
-	const possible = error as errors.UndiciError;
-	if (!possible) {
-		return false;
-	}
-	return !!possible.code && !!possible.name;
-}
+type InterceptorResponse = "retry" | "abort" | "continue";
 
-function shouldLogRetry(error: Error): boolean {
-	const cause = error.cause;
-	if (isUndiciError(cause)) {
-		// Can't use instance of due to jest tests borking classes
-		return !noLogRetries.find(e => e.includes(cause.code));
-	}
-	return error.name !== "AbortError";
-}
+// export type ResponseInterceptor = (response: Response) => void;
 
-export async function customFetch(url: string, init?: ExtraRequestInit): Promise<Response> {
-	const response = await fetchCore(0, url, init);
-	return response[0];
-}
+export class FetchCore {
+	private _refreshLock = new Mutex();
 
-function urlOrigin(requestInfo: RequestInfo): string {
-	try {
-		if (!requestInfo) {
-			return "<unknown>";
+	private isUndiciError(error: unknown): error is errors.UndiciError {
+		const possible = error as errors.UndiciError;
+		if (!possible) {
+			return false;
 		}
-		const urlString =
-			typeof requestInfo === "string"
-				? requestInfo
-				: requestInfo instanceof Request
-				? requestInfo.url
-				: requestInfo.href;
-		if (isEmpty(urlString)) {
-			return "<unknown>";
-		}
-		if (typeof requestInfo === "string") {
-			const url = new URL(requestInfo);
-			return `${url.origin}`;
-		}
-	} catch (e) {
-		// ignore
+		return !!possible.code && !!possible.name;
 	}
-	return "<unknown>";
-}
 
-export async function fetchCore(
-	count: number,
-	url: RequestInfo,
-	initIn?: Readonly<ExtraRequestInit>
-): Promise<[Response, number]> {
-	const origin = urlOrigin(url);
-	let timeout: NodeJS.Timeout | undefined = undefined;
-	// Make sure original init is not modified
-	const init = { ...initIn };
-	try {
-		handleLimit(origin);
-		const controller = new AbortController();
-		timeout = setTimeout(() => {
-			try {
-				controller.abort();
-			} catch (e) {
-				Logger.warn("AbortController error", e);
+	private shouldLogRetry(error: Error): boolean {
+		const cause = error.cause;
+		if (this.isUndiciError(cause)) {
+			// Can't use instance of due to jest tests borking classes
+			return !noLogRetries.find(e => e.includes(cause.code));
+		}
+		return error.name !== "AbortError";
+	}
+
+	async customFetch(url: string, init?: ExtraRequestInit): Promise<Response> {
+		const response = await this.fetchCore(0, url, init);
+		return response[0];
+	}
+
+	private urlOrigin(requestInfo: RequestInfo): { origin: string; path?: string } {
+		try {
+			if (!requestInfo) {
+				return { origin: "<unknown>" };
 			}
-		}, init.timeout ?? 30000);
-		init.signal = controller.signal;
-		const resp = await fetch(url, init);
-		if (resp.status < 200 || resp.status > 299) {
-			if (resp.status < 400 || resp.status >= 500) {
-				count++;
-				if (count <= 3) {
-					const waitMs = 250 * count;
-					if (Logger.isDebugging) {
-						const logUrl = `[${init?.method ?? "GET"}] ${origin}`;
-						Logger.debug(
-							`fetchCore: Retry ${count} for ${logUrl} due to http status ${resp.status} waiting ${waitMs}`
-						);
+			const urlString =
+				typeof requestInfo === "string"
+					? requestInfo
+					: requestInfo instanceof Request
+					? requestInfo.url
+					: requestInfo.href;
+			if (isEmpty(urlString)) {
+				return { origin: "<unknown>" };
+			}
+			if (typeof requestInfo === "string") {
+				const url = new URL(requestInfo);
+				return { origin: url.origin, path: url.pathname };
+			}
+		} catch (e) {
+			// ignore
+		}
+		return { origin: "<unknown>" };
+	}
+
+	async fetchCore(
+		count: number,
+		url: RequestInfo,
+		init?: ExtraRequestInit,
+		triedRefresh = false
+	): Promise<[Response, number]> {
+		if (!init) {
+			init = {};
+		}
+		const { origin, path } = this.urlOrigin(url);
+		const loggingPrefix = `[fetchCore] [${init?.method ?? "GET"} ${origin}${path}]`;
+		let timeout: NodeJS.Timeout | undefined = undefined;
+		try {
+			handleLimit(origin);
+			const controller = new AbortController();
+			timeout = setTimeout(() => {
+				try {
+					controller.abort();
+				} catch (e) {
+					Logger.warn(`${loggingPrefix} AbortController error`, e);
+				}
+			}, init.timeout ?? 30000);
+			init.signal = controller.signal;
+			const resp = await fetch(url, init);
+			const interceptorResponse = await this.handleResponseInterceptor(
+				resp,
+				init,
+				triedRefresh,
+				loggingPrefix
+			);
+			if (interceptorResponse === "abort") {
+				// No retry
+				return [resp, count];
+			}
+			const overrideRetry = interceptorResponse === "retry"; // Have to override for 403 status code
+			triedRefresh = true;
+			if (resp.status < 200 || resp.status > 299 || overrideRetry) {
+				if (resp.status < 400 || resp.status >= 500 || overrideRetry) {
+					count++;
+					if (count <= 3) {
+						const waitMs = overrideRetry ? 0 : 250 * count;
+						if (Logger.isDebugging) {
+							const logUrl = `[${init?.method ?? "GET"}] ${origin}`;
+							Logger.debug(
+								`${loggingPrefix} Retry ${count} for ${logUrl} due to http status ${resp.status} waiting ${waitMs}`
+							);
+						}
+						await Functions.wait(waitMs);
+						if (timeout) {
+							clearTimeout(timeout);
+							timeout = undefined;
+						}
+						if (init.signal) {
+							delete init.signal;
+						}
+						// Use unmodified init
+						return this.fetchCore(count, url, init, triedRefresh);
 					}
-					await Functions.wait(waitMs);
-					if (timeout) {
-						clearTimeout(timeout);
-						timeout = undefined;
-					}
-					// Use unmodified init
-					return fetchCore(count, url, initIn);
 				}
 			}
-		}
-		return [resp, count];
-	} catch (ex) {
-		if (timeout) {
-			clearTimeout(timeout);
-			timeout = undefined;
-		}
-		if (ex instanceof InternalRateError) {
-			throw ex;
-		}
-		if (ex.info?.error.match(/token expired/)) {
-			// expired access token is handled by caller
-			throw ex;
-		}
-
-		const shouldLog = shouldLogRetry(ex);
-		if (shouldLog) {
-			ex.cause ? Logger.error(ex.cause) : Logger.error(ex);
-		}
-		count++;
-		if (count <= 3) {
-			const waitMs = 250 * count;
-			if (Logger.isDebugging) {
-				const logUrl = `[${init?.method ?? "GET"}] ${origin}`;
-				Logger.debug(
-					`fetchCore: Retry ${count} for ${logUrl} due to Error ${
-						ex.cause ? ex.cause.message : ex.message
-					} waiting ${waitMs}`
-				);
+			return [resp, count];
+		} catch (ex) {
+			Logger.log(`${loggingPrefix} *** fetchCore catch ***`, ex);
+			// Note access token error can come from nerdgraph or codestream-api or nrsec vulnerabilities
+			if (timeout) {
+				clearTimeout(timeout);
+				timeout = undefined;
 			}
-			await Functions.wait(waitMs);
-			return fetchCore(count, url, init);
-		}
-		throw ex.cause ? ex.cause : ex;
-	} finally {
-		if (timeout) {
-			clearTimeout(timeout);
+			if (init.signal) {
+				delete init.signal;
+			}
+			if (ex instanceof InternalRateError) {
+				throw ex;
+			}
+			// TODO delete - seems like this is never called - maybe this whole catch section is only undici errors like ECONNRESET?
+			// if (ex.info?.error.match(/token expired/)) {
+			// 	// expired access token is handled by caller
+			// 	throw ex;
+			// }
+
+			const shouldLog = this.shouldLogRetry(ex);
+			if (shouldLog) {
+				ex.cause ? Logger.error(ex.cause, loggingPrefix) : Logger.error(ex, loggingPrefix);
+			}
+			count++;
+			if (count <= 3) {
+				const waitMs = 250 * count;
+				if (Logger.isDebugging) {
+					const logUrl = `[${init?.method ?? "GET"}] ${origin}`;
+					Logger.debug(
+						`${loggingPrefix} Retry ${count} for ${logUrl} due to Error ${
+							ex.cause ? ex.cause.message : ex.message
+						} waiting ${waitMs}`
+					);
+				}
+				await Functions.wait(waitMs);
+				return this.fetchCore(count, url, init);
+			}
+			throw ex.cause ? ex.cause : ex;
+		} finally {
+			if (timeout) {
+				clearTimeout(timeout);
+			}
+			if (init.signal) {
+				delete init.signal;
+			}
 		}
 	}
-}
 
-export function isSuppressedException(ex: any): ReportSuppressedMessages | undefined {
-	const networkErrors = [
-		"ENOTFOUND",
-		"NOT_FOUND",
-		"ETIMEDOUT",
-		"EAI_AGAIN",
-		"ECONNRESET",
-		"ECONNREFUSED",
-		"EHOSTUNREACH",
-		"ENETDOWN",
-		"ENETUNREACH",
-		"self signed certificate in certificate chain",
-		"socket disconnected before secure",
-		"socket hang up",
-	];
-
-	if (ex.message && networkErrors.some(e => ex.message.match(new RegExp(e)))) {
-		return ReportSuppressedMessages.NetworkError;
-	} else if (ex.message && ex.message.match(/GraphQL Error \(Code: 404\)/)) {
-		return ReportSuppressedMessages.ConnectionError;
-	}
-	// else if (
-	// 	(ex?.response?.message || ex?.message || "").indexOf(
-	// 		"enabled OAuth App access restrictions"
-	// 	) > -1
-	// ) {
-	// 	return ReportSuppressedMessages.OAuthAppAccessRestrictionError;
-	// }
-	else if (
-		(ex.response && ex.response.message === "Bad credentials") ||
-		(ex.response &&
-			ex.response.errors &&
-			ex.response.errors instanceof Array &&
-			ex.response.errors.find((e: any) => e.type === "FORBIDDEN"))
-	) {
-		// https://issues.newrelic.com/browse/NR-23727 - FORBIDDEN can happen for tokens that don't have full permissions,
-		// rather than risk breaking how this works, we'll just capture this one possibility
-		if (ex.response.errors.find((e: any) => e.message.match(/must have push access/i))) {
-			return undefined;
-		} else {
-			return ReportSuppressedMessages.AccessTokenInvalid;
+	private async handleResponseInterceptor(
+		resp: Response,
+		init: ExtraRequestInit,
+		triedRefresh: boolean,
+		loggingPrefix: string
+	): Promise<InterceptorResponse> {
+		// !SessionContainer.instance().session.api.usingServiceGatewayAuth - probably not needed and
+		// at initial startup
+		if (init.skipInterceptors || triedRefresh) {
+			return "continue";
 		}
-	} else if (ex.message && ex.message.match(/must accept the Terms of Service/)) {
-		return ReportSuppressedMessages.GitLabTermsOfService;
-	} else {
-		return undefined;
+		const refreshToken = tokenHolder.refreshToken;
+		const isHeaders = init?.headers instanceof Headers;
+		if (!isHeaders) {
+			init.headers = new Headers(init.headers);
+		}
+		if (!resp.ok && resp.status === 403 && refreshToken) {
+			const resp2 = resp.clone();
+			const textData = await resp2.text(); // JSON response if from api-server, large HTML text blob if from service gateway
+			const isTokenExpired = textData.includes("token expired");
+			const tokenExpiredSource = this.getSource(textData, loggingPrefix);
+			if (isTokenExpired) {
+				Logger.log(`${loggingPrefix} Handling expired token from: ${tokenExpiredSource}`);
+				if (this._refreshLock.isLocked()) {
+					Logger.log(`${loggingPrefix} Waiting for already running refresh token`);
+					await this._refreshLock.waitForUnlock();
+					// TODO how to handle errors here - store in local class variable?
+					const accessToken = tokenHolder.accessToken;
+					const tokenType = tokenHolder.tokenType;
+					if (accessToken && tokenType) {
+						if (init?.headers instanceof Headers) {
+							if (tokenType === CSAccessTokenType.ACCESS_TOKEN) {
+								init.headers.set("x-access-token", accessToken);
+							} else {
+								init.headers.set("x-id-token", accessToken);
+							}
+						}
+					}
+					Logger.log(`${loggingPrefix} Refresh token wait completed`);
+					return "retry";
+				}
+				const result = this._refreshLock.runExclusive(async () => {
+					Logger.log(`${loggingPrefix} Token was found to be expired, attempting to refresh...`);
+					return await this.tokenRefresh(refreshToken, init, loggingPrefix);
+				});
+				return result;
+			}
+		}
+		return "continue"; // Not a 403 error or not token expired so let existing fetchCore logic run
+	}
+
+	private getSource(textData: string, loggingPrefix: string) {
+		const isServiceGatewayTokenExpired = textData.includes(
+			"<title>403 Sorry – You've reached an error on New Relic</title>"
+		);
+		const isApiServerTokenExpired = textData.includes("service gateway: access token expired");
+		const tokenExpiredSource = isServiceGatewayTokenExpired
+			? "SG"
+			: isApiServerTokenExpired
+			? "api-server"
+			: "unknown";
+		if (tokenExpiredSource === "unknown") {
+			// TODO textData might be too big to log
+			Logger.log(`${loggingPrefix} unknown 403 error`, textData);
+		}
+		return tokenExpiredSource;
+	}
+
+	private async tokenRefresh(
+		refreshToken: string,
+		init: ExtraRequestInit,
+		loggingPrefix: string
+	): Promise<InterceptorResponse> {
+		try {
+			const tokenInfo = await SessionContainer.instance().session.api.refreshNewRelicToken(
+				refreshToken
+			);
+			Logger.log(
+				`${loggingPrefix} NR access token successfully refreshed, trying request again...`
+			);
+			if (init?.headers instanceof Headers) {
+				if (tokenInfo.tokenType === CSAccessTokenType.ACCESS_TOKEN) {
+					init.headers.set("x-access-token", tokenInfo.accessToken);
+				} else {
+					init.headers.set("x-id-token", tokenInfo.accessToken);
+				}
+			}
+			return "retry";
+		} catch (ex) {
+			Logger.warn(`${loggingPrefix} Exception thrown refreshing NR access token:`, ex);
+			return "abort";
+			// allow the original (failed) flow to continue, more meaningful than throwing an exception on refresh
+		}
 	}
 }

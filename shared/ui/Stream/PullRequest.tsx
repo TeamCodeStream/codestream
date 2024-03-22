@@ -610,7 +610,7 @@ export const PullRequest = () => {
 				console.error(ex);
 				interval && clearInterval(interval);
 			}
-		}, 300000); //300000 === 5 minute interval
+		}, 600000); //300000 === 5 minute interval
 
 		return () => {
 			interval && clearInterval(interval);

@@ -57,7 +57,7 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 		if (expanded) {
 			fetchGoldenMetrics(relatedEntity.guid);
 		}
-	}, 300000);
+	}, 600000);
 
 	const fetchNewRelicUrl = async (entityGuid?: string | null) => {
 		if (entityGuid) {
