@@ -25,4 +25,8 @@ class ExecuteNrql : DumbAwareAction(), ActionUpdateThreadAware {
         e.project?.webViewService?.postNotification(NrqlNotifications.Execute(nrql))
     }
 
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.EDT
+    }
+
 }
