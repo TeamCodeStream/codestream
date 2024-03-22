@@ -174,6 +174,25 @@ const sinceOptions: SelectedOption[] = [
 	{ value: "7 DAYS AGO", label: "7 Days Ago" },
 ];
 
+const defaultSinceOption: SelectedOption = {
+	value: "30 MINUTES AGO",
+	label: "30 Minutes Ago",
+};
+
+const maxSinceOption: SelectedOption = {
+	value: "7 DAYS AGO",
+	label: "7 Days Ago",
+};
+
+const defaultPartition: SelectedOption = {
+	value: "Log",
+	label: "Log",
+};
+
+const debouncedSave = debounce((value, fn) => {
+	fn(value);
+}, 1000);
+
 export const APMLogSearchPanel = (props: {
 	entryPoint: string;
 	entityGuid?: string;
@@ -213,27 +232,8 @@ export const APMLogSearchPanel = (props: {
 	const disposables: Disposable[] = [];
 	const [currentTraceId, setTraceId] = useState<string | undefined>(props.traceId);
 
-	const defaultSinceOption: SelectedOption = {
-		value: "30 MINUTES AGO",
-		label: "30 Minutes Ago",
-	};
-
-	const maxSinceOption: SelectedOption = {
-		value: "7 DAYS AGO",
-		label: "7 Days Ago",
-	};
-
-	const defaultPartition: SelectedOption = {
-		value: "Log",
-		label: "Log",
-	};
-
 	useEffect(() => {
-		const debouncedSave = debounce(nextValue => {
-			setQuery(nextValue);
-		}, 500);
-
-		debouncedSave(searchTerm);
+		debouncedSave(searchTerm, setQuery);
 	}, [searchTerm]);
 
 	useEffect(() => {
@@ -271,9 +271,10 @@ export const APMLogSearchPanel = (props: {
 
 		setSelectedPartitions([defaultPartition]);
 
-		// possible there is no searchTerm
+		// possible there is no query coming in
 		if (props.suppliedQuery) {
 			setSearchTerm(props.suppliedQuery);
+			setQuery(props.suppliedQuery);
 		}
 
 		const finishHandlingEntityAccount = (entityAccount: EntityAccount) => {
