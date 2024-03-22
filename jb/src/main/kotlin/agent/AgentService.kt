@@ -137,7 +137,7 @@ val serverUrlMigrations = hashMapOf(
 class AgentService(private val project: Project) : Disposable {
 
     companion object {
-        private var debugPortSeed = AtomicInteger(1337)
+        private var debugPortSeed = AtomicInteger(6014)
         private val debugPort get() = debugPortSeed.getAndAdd(1)
     }
 
@@ -478,7 +478,7 @@ class AgentService(private val project: Project) : Disposable {
                             params["Crash Details"] = agentCrashDetails.details
                             params["Crash Date"] = agentCrashDetails.dateTime.toString()
                         }
-                        
+
                     }
                 }
             }

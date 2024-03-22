@@ -618,7 +618,7 @@ export const Observability = React.memo((props: Props) => {
 		fetchGoldenMetrics(expandedEntity, true);
 		fetchServiceLevelObjectives(expandedEntity);
 		// fetchAnomalies(expandedEntity || "", currentRepoId);
-	}, 300000);
+	}, 600000);
 
 	/*
 	 *	After initial load, every time repo context changes, do telemetry tracking
@@ -1483,20 +1483,17 @@ export const Observability = React.memo((props: Props) => {
 																			onClick={e => {
 																				e.preventDefault();
 																				e.stopPropagation();
-																				HostApi.instance.track(
-																					"codestream/newrelic_link clicked",
-																					{
-																						entity_guid:
-																							derivedState.currentMethodLevelTelemetry
-																								.newRelicEntityGuid,
-																						account_id:
-																							derivedState.currentMethodLevelTelemetry
-																								.newRelicAccountId,
-																						meta_data: "destination: apm_service_summary",
-																						meta_data_2: `codestream_section: golden_metrics`,
-																						event_type: "click",
-																					}
-																				);
+																				HostApi.instance.track("codestream/newrelic_link clicked", {
+																					entity_guid:
+																						derivedState.currentMethodLevelTelemetry
+																							.newRelicEntityGuid,
+																					account_id:
+																						derivedState.currentMethodLevelTelemetry
+																							.newRelicAccountId,
+																					meta_data: "destination: apm_service_summary",
+																					meta_data_2: `codestream_section: golden_metrics`,
+																					event_type: "click",
+																				});
 																				HostApi.instance.send(OpenUrlRequestType, {
 																					url: ea.url!,
 																				});

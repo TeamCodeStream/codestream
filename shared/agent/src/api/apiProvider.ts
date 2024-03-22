@@ -195,7 +195,6 @@ import {
 	GenerateMSTeamsConnectCodeResponse,
 } from "@codestream/protocols/agent";
 import {
-	CSAccessTokenInfo,
 	CSApiCapabilities,
 	CSApiFeatures,
 	CSChannelStream,
@@ -424,7 +423,6 @@ export interface ApiProvider {
 		request: GenerateMSTeamsConnectCodeRequest
 	): Promise<GenerateMSTeamsConnectCodeResponse>;
 	subscribe(types?: MessageType[]): Promise<void>;
-	setAccessToken(token: string, tokenInfo?: CSAccessTokenInfo): void;
 
 	grantBroadcasterChannelAccess(token: string, channel: string): Promise<{}>;
 

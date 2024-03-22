@@ -1,5 +1,5 @@
 import { ApiResponse } from "../providers/provider";
-import { ExtraRequestInit, fetchCore } from "../system/fetchCore";
+import { ExtraRequestInit, FetchCore } from "../system/fetchCore";
 import { InternalError, ReportSuppressedMessages } from "../agentError";
 import { NewThirdPartyProviderConfig } from "@codestream/protocols/agent";
 import { Headers, Response } from "undici";
@@ -13,7 +13,8 @@ export class HttpClient implements Disposable {
 	constructor(
 		private providerConfig: NewThirdPartyProviderConfig,
 		private session: CodeStreamSession,
-		private providerInfo: CSProviderInfo | undefined
+		private providerInfo: CSProviderInfo | undefined,
+		private fetchClient: FetchCore
 	) {}
 
 	get headers() {
@@ -129,7 +130,7 @@ export class HttpClient implements Disposable {
 			let triedRefresh = false;
 			if (json === undefined) {
 				while (!resp) {
-					[resp, retryCount] = await fetchCore(0, absoluteUrl, init);
+					[resp, retryCount] = await this.fetchClient.fetchCore(0, absoluteUrl, init);
 					if (
 						this.isNewRelicAuth() &&
 						!triedRefresh &&
@@ -166,7 +167,7 @@ export class HttpClient implements Disposable {
 					}
 				}
 
-				[resp, retryCount] = await fetchCore(0, absoluteUrl, init);
+				[resp, retryCount] = await this.fetchClient.fetchCore(0, absoluteUrl, init);
 
 				if (resp.ok) {
 					traceResult = `${this.providerConfig.name}: Completed ${method} ${url}`;

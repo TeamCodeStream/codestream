@@ -3,7 +3,7 @@ import url from "url";
 
 import { Mutex } from "async-mutex";
 import { GraphQLClient } from "graphql-request";
-import { Headers, Response } from "undici";
+import { Response } from "undici";
 
 import { HttpsProxyAgent } from "https-proxy-agent";
 import { InternalError, ReportSuppressedMessages } from "../agentError";
@@ -15,14 +15,14 @@ import {
 	ThirdPartyDisconnect,
 	ThirdPartyProviderConfig,
 } from "@codestream/protocols/agent";
-import { CSMe, CSAccessTokenType, CSProviderInfos } from "@codestream/protocols/api";
+import { CSMe, CSProviderInfos } from "@codestream/protocols/api";
 
 import { User } from "../api/extensions";
 import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
 import { log } from "../system/decorators/log";
-import { ExtraRequestInit, fetchCore } from "../system/fetchCore";
+import { ExtraRequestInit, FetchCore } from "../system/fetchCore";
 import { isApiError, isErrnoException } from "../system/object";
 import { Strings } from "../system";
 import { ApiResponse, isRefreshable, ProviderVersion, ThirdPartyProvider } from "./provider";
@@ -40,6 +40,7 @@ export abstract class ThirdPartyProviderBase<
 	protected _httpsAgent: HttpsAgent | HttpsProxyAgent<string> | undefined;
 	protected _client: GraphQLClient | undefined;
 	private _refreshLock = new Mutex();
+	protected fetchClient = new FetchCore();
 
 	constructor(
 		public readonly session: CodeStreamSession,
@@ -454,42 +455,8 @@ export abstract class ThirdPartyProviderBase<
 			let json: Promise<R> | undefined;
 			let resp: Response | undefined;
 			let retryCount = 0;
-			let triedRefresh = false;
 			if (json === undefined) {
-				while (!resp) {
-					[resp, retryCount] = await fetchCore(0, absoluteUrl, init);
-					if (
-						this.isNewRelicAuth() &&
-						!triedRefresh &&
-						!resp.ok &&
-						resp.status === 403 &&
-						this._providerInfo &&
-						this._providerInfo.refreshToken &&
-						init?.headers instanceof Headers
-					) {
-						let tokenInfo;
-						try {
-							Logger.log(
-								"On New Relic API request, token was found to be expired, attempting to refresh..."
-							);
-							tokenInfo = await this.session.api.refreshNewRelicToken(
-								this._providerInfo.refreshToken
-							);
-							Logger.log("NR access token successfully refreshed, trying request again...");
-							if (tokenInfo.tokenType === CSAccessTokenType.ACCESS_TOKEN) {
-								init.headers.set("x-access-token", tokenInfo.accessToken);
-							} else {
-								init.headers.set("x-id-token", tokenInfo.accessToken);
-							}
-							//init.headers.set("Authorization", `Bearer ${tokenInfo.accessToken}`);
-							triedRefresh = true;
-							resp = undefined;
-						} catch (ex) {
-							Logger.warn("Exception thrown refreshing New Relic access token", ex);
-							// allow the original (failed) flow to continue, more meaningful than throwing an exception on refresh
-						}
-					}
-				}
+				[resp, retryCount] = await this.fetchClient.fetchCore(0, absoluteUrl, init);
 
 				if (resp.ok) {
 					traceResult = `${this.displayName}: Completed ${method} ${url}`;

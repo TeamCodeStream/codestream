@@ -47,7 +47,6 @@ import { GitRemoteLike } from "../git/models/remote";
 import { toRepoName } from "../git/utils";
 import { Logger } from "../logger";
 import { Dates, Functions, log, lspProvider } from "../system";
-import { customFetch } from "../system/fetchCore";
 import { TraceLevel } from "../types";
 import { Directive, Directives } from "./directives";
 import {
@@ -134,8 +133,6 @@ interface PRResponse {
 	};
 }
 
-const diffHunkRegex = /^@@ -([\d]+)(?:,([\d]+))? \+([\d]+)(?:,([\d]+))? @@/;
-
 @lspProvider("github")
 export class GitHubProvider
 	extends ThirdPartyIssueProviderBase<CSGitHubProviderInfo>
@@ -217,7 +214,7 @@ export class GitHubProvider
 		if (this._client === undefined) {
 			const options = {
 				agent: this._httpsAgent ?? undefined,
-				fetch: customFetch,
+				fetch: this.fetchClient.customFetch,
 			};
 			this._client = new GraphQLClient(this.graphQlBaseUrl, options);
 		}

@@ -48,7 +48,14 @@ beforeEach(() => {
 	mockGetInsufficientApiKeyError = jest.fn();
 
 	// Create an instance of NewRelicGraphqlClient
-	instance = new NewRelicGraphqlClient({} as any, {} as any, {} as any, {} as any, false);
+	instance = new NewRelicGraphqlClient(
+		{} as any,
+		{} as any,
+		{} as any,
+		{} as any,
+		false,
+		{} as any
+	);
 
 	// Replace the original methods with the mock functions
 	jest.spyOn(instance, "clientRequestWrap" as any).mockImplementation(mockClientRequestWrap);
@@ -74,7 +81,8 @@ describe("NewRelicGraphqlClient", () => {
 			{} as any,
 			{} as any,
 			{} as any,
-			false
+			false,
+			{} as any
 		);
 		const responseBody: GraphqlNrqlErrorResponse = {
 			errors: [
@@ -108,7 +116,8 @@ describe("NewRelicGraphqlClient", () => {
 			{} as any,
 			{} as any,
 			{} as any,
-			false
+			false,
+			{} as any
 		);
 		const responseBody: GraphqlNrqlErrorResponse = {
 			errors: [
