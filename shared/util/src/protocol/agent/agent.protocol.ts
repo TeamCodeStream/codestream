@@ -324,6 +324,8 @@ export type TelemetryEventName =
 	| "codestream/repo_disambiguation succeeded"
 	| "codestream/service displayed"
 	| "codestream/sign_in page_viewed"
+	| "codestream/sign_in_form displayed"
+	| "codestream/sign_in_button clicked"
 	| "codestream/toast displayed"
 	| "codestream/toast clicked"
 	| "codestream/tracing/span displayed"

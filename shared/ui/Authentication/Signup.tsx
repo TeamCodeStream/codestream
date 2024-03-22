@@ -225,8 +225,8 @@ export const Signup = (props: Props) => {
 	useDidMount(() => {
 		getUserInfo();
 		if (derivedState.webviewFocused) {
-			HostApi.instance.track("codestream/sign_in page_viewed", {
-				event_type: "page_view",
+			HostApi.instance.track("codestream/sign_in_form displayed", {
+				event_type: "modal_display",
 				platform: "codestream",
 				path: "N/A (codestream)",
 				section: "N/A (codestream)",
@@ -404,6 +404,12 @@ export const Signup = (props: Props) => {
 	const onClickNewRelicSignup = useCallback(
 		(event: React.SyntheticEvent, domain?: string) => {
 			event.preventDefault();
+			HostApi.instance.track("codestream/sign_in_button clicked", {
+				event_type: "click",
+				platform: "codestream",
+				path: "N/A (codestream)",
+				section: "N/A (codestream)",
+			});
 			dispatch(startSSOSignin("newrelicidp", buildSignupInfo(false, domain)));
 		},
 		[props.type]
