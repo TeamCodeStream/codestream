@@ -1,6 +1,7 @@
 package com.codestream.actions
 
 import com.codestream.DEBUG
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.DumbAwareAction
 
@@ -21,5 +22,9 @@ class TestUrlHandler : DumbAwareAction() {
         // 2021.3+
         // JBProtocolCommand.execute()
         // CommandLineProcessor.processProtocolCommand
+    }
+
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.EDT
     }
 }
