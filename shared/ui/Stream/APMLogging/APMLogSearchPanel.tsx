@@ -32,6 +32,7 @@ import { PanelHeaderTitleWithLink } from "../PanelHeaderTitleWithLink";
 import { Disposable } from "@codestream/webview/utils";
 import { isEmpty as _isEmpty } from "lodash";
 import { APMLogTableLoading } from "./APMLogTableLoading";
+import { APMPartitions } from "./APMPartitions";
 import { TableWindow } from "../TableWindow";
 import { debounce } from "lodash-es";
 
@@ -479,7 +480,7 @@ export const APMLogSearchPanel = (props: {
 	const fetchPartitions = async (entityAccount: EntityAccount) => {
 		try {
 			const response = await HostApi.instance.send(GetLoggingPartitionsRequestType, {
-				accountId: entityAccount.accountId,
+				accountId: 1,
 			});
 
 			if (!response) {
@@ -546,7 +547,7 @@ export const APMLogSearchPanel = (props: {
 					: selectedPartitions;
 
 			// you can clear the list entirely, but we must have at least one
-			if (partitions.length === 0) {
+			if (partitions?.length && partitions.length === 0) {
 				handleError("Please select at least one partition from the drop down before searching.");
 				return;
 			}
@@ -798,20 +799,14 @@ export const APMLogSearchPanel = (props: {
 						</div>
 
 						{hasPartitions && (
-							<div className="log-filter-bar-partition">
-								<Select
-									id="input-partition"
-									name="partition"
-									classNamePrefix="react-select"
-									value={selectedPartitions}
-									placeholder="Partition"
-									isMulti
-									options={selectPartitionOptions}
-									onChange={values => setSelectedPartitions(values)}
-									tabIndex={3}
-								/>
-							</div>
+							<APMPartitions
+								selectedPartitions={selectedPartitions}
+								selectPartitionOptions={selectPartitionOptions}
+								partitionsCallback={setSelectedPartitions}
+							/>
 						)}
+
+						{/* {hasPartitions && <APMPartitions />} */}
 					</div>
 
 					<div className="log-filter-bar-row">
@@ -856,35 +851,6 @@ export const APMLogSearchPanel = (props: {
 					height: "100%",
 				}}
 			>
-				{/* {!isLoading && totalItems > 0 && (
-					<div style={{ paddingBottom: "10px" }}>
-						<span style={{ fontSize: "14px", fontWeight: "bold" }}>
-							{totalItems.toLocaleString()} Logs
-						</span>{" "}
-						<a
-							style={{ float: "right", cursor: "pointer" }}
-							href="#"
-							onClick={e => {
-								e.preventDefault();
-								HostApi.instance
-									.send(ShellPromptFolderRequestType, { message: "Choose a location" })
-									.then(_ => {
-										if (_.path) {
-											// undefined can also mean cancel, but there isn't any other flag to indicate that, so
-											// no error if path is undefined
-											HostApi.instance.send(SaveFileRequestType, {
-												path: _.path,
-												data: results,
-											});
-										}
-									});
-							}}
-						>
-							<Icon name="download" title="Download as JSON" />
-						</a>
-					</div>
-				)} */}
-
 				<div>
 					{isLoading && <APMLogTableLoading height={height} />}
 
