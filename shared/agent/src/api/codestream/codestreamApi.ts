@@ -477,34 +477,13 @@ export class CodeStreamApiProvider implements ApiProvider {
 						`Invalid token, options.token.url="${options.token.url}" this.baseUrl="${this.baseUrl}"`
 					);
 				}
-
-				let triedRefresh = false;
-				while (!response) {
-					try {
-						response = await this.put<{}, CSLoginResponse>("/login", {}, options.token);
-					} catch (ex) {
-						if (ex.info?.error.match(/token expired/) && !triedRefresh) {
-							Logger.log("Attempted token login with an expired token, attempting to refresh...");
-							let tokenInfo;
-							try {
-								tokenInfo = await this.refreshNewRelicToken(options.token.refreshToken!);
-							} catch (refreshEx) {
-								Logger.warn("Exception thrown refreshing NR access token", refreshEx);
-								// rethrow the original exception, more meaningful than the exception on refresh
-								throw ex;
-							}
-							Logger.log("Expired token successfully refreshed");
-							options.token.value = tokenInfo.accessToken;
-							triedRefresh = true;
-						} else {
-							throw ex;
-						}
-					}
-				}
+				response = await this.put<{}, CSLoginResponse>("/login", {}, options.token);
 
 				response.provider = options.token.provider;
 				response.providerAccess = options.token.providerAccess;
 				response.teamId = options.token.teamId;
+
+				// Logger.debug(`login 'token' complete with response ${JSON.stringify(response)}`);
 
 				break;
 
@@ -534,7 +513,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		*/
 		if (response.user.mustSetPassword) {
 			// save the accessToken for the call to set password
-			tokenHolder.setAccessToken(response.accessToken);
+			tokenHolder.setAccessToken("mustSetPassword", response.accessToken);
 			throw {
 				error: LoginResult.MustSetPassword,
 				extra: { email: response.user.email },
@@ -544,7 +523,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		// 💩see above
 		if (response.companies.length === 0 || response.teams.length === 0) {
 			// save the accessToken for the call to create a team
-			tokenHolder.setAccessToken(response.accessToken);
+			tokenHolder.setAccessToken("createTeam", response.accessToken);
 
 			throw {
 				error: LoginResult.NotInCompany,
@@ -667,7 +646,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 		Logger.log(`Using team '${team.name}' (${team.id})${pickedTeamReason || ""}`);
 
-		tokenHolder.setAccessToken(response.accessToken, response.accessTokenInfo);
+		tokenHolder.setAccessToken(
+			"CodeStreamApiProvider.login",
+			response.accessToken,
+			response.accessTokenInfo
+		);
 		this._pubnubSubscribeKey = response.pubnubKey;
 		this._broadcasterToken = response.broadcasterToken || response.pubnubToken;
 		this._socketCluster = response.socketCluster;
@@ -736,7 +719,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			"/no-auth/confirm",
 			request
 		);
-		tokenHolder.setAccessToken(response.accessToken);
+		tokenHolder.setAccessToken("CodeStreamApiProvider.confirmRegistration", response.accessToken);
 		return response;
 	}
 
@@ -2491,22 +2474,27 @@ export class CodeStreamApiProvider implements ApiProvider {
 	refreshNewRelicToken(refreshToken: string): Promise<CSNewRelicProviderInfo> {
 		const cc = Logger.getCorrelationContext();
 
-		Logger.log("Incoming refresh New Relic token request");
+		Logger.log(cc, "Incoming refresh New Relic token request");
 		if (this._refreshNRTokenPromise) {
-			Logger.log("Promise already made");
+			Logger.log(cc, "Promise already made");
 			return this._refreshNRTokenPromise;
 		}
 
 		this._refreshNRTokenPromise = new Promise((resolve, reject) => {
-			Logger.log("Calling provider refresh for New Relic token...");
+			Logger.log(cc, "Calling provider refresh for New Relic token...");
 			const url = "/no-auth/provider-refresh/newrelic";
-			this.put<{ refreshToken: string }, CSNewRelicProviderInfo>(url, {
-				refreshToken: refreshToken, //+ "x", // uncomment to test roadblock
-			})
+			this.put<{ refreshToken: string }, CSNewRelicProviderInfo>(
+				url,
+				{
+					refreshToken: refreshToken, //+ "x", // uncomment to test roadblock
+				},
+				undefined,
+				{ skipInterceptors: true }
+			)
 				.then(response => {
 					if (response.accessToken) {
 						Logger.log("New Relic access token successfully refreshed, setting...");
-						tokenHolder.setAccessToken(response.accessToken, {
+						tokenHolder.setAccessToken("CodestreamApi.refreshNewRelicToken", response.accessToken, {
 							expiresAt: response.expiresAt!,
 							refreshToken: response.refreshToken!,
 							tokenType: response.tokenType! as CSAccessTokenType,
@@ -2786,10 +2774,14 @@ export class CodeStreamApiProvider implements ApiProvider {
 	async put<RQ extends object, R extends object>(
 		url: string,
 		body: RQ,
-		token?: string | AccessToken
+		token?: string | AccessToken,
+		init?: ExtraRequestInit
 	): Promise<R> {
-		const init: ExtraRequestInit = {};
+		if (!init) {
+			init = {};
+		}
 		if (!token && url.indexOf("/no-auth/") === -1) {
+			// Logger.debug(`token swapped to this._token ${tokenHolder.accessToken}`);
 			token = tokenHolder.accessToken;
 			init.skipInterceptors = true;
 		}

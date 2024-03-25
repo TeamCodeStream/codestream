@@ -1,88 +1,62 @@
-import {
-	CSAccessTokenInfo,
-	CSAccessTokenType,
-	CSNewRelicProviderInfo,
-} from "@codestream/protocols/api";
+import { CSAccessTokenInfo, CSAccessTokenType } from "@codestream/protocols/api";
 import { Logger } from "../../logger";
-import { SessionContainer } from "../../container";
-import { UsersManager } from "../../managers/usersManager";
-import { User } from "../../api/extensions";
 
+/*
+	token was stored in 3+ places before - session.ts, codestreamApi.ts and newRelicProviderInfo. providerInfo is kind of the
+	source of truth as it gets pubnub broadcasted and if you have multiple IDEs open it is the only way to get
+	tokens updated between IDE
+	... but the newRelicProviderInfo is not available at agent bootstrap time so this is the single source of truth and
+	we get updates from usersManager.ts (pubnub) to keep it fresh
+ */
 class TokenHolder {
-	// Server broadcasts updates to the User which is cached in UsersManager so that is the single source of truth for auth info
-	private _usersManager: UsersManager | undefined;
-
-	get usersManager(): UsersManager | undefined {
-		if (!this._usersManager) {
-			if (SessionContainer.isInitialized() && SessionContainer.instance()) {
-				this._usersManager = SessionContainer.instance().users;
-			}
-		}
-		return this._usersManager;
-	}
-
-	get providerInfo(): CSNewRelicProviderInfo | undefined {
-		if (SessionContainer.isInitialized() && SessionContainer.instance()) {
-			const user = this.usersManager?.getMeCached();
-			if (user) {
-				return User.getProviderInfo<CSNewRelicProviderInfo>(
-					user,
-					SessionContainer.instance().session.teamId,
-					"newrelic"
-				);
-			}
-		}
-		return undefined;
-	}
+	private _accessToken: string | undefined;
+	private _refreshToken: string | undefined;
+	private _expiresAt: number | undefined;
+	private _tokenType: CSAccessTokenType | undefined;
 
 	get accessToken(): string | undefined {
-		return this.providerInfo?.accessToken;
+		return this._accessToken;
 	}
 
 	set accessToken(token: string) {
-		if (this.providerInfo) {
-			this.providerInfo.accessToken = token;
-		}
+		this._accessToken = token;
+	}
+
+	get refreshToken() {
+		return this._refreshToken;
+	}
+
+	get expiresAt() {
+		return this._expiresAt;
+	}
+
+	get tokenType() {
+		return this._tokenType;
 	}
 
 	get tokenInfo(): CSAccessTokenInfo | undefined {
-		if (
-			this.providerInfo &&
-			this.providerInfo.expiresAt &&
-			this.providerInfo.tokenType &&
-			this.providerInfo.refreshToken
-		) {
+		if (this._expiresAt && this._tokenType && this._refreshToken) {
 			return {
-				refreshToken: this.providerInfo.refreshToken,
-				expiresAt: this.providerInfo.expiresAt,
-				tokenType: this.providerInfo.tokenType as CSAccessTokenType,
+				refreshToken: this._refreshToken,
+				expiresAt: this._expiresAt,
+				tokenType: this._tokenType as CSAccessTokenType,
 			};
 		}
 		return undefined;
 	}
 
-	get refreshToken() {
-		return this.providerInfo?.refreshToken;
-	}
+	public setAccessToken(source: string, token: string, tokenInfo?: CSAccessTokenInfo): void {
+		this._accessToken = token;
+		this._refreshToken = tokenInfo?.refreshToken;
+		this._expiresAt = tokenInfo?.expiresAt;
+		this._tokenType = tokenInfo?.tokenType;
+		const partialToken = token.slice(0, Math.min(8, token.length));
 
-	get expiresAt() {
-		return this.providerInfo?.expiresAt;
-	}
-
-	get tokenType() {
-		return this.providerInfo?.tokenType;
-	}
-
-	setAccessToken(token: string, tokenInfo?: CSAccessTokenInfo) {
-		if (this.providerInfo) {
-			this.providerInfo.accessToken = token;
-			if (tokenInfo) {
-				this.providerInfo.expiresAt = tokenInfo.expiresAt;
-				this.providerInfo.tokenType = tokenInfo.tokenType;
-				this.providerInfo.refreshToken = tokenInfo.refreshToken;
-			}
-		}
-		Logger.log("CodeStream API access token was set");
+		Logger.log(
+			`TokenHolder.setAccessToken: CodeStream API access token ${partialToken}... with tokenInfo ${JSON.stringify(
+				tokenInfo
+			)} was set from ${source}`
+		);
 	}
 }
 

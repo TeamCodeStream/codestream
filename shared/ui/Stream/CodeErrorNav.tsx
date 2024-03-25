@@ -26,7 +26,8 @@ import {
 	resolveStackTrace,
 	setErrorGroup,
 } from "@codestream/webview/store/codeErrors/thunks";
-import { closeAllPanels, setCurrentCodeError } from "@codestream/webview/store/context/actions";
+import { setCurrentCodeError } from "@codestream/webview/store/context/actions";
+import { closeAllPanels } from "@codestream/webview/store/context/thunks";
 import {
 	useAppDispatch,
 	useAppSelector,

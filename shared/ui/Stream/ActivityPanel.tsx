@@ -18,7 +18,6 @@ import {
 	setCurrentCodemark,
 	setCurrentReview,
 	setCurrentCodeError,
-	closeAllPanels,
 } from "../store/context/actions";
 import {
 	ActivityFeedResponse,
@@ -60,6 +59,7 @@ import { LoadingMessage } from "../src/components/LoadingMessage";
 import { Headshot } from "../src/components/Headshot";
 import { ProfileLink } from "../src/components/ProfileLink";
 import { Dialog } from "../src/components/Dialog";
+import { closeAllPanels } from "@codestream/webview/store/context/thunks";
 
 interface MenuItem {
 	label: any;
