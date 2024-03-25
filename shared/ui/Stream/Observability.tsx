@@ -614,11 +614,15 @@ export const Observability = React.memo((props: Props) => {
 	}, [derivedState.currentObservabilityAnomalyEntityGuid]);
 
 	// Update golden metrics every 5 minutes
-	useInterval(() => {
-		fetchGoldenMetrics(expandedEntity, true);
-		fetchServiceLevelObjectives(expandedEntity);
-		// fetchAnomalies(expandedEntity || "", currentRepoId);
-	}, 600000);
+	useInterval(
+		() => {
+			fetchGoldenMetrics(expandedEntity, true);
+			fetchServiceLevelObjectives(expandedEntity);
+			// fetchAnomalies(expandedEntity || "", currentRepoId);
+		},
+		300000,
+		true
+	);
 
 	/*
 	 *	After initial load, every time repo context changes, do telemetry tracking

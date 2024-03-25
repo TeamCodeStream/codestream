@@ -38,7 +38,7 @@ export function useUpdates(callback: Fn, dependencies: any[] = []) {
 	useEffect(isMountedRef.current ? callback : noop, dependencies);
 }
 
-export function useInterval(callback: Fn, delay = 1000) {
+export function useInterval(callback: Fn, delay = 1000, skew = false) {
 	const savedCallback = useRef<Fn>(callback);
 
 	// Remember the latest callback.
@@ -52,7 +52,14 @@ export function useInterval(callback: Fn, delay = 1000) {
 			savedCallback.current!();
 		}
 
-		let id = setInterval(tick, delay);
+		let delayWithSkew = delay;
+
+		if (skew) {
+			const skewFactor = 0.95 + Math.random() * 0.1; // Random number between 0.95 and 1.05
+			delayWithSkew *= skewFactor; // Skewing the delay by up to +/-5%
+		}
+
+		let id = setInterval(tick, delayWithSkew);
 		return () => clearInterval(id);
 	}, [delay]);
 }

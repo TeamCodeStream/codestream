@@ -101,7 +101,7 @@ export class FetchCore {
 			}, init.timeout ?? 30000);
 			init.signal = controller.signal;
 			const resp = await fetch(url, init);
-			const interceptorResponse = await this.handleResponseInterceptor(
+			const interceptorResponse = await this.handleRefreshInterceptor(
 				resp,
 				init,
 				triedRefresh,
@@ -139,7 +139,7 @@ export class FetchCore {
 			}
 			return [resp, count];
 		} catch (ex) {
-			Logger.log(`${loggingPrefix} *** fetchCore catch ***`, ex);
+			Logger.log(`${loggingPrefix} fetchCore caught`, ex);
 			// Note access token error can come from nerdgraph or codestream-api or nrsec vulnerabilities
 			if (timeout) {
 				clearTimeout(timeout);
@@ -151,11 +151,6 @@ export class FetchCore {
 			if (ex instanceof InternalRateError) {
 				throw ex;
 			}
-			// TODO delete - seems like this is never called - maybe this whole catch section is only undici errors like ECONNRESET?
-			// if (ex.info?.error.match(/token expired/)) {
-			// 	// expired access token is handled by caller
-			// 	throw ex;
-			// }
 
 			const shouldLog = this.shouldLogRetry(ex);
 			if (shouldLog) {
@@ -186,14 +181,14 @@ export class FetchCore {
 		}
 	}
 
-	private async handleResponseInterceptor(
+	private async handleRefreshInterceptor(
 		resp: Response,
 		init: ExtraRequestInit,
 		triedRefresh: boolean,
 		loggingPrefix: string
 	): Promise<InterceptorResponse> {
 		// !SessionContainer.instance().session.api.usingServiceGatewayAuth - probably not needed and
-		// at initial startup
+		// at initial bootstrap it's hard to get
 		if (init.skipInterceptors || triedRefresh) {
 			return "continue";
 		}

@@ -68,7 +68,6 @@ export default class Container extends React.Component<ContainerProps, Container
 		event.preventDefault();
 
 		// reset view state in case the error was tied to a piece of bad data
-		console.log("*** closeAllPanels");
 		this.dispatch(closeAllPanels());
 
 		HostApi.instance.send(ReloadWebviewRequestType, void undefined);

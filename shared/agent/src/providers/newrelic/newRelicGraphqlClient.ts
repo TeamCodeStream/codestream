@@ -117,7 +117,6 @@ export class NewRelicGraphqlClient implements Disposable {
 	}
 
 	get graphQlBaseUrl() {
-		// TODO dis ok?
 		return `${this.nrApiConfig.productUrl}/graphql`;
 		// if (tokenHolder.bearerToken) {
 		// 	return `${this.nrApiConfig.productUrl}/graphql`;
@@ -289,7 +288,6 @@ export class NewRelicGraphqlClient implements Disposable {
 			return await client.request<T>(query, variables);
 			// fetchCore will have retried 3 times by now
 		} catch (ex) {
-			// TODO shit this doesn't work when fetchCore is doing the retries
 			if (isInvalidInputErrorResponse(ex)) {
 				throw ex;
 			}
@@ -415,7 +413,9 @@ export class NewRelicGraphqlClient implements Disposable {
 				Logger.warn(loggableError);
 			}
 			Logger.warn(potentialEx.message);
-			ex = potentialEx;
+			if (!ex) {
+				ex = potentialEx;
+			}
 		}
 
 		// If multiRegion, and we are doing an entitySearch query, add region values
