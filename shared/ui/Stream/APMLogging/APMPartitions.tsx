@@ -17,6 +17,16 @@ export const APMPartitions = (props: {
 		multiValueRemove: () => ({
 			display: "none",
 		}),
+		multiValueLabel: (provided, state) => ({
+			display: "none",
+		}),
+		valueContainer: (defaultStyles: any) => {
+			return {
+				...defaultStyles,
+				padding: "0",
+				margin: "0 !important",
+			};
+		},
 		clearIndicator: () => ({
 			display: "none",
 		}),
@@ -68,7 +78,7 @@ export const APMPartitions = (props: {
 		) {
 			return <div>Partitions ({selectedPartitions.length}) </div>;
 		} else {
-			return <span></span>;
+			return <div style={{ display: "none" }}>&nbsp;</div>;
 		}
 	};
 
@@ -81,6 +91,7 @@ export const APMPartitions = (props: {
 				options={selectPartitionOptions}
 				captureMenuScroll={false}
 				isMulti
+				isClearable={false}
 				closeMenuOnSelect={false}
 				hideSelectedOptions={false}
 				value={selectedPartitions}
