@@ -31,11 +31,8 @@
 		"theme": "light"
 	},
 	"keywords": [
-		"gitlab",
-		"collaboration",
-		"bitbucket",
-		"github",
-		"slack"
+		"insights",
+		"observability"
 	],
 	"contributes": {
 		"snippets": [
