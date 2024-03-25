@@ -33,7 +33,6 @@ import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { isCreateCodemarkError, NewCodemarkAttributes } from "../store/codemarks/actions";
 import {
 	closeAllModals,
-	closeAllPanels,
 	closePanel,
 	closePrDetailModal,
 	repositionCodemark,
@@ -43,6 +42,7 @@ import {
 	setCurrentCodemark,
 	setNewPostEntry,
 } from "../store/context/actions";
+import { closeAllPanels } from "@codestream/webview/store/context/thunks";
 import { PostEntryPoint } from "../store/context/types";
 import { addDocumentMarker, fetchDocumentMarkers } from "../store/documentMarkers/actions";
 import { DocumentMarkersActionsType } from "../store/documentMarkers/types";

@@ -31,10 +31,19 @@ import {
 	UpdateUserRequest,
 	UpdateUserRequestType,
 } from "@codestream/protocols/agent";
-import { CSMe, CSUser } from "@codestream/protocols/api";
+import {
+	CSAccessTokenInfo,
+	CSAccessTokenType,
+	CSMe,
+	CSNewRelicProviderInfo,
+	CSUser,
+} from "@codestream/protocols/api";
 
 import { lsp, lspHandler } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
+import { User } from "../api/extensions";
+import { SessionContainer } from "../container";
+import { tokenHolder } from "../providers/newrelic/TokenHolder";
 
 @lsp
 export class UsersManager extends CachedEntityManagerBase<CSUser> {
@@ -90,6 +99,34 @@ export class UsersManager extends CachedEntityManagerBase<CSUser> {
 	protected async fetchById(userId: Id): Promise<CSUser> {
 		const response = await this.session.api.getUser({ userId: userId });
 		return response.user;
+	}
+
+	async cacheSet(entity: CSUser, oldEntity?: CSUser): Promise<CSUser | undefined> {
+		this.updateTokenHolder(entity);
+		return super.cacheSet(entity, oldEntity);
+	}
+
+	private updateTokenHolder(entity: CSUser) {
+		if (SessionContainer.isInitialized()) {
+			const teamId = SessionContainer.instance().session.teamId;
+			const providerInfo = User.getProviderInfo<CSNewRelicProviderInfo>(
+				entity as CSMe,
+				teamId,
+				"newrelic"
+			);
+			if (!providerInfo || !providerInfo.accessToken) {
+				return;
+			}
+			let tokenInfo: CSAccessTokenInfo | undefined;
+			if (providerInfo?.refreshToken && providerInfo.expiresAt && providerInfo.tokenType) {
+				tokenInfo = {
+					refreshToken: providerInfo.refreshToken,
+					expiresAt: providerInfo.expiresAt,
+					tokenType: providerInfo.tokenType as CSAccessTokenType,
+				};
+			}
+			tokenHolder.setAccessToken("UsersManager", providerInfo.accessToken, tokenInfo);
+		}
 	}
 
 	@lspHandler(InviteUserRequestType)

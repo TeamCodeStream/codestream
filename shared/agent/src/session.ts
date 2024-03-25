@@ -1248,7 +1248,8 @@ export class CodeStreamSession {
 		if (response.accessTokenInfo?.tokenType) {
 			token.tokenType = response.accessTokenInfo.tokenType;
 		}
-		tokenHolder.setAccessToken(token.value, response.accessTokenInfo);
+		//  probably don't need as this.api.login() sets it
+		// tokenHolder.setAccessToken("session login", token.value, response.accessTokenInfo);
 		this._teamId = (this._options as any).teamId = token.teamId;
 		this._codestreamUserId = response.user.id;
 		this._nrUserId = response.user.nrUserId;

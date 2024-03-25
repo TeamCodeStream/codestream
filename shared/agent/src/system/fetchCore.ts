@@ -238,10 +238,12 @@ export class FetchCore {
 	}
 
 	private getSource(textData: string, loggingPrefix: string) {
+		// Confirmed nerdgraph and vulnerabilities reset api look the same (bith service gateway)
 		const isServiceGatewayTokenExpired = textData.includes(
 			"<title>403 Sorry – You've reached an error on New Relic</title>"
 		);
 		const isApiServerTokenExpired = textData.includes("service gateway: access token expired");
+
 		const tokenExpiredSource = isServiceGatewayTokenExpired
 			? "SG"
 			: isApiServerTokenExpired
