@@ -101,11 +101,15 @@ export const ObservabilityRelatedSearch = React.memo((props: Props) => {
 		}
 	}, [selectedOption]);
 
-	useInterval(() => {
-		if (!_isEmpty(selectedOption)) {
-			fetchGoldenMetrics(selectedOption?.value);
-		}
-	}, 600000);
+	useInterval(
+		() => {
+			if (!_isEmpty(selectedOption)) {
+				fetchGoldenMetrics(selectedOption?.value);
+			}
+		},
+		300000,
+		true
+	);
 
 	const fetchGoldenMetrics = async (entityGuid?: string | null) => {
 		if (entityGuid) {
