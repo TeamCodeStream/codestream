@@ -1348,7 +1348,7 @@ export const Observability = React.memo((props: Props) => {
 								<ObservabilityLoadingServiceEntities />
 							) : (
 								<>
-									{genericError && (
+									{genericError && repoIsCollapsed && (
 										<GenericWrapper>
 											<GenericCopy>{genericError}</GenericCopy>
 										</GenericWrapper>
@@ -1356,6 +1356,7 @@ export const Observability = React.memo((props: Props) => {
 									{!_isEmpty(currentRepoId) &&
 										!_isEmpty(repoForEntityAssociator) &&
 										!hasEntities &&
+										!repoIsCollapsed &&
 										!genericError && (
 											<GenericWrapper>
 												<GenericCopy>
@@ -1479,20 +1480,17 @@ export const Observability = React.memo((props: Props) => {
 																			onClick={e => {
 																				e.preventDefault();
 																				e.stopPropagation();
-																				HostApi.instance.track(
-																					"codestream/newrelic_link clicked",
-																					{
-																						entity_guid:
-																							derivedState.currentMethodLevelTelemetry
-																								.newRelicEntityGuid,
-																						account_id:
-																							derivedState.currentMethodLevelTelemetry
-																								.newRelicAccountId,
-																						meta_data: "destination: apm_service_summary",
-																						meta_data_2: `codestream_section: golden_metrics`,
-																						event_type: "click",
-																					}
-																				);
+																				HostApi.instance.track("codestream/newrelic_link clicked", {
+																					entity_guid:
+																						derivedState.currentMethodLevelTelemetry
+																							.newRelicEntityGuid,
+																					account_id:
+																						derivedState.currentMethodLevelTelemetry
+																							.newRelicAccountId,
+																					meta_data: "destination: apm_service_summary",
+																					meta_data_2: `codestream_section: golden_metrics`,
+																					event_type: "click",
+																				});
 																				HostApi.instance.send(OpenUrlRequestType, {
 																					url: ea.url!,
 																				});
