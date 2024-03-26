@@ -482,7 +482,7 @@ export const APMLogSearchPanel = (props: {
 	const fetchPartitions = async (entityAccount: EntityAccount) => {
 		try {
 			const response = await HostApi.instance.send(GetLoggingPartitionsRequestType, {
-				accountId: 1,
+				accountId: entityAccount.accountId,
 			});
 
 			if (!response) {
@@ -809,8 +809,6 @@ export const APMLogSearchPanel = (props: {
 								partitionsCallback={setSelectedPartitions}
 							/>
 						)}
-
-						{/* {hasPartitions && <APMPartitions />} */}
 					</div>
 
 					<div className="log-filter-bar-row">
