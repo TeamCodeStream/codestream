@@ -1348,7 +1348,7 @@ export const Observability = React.memo((props: Props) => {
 								<ObservabilityLoadingServiceEntities />
 							) : (
 								<>
-									{genericError && repoIsCollapsed && (
+									{genericError && !repoIsCollapsed && (
 										<GenericWrapper>
 											<GenericCopy>{genericError}</GenericCopy>
 										</GenericWrapper>
