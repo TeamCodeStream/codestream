@@ -1,3 +1,24 @@
+//
+// Using a static value because the query is only available with the Product scope
+// (NR1 internal) and we don't have access to execute it at runtime
+//
+// Query here:
+// https://one.newrelic.com/nerdgraph-graphiql?state=382bbb5b-0b44-60a6-8826-732c0bd40850
+// {
+// 	actor {
+// 	  entityTypes {
+// 		uiDefinitions {
+// 		  displayName
+// 		  displayNamePlural
+// 		}
+// 		domain
+// 		type
+// 		id
+// 	  }
+// 	}
+// }
+//
+
 export const entityTypeDisplayNames = [
 	{
 		domain: "AGENT",
