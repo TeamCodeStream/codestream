@@ -135,6 +135,7 @@ import { ProxyAgent, setGlobalDispatcher } from "undici";
 import * as fs from "fs";
 import { FetchCore } from "./system/fetchCore";
 import { tokenHolder } from "./providers/newrelic/TokenHolder";
+import { newRelicResponseInterceptor } from "./system/newRelicResponseInterceptor";
 
 // https://regex101.com/r/Yn5uqi/1
 const envRegex = /https?:\/\/(?:codestream)?-?([a-zA-Z]+)?(?:[0-9])?(?:\.)((\w+)-?(?:\w+)?)?/i;
@@ -350,7 +351,7 @@ export class CodeStreamSession {
 		Logger.log(`API Server URL: >${_options.serverUrl}<`);
 		Logger.log(`Reject unauthorized: ${this.rejectUnauthorized}`);
 		// Todo add refresh token handling
-		this._nrFetchClient = new FetchCore();
+		this._nrFetchClient = new FetchCore(newRelicResponseInterceptor);
 		this._api = new CodeStreamApiProvider(
 			_options.serverUrl?.trim(),
 			this.versionInfo,

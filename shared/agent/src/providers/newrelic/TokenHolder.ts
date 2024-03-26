@@ -53,9 +53,7 @@ class TokenHolder {
 		const partialToken = token.slice(0, Math.min(8, token.length));
 
 		Logger.log(
-			`TokenHolder.setAccessToken: CodeStream API access token ${partialToken}... with tokenInfo ${JSON.stringify(
-				tokenInfo
-			)} was set from ${source}`
+			`TokenHolder.setAccessToken: CodeStream API access token ${partialToken} was set from ${source}`
 		);
 	}
 }
