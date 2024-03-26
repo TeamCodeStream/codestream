@@ -36,9 +36,10 @@ import { APMPartitions } from "./APMPartitions";
 import { TableWindow } from "../TableWindow";
 import { debounce } from "lodash-es";
 
-interface SelectedOption {
+export interface SelectedOption {
 	value: string;
 	label: string;
+	disabled?: boolean;
 }
 
 const LogFilterBarContainer = styled.div`
@@ -188,6 +189,7 @@ const maxSinceOption: SelectedOption = {
 const defaultPartition: SelectedOption = {
 	value: "Log",
 	label: "Log",
+	disabled: true,
 };
 
 const debouncedSave = debounce((value, fn) => {
@@ -496,15 +498,17 @@ export const APMLogSearchPanel = (props: {
 			}
 
 			// partition query doesn't bring back the default partition, so we'll add it here
-			const defaultPartition = { label: "Log", value: "Log" };
+			const defaultPartition = { label: "Log", value: "Log", disabled: true };
 
 			if (response.partitions && response.partitions.length > 0) {
-				const partitionOptions = response.partitions.map(p => {
-					return {
-						label: p,
-						value: p,
-					};
-				});
+				const partitionOptions: { label: string; value: string; disabled?: boolean }[] =
+					response.partitions.map(p => {
+						return {
+							label: p,
+							value: p,
+							disabled: false,
+						};
+					});
 
 				partitionOptions.unshift(defaultPartition);
 				setSelectPartitionOptions(partitionOptions);
