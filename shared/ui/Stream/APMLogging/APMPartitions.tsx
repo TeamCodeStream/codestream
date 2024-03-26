@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import Select from "react-select";
 import { Button } from "../../src/components/Button";
 
@@ -74,6 +74,39 @@ export const APMPartitions = (props: {
 		}
 	};
 
+	// Needs callback to prevent re-renders.  Better optimization and fixes
+	// a scroll to top on select bug
+	const MenuList = useCallback((props: any) => {
+		return (
+			<div
+				style={{
+					position: "relative",
+					maxHeight: "500px",
+					overflowY: "auto",
+					display: "flex",
+					flexDirection: "column",
+				}}
+			>
+				<div style={{ flex: "1", borderRight: "1px solid var(--base-border-color)" }}>
+					{props.children}
+				</div>
+				<div
+					style={{
+						display: "flex",
+						justifyContent: "flex-end",
+						position: "sticky",
+						bottom: "0",
+						padding: "10px",
+						borderTop: "1px solid var(--base-border-color)",
+						background: "var(--base-background-color)",
+					}}
+				>
+					<Button onClick={() => setOpen(false)}>Done</Button>
+				</div>
+			</div>
+		);
+	}, []);
+
 	return (
 		<div className="log-filter-bar-partition">
 			<Select
@@ -94,42 +127,13 @@ export const APMPartitions = (props: {
 				value={selectedPartitions}
 				onChange={values => partitionsCallback(values || [])}
 				styles={customStyles}
+				menuShouldScrollIntoView={false}
 				components={{
-					MenuList: <CustomMenuList {...props} setOpenCallback={setOpen} />,
+					MenuList: MenuList,
 					Option: CustomOption,
 					MultiValueLabel: CustomMultiValueLabel,
 				}}
 			/>
-		</div>
-	);
-};
-
-const CustomMenuList = props => {
-	const { children, setOpenCallback } = props;
-	return (
-		<div
-			style={{
-				position: "relative",
-				maxHeight: "500px",
-				overflowY: "auto",
-				display: "flex",
-				flexDirection: "column",
-			}}
-		>
-			<div style={{ flex: "1", borderRight: "1px solid var(--base-border-color)" }}>{children}</div>
-			<div
-				style={{
-					display: "flex",
-					justifyContent: "flex-end",
-					position: "sticky",
-					bottom: "0",
-					padding: "10px",
-					borderTop: "1px solid var(--base-border-color)",
-					background: "var(--base-background-color)",
-				}}
-			>
-				<Button onClick={() => setOpenCallback(false)}>Done</Button>
-			</div>
 		</div>
 	);
 };
