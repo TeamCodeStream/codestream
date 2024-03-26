@@ -872,6 +872,10 @@ export class CodeStreamSession {
 		return this.environmentInfo.newRelicSecApiUrl;
 	}
 
+	get newRelicTaxonomyEnforcerUrl() {
+		return "https://taxonomy-enforcer.service.newrelic.com/events";
+	}
+
 	get disableStrictSSL(): boolean {
 		return this._options.disableStrictSSL != null ? this._options.disableStrictSSL : false;
 	}
