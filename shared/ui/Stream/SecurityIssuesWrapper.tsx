@@ -29,6 +29,7 @@ import { setUserPreference } from "./actions";
 import { useAppSelector, useAppDispatch } from "../utilities/hooks";
 import { CodeStreamState } from "@codestream/webview/store";
 import { setPreferences } from "../store/preferences/actions";
+import { Meta, MetaLabel, MetaSection } from "./Codemark/BaseCodemark";
 
 interface Props {
 	currentRepoId: string;
@@ -146,11 +147,11 @@ function VulnerabilityView(props: {
 		event_type: "click",
 	});
 	return (
-		<div className="codemark-form-container">
-			<div className="codemark-form standard-form vscroll">
+		<MetaSection className="codemark-form-container">
+			<Meta className="codemark-form standard-form vscroll">
 				<div className="form-body" style={{ padding: "20px 5px 20px 28px" }}>
 					<div className="contents">
-						<CardTitle>
+						<MetaLabel>
 							<Icon name="lock" className="ticket-icon" />
 							<div className="title">{vuln.title}</div>
 							<div
@@ -165,7 +166,7 @@ function VulnerabilityView(props: {
 							>
 								<Icon title="Open on web" className="clickable" name="globe" />
 							</div>
-						</CardTitle>
+						</MetaLabel>
 						<div style={{ margin: "10px 0" }}>
 							<div>
 								<b>Severity: </b>
@@ -187,8 +188,8 @@ function VulnerabilityView(props: {
 						</div>
 					</div>
 				</div>
-			</div>
-		</div>
+			</Meta>
+		</MetaSection>
 	);
 }
 
