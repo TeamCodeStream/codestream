@@ -1600,7 +1600,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 						</TourTip>
 					</Meta>
 					{props.post && (
-						<div style={{ marginBottom: "10px" }}>
+						<div>
 							<Reactions className="reactions no-pad-left" post={props.post} />
 						</div>
 					)}
