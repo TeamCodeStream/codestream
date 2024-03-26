@@ -1515,7 +1515,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 
 	const renderLogsIcon = () => {
 		return (
-			<Meta>
+			<Meta style={{ paddingBottom: "25px" }}>
 				<LinkForExternalUrl
 					href="#"
 					onClick={e => {
