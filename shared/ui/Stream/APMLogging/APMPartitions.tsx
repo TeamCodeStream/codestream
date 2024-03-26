@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import Select from "react-select";
 import { Button } from "../../src/components/Button";
+
+const menuPortalTarget = document.body;
 
 export const APMPartitions = (props: {
 	selectedPartitions: any;
@@ -8,17 +10,28 @@ export const APMPartitions = (props: {
 	partitionsCallback: Function;
 }) => {
 	const { selectedPartitions, selectPartitionOptions, partitionsCallback } = props;
-
-	interface Option {
-		value: string;
-		label: string;
-	}
+	const selectRef = useRef(null);
+	const [open, setOpen] = useState<boolean>(false);
 	const customStyles = {
 		multiValueRemove: () => ({
 			display: "none",
 		}),
-		multiValueLabel: (provided, state) => ({
+		multiValueLabel: () => ({
 			display: "none",
+		}),
+		multiValue: () => ({
+			margin: 0,
+		}),
+		clearIndicator: () => ({
+			display: "none",
+		}),
+		menu: provided => ({
+			...provided,
+			backgroundColor: "var(--base-background-color) !important",
+			minWidth: "300px",
+			overflowY: "auto",
+			left: "auto",
+			right: 0,
 		}),
 		valueContainer: (defaultStyles: any) => {
 			return {
@@ -27,18 +40,6 @@ export const APMPartitions = (props: {
 				margin: "0 !important",
 			};
 		},
-		clearIndicator: () => ({
-			display: "none",
-		}),
-		menu: provided => ({
-			...provided,
-			backgroundColor: "var(--base-background-color) !important",
-			maxHeight: "500px",
-			minWidth: "300px",
-			overflowY: "auto",
-			left: "auto",
-			right: 0,
-		}),
 	};
 
 	const CustomOption = ({ innerProps, data }) => {
@@ -61,15 +62,6 @@ export const APMPartitions = (props: {
 		);
 	};
 
-	const CustomMenuList = ({ children }) => {
-		return (
-			<div>
-				{children}
-				<Button onClick={() => console.log("Done!")}>Done</Button>
-			</div>
-		);
-	};
-
 	const CustomMultiValueLabel = ({ ...props }) => {
 		if (
 			selectedPartitions &&
@@ -85,6 +77,11 @@ export const APMPartitions = (props: {
 	return (
 		<div className="log-filter-bar-partition">
 			<Select
+				menuIsOpen={open}
+				onMenuOpen={() => setOpen(true)}
+				onMenuClose={() => setOpen(false)}
+				menuPortalTarget={menuPortalTarget}
+				ref={selectRef}
 				id="input-partition"
 				name="partition"
 				classNamePrefix="react-select"
@@ -98,11 +95,41 @@ export const APMPartitions = (props: {
 				onChange={values => partitionsCallback(values || [])}
 				styles={customStyles}
 				components={{
-					MenuList: CustomMenuList,
+					MenuList: <CustomMenuList {...props} setOpenCallback={setOpen} />,
 					Option: CustomOption,
 					MultiValueLabel: CustomMultiValueLabel,
 				}}
 			/>
+		</div>
+	);
+};
+
+const CustomMenuList = props => {
+	const { children, setOpenCallback } = props;
+	return (
+		<div
+			style={{
+				position: "relative",
+				maxHeight: "500px",
+				overflowY: "auto",
+				display: "flex",
+				flexDirection: "column",
+			}}
+		>
+			<div style={{ flex: "1", borderRight: "1px solid var(--base-border-color)" }}>{children}</div>
+			<div
+				style={{
+					display: "flex",
+					justifyContent: "flex-end",
+					position: "sticky",
+					bottom: "0",
+					padding: "10px",
+					borderTop: "1px solid var(--base-border-color)",
+					background: "var(--base-background-color)",
+				}}
+			>
+				<Button onClick={() => setOpenCallback(false)}>Done</Button>
+			</div>
 		</div>
 	);
 };
