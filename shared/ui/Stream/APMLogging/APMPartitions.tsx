@@ -16,8 +16,6 @@ export const APMPartitions = (props: {
 	const selectRef = useRef(null);
 
 	const [open, setOpen] = useState<boolean>(false);
-	const [selectParititionOptionsWithDisabled, setSelectPartitionOptionsWithDisabled] =
-		useState(selectPartitionOptions);
 
 	const customStyles = {
 		multiValueRemove: () => ({
