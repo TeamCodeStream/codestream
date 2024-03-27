@@ -352,14 +352,14 @@ export const APMLogSearchPanel = (props: {
 			return;
 		}
 
-		let subtleLabel = `${optionProps.entityTypeDescription} | `;
-		subtleLabel += optionProps.entityAccount.type ? `${optionProps.entityAccount.type}` : "";
-		subtleLabel = ` (${subtleLabel})`;
+		const subtleLabel = optionProps?.entityAccount?.displayName
+			? `(${optionProps.entityAccount.displayName})`
+			: "";
 
 		const customLabel = (
 			<>
 				<span>Service: {optionProps.entityAccount.entityName}</span>
-				<span className="subtle">{subtleLabel}</span>
+				<span className="subtle"> {subtleLabel}</span>
 			</>
 		);
 

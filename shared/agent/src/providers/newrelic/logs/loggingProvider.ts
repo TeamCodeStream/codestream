@@ -151,7 +151,7 @@ export class LoggingProvider {
 			const entities: EntityAccount[] = response.actor.entitySearch.results.entities.map(
 				(ea: LogEntityResult) => {
 					const entityTypeDisplayName = entityTypeDisplayNames.find(
-						item => item.type === ea.type && item.domain === ea.domain
+						_ => _.type === ea.type && _.domain === ea.domain
 					);
 					const displayName = entityTypeDisplayName?.uiDefinitions?.displayName || "";
 
@@ -165,7 +165,7 @@ export class LoggingProvider {
 						accountName: ea.account.name,
 						type: ea.type,
 						entityTypeDescription: EntityTypeMap[ea.entityType],
-						displayName: displayName,
+						displayName,
 					};
 				}
 			);
