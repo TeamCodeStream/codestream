@@ -29,6 +29,7 @@ import { setUserPreference } from "./actions";
 import { useAppSelector, useAppDispatch } from "../utilities/hooks";
 import { CodeStreamState } from "@codestream/webview/store";
 import { setPreferences } from "../store/preferences/actions";
+import { MetaDescription, MetaLabel } from "./Codemark/BaseCodemark";
 
 interface Props {
 	currentRepoId: string;
@@ -148,44 +149,36 @@ function VulnerabilityView(props: {
 	return (
 		<div className="codemark-form-container">
 			<div className="codemark-form standard-form vscroll">
-				<div className="form-body" style={{ padding: "20px 5px 20px 28px" }}>
-					<div className="contents">
-						<CardTitle>
-							<Icon name="lock" className="ticket-icon" />
-							<div className="title">{vuln.title}</div>
-							<div
-								className="link-to-ticket"
-								onClick={() => {
-									if (vuln.url) {
-										HostApi.instance.send(OpenUrlRequestType, {
-											url: vuln.url,
-										});
-									}
-								}}
-							>
-								<Icon title="Open on web" className="clickable" name="globe" />
-							</div>
-						</CardTitle>
-						<div style={{ margin: "10px 0" }}>
-							<div>
-								<b>Severity: </b>
-								{vuln.severity}
-							</div>
-							<div>
-								<b>CVE Id: </b> {vuln.cveId}
-							</div>
-
-							<div>
-								<b>CVSS score: </b> {vuln.score}
-							</div>
-							<div>
-								<b>CVSS vector: </b> <span style={{ fontSize: "80%" }}>{vuln.vector}</span>
-							</div>
-						</div>
+				<div className="form-body">
+					<Row
+						className="pr-row"
+						style={{ padding: "10px 0" }}
+						onClick={() => {
+							if (vuln.url) {
+								HostApi.instance.send(OpenUrlRequestType, {
+									url: vuln.url,
+								});
+							}
+						}}
+					>
 						<div>
-							<MarkdownText className="less-space" text={vuln.description} inline={false} />
+							<Icon style={{ transform: "scale(0.9)" }} name="lock" />
 						</div>
+
+						<div className="title">{vuln.title}</div>
+
+						<Icon title="Open on web" className="clickable" name="globe" />
+					</Row>
+
+					<div style={{ margin: "10px 0 10px 0" }}>
+						<MetaLabel>Severity: {vuln.severity}</MetaLabel>
+						<MetaLabel>CVE Id: {vuln.cveId}</MetaLabel>
+						<MetaLabel>CVSS score: {vuln.score}</MetaLabel>
+						<MetaLabel>CVSS vector: {vuln.vector}</MetaLabel>
 					</div>
+					<MetaDescription>
+						<MarkdownText className="less-space" text={vuln.description} inline={false} />
+					</MetaDescription>
 				</div>
 			</div>
 		</div>
