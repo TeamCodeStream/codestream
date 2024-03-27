@@ -824,7 +824,7 @@ export const APMLogSearchPanel = (props: {
 									setSearchTerm(e.target.value);
 								}}
 								onKeyDown={checkKeyPress}
-								placeholder="Query logs in the selected enitity"
+								placeholder="Query logs in the selected entity"
 								tabIndex={hasPartitions ? 4 : 3}
 								autoFocus
 							/>
