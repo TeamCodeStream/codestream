@@ -28,6 +28,7 @@ import { mapNRErrorResponse } from "../utils";
 import { Strings } from "../../../system";
 import { LogEntityResult, LogEntitySearchResult } from "./logging.types";
 import { EntityAttributeMapper } from "./entityAttributeMapper";
+import { entityTypeDisplayNames } from "staticData/EntityTypeDisplayNames";
 
 @lsp
 export class LoggingProvider {
@@ -125,6 +126,7 @@ export class LoggingProvider {
 						name
 						entityType
 						type
+						domain
 						tags {
 							key
 							values
@@ -148,15 +150,22 @@ export class LoggingProvider {
 
 			const entities: EntityAccount[] = response.actor.entitySearch.results.entities.map(
 				(ea: LogEntityResult) => {
+					const entityTypeDisplayName = entityTypeDisplayNames.find(
+						item => item.type === ea.type && item.domain === ea.domain
+					);
+					const displayName = entityTypeDisplayName?.uiDefinitions?.displayName || "";
+
 					return {
 						entityGuid: ea.guid,
 						entityName: ea.name,
 						entityType: ea.entityType,
+						entityDomain: ea.domain,
 						tags: ea.tags,
 						accountId: ea.account.id,
 						accountName: ea.account.name,
 						type: ea.type,
 						entityTypeDescription: EntityTypeMap[ea.entityType],
+						displayName: displayName,
 					};
 				}
 			);

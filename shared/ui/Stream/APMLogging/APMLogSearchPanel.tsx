@@ -148,15 +148,15 @@ const MessageHeader = styled.div`
 `;
 
 const Option = (props: OptionProps) => {
-	let subtleLabel = `${props.data?.entityTypeDescription} | `;
-	subtleLabel += props.data?.entityAccount.type ? `${props.data?.entityAccount.type}` : "";
-	subtleLabel = ` (${subtleLabel})`;
+	const subtleLabel = props?.data?.entityAccount?.displayName
+		? `(${props.data.entityAccount.displayName})`
+		: "";
 
 	const children = (
 		<>
 			<OptionName>
 				{props.data?.label}
-				<OptionType>{subtleLabel}</OptionType>
+				<OptionType> {subtleLabel}</OptionType>
 			</OptionName>
 			<OptionAccount>
 				{props.data?.accountName} ({props.data?.entityAccount.accountId})
