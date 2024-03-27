@@ -8,7 +8,7 @@ import { SessionStatus } from "../types";
 // FIXME: sorry, typescript purists: i simply gave up trying to get the type definitions for this module to work
 import { TelemetryData, TelemetryEventName } from "@codestream/protocols/agent";
 import Analytics from "analytics-node";
-import fetch from "node-fetch";
+import { customFetch } from "../system/fetchCore";
 import { debug } from "../system";
 
 export class SegmentTelemetryService {
@@ -176,22 +176,24 @@ export class SegmentTelemetryService {
 			payload
 		);
 		try {
-			this._segmentInstance.track({
-				userId: this._distinctId,
-				anonymousId: this._anonymousId,
-				event,
-				properties: payload,
-			});
-			this._segmentInstance.flush();
+			if (event === "codestream/user/login succeeded") {
+				this._segmentInstance.track({
+					userId: this._distinctId,
+					anonymousId: this._anonymousId,
+					event,
+					properties: payload,
+				});
+				this._segmentInstance.flush();
+			}
 		} catch (ex) {
 			Logger.error(ex, cc);
 		}
 		try {
 			if (
-				this._session.newRelicTaxonomyEnforcerUrl &&
-				this._session.environmentInfo.isProductionCloud
+				this._session.environmentInfo.isProductionCloud &&
+				this._session.newRelicTaxonomyEnforcerUrl
 			) {
-				fetch(this._session.newRelicTaxonomyEnforcerUrl, {
+				customFetch(`${this._session.newRelicTaxonomyEnforcerUrl}/events`, {
 					method: "POST",
 					body: JSON.stringify({
 						event: event,
