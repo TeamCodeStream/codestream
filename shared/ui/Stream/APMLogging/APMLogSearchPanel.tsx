@@ -780,7 +780,7 @@ export const APMLogSearchPanel = (props: {
 								value={selectedEntityAccount}
 								isClearable
 								debounceTimeout={750}
-								placeholder={`Type to search for enitities...`}
+								placeholder={`Type to search for entities...`}
 								onChange={newValue => {
 									handleSelectDropdownOption(newValue);
 								}}
