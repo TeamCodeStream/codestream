@@ -151,6 +151,7 @@ export interface LogEntityResult {
 	guid: string;
 	name: string;
 	entityType: EntityType;
+	domain: string;
 	type: string;
 	tags: {
 		key: string;
