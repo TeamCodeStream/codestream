@@ -32,7 +32,7 @@ import { NrApiConfig } from "../nrApiConfig";
 import { mapNRErrorResponse } from "../utils";
 import { ContextLogger } from "../../contextLogger";
 import { Disposable } from "../../../system/disposable";
-import { entityTypeDisplayNames } from "staticData/EntityTypeDisplayNames";
+import { entityTypeDisplayNames } from "../entityTypeDisplayNames";
 
 const REQUIRED_AGENT_VERSIONS = {
 	go: "3.24.0",

@@ -28,7 +28,7 @@ import { mapNRErrorResponse } from "../utils";
 import { Strings } from "../../../system";
 import { LogEntityResult, LogEntitySearchResult } from "./logging.types";
 import { EntityAttributeMapper } from "./entityAttributeMapper";
-import { entityTypeDisplayNames } from "staticData/EntityTypeDisplayNames";
+import { entityTypeDisplayNames } from "../entityTypeDisplayNames";
 
 @lsp
 export class LoggingProvider {
