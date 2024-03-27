@@ -358,7 +358,7 @@ export const APMLogSearchPanel = (props: {
 
 		const customLabel = (
 			<>
-				<span>Service: {optionProps.entityAccount.entityName}</span>
+				<span>{optionProps.entityAccount.entityName}</span>
 				<span className="subtle"> {subtleLabel}</span>
 			</>
 		);
@@ -780,7 +780,7 @@ export const APMLogSearchPanel = (props: {
 								value={selectedEntityAccount}
 								isClearable
 								debounceTimeout={750}
-								placeholder={`Type to search for services...`}
+								placeholder={`Type to search for enitities...`}
 								onChange={newValue => {
 									handleSelectDropdownOption(newValue);
 								}}
@@ -824,7 +824,7 @@ export const APMLogSearchPanel = (props: {
 									setSearchTerm(e.target.value);
 								}}
 								onKeyDown={checkKeyPress}
-								placeholder="Query logs in the selected service"
+								placeholder="Query logs in the selected enitity"
 								tabIndex={hasPartitions ? 4 : 3}
 								autoFocus
 							/>
