@@ -176,8 +176,13 @@ function VulnerabilityView(props: {
 						<MetaLabel>CVSS score: {vuln.score}</MetaLabel>
 						<MetaLabel>CVSS vector: {vuln.vector}</MetaLabel>
 					</div>
-					<MetaDescription>
-						<MarkdownText className="less-space" text={vuln.description} inline={false} />
+					<MetaDescription style={{ paddingTop: "10px" }}>
+						<MarkdownText
+							className="less-space"
+							text={vuln.description}
+							isHtml={true}
+							inline={false}
+						/>
 					</MetaDescription>
 				</div>
 			</div>
