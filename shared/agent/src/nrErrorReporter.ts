@@ -225,7 +225,7 @@ export function webviewError(request: WebviewErrorRequest): void {
 	// } catch (e) {
 	// 	console.warn(e);
 	// }
-	if (stackMapper) {
+	if (stackMapper && request.error.stack) {
 		// console.log(`=== stack before ${request.error.stack}`);
 		const stackTraceInfo = parseStackString(request.error.stack);
 		// Use source map to resolve original filename / lines

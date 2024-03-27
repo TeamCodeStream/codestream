@@ -24,7 +24,7 @@ function getRateLimit(origin: string): Limit {
 	// 	return { warn: 30, block: 20 };
 	// }
 	else {
-		return { warn: 75, report: 100 };
+		return { warn: 150, report: 200 };
 	}
 }
 

@@ -133,6 +133,9 @@ import {
 import { testGroups } from "./testGroups";
 import { ProxyAgent, setGlobalDispatcher } from "undici";
 import * as fs from "fs";
+import { FetchCore } from "./system/fetchCore";
+import { tokenHolder } from "./providers/newrelic/TokenHolder";
+import { newRelicResponseInterceptor } from "./system/newRelicResponseInterceptor";
 
 // https://regex101.com/r/Yn5uqi/1
 const envRegex = /https?:\/\/(?:codestream)?-?([a-zA-Z]+)?(?:[0-9])?(?:\.)((\w+)-?(?:\w+)?)?/i;
@@ -347,11 +350,14 @@ export class CodeStreamSession {
 
 		Logger.log(`API Server URL: >${_options.serverUrl}<`);
 		Logger.log(`Reject unauthorized: ${this.rejectUnauthorized}`);
+		// Todo add refresh token handling
+		this._nrFetchClient = new FetchCore(newRelicResponseInterceptor);
 		this._api = new CodeStreamApiProvider(
 			_options.serverUrl?.trim(),
 			this.versionInfo,
 			this._httpAgent || this._httpsAgent,
-			this.rejectUnauthorized
+			this.rejectUnauthorized,
+			this._nrFetchClient
 		);
 
 		this._api.useMiddleware({
@@ -360,10 +366,7 @@ export class CodeStreamSession {
 			},
 
 			onResponse: async (context: Readonly<CodeStreamApiMiddlewareContext>, _) => {
-				if (
-					context.response?.headers.get("X-CS-API-Maintenance-Mode") &&
-					this._codestreamAccessToken
-				) {
+				if (context.response?.headers.get("X-CS-API-Maintenance-Mode") && tokenHolder.accessToken) {
 					this._didEncounterMaintenanceMode();
 				}
 
@@ -420,7 +423,7 @@ export class CodeStreamSession {
 
 		this.agent.registerHandler(VerifyConnectivityRequestType, () => this.verifyConnectivity());
 		this.agent.registerHandler(GetAccessTokenRequestType, e => {
-			return { accessToken: this._codestreamAccessToken! };
+			return { accessToken: tokenHolder.accessToken! };
 		});
 		this.agent.registerHandler(PasswordLoginRequestType, e => this.passwordLogin(e));
 		this.agent.registerHandler(TokenLoginRequestType, e => this.tokenLogin(e));
@@ -515,7 +518,7 @@ export class CodeStreamSession {
 
 	onAccessTokenChanged(token: string, refreshToken?: string, tokenType?: CSAccessTokenType) {
 		Logger.log("Session access token was changed, notifying extension...");
-		this._codestreamAccessToken = token;
+		// this._codestreamAccessToken = token;
 		this.agent.sendNotification(DidRefreshAccessTokenNotificationType, {
 			url: this._options.serverUrl,
 			email: this._email!,
@@ -526,10 +529,14 @@ export class CodeStreamSession {
 		});
 	}
 
-	onSessionTokenStatusChanged(status: SessionTokenStatus) {
-		Logger.log(`Session token status changed: ${status}`);
-		this.agent.sendNotification(DidChangeSessionTokenStatusNotificationType, { status });
-	}
+	onSessionTokenStatusChanged = Functions.debounceMemoized(
+		(status: SessionTokenStatus) => {
+			Logger.log(`Session token status changed: ${status}`);
+			this.agent.sendNotification(DidChangeSessionTokenStatusNotificationType, { status });
+		},
+		5000,
+		{ leading: true }
+	);
 
 	private _didEncounterMaintenanceMode() {
 		this.agent.sendNotification(DidEncounterMaintenanceModeNotificationType, {
@@ -538,7 +545,7 @@ export class CodeStreamSession {
 				email: this._email!,
 				url: this._options.serverUrl,
 				teamId: this._teamId!,
-				value: this._codestreamAccessToken!,
+				value: tokenHolder.accessToken!,
 			},
 		});
 	}
@@ -791,6 +798,11 @@ export class CodeStreamSession {
 		}
 	}
 
+	private _nrFetchClient: FetchCore;
+	get nrFetchClient() {
+		return this._nrFetchClient;
+	}
+
 	private _api: ApiProvider | undefined;
 	get api() {
 		return this._api!;
@@ -809,11 +821,6 @@ export class CodeStreamSession {
 	private _email: string | undefined;
 	get email() {
 		return this._email!;
-	}
-
-	private _codestreamAccessToken: string | undefined;
-	get codestreamAccessToken() {
-		return this._codestreamAccessToken;
 	}
 
 	private _environmentInfo: CodeStreamEnvironmentInfo = {
@@ -1242,8 +1249,8 @@ export class CodeStreamSession {
 		if (response.accessTokenInfo?.tokenType) {
 			token.tokenType = response.accessTokenInfo.tokenType;
 		}
-		this._codestreamAccessToken = token.value;
-		this.api.setAccessToken(token.value, response.accessTokenInfo);
+		//  probably don't need as this.api.login() sets it
+		// tokenHolder.setAccessToken("session login", token.value, response.accessTokenInfo);
 		this._teamId = (this._options as any).teamId = token.teamId;
 		this._codestreamUserId = response.user.id;
 		this._nrUserId = response.user.nrUserId;

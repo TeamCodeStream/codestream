@@ -12,6 +12,7 @@ import {
 	ObservabilityRepo,
 	ObservabilityRepoError,
 } from "@codestream/protocols/agent";
+import { shallowEqual } from "react-redux";
 
 interface Props {
 	observabilityErrors: ObservabilityRepoError[];
@@ -37,7 +38,7 @@ export const ObservabilityErrorWrapper = React.memo((props: Props) => {
 		return {
 			errorDropdownIsExpanded,
 		};
-	});
+	}, shallowEqual);
 
 	const handleRowOnClick = () => {
 		const { errorDropdownIsExpanded } = derivedState;

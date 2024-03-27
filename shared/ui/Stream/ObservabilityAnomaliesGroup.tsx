@@ -8,10 +8,10 @@ import { HostApi } from "@codestream/webview/webview-api";
 import { EditorRevealSymbolRequestType } from "@codestream/protocols/webview";
 import { WebviewPanels } from "@codestream/protocols/api";
 import {
-	closeAllPanels,
 	openPanel,
 	setCurrentObservabilityAnomaly,
 } from "@codestream/webview/store/context/actions";
+import { closeAllPanels } from "@codestream/webview/store/context/thunks";
 import Tooltip from "./Tooltip";
 import {
 	DetectionMethod,

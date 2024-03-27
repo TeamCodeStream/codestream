@@ -3,8 +3,7 @@ import { ReposProvider } from "../../../../src/providers/newrelic/repos/reposPro
 import { NewRelicGraphqlClient } from "../../../../src/providers/newrelic/newRelicGraphqlClient";
 import { NrApiConfig } from "../../../../src/providers/newrelic/nrApiConfig";
 import { describe, expect, it } from "@jest/globals";
-import { CSNewRelicProviderInfo } from "@codestream/protocols/api";
-import { NraiProvider } from "providers/newrelic/nrai/nraiProvider";
+import { SourceMapProvider } from "../../../../src/providers/newrelic/errors/sourceMapProvider";
 
 describe("ObservabilityErrorsProvider", () => {
 	it("tryFormatStack", async () => {
@@ -104,17 +103,15 @@ describe("ObservabilityErrorsProvider", () => {
 		};
 
 		const mockReposProvider = {} as ReposProvider;
-		const mockNraiProvider = {} as NraiProvider;
 		const mockNewRelicGraphqlClient = {} as NewRelicGraphqlClient;
 		const mockNrApiConfig = {} as NrApiConfig;
-		const mockNewRelicProviderInfo = {} as CSNewRelicProviderInfo;
+		const sourceMapProvider = {} as SourceMapProvider;
 
 		const observabilityErrorsProvider = new ObservabilityErrorsProvider(
 			mockReposProvider,
-			mockNraiProvider,
 			mockNewRelicGraphqlClient,
 			mockNrApiConfig,
-			mockNewRelicProviderInfo
+			sourceMapProvider
 		);
 
 		const results = observabilityErrorsProvider.tryFormatStack(data.entityType, data.exception);

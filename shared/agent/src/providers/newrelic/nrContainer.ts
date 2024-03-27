@@ -31,6 +31,8 @@ import { NewRelicVulnerabilitiesProvider } from "./vuln/nrVulnerability";
 import { NrqlCompletionProvider } from "./nrql/nrqlCompletionProvider";
 import { AccountProvider } from "./account/accountProvider";
 import { EntityGuidDocumentParser } from "./entity/entityGuidDocumentParser";
+import { FetchCore } from "../../system/fetchCore";
+import { SourceMapProvider } from "./errors/sourceMapProvider";
 
 let nrDirectives: NrDirectives | undefined;
 let disposables: Disposable[] = [];
@@ -81,7 +83,8 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 		session,
 		newRelicProviderInfo,
 		versionInfo,
-		session.isProductionCloud
+		session.isProductionCloud,
+		session.nrFetchClient
 	);
 
 	disposables.push(newRelicGraphqlClient);
@@ -95,10 +98,6 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 		await nrOrgProvider.updateOrgId({ teamId: session.teamId });
 	});
 
-	const nrHttpClient = new HttpClient(newRelicProviderConfig, session, newRelicProviderInfo);
-
-	disposables.push(nrHttpClient);
-
 	const deploymentsProvider = new DeploymentsProvider(newRelicGraphqlClient, nrApiConfig);
 
 	const reposProvider = new ReposProvider(
@@ -111,12 +110,21 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 
 	const nraiProvider = new NraiProvider(newRelicGraphqlClient);
 
+	disposables.push(nraiProvider);
+
+	const genericFetchClient = new FetchCore();
+
+	const sourceMapProvider = new SourceMapProvider(
+		newRelicProviderInfo,
+		nrApiConfig,
+		genericFetchClient
+	);
+
 	const observabilityErrorsProvider = new ObservabilityErrorsProvider(
 		reposProvider,
-		nraiProvider,
 		newRelicGraphqlClient,
 		nrApiConfig,
-		newRelicProviderInfo
+		sourceMapProvider
 	);
 
 	const entityProvider = new EntityProvider(nrApiConfig, newRelicGraphqlClient);
@@ -182,7 +190,12 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 		baseHeaders: nrApiConfig.baseHeaders,
 	};
 
-	const vulnHttpClient = new HttpClient(newRelicVulnProviderConfig, session, newRelicProviderInfo);
+	const vulnHttpClient = new HttpClient(
+		newRelicVulnProviderConfig,
+		session,
+		newRelicProviderInfo,
+		session.nrFetchClient
+	);
 
 	disposables.push(vulnHttpClient);
 

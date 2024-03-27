@@ -45,6 +45,7 @@ import {
 	handlePendingProtocolHandlerUrl,
 } from "../store/context/actions";
 import { logout } from "@codestream/webview/store/session/thunks";
+import { ContextState } from "@codestream/webview/store/context/types";
 
 export const reset = () => action("RESET");
 
@@ -133,6 +134,13 @@ export const bootstrap = (data?: SignedInBootstrapData) => async (dispatch, getS
 const bootstrapEssentials = (data: BootstrapInHostResponse) => dispatch => {
 	dispatch(setIde(data.ide!));
 	dispatch(sessionActions.setSession(data.session));
+	const tmpCtx = data.context as Partial<ContextState>;
+	if (tmpCtx.route) {
+		// Route gets stuck on providerAuth (polling for login otc) even after logging in successfully and it is NOT part
+		// of WebViewContext type so just delete it.
+		// If this causes problems, scope the delete to the 'providerAuth' route
+		delete tmpCtx.route;
+	}
 	dispatch(
 		contextActions.setContext({
 			hasFocus: true,

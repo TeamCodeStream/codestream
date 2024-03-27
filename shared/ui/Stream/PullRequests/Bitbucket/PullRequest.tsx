@@ -509,51 +509,54 @@ export const PullRequest = () => {
 		interval && clearInterval(interval);
 		if (!derivedState.currentPullRequest) return;
 
-		interval = setInterval(async () => {
-			// checks for 15 min
-			if (intervalCounter >= 15) {
-				interval && clearInterval(interval);
-				intervalCounter = 0;
-				console.warn(`stopped getPullRequestLastUpdated interval counter=${intervalCounter}`);
-				return;
-			}
-			try {
-				const response = await dispatch(
-					api({
-						method: "getPullRequestLastUpdated",
-						params: {},
-						options: { preventClearError: true, preventErrorReporting: true },
-					})
-				).unwrap();
-				if (
-					derivedState.currentPullRequest &&
-					response &&
-					response.updatedAt &&
-					derivedState.currentPullRequestLastUpdated &&
-					// if more than 5 seconds "off""
-					(Date.parse(response.updatedAt) -
-						Date.parse(derivedState.currentPullRequestLastUpdated)) /
-						1000 >
-						5
-				) {
-					console.warn(
-						"getPullRequestLastUpdated is updating",
-						response.updatedAt,
-						derivedState.currentPullRequestLastUpdated,
-						intervalCounter
-					);
+		interval = setInterval(
+			async () => {
+				// checks for 15 min
+				if (intervalCounter >= 15) {
+					interval && clearInterval(interval);
 					intervalCounter = 0;
-					reload();
-					clearInterval(interval);
-				} else {
-					intervalCounter++;
-					console.log("incrementing counter", intervalCounter);
+					console.warn(`stopped getPullRequestLastUpdated interval counter=${intervalCounter}`);
+					return;
 				}
-			} catch (ex) {
-				console.error(ex);
-				interval && clearInterval(interval);
-			}
-		}, 1000 * 60 * 5); //300000 === 5 minute interval
+				try {
+					const response = await dispatch(
+						api({
+							method: "getPullRequestLastUpdated",
+							params: {},
+							options: { preventClearError: true, preventErrorReporting: true },
+						})
+					).unwrap();
+					if (
+						derivedState.currentPullRequest &&
+						response &&
+						response.updatedAt &&
+						derivedState.currentPullRequestLastUpdated &&
+						// if more than 5 seconds "off""
+						(Date.parse(response.updatedAt) -
+							Date.parse(derivedState.currentPullRequestLastUpdated)) /
+							1000 >
+							5
+					) {
+						console.warn(
+							"getPullRequestLastUpdated is updating",
+							response.updatedAt,
+							derivedState.currentPullRequestLastUpdated,
+							intervalCounter
+						);
+						intervalCounter = 0;
+						reload();
+						clearInterval(interval);
+					} else {
+						intervalCounter++;
+						console.log("incrementing counter", intervalCounter);
+					}
+				} catch (ex) {
+					console.error(ex);
+					interval && clearInterval(interval);
+				}
+			},
+			1000 * 60 * 19
+		); //300000 === 5 minute interval
 
 		return () => {
 			interval && clearInterval(interval);

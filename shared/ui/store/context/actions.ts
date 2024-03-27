@@ -63,19 +63,6 @@ export const closePrDetailModal =
 		dispatch(setCurrentMethodLevelTelemetry(undefined));
 	};
 
-export const closeAllPanels = () => dispatch => {
-	dispatch(closeModal());
-	dispatch(openPanel(WebviewPanels.Sidebar));
-	dispatch(setCurrentCodemark());
-	dispatch(setCurrentReview());
-	dispatch(setCurrentCodeError());
-	dispatch(clearCurrentPullRequest());
-	dispatch(clearCurrentErrorsInboxOptions());
-	dispatch(clearCurrentInstrumentationOptions());
-	dispatch(clearWantNewRelicOptions());
-	dispatch(setCurrentMethodLevelTelemetry(undefined));
-};
-
 export const closeAllModals = () => dispatch => {
 	dispatch(closeModal());
 	dispatch(setCurrentCodemark());

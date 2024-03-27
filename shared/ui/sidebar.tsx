@@ -94,7 +94,6 @@ import { errorOccurred, offline, online } from "./store/connectivity/actions";
 import {
 	blur,
 	clearCurrentPullRequest,
-	closeAllPanels,
 	focus,
 	goToSignup,
 	setCurrentCodeError,
@@ -109,6 +108,7 @@ import {
 	setPendingProtocolHandlerUrl,
 	setStartWorkCard,
 } from "./store/context/actions";
+import { closeAllPanels } from "@codestream/webview/store/context/thunks";
 import { ContextState } from "./store/context/types";
 import {
 	appendProcessBuffer,
@@ -152,7 +152,7 @@ export async function initialize(selector: string) {
 	listenForEvents(store);
 
 	const locale = "en";
-	const messages: any = translations;
+	const messages: Record<string, string> = translations;
 	// try {
 	// 	const userLocale = navigator && navigator.language?.split(/-|_/)[0];
 	// 	if (userLocale === "es") {

@@ -28,10 +28,8 @@ import {
 } from "@codestream/webview/ipc/host.protocol";
 import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
 import { CodeStreamState } from "@codestream/webview/store";
-import {
-	closeAllPanels,
-	setCurrentMethodLevelTelemetry,
-} from "@codestream/webview/store/context/actions";
+import { setCurrentMethodLevelTelemetry } from "@codestream/webview/store/context/actions";
+import { closeAllPanels } from "@codestream/webview/store/context/thunks";
 import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
 import { useDidMount, usePrevious } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";

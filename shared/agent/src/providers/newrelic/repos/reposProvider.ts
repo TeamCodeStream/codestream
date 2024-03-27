@@ -488,7 +488,6 @@ export class ReposProvider implements Disposable {
 			const queryResponse = await this.graphqlClient.query<EntitySearchResponse>(
 				query,
 				undefined,
-				3,
 				isMultiRegion
 			);
 			const response = {

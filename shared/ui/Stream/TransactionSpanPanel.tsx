@@ -20,10 +20,7 @@ import { LoadingMessage } from "../src/components/LoadingMessage";
 import { PanelHeader } from "../src/components/PanelHeader";
 import { CodeStreamState } from "@codestream/webview/store";
 import { CurrentTransactionSpan } from "@codestream/webview/store/context/types";
-import {
-	closeAllPanels,
-	setCurrentTransactionSpan,
-} from "@codestream/webview/store/context/actions";
+import { setCurrentTransactionSpan } from "@codestream/webview/store/context/actions";
 import { HostApi } from "@codestream/webview/webview-api";
 import {
 	GetObservabilityErrorGroupMetadataRequestType,
@@ -47,6 +44,7 @@ import { EnhancedRepoScm, RepositoryAssociator } from "./CodeError/RepositoryAss
 import { api } from "../store/codeErrors/thunks";
 import { logError } from "../logger";
 import { Modal } from "./Modal";
+import { closeAllPanels } from "@codestream/webview/store/context/thunks";
 
 const COLOR_LINE_1 = "#8884d8";
 const COLOR_LINE_2 = "#7aa7d2";

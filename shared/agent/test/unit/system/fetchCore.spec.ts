@@ -1,6 +1,6 @@
 import { fetch, Response } from "undici";
 import { Logger } from "../../../src/logger";
-import { fetchCore } from "../../../src/system/fetchCore";
+import { FetchCore } from "../../../src/system/fetchCore";
 import { Functions } from "../../../src/system/function";
 
 jest.mock("undici");
@@ -18,13 +18,14 @@ describe("fetchCore", () => {
 	});
 
 	it("should not retry on 200 error", async () => {
+		const fetchClient = new FetchCore();
 		const errorResponse: Partial<Response> = {
 			status: 200,
 			ok: true,
 			text: () => Promise.resolve("good"),
 		};
 		fetchMock.mockResolvedValueOnce(errorResponse as Response);
-		const response = await fetchCore(0, "https://somewhere");
+		const response = await fetchClient.fetchCore(0, "https://somewhere");
 		expect(response[1]).toBe(0);
 		const resp = response[0];
 		expect(await resp.text()).toBe("good");
@@ -32,6 +33,7 @@ describe("fetchCore", () => {
 	});
 
 	it("should retry on 500 error", async () => {
+		const fetchClient = new FetchCore();
 		const errorResponse: Partial<Response> = {
 			status: 500,
 			ok: false,
@@ -44,7 +46,7 @@ describe("fetchCore", () => {
 		fetchMock
 			.mockResolvedValueOnce(errorResponse as Response)
 			.mockResolvedValueOnce(successResponse as Response);
-		const response = await fetchCore(0, "https://somewhere");
+		const response = await fetchClient.fetchCore(0, "https://somewhere");
 		expect(response[1]).toBe(1);
 		const resp = response[0];
 		expect(await resp.text()).toBe("good");
@@ -53,6 +55,7 @@ describe("fetchCore", () => {
 	});
 
 	it("should retry on thrown Error", async () => {
+		const fetchClient = new FetchCore();
 		const successResponse: Partial<Response> = {
 			status: 200,
 			ok: true,
@@ -61,7 +64,7 @@ describe("fetchCore", () => {
 		fetchMock
 			.mockRejectedValueOnce(new Error("something blewed up"))
 			.mockResolvedValueOnce(successResponse as Response);
-		const response = await fetchCore(0, "https://somewhere");
+		const response = await fetchClient.fetchCore(0, "https://somewhere");
 		expect(response[1]).toBe(1);
 		const resp = response[0];
 		expect(await resp.text()).toBe("good");
@@ -70,12 +73,13 @@ describe("fetchCore", () => {
 	});
 
 	it("should give up after 4 500 errors", async () => {
+		const fetchClient = new FetchCore();
 		const errorResponse: Partial<Response> = {
 			status: 500,
 			ok: false,
 		};
 		fetchMock.mockResolvedValue(errorResponse as Response);
-		const response = await fetchCore(0, "https://somewhere");
+		const response = await fetchClient.fetchCore(0, "https://somewhere");
 		expect(response[1]).toBe(4);
 		const resp = response[0];
 		expect(resp.status).toBe(500);
@@ -85,14 +89,18 @@ describe("fetchCore", () => {
 	});
 
 	it("should give up after 4 thrown Errors and throw last error", async () => {
+		const fetchClient = new FetchCore();
 		fetchMock.mockRejectedValue(new Error("something blewed up"));
-		await expect(fetchCore(0, "https://somewhere")).rejects.toThrow("something blewed up");
+		await expect(fetchClient.fetchCore(0, "https://somewhere")).rejects.toThrow(
+			"something blewed up"
+		);
 		expect(waitMock).toHaveBeenCalledTimes(3);
 		expect(waitMock).toHaveBeenLastCalledWith(750);
 		expect(loggerMock.error).toHaveBeenCalledTimes(4);
 	});
 
 	it("does not error log boring logs", async () => {
+		const fetchClient = new FetchCore();
 		// Create unmocked ConnectTimeoutError but unfortunately still does not completely fix test
 		// (can't use instanceof in fetchCore.ts)
 		const cause = new undiciOriginal.errors.ConnectTimeoutError();
@@ -100,7 +108,9 @@ describe("fetchCore", () => {
 		fetchMock.mockImplementation(() => {
 			throw error;
 		});
-		await expect(fetchCore(0, "https://somewhere")).rejects.toThrow("Connect Timeout Error");
+		await expect(fetchClient.fetchCore(0, "https://somewhere")).rejects.toThrow(
+			"Connect Timeout Error"
+		);
 		expect(waitMock).toHaveBeenCalledTimes(3);
 		expect(waitMock).toHaveBeenLastCalledWith(750);
 		expect(loggerMock.error).toHaveBeenCalledTimes(0);

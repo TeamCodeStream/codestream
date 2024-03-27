@@ -35,7 +35,6 @@ import { LoadingMessage } from "../src/components/LoadingMessage";
 import { PanelHeader } from "../src/components/PanelHeader";
 import { CodeStreamState } from "../store";
 import {
-	closeAllPanels,
 	setCurrentPullRequest,
 	setCurrentRepo,
 	setCurrentReview,
@@ -60,6 +59,7 @@ import { PrePRProviderInfoModal } from "./PrePRProviderInfoModal";
 import { PRBranch, PRError } from "./PullRequestComponents";
 import { PullRequestFilesChangedList } from "./PullRequestFilesChangedList";
 import Tooltip from "./Tooltip";
+import { closeAllPanels } from "@codestream/webview/store/context/thunks";
 
 export const EMPTY_STATUS = {
 	label: "",
