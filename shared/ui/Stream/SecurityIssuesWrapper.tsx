@@ -29,7 +29,13 @@ import { setUserPreference } from "./actions";
 import { useAppSelector, useAppDispatch } from "../utilities/hooks";
 import { CodeStreamState } from "@codestream/webview/store";
 import { setPreferences } from "../store/preferences/actions";
-import { MetaDescription, MetaLabel } from "./Codemark/BaseCodemark";
+import {
+	Meta,
+	MetaDescription,
+	MetaSection,
+	MinimumWidthCard,
+} from "./Codemark/BaseCodemark";
+import { DataLabel, DataRow, DataValue } from "./CodeError";
 
 interface Props {
 	currentRepoId: string;
@@ -86,9 +92,9 @@ export const CardTitle = styled.div`
 `;
 
 const MarkdownStyle = styled.div`
-	font-size: 11px;
+	font-size: 12px;
 	h1 {
-		font-size: 16px;
+		font-size: 15px;
 	}
 	h2 {
 		font-size: 15px;
@@ -103,7 +109,7 @@ const MarkdownStyle = styled.div`
 		font-size: 12px;
 	}
 	h6 {
-		font-size: 11px;
+		font-size: 12px;
 	}
 `;
 
@@ -169,47 +175,69 @@ function VulnerabilityView(props: {
 		event_type: "click",
 	});
 	return (
-		<div className="codemark-form-container">
-			<div className="codemark-form standard-form vscroll">
-				<div className="form-body">
-					<Row
-						className="pr-row"
-						style={{ padding: "10px 0" }}
-						onClick={() => {
-							if (vuln.url) {
-								HostApi.instance.send(OpenUrlRequestType, {
-									url: vuln.url,
-								});
-							}
-						}}
-					>
-						<div>
-							<Icon style={{ transform: "scale(0.9)" }} name="lock" />
-						</div>
-
-						<div className="title">{vuln.title}</div>
-
+		<MinimumWidthCard>
+			<div
+				className="codestream.stream.vscroll"
+				style={{
+					display: "flex",
+					padding: "10px",
+					whiteSpace: "normal",
+					alignItems: "flex-start",
+					position: "relative",
+					flexDirection: "column",
+				}}
+			>
+				<div
+					onClick={() => {
+						if (vuln.url) {
+							HostApi.instance.send(OpenUrlRequestType, {
+								url: vuln.url,
+							});
+						}
+					}}
+				>
+					<Icon style={{ transform: "scale(0.9)" }} name="lock" />
+					<div style={{ fontSize: "16px", paddingLeft: "10px" }} className="title">
+						{vuln.title}
+					</div>
+					<span>
 						<Icon title="Open on web" className="clickable" name="globe" />
-					</Row>
+					</span>
+				</div>
 
-					<Row className="pr-row">
-						<div style={{ margin: "10px 0 10px 0" }}>
-							<MetaLabel>Severity: {vuln.severity}</MetaLabel>
-							<MetaLabel>CVE Id: {vuln.cveId}</MetaLabel>
-							<MetaLabel>CVSS score: {vuln.score}</MetaLabel>
-							<MetaLabel>CVSS vector: {vuln.vector}</MetaLabel>
-						</div>
-					</Row>
-					<Row className="pr-row">
-						<MetaDescription style={{ paddingTop: "10px" }}>
-							<MarkdownStyle>
-								<MarkdownText className="less-space" text={vuln.description} inline={false} />
-							</MarkdownStyle>
-						</MetaDescription>
-					</Row>
+				<div>
+					<DataRow>
+						<DataLabel>Severity: </DataLabel>
+						<DataValue>{vuln.severity}</DataValue>
+					</DataRow>
+
+					<DataRow>
+						<DataLabel>CVE Id: </DataLabel>
+						<DataValue>{vuln.cveId}</DataValue>
+					</DataRow>
+
+					<DataRow>
+						<DataLabel>CVSS score: </DataLabel>
+						<DataValue>{vuln.score}</DataValue>
+					</DataRow>
+					<DataRow>
+						<DataLabel>CVSS vector: </DataLabel>
+						<DataValue>{vuln.vector}</DataValue>
+					</DataRow>
+				</div>
+				<div>
+					<MetaSection>
+						<Meta>
+							<MetaDescription>
+								<MarkdownStyle>
+									<MarkdownText className="less-space" text={vuln.description} inline={false} />
+								</MarkdownStyle>
+							</MetaDescription>
+						</Meta>
+					</MetaSection>
 				</div>
 			</div>
-		</div>
+		</MinimumWidthCard>
 	);
 }
 

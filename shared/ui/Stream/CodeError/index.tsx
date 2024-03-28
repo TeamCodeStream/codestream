@@ -211,14 +211,14 @@ const ClickLine = styled.div`
 	}
 `;
 
-const DataRow = styled.div`
+export const DataRow = styled.div`
 	display: flex;
 	align-items: center;
 `;
-const DataLabel = styled.div`
+export const DataLabel = styled.div`
 	margin-right: 5px;
 `;
-const DataValue = styled.div`
+export const DataValue = styled.div`
 	color: var(--text-color-subtle);
 `;
 
