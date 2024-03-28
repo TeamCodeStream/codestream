@@ -200,12 +200,7 @@ function VulnerabilityView(props: {
 					</div>
 					<MetaDescription style={{ paddingTop: "10px" }}>
 						<MarkdownStyle>
-							<MarkdownText
-								className="less-space"
-								isHtml={true}
-								text={vuln.description}
-								inline={false}
-							/>
+							<MarkdownText className="less-space" text={vuln.description} inline={false} />
 						</MarkdownStyle>
 					</MetaDescription>
 				</div>
