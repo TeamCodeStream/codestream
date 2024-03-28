@@ -140,9 +140,9 @@ export class CodeStreamAgent implements Disposable {
 		return this._recordRequests;
 	}
 
-	private _httpHistoryByOrigin: HistoryCounter | undefined = undefined;
-	get httpHistoryByOrigin() {
-		return this._httpHistoryByOrigin;
+	private _httpHistoryByUrl: HistoryCounter | undefined = undefined;
+	get httpHistoryByUrl() {
+		return this._httpHistoryByUrl;
 	}
 
 	private _lspHistory: HistoryCounter | undefined = undefined;
@@ -190,7 +190,7 @@ export class CodeStreamAgent implements Disposable {
 				Logger.overrideIsDebugging();
 			}
 
-			this._httpHistoryByOrigin = new HistoryCounter(
+			this._httpHistoryByUrl = new HistoryCounter(
 				"apiCall",
 				RATE_LIMIT_INTERVAL,
 				100,

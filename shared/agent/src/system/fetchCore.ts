@@ -2,7 +2,9 @@ import { isEmpty } from "lodash";
 import { errors, fetch, Request, RequestInfo, RequestInit, Response } from "undici";
 import { Logger } from "../logger";
 import { Functions } from "./function";
-import { handleLimit, InternalRateError } from "../rateLimits";
+import { handleLimit, InternalRateError, InternalRateForceLogoutError } from "../rateLimits";
+import { SessionContainer } from "../container";
+import { SessionTokenStatus } from "@codestream/protocols/agent";
 
 export interface ExtraRequestInit extends RequestInit {
 	timeout?: number;
@@ -91,7 +93,7 @@ export class FetchCore {
 		const loggingPrefix = `[fetchCore] [${init?.method ?? "GET"} ${origin}${path}]`;
 		let timeout: NodeJS.Timeout | undefined = undefined;
 		try {
-			handleLimit(origin);
+			handleLimit(origin, init.method ?? "GET", path);
 			const controller = new AbortController();
 			timeout = setTimeout(() => {
 				try {
@@ -153,6 +155,14 @@ export class FetchCore {
 			}
 			if (ex instanceof InternalRateError) {
 				throw ex;
+			}
+			if (ex instanceof InternalRateForceLogoutError) {
+				if (SessionContainer.isInitialized()) {
+					Logger.log("Setting session expired due to force logout error");
+					SessionContainer.instance().session.onSessionTokenStatusChanged(
+						SessionTokenStatus.Expired
+					);
+				}
 			}
 
 			const shouldLog = this.shouldLogRetry(ex);

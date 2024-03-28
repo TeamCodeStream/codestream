@@ -22,7 +22,7 @@ export class HistoryCounter {
 		private log: Logger,
 		private isDebugging: boolean
 	) {
-		// Just using setIntervalAsync to deal with setInterval bing completely
+		// Just using setIntervalAsync to deal with setInterval being completely
 		// different type on browser vs node
 		this.interval = setIntervalAsync(() => {
 			this.trim();

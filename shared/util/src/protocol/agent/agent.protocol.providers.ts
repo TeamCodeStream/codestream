@@ -1763,6 +1763,7 @@ export const NRErrorTypes = [
 	"NR_UNKNOWN",
 	"GENERIC",
 	"INTERNAL_RATE",
+	"INTERNAL_RATE_FORCE_LOGOUT",
 ] as const;
 
 export type NRErrorType = (typeof NRErrorTypes)[number];
