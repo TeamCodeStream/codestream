@@ -198,7 +198,7 @@ export class SegmentTelemetryService {
 					body: JSON.stringify({
 						event: event,
 						properties: payload,
-						messageId: `codestream_${UUID()}`,
+						messageId: UUID(),
 						timestamp: new Date(),
 						userId: this._distinctId,
 						anonymousId: this._anonymousId,
