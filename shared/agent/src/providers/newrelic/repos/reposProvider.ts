@@ -32,7 +32,7 @@ import { NrApiConfig } from "../nrApiConfig";
 import { mapNRErrorResponse } from "../utils";
 import { ContextLogger } from "../../contextLogger";
 import { Disposable } from "../../../system/disposable";
-import { entityTypeDisplayNames } from "../entityTypeDisplayNames";
+import { entityTypeDisplayNames, entityTypeDisplayNamesCustom } from "../entityTypeDisplayNames";
 
 const REQUIRED_AGENT_VERSIONS = {
 	go: "3.24.0",
@@ -251,9 +251,15 @@ export class ReposProvider implements Disposable {
 							entity,
 							request?.isVsCode
 						);
-						const entityTypeDisplayName = entityTypeDisplayNames.find(
-							_ => _.type === entity.type && _.domain === entity.domain
-						);
+
+						let entityTypeDisplayName =
+							entityTypeDisplayNamesCustom.find(
+								({ type, domain }) => type === entity.type && domain === entity.domain
+							) ||
+							entityTypeDisplayNames.find(
+								({ type, domain }) => type === entity.type && domain === entity.domain
+							);
+
 						const displayName = entityTypeDisplayName?.uiDefinitions?.displayName || "";
 
 						return {

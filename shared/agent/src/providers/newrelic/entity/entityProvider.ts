@@ -38,6 +38,7 @@ import {
 	GraphqlNrqlTimeoutError,
 } from "../newrelic.types";
 import { NrApiConfig } from "../nrApiConfig";
+import { entityTypeDisplayNames, entityTypeDisplayNamesCustom } from "../entityTypeDisplayNames";
 
 const ENTITY_CACHE_KEY = "entityCache";
 
@@ -193,6 +194,8 @@ export class EntityProvider implements Disposable {
 						guid
 						name
 						entityType
+						type
+						domain
 						account {
 							name
 						  }
@@ -209,13 +212,30 @@ export class EntityProvider implements Disposable {
 				}
 			);
 			const entities = response.actor.entitySearch.results.entities.map(
-				(_: { guid: string; name: string; account: { name: string }; entityType: EntityType }) => {
+				(_: {
+					guid: string;
+					domain: string;
+					type: string;
+					name: string;
+					account: { name: string };
+					entityType: EntityType;
+				}) => {
+					let entityTypeDisplayName =
+						entityTypeDisplayNamesCustom.find(
+							({ type, domain }) => type === _.type && domain === _.domain
+						) ||
+						entityTypeDisplayNames.find(
+							({ type, domain }) => type === _.type && domain === _.domain
+						);
+
+					const displayName = entityTypeDisplayName?.uiDefinitions?.displayName || "";
 					return {
 						guid: _.guid,
 						name: _.name,
 						account: _.account.name,
 						entityType: _.entityType,
 						entityTypeDescription: EntityTypeMap[_.entityType],
+						displayName,
 					};
 				}
 			);

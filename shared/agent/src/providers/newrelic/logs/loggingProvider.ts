@@ -28,7 +28,7 @@ import { mapNRErrorResponse } from "../utils";
 import { Strings } from "../../../system";
 import { LogEntityResult, LogEntitySearchResult } from "./logging.types";
 import { EntityAttributeMapper } from "./entityAttributeMapper";
-import { entityTypeDisplayNames } from "../entityTypeDisplayNames";
+import { entityTypeDisplayNames, entityTypeDisplayNamesCustom } from "../entityTypeDisplayNames";
 
 @lsp
 export class LoggingProvider {
@@ -150,9 +150,14 @@ export class LoggingProvider {
 
 			const entities: EntityAccount[] = response.actor.entitySearch.results.entities.map(
 				(ea: LogEntityResult) => {
-					const entityTypeDisplayName = entityTypeDisplayNames.find(
-						_ => _.type === ea.type && _.domain === ea.domain
-					);
+					let entityTypeDisplayName =
+						entityTypeDisplayNamesCustom.find(
+							({ type, domain }) => type === ea.type && domain === ea.domain
+						) ||
+						entityTypeDisplayNames.find(
+							({ type, domain }) => type === ea.type && domain === ea.domain
+						);
+
 					const displayName = entityTypeDisplayName?.uiDefinitions?.displayName || "";
 
 					return {

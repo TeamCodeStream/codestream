@@ -84,6 +84,8 @@ export interface EntitySearchResult {
 					guid: string;
 					name: string;
 					entityType: EntityType;
+					domain: string;
+					type: string;
 				}[];
 			};
 		};

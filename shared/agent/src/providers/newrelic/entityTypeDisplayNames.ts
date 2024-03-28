@@ -2,6 +2,43 @@
 // Using a static value because the query is only available with the Product scope
 // (NR1 internal) and we don't have access to execute it at runtime
 //
+// For the custom array, some of the more commonly used displayNames from entityTypeDisplayNames
+// are not very CS friendly given our limited landscape to work with in the sidebar.
+// This is a list of custom overrides we use instead.
+//
+export const entityTypeDisplayNamesCustom = [
+	{
+		domain: "APM",
+		id: "APM-APPLICATION",
+		type: "APPLICATION",
+		uiDefinitions: {
+			displayName: "APM",
+			displayNamePlural: "APM",
+		},
+	},
+	{
+		domain: "BROWSER",
+		id: "BROWSER-APPLICATION",
+		type: "APPLICATION",
+		uiDefinitions: {
+			displayName: "Browser",
+			displayNamePlural: "Browser",
+		},
+	},
+	{
+		domain: "EXT",
+		id: "EXT-SERVICE",
+		type: "SERVICE",
+		uiDefinitions: {
+			displayName: "OTel",
+			displayNamePlural: "OTel",
+		},
+	},
+];
+
+//
+// The below array is pulled straight from NR1
+//
 // Query here:
 // https://one.newrelic.com/nerdgraph-graphiql?state=382bbb5b-0b44-60a6-8826-732c0bd40850
 // {
