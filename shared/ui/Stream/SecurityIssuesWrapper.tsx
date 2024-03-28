@@ -192,17 +192,21 @@ function VulnerabilityView(props: {
 						<Icon title="Open on web" className="clickable" name="globe" />
 					</Row>
 
-					<div style={{ margin: "10px 0 10px 0" }}>
-						<MetaLabel>Severity: {vuln.severity}</MetaLabel>
-						<MetaLabel>CVE Id: {vuln.cveId}</MetaLabel>
-						<MetaLabel>CVSS score: {vuln.score}</MetaLabel>
-						<MetaLabel>CVSS vector: {vuln.vector}</MetaLabel>
-					</div>
-					<MetaDescription style={{ paddingTop: "10px" }}>
-						<MarkdownStyle>
-							<MarkdownText className="less-space" text={vuln.description} inline={false} />
-						</MarkdownStyle>
-					</MetaDescription>
+					<Row className="pr-row">
+						<div style={{ margin: "10px 0 10px 0" }}>
+							<MetaLabel>Severity: {vuln.severity}</MetaLabel>
+							<MetaLabel>CVE Id: {vuln.cveId}</MetaLabel>
+							<MetaLabel>CVSS score: {vuln.score}</MetaLabel>
+							<MetaLabel>CVSS vector: {vuln.vector}</MetaLabel>
+						</div>
+					</Row>
+					<Row className="pr-row">
+						<MetaDescription style={{ paddingTop: "10px" }}>
+							<MarkdownStyle>
+								<MarkdownText className="less-space" text={vuln.description} inline={false} />
+							</MarkdownStyle>
+						</MetaDescription>
+					</Row>
 				</div>
 			</div>
 		</div>
