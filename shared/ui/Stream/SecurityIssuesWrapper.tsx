@@ -29,12 +29,7 @@ import { setUserPreference } from "./actions";
 import { useAppSelector, useAppDispatch } from "../utilities/hooks";
 import { CodeStreamState } from "@codestream/webview/store";
 import { setPreferences } from "../store/preferences/actions";
-import {
-	Meta,
-	MetaDescription,
-	MetaSection,
-	MinimumWidthCard,
-} from "./Codemark/BaseCodemark";
+import { Meta, MetaDescription, MetaSection, MinimumWidthCard } from "./Codemark/BaseCodemark";
 import { DataLabel, DataRow, DataValue } from "./CodeError";
 
 interface Props {
@@ -180,7 +175,7 @@ function VulnerabilityView(props: {
 				className="codestream.stream.vscroll"
 				style={{
 					display: "flex",
-					padding: "10px",
+					padding: "20px",
 					whiteSpace: "normal",
 					alignItems: "flex-start",
 					position: "relative",
@@ -188,6 +183,8 @@ function VulnerabilityView(props: {
 				}}
 			>
 				<div
+					style={{ fontSize: "16px" }}
+					className="title"
 					onClick={() => {
 						if (vuln.url) {
 							HostApi.instance.send(OpenUrlRequestType, {
@@ -197,12 +194,9 @@ function VulnerabilityView(props: {
 					}}
 				>
 					<Icon style={{ transform: "scale(0.9)" }} name="lock" />
-					<div style={{ fontSize: "16px", paddingLeft: "10px" }} className="title">
-						{vuln.title}
-					</div>
-					<span>
-						<Icon title="Open on web" className="clickable" name="globe" />
-					</span>
+					{vuln.title}
+
+					<Icon title="Open on web" className="clickable" name="globe" />
 				</div>
 
 				<div>
