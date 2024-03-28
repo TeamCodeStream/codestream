@@ -85,6 +85,28 @@ export const CardTitle = styled.div`
 	}
 `;
 
+const MarkdownStyle = styled.div`
+	font-size: 11px;
+	h1 {
+		font-size: 16px;
+	}
+	h2 {
+		font-size: 15px;
+	}
+	h3 {
+		font-size: 14px;
+	}
+	h4 {
+		font-size: 13px;
+	}
+	h5 {
+		font-size: 12px;
+	}
+	h6 {
+		font-size: 11px;
+	}
+`;
+
 const severityColorMap: Record<RiskSeverity, string> = {
 	CRITICAL: "#f52222",
 	HIGH: "#F5554B",
@@ -177,12 +199,14 @@ function VulnerabilityView(props: {
 						<MetaLabel>CVSS vector: {vuln.vector}</MetaLabel>
 					</div>
 					<MetaDescription style={{ paddingTop: "10px" }}>
-						<MarkdownText
-							className="less-space"
-							text={vuln.description}
-							isHtml={true}
-							inline={false}
-						/>
+						<MarkdownStyle>
+							<MarkdownText
+								className="less-space"
+								isHtml={true}
+								text={vuln.description}
+								inline={false}
+							/>
+						</MarkdownStyle>
 					</MetaDescription>
 				</div>
 			</div>
