@@ -1456,7 +1456,7 @@ export const Observability = React.memo((props: Props) => {
 																					{ea.accountName && ea.accountName.length > 25
 																						? ea.accountName.substr(0, 25) + "..."
 																						: ea.accountName}
-																					{ea?.domain ? ` (${ea?.domain})` : ""}
+																					{ea?.displayName ? ` (${ea?.displayName})` : ""}
 																				</span>
 																			</div>
 																		</div>

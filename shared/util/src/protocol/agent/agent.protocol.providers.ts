@@ -1539,6 +1539,7 @@ export interface EntityAccount {
 	entityTypeDescription?: string;
 	domain?: string;
 	url?: string;
+	displayName?: string;
 	tags: {
 		key: string;
 		values: string[];
@@ -1592,6 +1593,7 @@ export interface GetObservabilityEntitiesResponse {
 		account: string;
 		entityType: EntityType;
 		entityTypeDescription: string;
+		displayName: string;
 	}[];
 	nextCursor?: string;
 }

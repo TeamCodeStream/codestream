@@ -1,6 +1,5 @@
 import {
 	EntityAccount,
-	EntityType,
 	GetObservabilityEntitiesRequestType,
 	WarningOrError,
 } from "@codestream/protocols/agent";
@@ -75,25 +74,11 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 		});
 
 		let options = result.entities.map(e => {
-			const typeLabel = (t: EntityType) => {
-				switch (t) {
-					case "BROWSER_APPLICATION_ENTITY":
-						return "Browser";
-					case "MOBILE_APPLICATION_ENTITY":
-						return "Mobile";
-					case "THIRD_PARTY_SERVICE_ENTITY":
-						return "OTEL";
-					case "INFRASTRUCTURE_AWS_LAMBDA_FUNCTION_ENTITY":
-						return "Lambda";
-					default:
-						return "APM";
-				}
-			};
 			return {
 				label: e.name,
 				value: e.guid,
 				sublabel: e.account,
-				labelAppend: typeLabel(e.entityType),
+				labelAppend: e.displayName,
 			};
 		});
 
