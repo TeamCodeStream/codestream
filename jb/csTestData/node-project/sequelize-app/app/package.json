@@ -14,7 +14,7 @@
   "dependencies": {
     "body-parser": "^1.19.0",
     "dotenv": "^16.0.3",
-    "express": "^4.17.1",
+    "express": "^4.19.2",
     "newrelic": "^9.7.4",
     "pg": "^8.8.0",
     "sequelize": "^6.29.0",
