@@ -24,11 +24,10 @@ import {
 import { log } from "../../../system/decorators/log";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 import { ContextLogger } from "../../contextLogger";
-import { mapNRErrorResponse } from "../utils";
+import { mapNRErrorResponse, findEntityTypeDisplayName } from "../utils";
 import { Strings } from "../../../system";
 import { LogEntityResult, LogEntitySearchResult } from "./logging.types";
 import { EntityAttributeMapper } from "./entityAttributeMapper";
-import { entityTypeDisplayNames, entityTypeDisplayNamesCustom } from "../entityTypeDisplayNames";
 
 @lsp
 export class LoggingProvider {
@@ -150,16 +149,6 @@ export class LoggingProvider {
 
 			const entities: EntityAccount[] = response.actor.entitySearch.results.entities.map(
 				(ea: LogEntityResult) => {
-					let entityTypeDisplayName =
-						entityTypeDisplayNamesCustom.find(
-							({ type, domain }) => type === ea.type && domain === ea.domain
-						) ||
-						entityTypeDisplayNames.find(
-							({ type, domain }) => type === ea.type && domain === ea.domain
-						);
-
-					const displayName = entityTypeDisplayName?.uiDefinitions?.displayName || "";
-
 					return {
 						entityGuid: ea.guid,
 						entityName: ea.name,
@@ -170,7 +159,7 @@ export class LoggingProvider {
 						accountName: ea.account.name,
 						type: ea.type,
 						entityTypeDescription: EntityTypeMap[ea.entityType],
-						displayName,
+						displayName: findEntityTypeDisplayName(ea.domain, ea.type),
 					};
 				}
 			);

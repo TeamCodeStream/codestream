@@ -1,6 +1,7 @@
 import { NRErrorResponse, NRErrorType, NewRelicId } from "@codestream/protocols/agent";
 import { CodedError } from "./newrelic.types";
 import { ContextLogger } from "../contextLogger";
+import { entityTypeDisplayNames, entityTypeDisplayNamesCustom } from "./entityTypeDisplayNames";
 
 export function toFixedNoRounding(number: number, precision = 1): string {
 	const factor = Math.pow(10, precision);
@@ -77,4 +78,12 @@ export function parseId(idLike: string, strict: boolean = false): NewRelicId | u
 	}
 	// Fallback return undefined if any error occurs during execution
 	return undefined;
+}
+
+export function findEntityTypeDisplayName(eDomain: string, eType: string) {
+	let entityTypeDisplayName =
+		entityTypeDisplayNamesCustom.find(({ type, domain }) => type === eType && domain === eDomain) ||
+		entityTypeDisplayNames.find(({ type, domain }) => type === eType && domain === eDomain);
+
+	return entityTypeDisplayName?.uiDefinitions?.displayName || "";
 }

@@ -23,6 +23,7 @@ import {
 	RelatedEntity,
 } from "@codestream/protocols/agent";
 import Cache from "@codestream/utils/system/timedCache";
+import { findEntityTypeDisplayName } from "../utils";
 import { isEmpty as _isEmpty, isUndefined as _isUndefined, isEqual } from "lodash";
 import { ResponseError } from "vscode-jsonrpc/lib/messages";
 import { Logger } from "../../../logger";
@@ -38,7 +39,6 @@ import {
 	GraphqlNrqlTimeoutError,
 } from "../newrelic.types";
 import { NrApiConfig } from "../nrApiConfig";
-import { entityTypeDisplayNames, entityTypeDisplayNamesCustom } from "../entityTypeDisplayNames";
 
 const ENTITY_CACHE_KEY = "entityCache";
 
@@ -220,22 +220,13 @@ export class EntityProvider implements Disposable {
 					account: { name: string };
 					entityType: EntityType;
 				}) => {
-					let entityTypeDisplayName =
-						entityTypeDisplayNamesCustom.find(
-							({ type, domain }) => type === _.type && domain === _.domain
-						) ||
-						entityTypeDisplayNames.find(
-							({ type, domain }) => type === _.type && domain === _.domain
-						);
-
-					const displayName = entityTypeDisplayName?.uiDefinitions?.displayName || "";
 					return {
 						guid: _.guid,
 						name: _.name,
 						account: _.account.name,
 						entityType: _.entityType,
 						entityTypeDescription: EntityTypeMap[_.entityType],
-						displayName,
+						displayName: findEntityTypeDisplayName(_.domain, _.type),
 					};
 				}
 			);
