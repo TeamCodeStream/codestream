@@ -9,7 +9,7 @@
   "author": "Jessica Lopatta <jlopatta@newrelic.com>",
   "license": "Apache-2.0",
   "dependencies": {
-    "express": "^4.18.2",
+    "express": "^4.19.2",
     "newrelic": "^9.13.0",
     "uuid": "^9.0.0"
   },
