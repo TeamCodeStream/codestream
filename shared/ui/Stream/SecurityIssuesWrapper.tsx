@@ -31,6 +31,7 @@ import { CodeStreamState } from "@codestream/webview/store";
 import { setPreferences } from "../store/preferences/actions";
 import { Meta, MetaDescription, MetaSection, MinimumWidthCard } from "./Codemark/BaseCodemark";
 import { DataLabel, DataRow, DataValue } from "./CodeError";
+import { CardBody } from "../src/components/Card";
 
 interface Props {
 	currentRepoId: string;
@@ -172,18 +173,16 @@ function VulnerabilityView(props: {
 	return (
 		<MinimumWidthCard>
 			<div
-				className="codestream.stream.vscroll"
 				style={{
 					display: "flex",
-					padding: "20px",
-					whiteSpace: "normal",
-					alignItems: "flex-start",
-					position: "relative",
+					padding: "30px",
+					width: "100%",
 					flexDirection: "column",
+					height: "100%",
 				}}
 			>
-				<div
-					style={{ fontSize: "16px" }}
+				<CardTitle
+					style={{ fontSize: "16px", paddingBottom: "10px" }}
 					className="title"
 					onClick={() => {
 						if (vuln.url) {
@@ -193,13 +192,18 @@ function VulnerabilityView(props: {
 						}
 					}}
 				>
-					<Icon style={{ transform: "scale(0.9)" }} name="lock" />
-					{vuln.title}
+					<Icon style={{ transform: "scale(0.9)", paddingRight: "10px" }} name="lock" />
+					<span style={{ paddingRight: "10px" }}>{vuln.title}</span>
 
-					<Icon title="Open on web" className="clickable" name="globe" />
-				</div>
+					<Icon
+						style={{ transform: "scale(0.9)" }}
+						title="Open on web"
+						className="clickable"
+						name="globe"
+					/>
+				</CardTitle>
 
-				<div>
+				<CardBody style={{ paddingTop: "10px" }}>
 					<DataRow>
 						<DataLabel>Severity: </DataLabel>
 						<DataValue>{vuln.severity}</DataValue>
@@ -218,8 +222,8 @@ function VulnerabilityView(props: {
 						<DataLabel>CVSS vector: </DataLabel>
 						<DataValue>{vuln.vector}</DataValue>
 					</DataRow>
-				</div>
-				<div>
+				</CardBody>
+				<CardBody>
 					<MetaSection>
 						<Meta>
 							<MetaDescription>
@@ -229,7 +233,7 @@ function VulnerabilityView(props: {
 							</MetaDescription>
 						</Meta>
 					</MetaSection>
-				</div>
+				</CardBody>
 			</div>
 		</MinimumWidthCard>
 	);
