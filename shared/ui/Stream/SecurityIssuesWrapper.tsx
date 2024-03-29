@@ -193,14 +193,15 @@ function VulnerabilityView(props: {
 					}}
 				>
 					<Icon style={{ transform: "scale(0.9)", paddingRight: "10px" }} name="lock" />
-					<span style={{ paddingRight: "10px" }}>{vuln.title}</span>
-
-					<Icon
-						style={{ transform: "scale(0.9)" }}
-						title="Open on web"
-						className="clickable"
-						name="globe"
-					/>
+					<span>
+						{vuln.title}{" "}
+						<Icon
+							style={{ transform: "scale(0.9)" }}
+							title="Open on web"
+							className="clickable"
+							name="globe"
+						/>
+					</span>
 				</CardTitle>
 
 				<CardBody style={{ paddingTop: "10px" }}>
