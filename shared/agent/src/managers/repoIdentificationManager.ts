@@ -48,7 +48,7 @@ export class RepoIdentificationManager {
 	}
 
 	private async repoIsJava(repo: ReposScm, files: string[]): Promise<boolean> {
-		return await this._findFileWithExtension(repo.path, ".java", files, 2, 0);
+		return await this._findFileWithExtension(repo.path, ".java", files, 15, 0);
 	}
 
 	// TODO consolidate with other method
