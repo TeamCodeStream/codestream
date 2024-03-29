@@ -164,12 +164,7 @@ function VulnerabilityView(props: {
 	onClose: () => void;
 }) {
 	const { vulnerability: vuln } = props;
-	HostApi.instance.track("codestream/vulnerability_link clicked", {
-		entity_guid: props.entityGuid,
-		account_id: props.accountId,
-		target: "vulnerability",
-		event_type: "click",
-	});
+
 	return (
 		<MinimumWidthCard>
 			<div
@@ -190,6 +185,12 @@ function VulnerabilityView(props: {
 								url: vuln.url,
 							});
 						}
+						HostApi.instance.track("codestream/vulnerability_link clicked", {
+							entity_guid: props.entityGuid,
+							account_id: props.accountId,
+							target: "vulnerability",
+							event_type: "click",
+						});
 					}}
 				>
 					<Icon style={{ transform: "scale(0.9)", paddingRight: "10px" }} name="lock" />
