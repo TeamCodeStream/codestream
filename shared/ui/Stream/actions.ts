@@ -49,7 +49,7 @@ import {
 	ShareTarget,
 	StreamType,
 } from "@codestream/protocols/api";
-import { pick } from "lodash-es";
+import { get, isEqual, pick } from "lodash-es";
 import React from "react";
 
 import { createCodeError } from "@codestream/webview/store/codeErrors/thunks";
@@ -656,8 +656,9 @@ export const deletePost =
 // usage: setUserPreference( { prefPath: ["favorites", "shoes", "wedges"], value: "red" } )
 export const setUserPreference = createAppAsyncThunk<void, SetUserPreferenceRequest>(
 	"stream/setUserPreferences",
-	async (request, { dispatch }) => {
+	async (request, { dispatch, getState }) => {
 		const { prefPath, value } = request;
+		const dotPath = request.prefPath.join("."); // Used to retrieve current value later
 		// create an object out of the provided path
 		const newPreference = {};
 		let newPreferencePointer = newPreference;
@@ -669,11 +670,19 @@ export const setUserPreference = createAppAsyncThunk<void, SetUserPreferenceRequ
 		newPreferencePointer[prefPath[0].replace(/\./g, "*")] = value;
 
 		try {
-			// optimistically merge it into current preferences
-			dispatch(updatePreferences(newPreference));
-			const response = await HostApi.instance.send(UpdatePreferencesRequestType, {
-				preferences: newPreference,
-			});
+			const state = getState();
+			// lodash get can resolve nested properties
+			const currentPrefsValue = get(state.preferences, dotPath);
+			// lodash isEqual is a deep equals, handles arrays / objects
+			if (isEqual(currentPrefsValue, value)) {
+				console.debug("Skipping already set pref", dotPath, value);
+			} else {
+				// optimistically merge it into current preferences
+				dispatch(updatePreferences(newPreference));
+				const response = await HostApi.instance.send(UpdatePreferencesRequestType, {
+					preferences: newPreference,
+				});
+			}
 			// update with confirmed server response
 			// turning this off so we don't get 3 updates: one optimistically, one
 			// via API return, and one via pubnub
