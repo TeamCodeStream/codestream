@@ -26,6 +26,7 @@ import {
 	GetObservabilityErrorGroupMetadataResponse,
 	CSAsyncGrokError,
 	DidChangeSessionTokenStatusNotificationType,
+	GetReposScmResponse,
 } from "@codestream/protocols/agent";
 import { CodemarkType, CSCodeError, CSMe, WebviewPanels } from "@codestream/protocols/api";
 import React from "react";
@@ -78,7 +79,7 @@ import {
 	InitiateNrqlExecutionNotificationType,
 	ViewColumn,
 } from "./ipc/webview.protocol";
-import { CodeStreamState, store } from "./store";
+import { CodeStreamState, store, StoreType } from "./store";
 import { bootstrap, reset } from "./store/actions";
 import {
 	apiCapabilitiesUpdated,
@@ -109,7 +110,6 @@ import {
 	setStartWorkCard,
 } from "./store/context/actions";
 import { closeAllPanels } from "@codestream/webview/store/context/thunks";
-import { ContextState } from "./store/context/types";
 import {
 	appendProcessBuffer,
 	setEditorContext,
@@ -131,8 +131,6 @@ import translations from "./translations/en";
 import { parseProtocol } from "./utilities/urls";
 import { HostApi } from "./webview-api";
 import { parseId } from "./utilities/newRelic";
-import { SessionState } from "./store/session/types";
-import { UsersState } from "./store/users/types";
 
 // import translationsEs from "./translations/es";
 
@@ -211,8 +209,7 @@ export async function initialize(selector: string) {
 	}
 }
 
-// TODO: type up the store state
-function listenForEvents(store) {
+function listenForEvents(store: StoreType) {
 	const api = HostApi.instance;
 
 	api.on(DidEncounterMaintenanceModeNotificationType, async e => {
@@ -414,20 +411,7 @@ function listenForEvents(store) {
 	});
 
 	api.on(ShowCodemarkNotificationType, async e => {
-		let {
-			codemarks,
-			context,
-			editorContext,
-			session,
-			users,
-		}: {
-			codemarks: CodemarksState;
-			context: ContextState;
-			editorContext: EditorContextState;
-			session: SessionState;
-			users: UsersState;
-			source: SourceOptions;
-		} = store.getState();
+		let { codemarks, context, editorContext, session, users } = store.getState();
 
 		if (Object.keys(codemarks).length === 0) {
 			await store.dispatch(fetchCodemarks());
@@ -792,7 +776,7 @@ function listenForEvents(store) {
 						}
 						const { normalizedUrl } = normalizedUrlResponse;
 
-						let reposResponse;
+						let reposResponse: GetReposScmResponse;
 						try {
 							reposResponse = await HostApi.instance.send(GetReposScmRequestType, {
 								inEditorOnly: true,
@@ -813,6 +797,7 @@ function listenForEvents(store) {
 										return normalizedUrl === rem.normalizedUrl;
 									});
 								}
+								return false;
 							});
 							if (repo) {
 								// eslint-disable-next-line import/namespace

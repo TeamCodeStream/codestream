@@ -145,7 +145,6 @@ export class FetchCore {
 			return [resp, count];
 		} catch (ex) {
 			Logger.log(`${loggingPrefix} fetchCore caught`, ex);
-			// Note access token error can come from nerdgraph or codestream-api or nrsec vulnerabilities
 			if (timeout) {
 				clearTimeout(timeout);
 				timeout = undefined;
@@ -157,12 +156,20 @@ export class FetchCore {
 				throw ex;
 			}
 			if (ex instanceof InternalRateForceLogoutError) {
-				if (SessionContainer.isInitialized()) {
-					Logger.log("Setting session expired due to force logout error");
-					SessionContainer.instance().session.onSessionTokenStatusChanged(
-						SessionTokenStatus.Expired
-					);
-				}
+				setTimeout(() => {
+					try {
+						if (SessionContainer.isInitialized()) {
+							SessionContainer.instance().session.getWorkspaceFolders();
+							Logger.log("Setting session expired due to force logout error");
+							SessionContainer.instance().session.onSessionTokenStatusChanged(
+								SessionTokenStatus.Expired
+							);
+						}
+					} catch (error) {
+						// ignore
+					}
+				}, 15000); // 15 seconds for NewRelic.noticeError to complete and harvest
+				throw ex;
 			}
 
 			const shouldLog = this.shouldLogRetry(ex);

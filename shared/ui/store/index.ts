@@ -77,6 +77,7 @@ export const store = configureStore({
 
 export type AppDispatch = typeof store.dispatch;
 export type CodeStreamState = ReturnType<typeof store.getState>;
+export type StoreType = typeof store;
 export type AppThunk<ReturnType = void> = ThunkAction<
 	ReturnType,
 	CodeStreamState,

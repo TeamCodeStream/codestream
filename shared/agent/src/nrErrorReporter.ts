@@ -200,12 +200,14 @@ export function reportErrorToNr(request: ReportMessageRequest, attributes?: Erro
 			return;
 		}
 		_errorCache.put(cacheKey, true);
+		const errorClassName = error.constructor ? error.constructor.name : ""; // NR agent just records Object or Error :(
 
 		NewRelic.noticeError(error, {
 			...attributes,
 			extra:
 				typeof request.extra === "object" ? JSON.stringify(request.extra) : request.extra || "",
 			type: request.type,
+			errorClassName: errorClassName,
 			source: request.source || "agent",
 			stack: stack || undefined,
 		});

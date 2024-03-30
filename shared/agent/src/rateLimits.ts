@@ -123,7 +123,7 @@ export function handleLimit(origin: string, method: string, path?: string) {
 	if (rateLimit) {
 		switch (rateLimit.violation) {
 			case "warn": {
-				// Not reporting the actual count here so that we don't over-report errors to NR - makes the erorr non-unique
+				// Not reporting the actual count here so that we don't over-report errors to NR - makes the error non-unique
 				Logger.warn(
 					`${urlPart} is over internal rate limit warning with count ${rateLimit.limit} in ${RATE_LIMIT_INTERVAL} seconds`
 				);
@@ -131,7 +131,7 @@ export function handleLimit(origin: string, method: string, path?: string) {
 			}
 			case "block":
 			case "report": {
-				// Not reporting the actual count here so that we don't over-report errors to NR - makes the erorr non-unique
+				// Not reporting the actual count here so that we don't over-report errors to NR - makes the error non-unique
 				const error = new InternalRateError(
 					`${urlPart} exceeded internal block limit of ${rateLimit.limit} in ${RATE_LIMIT_INTERVAL} seconds`
 				);
@@ -143,7 +143,7 @@ export function handleLimit(origin: string, method: string, path?: string) {
 			}
 			case "forceLogout": {
 				const error = new InternalRateForceLogoutError(
-					`${urlPart} exceeded internal block limit of ${rateLimit.limit} in ${RATE_LIMIT_INTERVAL} seconds`
+					`${urlPart} exceeded internal force logout limit of ${rateLimit.limit} in ${RATE_LIMIT_INTERVAL} seconds`
 				);
 				Logger.error(error, undefined);
 				throw error;
