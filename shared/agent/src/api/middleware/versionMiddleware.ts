@@ -4,13 +4,14 @@ import { CSApiCapabilities, CSApiCapability } from "@codestream/protocols/api";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
 
 import { Logger } from "../../logger";
-import { log, Versions } from "../../system";
+import { Functions, log, Versions } from "../../system";
 import {
 	ApiProvider,
 	CodeStreamApiMiddleware,
 	CodeStreamApiMiddlewareContext,
 } from "../apiProvider";
 import { APIServerVersionInfo } from "../codestream/apiServerVersionInfo";
+import { isEmpty } from "lodash";
 
 export interface VersionCompatibilityChangedEvent {
 	compatibility: VersionCompatibility;
@@ -65,12 +66,24 @@ export class VersionMiddlewareManager implements Disposable {
 		version: string,
 		missingCapabilities: CSApiCapabilities
 	) {
-		this._onDidChangeApiCompatibility.fire({
-			compatibility,
-			version,
-			missingCapabilities,
-		});
+		this._apiVersionNotify(compatibility, version, missingCapabilities);
 	}
+
+	private _apiVersionNotify = Functions.debounceMemoized(
+		(
+			compatibility: ApiVersionCompatibility,
+			version: string,
+			missingCapabilities: CSApiCapabilities
+		) => {
+			this._onDidChangeApiCompatibility.fire({
+				compatibility,
+				version,
+				missingCapabilities,
+			});
+		},
+		10000,
+		{ leading: true }
+	);
 
 	async setApiVersion(version: string) {
 		if (version === this._apiVersion) return;
@@ -96,6 +109,11 @@ export class VersionMiddlewareManager implements Disposable {
 			}
 			return capabilities;
 		}, {}) as CSApiCapabilities;
+
+		// Don't notify at all if there is no action to take
+		if (compatibility === ApiVersionCompatibility.ApiCompatible && isEmpty(missingCapabilities)) {
+			return;
+		}
 
 		this.apiVersionNotify(compatibility, version, missingCapabilities);
 	}
