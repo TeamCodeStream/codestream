@@ -6,6 +6,8 @@ import { handleLimit, InternalRateError, InternalRateForceLogoutError } from "..
 import { SessionContainer } from "../container";
 import { SessionTokenStatus } from "@codestream/protocols/agent";
 
+const startTime = Date.now();
+
 export interface ExtraRequestInit extends RequestInit {
 	timeout?: number;
 	skipInterceptors?: boolean;
@@ -155,7 +157,8 @@ export class FetchCore {
 			if (ex instanceof InternalRateError) {
 				throw ex;
 			}
-			if (ex instanceof InternalRateForceLogoutError) {
+			// Quiet period - allow for several calls during bootstrap
+			if (ex instanceof InternalRateForceLogoutError && Date.now() - startTime > 30000) {
 				setTimeout(() => {
 					try {
 						if (SessionContainer.isInitialized()) {
