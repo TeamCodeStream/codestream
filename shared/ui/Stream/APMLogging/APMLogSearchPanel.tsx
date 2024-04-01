@@ -19,7 +19,6 @@ import { parseId } from "@codestream/webview/utilities/newRelic";
 import React, { useEffect, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import Select, { components, OptionProps } from "react-select";
-import { AsyncPaginate } from "react-select-async-paginate";
 import styled from "styled-components";
 import { PanelHeader } from "../../src/components/PanelHeader";
 import { useDidMount } from "../../utilities/hooks";
@@ -35,6 +34,7 @@ import { APMLogTableLoading } from "./APMLogTableLoading";
 import { APMPartitions } from "./APMPartitions";
 import { TableWindow } from "../TableWindow";
 import { debounce } from "lodash-es";
+import { DropdownWithSearch } from "../DropdownWithSearch";
 
 export interface SelectedOption {
 	value: string;
@@ -49,7 +49,7 @@ const LogFilterBarContainer = styled.div`
 		display: flex;
 
 		.log-filter-bar-service {
-			flex: 8;
+			flex: 4;
 		}
 
 		.log-filter-bar-since {
@@ -62,6 +62,7 @@ const LogFilterBarContainer = styled.div`
 			padding-left: 10px;
 			flex: 2;
 			justify-content: flex-end;
+			min-width: 130px;
 		}
 
 		.log-filter-bar-query {
@@ -771,7 +772,8 @@ export const APMLogSearchPanel = (props: {
 			>
 				<LogFilterBarContainer>
 					<div className="log-filter-bar-row">
-						<div className="log-filter-bar-service">
+						{/* @TODO: Remove this when done */}
+						{/* <div className="log-filter-bar-service">
 							<AsyncPaginate
 								id="input-entity-log-autocomplete"
 								name="entity-log-autocomplete"
@@ -786,6 +788,18 @@ export const APMLogSearchPanel = (props: {
 								}}
 								components={{ Option }}
 								tabIndex={1}
+							/>
+						</div> */}
+
+						<div className="log-filter-bar-service">
+							<DropdownWithSearch
+								selectedOption={selectedEntityAccount}
+								loadOptions={loadEntities}
+								id="input-entity-log-autocomplete"
+								name="entity-log-autocomplete"
+								handleChangeCallback={handleSelectDropdownOption}
+								tabIndex={1}
+								customOption={Option}
 							/>
 						</div>
 

@@ -167,7 +167,7 @@ export const APMPartitions = (props: {
 	};
 
 	return (
-		<div className="log-filter-bar-partition">
+		<div style={{ minWidth: "130px" }} className="log-filter-bar-partition">
 			<Select
 				menuIsOpen={open}
 				onMenuOpen={() => setOpen(true)}
