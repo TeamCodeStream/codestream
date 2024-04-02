@@ -6,8 +6,6 @@ import { handleLimit, InternalRateError, InternalRateForceLogoutError } from "..
 import { SessionContainer } from "../container";
 import { SessionTokenStatus } from "@codestream/protocols/agent";
 
-const startTime = Date.now();
-
 export interface ExtraRequestInit extends RequestInit {
 	timeout?: number;
 	skipInterceptors?: boolean;
@@ -80,6 +78,17 @@ export class FetchCore {
 			// ignore
 		}
 		return { origin: "<unknown>" };
+	}
+
+	// Only true 30 seconds after logging in
+	private isPastStartupTime(): boolean {
+		const sessionStartTime = SessionContainer.isInitialized()
+			? SessionContainer.instance().session.sessionStartTime
+			: undefined;
+		if (!sessionStartTime) {
+			return false;
+		}
+		return Date.now() - sessionStartTime > 30000;
 	}
 
 	async fetchCore(
@@ -157,8 +166,9 @@ export class FetchCore {
 			if (ex instanceof InternalRateError) {
 				throw ex;
 			}
-			// Quiet period - allow for several calls during bootstrap
-			if (ex instanceof InternalRateForceLogoutError && Date.now() - startTime > 30000) {
+			// Don't enforce logout until 30 seconds after logging in
+			// But need to watch o11y for edge cases of looping before logging in
+			if (ex instanceof InternalRateForceLogoutError && this.isPastStartupTime()) {
 				setTimeout(() => {
 					try {
 						if (SessionContainer.isInitialized()) {

@@ -206,6 +206,8 @@ export interface VersionInfo {
 }
 
 export class CodeStreamSession {
+	sessionStartTime: number | undefined = undefined;
+
 	private _onDidChangeCodemarks = new Emitter<CSCodemark[]>();
 	get onDidChangeCodemarks(): Event<CSCodemark[]> {
 		return this._onDidChangeCodemarks.event;
@@ -1368,6 +1370,7 @@ export class CodeStreamSession {
 		setImmediate(() => {
 			this.agent.sendNotification(DidLoginNotificationType, { data: loginResponse });
 			this.whatsNewNotification();
+			this.sessionStartTime = Date.now();
 		});
 
 		if (!response.user.timeZone) {
