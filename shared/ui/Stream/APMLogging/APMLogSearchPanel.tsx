@@ -18,7 +18,7 @@ import { IdeNames, OpenEditorViewNotificationType } from "@codestream/protocols/
 import { parseId } from "@codestream/webview/utilities/newRelic";
 import React, { useEffect, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
-import Select, { components, OptionProps } from "react-select";
+import { components, OptionProps } from "react-select";
 import styled from "styled-components";
 import { PanelHeader } from "../../src/components/PanelHeader";
 import { useDidMount } from "../../utilities/hooks";
@@ -35,6 +35,7 @@ import { APMPartitions } from "./APMPartitions";
 import { TableWindow } from "../TableWindow";
 import { debounce } from "lodash-es";
 import { DropdownWithSearch } from "../DropdownWithSearch";
+import { SelectCustomStyles } from "../AsyncPaginateCustomStyles";
 
 export interface SelectedOption {
 	value: string;
@@ -232,6 +233,7 @@ export const APMLogSearchPanel = (props: {
 	const [totalItems, setTotalItems] = useState<number>(0);
 	const [logError, setLogError] = useState<string | undefined>("");
 	const { height, ref } = useResizeDetector();
+	const { width: entitySearchWidth, ref: entitySearchRef } = useResizeDetector();
 	const trimmedListHeight: number = (height ?? 0) - (height ?? 0) * 0.08;
 	const disposables: Disposable[] = [];
 	const [currentTraceId, setTraceId] = useState<string | undefined>(props.traceId);
@@ -791,7 +793,7 @@ export const APMLogSearchPanel = (props: {
 							/>
 						</div> */}
 
-						<div className="log-filter-bar-service">
+						<div className="log-filter-bar-service" ref={entitySearchRef}>
 							<DropdownWithSearch
 								selectedOption={selectedEntityAccount}
 								loadOptions={loadEntities}
@@ -800,11 +802,12 @@ export const APMLogSearchPanel = (props: {
 								handleChangeCallback={handleSelectDropdownOption}
 								tabIndex={1}
 								customOption={Option}
+								customWidth={entitySearchWidth?.toString()}
 							/>
 						</div>
 
 						<div className="log-filter-bar-since">
-							<Select
+							<SelectCustomStyles
 								id="input-since"
 								name="since"
 								classNamePrefix="react-select"
@@ -813,6 +816,7 @@ export const APMLogSearchPanel = (props: {
 								options={sinceOptions}
 								onChange={value => setSelectedSinceOption(value)}
 								tabIndex={2}
+								isSearchable={false}
 							/>
 						</div>
 

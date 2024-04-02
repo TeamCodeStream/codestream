@@ -1,9 +1,9 @@
 import React, { useRef, useState, useCallback } from "react";
-import Select from "react-select";
 import { Button } from "../../src/components/Button";
 import Tooltip from "../Tooltip";
 import { SelectedOption } from "./APMLogSearchPanel";
 import { useDidMount } from "../../utilities/hooks";
+import { SelectCustomStyles } from "../AsyncPaginateCustomStyles";
 
 const menuPortalTarget = document.body;
 
@@ -31,6 +31,8 @@ export const APMPartitions = (props: {
 		}),
 		multiValueLabel: () => ({
 			display: "none",
+			textOverflow: "ellipsis",
+			textWrap: "nowrap",
 		}),
 		multiValue: () => ({
 			margin: 0,
@@ -45,6 +47,8 @@ export const APMPartitions = (props: {
 			overflowY: "auto",
 			left: "auto",
 			right: 0,
+			textOverflow: "ellipsis",
+			textWrap: "nowrap",
 		}),
 		valueContainer: (defaultStyles: any) => {
 			return {
@@ -168,7 +172,7 @@ export const APMPartitions = (props: {
 
 	return (
 		<div style={{ minWidth: "130px" }} className="log-filter-bar-partition">
-			<Select
+			<SelectCustomStyles
 				menuIsOpen={open}
 				onMenuOpen={() => setOpen(true)}
 				onMenuClose={() => setOpen(false)}

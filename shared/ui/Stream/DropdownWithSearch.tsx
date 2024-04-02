@@ -1,7 +1,33 @@
-import React, { useState } from "react";
-import { AsyncPaginate } from "react-select-async-paginate";
+import React, { useEffect, useRef, useState } from "react";
 import { components } from "react-select";
 import Icon from "./Icon";
+import styled from "styled-components";
+import { AsyncPaginateCustomStyles } from "./AsyncPaginateCustomStyles";
+
+interface SelectedValueContainerProps {
+	styles?: any;
+	onClick: Function;
+}
+
+const SelectedValueContainer = styled.div<SelectedValueContainerProps>`
+	${({ styles }) => styles}
+	padding: 4px;
+	margin-bottom: 8px;
+	border: 1px solid var(--base-border-color);
+	background: var(--base-background-color);
+	border-radius: 2px;
+`;
+
+const SelectedValueRow = styled.div`
+	display: flex;
+	justify-content: space-between;
+	margin-left: 2px;
+	margin-right: 2px;
+`;
+
+const LoadingSpan = styled.span`
+	font-style: italic;
+`;
 
 interface DropdownWithSearchProps {
 	loadOptions?: Function;
@@ -12,6 +38,8 @@ interface DropdownWithSearchProps {
 	tabIndex?: number;
 	customOption?: any;
 	placeholder?: any;
+	customSelectedValueStyles?: any;
+	customWidth?: string;
 }
 
 export const DropdownWithSearch: React.FC<DropdownWithSearchProps> = ({
@@ -23,35 +51,55 @@ export const DropdownWithSearch: React.FC<DropdownWithSearchProps> = ({
 	tabIndex,
 	customOption,
 	placeholder,
+	customSelectedValueStyles,
+	customWidth,
 }) => {
 	const [value, setValue] = useState<any | null>(null);
 	const [showSelect, setShowSelect] = useState<boolean>(false);
+	const selectRef = useRef(null);
 
-	const customStyles = {
-		control: provided => ({
-			...provided,
-			borderBottomRightRadius: 0,
-			borderBottomLeftRadius: 0,
-		}),
-		menu: provided => ({
-			...provided,
-			borderTopWidth: 0,
-			borderTopRightRadius: 0,
-			borderTopLeftRadius: 0,
-			marginTop: 0,
-			backgroundColor: "var(--base-background-color) !important",
-		}),
-		menuList: provided => ({
-			...provided,
-			paddingTop: 0,
-		}),
-		indicatorSeparator: provided => ({
-			...provided,
-			display: "none",
-		}),
-		dropdownIndicator: provided => ({
-			...provided,
-		}),
+	// const customStyles = {
+	// 	control: provided => ({
+	// 		...provided,
+	// 		borderBottomRightRadius: 0,
+	// 		borderBottomLeftRadius: 0,
+	// 		backgroundColor: "var(--app-background-color-hover) !important",
+	// 		cursor: "text !important",
+	// 	}),
+	// 	menu: provided => ({
+	// 		...provided,
+	// 		borderTopWidth: 0,
+	// 		borderTopRightRadius: 0,
+	// 		borderTopLeftRadius: 0,
+	// 		marginTop: 0,
+	// 		backgroundColor: "var(--base-background-color) !important",
+	// 	}),
+	// 	menuList: provided => ({
+	// 		...provided,
+	// 		paddingTop: 0,
+	// 	}),
+	// 	indicatorSeparator: provided => ({
+	// 		...provided,
+	// 		display: "none",
+	// 	}),
+	// 	dropdownIndicator: provided => ({
+	// 		...provided,
+	// 	}),
+	// 	option: provided => ({
+	// 		...provided,
+	// 		backgroundColor: "var(--app-background-color) !important",
+	// 	}),
+	// 	loadingMessage: provided => ({
+	// 		...provided,
+	// 		backgroundColor: "var(--app-background-color) !important",
+	// 	}),
+	// };
+
+	const focusSelect = () => {
+		if (selectRef?.current) {
+			//@ts-ignore
+			selectRef.current.select.focus();
+		}
 	};
 
 	const CustomDropdownIndicator = props => {
@@ -62,49 +110,65 @@ export const DropdownWithSearch: React.FC<DropdownWithSearchProps> = ({
 		);
 	};
 
-	const handleClickSelected = () => {
-		setShowSelect(!showSelect);
+	const handleOnBlur = () => {
+		console.warn("blurred");
+		setShowSelect(false);
 	};
 
+	const handleClickSelected = event => {
+		event.stopPropagation();
+		if (showSelect) {
+			setShowSelect(false);
+		} else {
+			setShowSelect(true);
+			focusSelect();
+		}
+	};
+
+	useEffect(() => {
+		console.warn(showSelect);
+	}, [showSelect]);
+
 	return (
-		<>
-			<div
-				style={{
-					padding: "9px",
-					marginBottom: "8px",
-					border: "1px solid var(--base-border-color)",
-				}}
-				onClick={handleClickSelected}
+		<div>
+			<SelectedValueContainer
+				styles={customSelectedValueStyles ? customSelectedValueStyles : undefined}
+				onClick={e => handleClickSelected(e)} // Pass the event to handleClickSelected
 			>
-				<div style={{ display: "flex", justifyContent: "space-between" }}>
-					<span>
-						{selectedOption?.label || <span style={{ fontStyle: "italic" }}>Loading...</span>}
+				<SelectedValueRow>
+					<span style={{ color: "var(--text-color)" }}>
+						{selectedOption?.label || <LoadingSpan>Loading...</LoadingSpan>}
 					</span>
 					<span>
 						<Icon name="chevron-down" />
 					</span>
-				</div>
+				</SelectedValueRow>
+			</SelectedValueContainer>
+			<div
+				tabIndex={tabIndex}
+				onBlur={handleOnBlur}
+				style={{
+					visibility: showSelect ? "visible" : "hidden",
+					position: "absolute",
+					width: `${customWidth}px` || "400px",
+				}}
+			>
+				<AsyncPaginateCustomStyles
+					selectRef={selectRef}
+					id={id}
+					name={name}
+					menuIsOpen={true}
+					classNamePrefix="react-select"
+					loadOptions={loadOptions}
+					value={value}
+					debounceTimeout={750}
+					placeholder={placeholder || "Search"}
+					onChange={newValue => {
+						handleChangeCallback(newValue);
+					}}
+					components={{ Option: customOption, DropdownIndicator: CustomDropdownIndicator }}
+				/>
 			</div>
-			{showSelect && (
-				<div>
-					<AsyncPaginate
-						id={id}
-						name={name}
-						styles={customStyles}
-						menuIsOpen={true}
-						classNamePrefix="react-select"
-						loadOptions={loadOptions}
-						value={value}
-						debounceTimeout={750}
-						placeholder={placeholder || "Search"}
-						onChange={newValue => {
-							handleChangeCallback(newValue);
-						}}
-						components={{ Option: customOption, DropdownIndicator: CustomDropdownIndicator }}
-						tabIndex={tabIndex}
-					/>
-				</div>
-			)}
-		</>
+		</div>
 	);
 };

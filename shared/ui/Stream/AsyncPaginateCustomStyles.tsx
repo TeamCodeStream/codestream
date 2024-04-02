@@ -3,6 +3,7 @@ import { AsyncPaginate } from "react-select-async-paginate";
 import Select from "react-select";
 
 const selectStyles = {
+	// Need to use a lot of !important here to override react-select built in styling
 	control: (provided, state) => ({
 		...provided,
 		boxShadow: "none",
@@ -13,12 +14,18 @@ const selectStyles = {
 		margin: 0,
 		fontFamily: "inherit",
 		fontSize: "13px",
-		minHeight: "29px !important",
-		borderRadius: 0,
-		cursor: "text",
+		minHeight: "28px !important",
+		maxHeight: "28px !important",
+		height: "28px !important",
+		borderTopRightRadius: "2px !important",
+		borderTopLeftRadius: "2px !important",
+		borderBottomRightRadius: 0,
+		borderBottomLeftRadius: 0,
+		zIndex: 9999,
 	}),
 	input: provided => ({
 		...provided,
+		borderRadius: "2px",
 		fontFamily: "inherit",
 		fontSize: "13px",
 		color: "var(--text-color) !important",
@@ -26,49 +33,51 @@ const selectStyles = {
 			padding: "0 !important",
 			outline: "none !important",
 		},
+		zIndex: 9999,
 	}),
 	singleValue: provided => ({
 		...provided,
 		color: "var(--text-color) !important",
 		fontSize: "13px",
-		background: "var(--app-background-color-hover) !important",
 		marginTop: "0",
 		marginBottom: "0",
-		paddingTop: "2px",
 	}),
 	multiValue: provided => ({
 		...provided,
 		fontSize: "13px",
-		background: "var(--app-background-color-hover)",
 		marginTop: "0",
 		marginBottom: "0",
+		backgroundColor: "var(--base-background-color) !important",
 	}),
 	valueContainer: provided => ({
 		...provided,
-		padding: "0 5px !important",
+		marginTop: "-1px !important",
 		height: "29px !important",
 	}),
 	multiValueLabel: provided => ({
 		...provided,
 		color: "var(--text-color)",
+		display: "none",
 	}),
 	multiValueRemove: provided => ({
 		...provided,
-		"&:hover": {
-			background: "var(--app-background-color-hover)",
-			color: "white",
-		},
+		display: "none",
 	}),
 	menu: provided => ({
 		...provided,
 		zIndex: "2",
 		border: `1px solid var(--text-focus-border-color)`,
-		backgroundColor: "unset",
+		backgroundColor: "var(--base-background-color) !important",
+		borderTopRightRadius: 0,
+		borderTopLeftRadius: 0,
+		marginTop: 0,
 	}),
 	menuList: provided => ({
 		...provided,
 		background: "var(--base-background-color) !important",
-		borderRadius: "3px",
+		borderRadius: "0px !important",
+		paddingTop: "0px !important",
+		paddingBottom: "0px !important",
 	}),
 	option: (provided, state) => ({
 		...provided,
@@ -92,14 +101,13 @@ const selectStyles = {
 	dropdownIndicator: provided => ({
 		...provided,
 		color: "var(--text-color) !important",
-		opacity: "0.6",
+		opacity: "1",
 		padding: "0 6px",
+		width: "29px !important",
 	}),
 	indicatorSeparator: provided => ({
 		...provided,
-		backgroundColor: "var(--text-color) !important",
-		opacity: "0.25",
-		margin: "4px 0",
+		display: "none !important",
 	}),
 };
 
