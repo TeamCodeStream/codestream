@@ -113,7 +113,6 @@ export const selectStyles = {
 };
 
 export const asyncSelectStyles = {
-	// Need to use a lot of !important here to override react-select built in styling
 	control: (provided, state) => ({
 		...provided,
 		boxShadow: "none",

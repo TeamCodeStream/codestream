@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { components } from "react-select";
+import { components, OptionProps } from "react-select";
 import Icon from "./Icon";
 import styled from "styled-components";
 import { AsyncPaginateCustomStyles } from "./AsyncPaginateCustomStyles";
@@ -36,17 +36,26 @@ const ChevronIcon = styled.span`
 	transform: translateY(-50%);
 `;
 
+const ValuePlaceholder = styled.span`
+	opacity: 0.5;
+`;
+
+interface SelectOptionType {
+	label: string;
+	value: string;
+}
+
 interface DropdownWithSearchProps {
 	loadOptions?: Function;
-	selectedOption?: any;
+	selectedOption?: SelectOptionType | any;
 	name?: string;
 	id?: string;
 	handleChangeCallback: Function;
 	tabIndex?: number;
-	customOption?: any;
-	placeholder?: any;
-	customSelectedValueStyles?: any;
+	customOption?: ((props: OptionProps) => JSX.Element) | JSX.Element;
+	placeholder?: string;
 	customWidth?: string;
+	valuePlaceholder?: string;
 }
 
 export const DropdownWithSearch: React.FC<DropdownWithSearchProps> = ({
@@ -58,8 +67,8 @@ export const DropdownWithSearch: React.FC<DropdownWithSearchProps> = ({
 	tabIndex,
 	customOption,
 	placeholder,
-	customSelectedValueStyles,
 	customWidth,
+	valuePlaceholder,
 }) => {
 	const [value, setValue] = useState<any | null>(null);
 	const [showSelect, setShowSelect] = useState<boolean>(false);
@@ -100,16 +109,21 @@ export const DropdownWithSearch: React.FC<DropdownWithSearchProps> = ({
 		}
 	}, [showSelect]);
 
+	const selectedOptionOutput = () => {
+		if (selectedOption?.label) {
+			return selectedOption?.label;
+		}
+		if (valuePlaceholder) {
+			return <ValuePlaceholder>{valuePlaceholder}</ValuePlaceholder>;
+		}
+		return <LoadingSpan>Loading...</LoadingSpan>;
+	};
+
 	return (
 		<div>
-			<SelectedValueContainer
-				styles={customSelectedValueStyles ? customSelectedValueStyles : undefined}
-				onClick={e => handleClickSelected(e)}
-			>
+			<SelectedValueContainer onClick={e => handleClickSelected(e)}>
 				<SelectedValueRow>
-					<span style={{ color: "var(--text-color)" }}>
-						{selectedOption?.label || <LoadingSpan>Loading...</LoadingSpan>}
-					</span>
+					<span style={{ color: "var(--text-color)" }}>{selectedOptionOutput()}</span>
 					<ChevronIcon>
 						<Icon name="chevron-down" />
 					</ChevronIcon>
@@ -136,6 +150,7 @@ export const DropdownWithSearch: React.FC<DropdownWithSearchProps> = ({
 						debounceTimeout={750}
 						placeholder={placeholder || "Search"}
 						onChange={newValue => {
+							setShowSelect(false);
 							handleChangeCallback(newValue);
 						}}
 						components={{ Option: customOption, DropdownIndicator: CustomDropdownIndicator }}

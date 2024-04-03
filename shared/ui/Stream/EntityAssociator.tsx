@@ -5,7 +5,6 @@ import {
 } from "@codestream/protocols/agent";
 import React, { PropsWithChildren, useState } from "react";
 import { components, OptionProps } from "react-select";
-import { AsyncPaginate } from "react-select-async-paginate";
 import styled from "styled-components";
 
 import { HostApi } from "@codestream/webview/webview-api";
@@ -16,6 +15,8 @@ import { NoContent } from "../src/components/Pane";
 import { useAppDispatch } from "../utilities/hooks";
 import { WarningBox } from "./WarningBox";
 import { isEmpty as _isEmpty } from "lodash";
+import { DropdownWithSearch } from "./DropdownWithSearch";
+import { useResizeDetector } from "react-resize-detector";
 
 interface EntityAssociatorProps {
 	title?: string;
@@ -64,6 +65,7 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 	const [selected, setSelected] = useState<SelectOptionType | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const [warningOrErrors, setWarningOrErrors] = useState<WarningOrError[] | undefined>(undefined);
+	const { width: entitySearchWidth, ref: entitySearchRef } = useResizeDetector();
 
 	async function loadEntities(search: string, _loadedOptions, additional?: AdditionalType) {
 		const { servicesToExcludeFromSearch } = props;
@@ -156,24 +158,20 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 			});
 	};
 	return (
-		<NoContent style={{ marginLeft: props.isSidebarView ? "20px" : "40px" }}>
+		<NoContent style={{ marginLeft: "20px" }}>
 			{props.title && <h3>{props.title}</h3>}
 			{props.label && <p style={{ marginTop: 0 }}>{props.label}</p>}
 			{warningOrErrors && <WarningBox items={warningOrErrors} />}
-			<div style={{ marginBottom: "15px" }}>
-				<AsyncPaginate
+			<div ref={entitySearchRef} style={{ marginBottom: "10px" }}>
+				<DropdownWithSearch
 					id="input-entity-autocomplete"
 					name="entity-autocomplete"
-					classNamePrefix="react-select"
 					loadOptions={loadEntities}
-					value={selected}
-					isClearable
-					debounceTimeout={750}
-					placeholder={`Type to search for services...`}
-					onChange={newValue => {
-						setSelected(newValue);
-					}}
-					components={{ Option }}
+					selectedOption={selected || undefined}
+					handleChangeCallback={setSelected}
+					customOption={Option}
+					customWidth={entitySearchWidth?.toString()}
+					valuePlaceholder={`Select an entity...`}
 				/>
 			</div>
 			<Button

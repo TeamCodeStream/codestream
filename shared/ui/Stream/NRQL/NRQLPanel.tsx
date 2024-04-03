@@ -110,6 +110,10 @@ const CodeText = styled.span`
 	font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
 	color: var(--text-color);
 `;
+interface SelectOptionType {
+	label: string;
+	value: string;
+}
 
 const Option = (props: OptionProps) => {
 	const children = (
