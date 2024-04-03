@@ -95,6 +95,10 @@ namespace CodeStream.VisualStudio.Shared.Packages
 				{
 					"https://eu-api.codestream.com",
 					"https://codestream-eu1.service.eu.newrelic.com"
+				},
+				{
+					"https://codestream.eu.service.newrelic.com",
+					"https://codestream-eu1.service.eu.newrelic.com"
 				}
 			};
 
