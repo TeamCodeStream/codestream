@@ -774,25 +774,6 @@ export const APMLogSearchPanel = (props: {
 			>
 				<LogFilterBarContainer>
 					<div className="log-filter-bar-row">
-						{/* @TODO: Remove this when done */}
-						{/* <div className="log-filter-bar-service">
-							<AsyncPaginate
-								id="input-entity-log-autocomplete"
-								name="entity-log-autocomplete"
-								classNamePrefix="react-select"
-								loadOptions={loadEntities}
-								value={selectedEntityAccount}
-								isClearable
-								debounceTimeout={750}
-								placeholder={`Type to search for entities...`}
-								onChange={newValue => {
-									handleSelectDropdownOption(newValue);
-								}}
-								components={{ Option }}
-								tabIndex={1}
-							/>
-						</div> */}
-
 						<div className="log-filter-bar-service" ref={entitySearchRef}>
 							<DropdownWithSearch
 								selectedOption={selectedEntityAccount}

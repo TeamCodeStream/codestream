@@ -139,6 +139,7 @@ export const DropdownWithSearch: React.FC<DropdownWithSearchProps> = ({
 							handleChangeCallback(newValue);
 						}}
 						components={{ Option: customOption, DropdownIndicator: CustomDropdownIndicator }}
+						autoFocus
 					/>
 				</div>
 			)}

@@ -3,7 +3,7 @@ import { AsyncPaginate } from "react-select-async-paginate";
 import Select from "react-select";
 
 // Need to use a lot of !important here to override react-select built in styling
-const selectStyles = {
+export const selectStyles = {
 	control: (provided, state) => ({
 		...provided,
 		boxShadow: "none",
@@ -112,7 +112,7 @@ const selectStyles = {
 	}),
 };
 
-const asyncSelectStyles = {
+export const asyncSelectStyles = {
 	// Need to use a lot of !important here to override react-select built in styling
 	control: (provided, state) => ({
 		...provided,
@@ -124,8 +124,8 @@ const asyncSelectStyles = {
 		margin: 0,
 		fontFamily: "inherit",
 		fontSize: "13px",
-		minHeight: "34px !important",
-		maxHeight: "34px !important",
+		minHeight: "28px !important",
+		maxHeight: "28px !important",
 		height: "28px !important",
 		borderTopRightRadius: "2px !important",
 		borderTopLeftRadius: "2px !important",

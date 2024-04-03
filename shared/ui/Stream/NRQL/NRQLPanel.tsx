@@ -16,7 +16,6 @@ import { Disposable } from "@codestream/webview/utils";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { OptionProps, components } from "react-select";
-import { AsyncPaginate } from "react-select-async-paginate";
 import styled from "styled-components";
 import { PanelHeader } from "../../src/components/PanelHeader";
 import { HostApi } from "../../webview-api";
@@ -34,6 +33,7 @@ import { NRQLResultsTable } from "./NRQLResultsTable";
 import { NRQLVisualizationDropdown } from "./NRQLVisualizationDropdown";
 import { RecentQueries } from "./RecentQueries";
 import { PanelHeaderTitleWithLink } from "../PanelHeaderTitleWithLink";
+import { DropdownWithSearch } from "../DropdownWithSearch";
 
 const QueryWrapper = styled.div`
 	width: 100%;
@@ -168,6 +168,7 @@ export const NRQLPanel = (props: {
 	const { height: editorHeight, ref: editorRef } = useResizeDetector();
 	const { width, height, ref } = useResizeDetector();
 	const trimmedHeight: number = (height ?? 0) - (height ?? 0) * 0.05;
+	const { width: entitySearchWidth, ref: entitySearchRef } = useResizeDetector();
 
 	const disposables: Disposable[] = [];
 
@@ -361,40 +362,37 @@ export const NRQLPanel = (props: {
 						<div style={{ marginBottom: "10px" }}>
 							<AccountRecentContainer>
 								<AccountContainer>
-									<AsyncPaginate
-										style={{ width: "300px" }}
-										id="input-account-autocomplete"
-										name="account-autocomplete"
-										classNamePrefix="react-select"
-										loadOptions={async (
-											search: string,
-											_loadedOptions,
-											additional?: { nextCursor?: string }
-										) => {
-											await accountsPromise;
+									<div style={{ width: "100%" }} ref={entitySearchRef}>
+										<DropdownWithSearch
+											id="input-account-autocomplete"
+											name="account-autocomplete"
+											loadOptions={async (
+												search: string,
+												_loadedOptions,
+												additional?: { nextCursor?: string }
+											) => {
+												await accountsPromise;
 
-											return {
-												options: accounts!
-													.filter(_ =>
-														search ? _.name.toLowerCase().indexOf(search.toLowerCase()) > -1 : true
-													)
-													.map(account => {
-														return formatSelectedAccount(account);
-													}),
-												hasMore: false,
-											};
-										}}
-										value={selectedAccount}
-										debounceTimeout={750}
-										placeholder={`Type to search for accounts...`}
-										onChange={newValue => {
-											setSelectedAccount(newValue);
-										}}
-										components={{ Option }}
-										tabIndex={1}
-										autoFocus
-										isClearable={false}
-									/>
+												return {
+													options: accounts!
+														.filter(_ =>
+															search
+																? _.name.toLowerCase().indexOf(search.toLowerCase()) > -1
+																: true
+														)
+														.map(account => {
+															return formatSelectedAccount(account);
+														}),
+													hasMore: false,
+												};
+											}}
+											handleChangeCallback={setSelectedAccount}
+											customOption={Option}
+											tabIndex={1}
+											customWidth={entitySearchWidth?.toString()}
+											selectedOption={selectedAccount}
+										/>
+									</div>
 								</AccountContainer>
 								<RecentContainer>
 									<RecentQueries

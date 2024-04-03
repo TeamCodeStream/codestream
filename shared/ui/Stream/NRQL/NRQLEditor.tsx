@@ -83,6 +83,7 @@ export const NRQLEditor = React.forwardRef(
 		) => {
 			monacoRef.current = monaco;
 			editorRef.current = editor;
+			editor.updateOptions({ wordWrap: "on" });
 
 			if (props.onSubmit) {
 				const handleKeySubmit = e => {

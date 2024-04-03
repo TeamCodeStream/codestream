@@ -5,6 +5,28 @@ import React, { useEffect, useState } from "react";
 import { OptionProps, components } from "react-select";
 import { AsyncPaginate, reduceGroupedOptions } from "react-select-async-paginate";
 import styled from "styled-components";
+import { asyncSelectStyles } from "../AsyncPaginateCustomStyles";
+
+const overrideStyles = {
+	menu: provided => ({
+		...provided,
+		// Set the desired width here
+		width: "400px",
+		// align the menu to the right
+		right: "0",
+		left: "auto",
+	}),
+	dropdownIndicator: provided => ({
+		...provided,
+		// Hide the down chevron
+		// display: "none",
+	}),
+};
+
+const mergedStyles = {
+	...asyncSelectStyles,
+	...overrideStyles,
+};
 
 const OptionName = styled.div`
 	color: var(--text-color);
@@ -194,21 +216,7 @@ export const RecentQueries = (props: {
 				additional={{
 					page: 1,
 				}}
-				styles={{
-					menu: provided => ({
-						...provided,
-						// Set the desired width here
-						width: "400px",
-						// align the menu to the right
-						right: "0",
-						left: "auto",
-					}),
-					dropdownIndicator: provided => ({
-						...provided,
-						// Hide the down chevron
-						// display: "none",
-					}),
-				}}
+				styles={mergedStyles}
 				value={selectedValue}
 				debounceTimeout={750}
 				placeholder={`Recent queries`}
