@@ -150,7 +150,7 @@ export class SessionServiceContainer {
 		this._codemarks = new CodemarksManager(session);
 		this._markers = new MarkersManager(session);
 		this._posts = new PostsManager(session);
-		this._repos = new ReposManager(session);
+		this._repos = new ReposManager();
 		this._streams = new StreamsManager(session);
 		this._teams = new TeamsManager(session);
 		this._users = new UsersManager(session);

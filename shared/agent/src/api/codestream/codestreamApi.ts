@@ -41,7 +41,6 @@ import {
 	CreateMarkerLocationRequest,
 	CreateMarkerRequest,
 	CreatePostRequest,
-	CreateRepoRequest,
 	CreateTeamRequest,
 	CreateTeamRequestType,
 	CreateTeamTagRequestType,
@@ -110,7 +109,6 @@ import {
 	GetPostRequest,
 	GetPostsRequest,
 	GetPreferencesResponse,
-	GetRepoRequest,
 	GetReviewRequest,
 	GetReviewResponse,
 	GetStreamRequest,
@@ -132,9 +130,6 @@ import {
 	MarkItemReadRequest,
 	MarkPostUnreadRequest,
 	MarkStreamReadRequest,
-	MatchReposRequest,
-	MatchReposRequestType,
-	MatchReposResponse,
 	MoveMarkerResponse,
 	MuteStreamRequest,
 	OpenStreamRequest,
@@ -214,8 +209,6 @@ import {
 	CSCreateMarkerResponse,
 	CSCreatePostRequest,
 	CSCreatePostResponse,
-	CSCreateRepoRequest,
-	CSCreateRepoResponse,
 	CSDeleteCodemarkResponse,
 	CSDeletePostResponse,
 	CSDirectStream,
@@ -237,8 +230,6 @@ import {
 	CSGetMeResponse,
 	CSGetPostResponse,
 	CSGetPostsResponse,
-	CSGetRepoResponse,
-	CSGetReposResponse,
 	CSGetReviewCheckpointDiffsResponse,
 	CSGetReviewDiffsResponse,
 	CSGetReviewResponse,
@@ -851,9 +842,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 				break;
 			case MessageType.Repositories:
-				e.data = await SessionContainer.instance().repos.resolve(e, { onlyIfNeeded: false });
-				if (e.data == null || e.data.length === 0) return;
-
 				break;
 			case MessageType.Reviews: {
 				e.data = await SessionContainer.instance().reviews.resolve(e, { onlyIfNeeded: false });
@@ -1577,20 +1565,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return { ...response, post: post };
 	}
 
-	@log()
-	createRepo(request: CreateRepoRequest) {
-		return this.post<CSCreateRepoRequest, CSCreateRepoResponse>(
-			`/repos`,
-			{ ...request, teamId: this.teamId },
-			tokenHolder.accessToken
-		);
-	}
-
-	@log()
-	fetchRepos() {
-		return this.get<CSGetReposResponse>(`/repos?teamId=${this.teamId}`, tokenHolder.accessToken);
-	}
-
 	fetchMsTeamsConversations(
 		request: CSMsTeamsConversationRequest
 	): Promise<CSMsTeamsConversationResponse> {
@@ -1606,34 +1580,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return this.post<any, any>(
 			"/msteams_conversations",
 			{ ...request, teamId: this.teamId },
-			tokenHolder.accessToken
-		);
-	}
-
-	@log()
-	getRepo(request: GetRepoRequest) {
-		return this.get<CSGetRepoResponse>(`/repos/${request.repoId}`, tokenHolder.accessToken);
-	}
-
-	@log()
-	async matchRepos(request: MatchReposRequest) {
-		const response = await this.put<MatchReposRequest, MatchReposResponse>(
-			`/repos/match/${this.teamId}`,
-			request,
-			tokenHolder.accessToken
-		);
-		await SessionContainer.instance().repos.resolve({
-			type: MessageType.Repositories,
-			data: [response.repos],
-		});
-		return response;
-	}
-
-	@lspHandler(MatchReposRequestType)
-	@log()
-	async matchRepo(request: MatchReposRequest) {
-		return this.get<MatchReposResponse>(
-			`/repos/match/${this.teamId}?repos=${encodeURIComponent(JSON.stringify(request))}`,
 			tokenHolder.accessToken
 		);
 	}

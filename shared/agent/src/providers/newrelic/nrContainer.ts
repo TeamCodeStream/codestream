@@ -34,6 +34,11 @@ import { EntityGuidDocumentParser } from "./entity/entityGuidDocumentParser";
 import { FetchCore } from "../../system/fetchCore";
 import { SourceMapProvider } from "./errors/sourceMapProvider";
 
+interface NrContainer {
+	repos: ReposProvider;
+}
+
+let nrContainer: NrContainer | undefined;
 let nrDirectives: NrDirectives | undefined;
 let disposables: Disposable[] = [];
 let codeStreamAgent: CodeStreamAgent | undefined;
@@ -239,8 +244,17 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 		Container.instance().documents,
 		entityProvider
 	);
+
+	nrContainer = {
+		repos: reposProvider,
+	};
 }
 
 export function getNrDirectives(): NrDirectives | undefined {
 	return nrDirectives;
+}
+
+export function getNrContainer(): NrContainer {
+	if (!nrContainer) throw new Error("NR Container not yet initialized.");
+	return nrContainer;
 }
