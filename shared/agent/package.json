@@ -90,7 +90,7 @@
 		"string-similarity": "3.0.0",
 		"tiny-async-pool": "1.2.0",
 		"tmp": "0.1.0",
-		"undici": "5.28.3",
+		"undici": "5.28.4",
 		"utf-8-validate": "5.0.8",
 		"uuid": "3.3.2",
 		"vscode-languageserver": "5.2.1",
