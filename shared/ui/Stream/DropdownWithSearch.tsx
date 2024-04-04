@@ -5,12 +5,16 @@ import styled from "styled-components";
 import { AsyncPaginateCustomStyles } from "./AsyncPaginateCustomStyles";
 
 interface SelectedValueContainerProps {
-	styles?: any;
+	styles?: React.CSSProperties;
 	onClick: Function;
 }
 
 const SelectedValueContainer = styled.div<SelectedValueContainerProps>`
-	${({ styles }) => styles}
+	${({ styles }) =>
+		styles &&
+		Object.entries(styles)
+			.map(([key, value]) => `${key}: ${value};`)
+			.join("\n")}
 	padding: 4px;
 	border: 1px solid var(--base-border-color);
 	background: var(--base-background-color);
@@ -42,12 +46,12 @@ const ValuePlaceholder = styled.span`
 
 interface SelectOptionType {
 	label: string;
-	value: string;
+	value: string | number;
 }
 
 interface DropdownWithSearchProps {
 	loadOptions?: Function;
-	selectedOption?: SelectOptionType | any;
+	selectedOption?: SelectOptionType;
 	name?: string;
 	id?: string;
 	handleChangeCallback: Function;
@@ -70,7 +74,6 @@ export const DropdownWithSearch: React.FC<DropdownWithSearchProps> = ({
 	customWidth,
 	valuePlaceholder,
 }) => {
-	const [value, setValue] = useState<any | null>(null);
 	const [showSelect, setShowSelect] = useState<boolean>(false);
 	const selectRef = useRef(null);
 
@@ -84,9 +87,9 @@ export const DropdownWithSearch: React.FC<DropdownWithSearchProps> = ({
 
 	const handleOnBlur = () => {
 		// timeout not ideal, but given the constraints of using async-paginate
-		// nested in a seperate container seperate from the selected value, where
-		// the selected value container and paginate blur modify the same state value,
-		// it seems like a neccssary evil in order to make sure state values
+		// nested in a seperate container from the selected value display, where
+		// the selected value container and async-paginate blur modify the same state value,
+		// it seems like a neccssary evil in order to ensure state values
 		// are modified in the correct order.
 		setTimeout(() => {
 			if (showSelect) {
@@ -146,7 +149,6 @@ export const DropdownWithSearch: React.FC<DropdownWithSearchProps> = ({
 						menuIsOpen={true}
 						classNamePrefix="react-select"
 						loadOptions={loadOptions}
-						value={value}
 						debounceTimeout={750}
 						placeholder={placeholder || "Search"}
 						onChange={newValue => {
