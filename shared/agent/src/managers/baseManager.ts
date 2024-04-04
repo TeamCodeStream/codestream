@@ -152,7 +152,6 @@ export abstract class ManagerBase<T> {
 		this.cacheResponseEntities(container.markers, response.markers);
 		this.cacheResponseEntities(container.markerLocations, response.markerLocations);
 		this.cacheResponseEntities(container.posts, response.posts);
-		this.cacheResponseEntities(container.repos, response.repos);
 		this.cacheResponseEntities(container.streams, response.streams);
 		this.cacheResponseEntities(container.users, response.users);
 	}

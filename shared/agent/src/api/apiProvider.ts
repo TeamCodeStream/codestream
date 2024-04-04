@@ -31,8 +31,6 @@ import {
 	CreateMarkerRequest,
 	CreatePostRequest,
 	CreatePostResponse,
-	CreateRepoRequest,
-	CreateRepoResponse,
 	DeclineInviteRequest,
 	DeclineInviteResponse,
 	LogoutCompanyRequest,
@@ -69,8 +67,6 @@ import {
 	FetchPostRepliesResponse,
 	FetchPostsRequest,
 	FetchPostsResponse,
-	FetchReposRequest,
-	FetchReposResponse,
 	FetchReviewCheckpointDiffsRequest,
 	FetchReviewCheckpointDiffsResponse,
 	FetchReviewDiffsRequest,
@@ -109,8 +105,6 @@ import {
 	GetPostsRequest,
 	GetPostsResponse,
 	GetPreferencesResponse,
-	GetRepoRequest,
-	GetRepoResponse,
 	GetReviewRequest,
 	GetReviewResponse,
 	GetStreamRequest,
@@ -139,8 +133,6 @@ import {
 	MarkPostUnreadResponse,
 	MarkStreamReadRequest,
 	MarkStreamReadResponse,
-	MatchReposRequest,
-	MatchReposResponse,
 	MoveMarkerResponse,
 	MuteStreamRequest,
 	MuteStreamResponse,
@@ -485,12 +477,6 @@ export interface ApiProvider {
 	getPosts(request: GetPostsRequest | Partial<GetPostRequest>): Promise<GetPostsResponse>;
 	markPostUnread(request: MarkPostUnreadRequest): Promise<MarkPostUnreadResponse>;
 	reactToPost(request: ReactToPostRequest): Promise<ReactToPostResponse>;
-
-	createRepo(request: CreateRepoRequest): Promise<CreateRepoResponse>;
-	fetchRepos(request: FetchReposRequest): Promise<FetchReposResponse>;
-	getRepo(request: GetRepoRequest): Promise<GetRepoResponse>;
-	matchRepos(request: MatchReposRequest): Promise<MatchReposResponse>;
-	matchRepo(request: MatchReposRequest): Promise<MatchReposResponse>;
 
 	fetchMsTeamsConversations(
 		request: CSMsTeamsConversationRequest

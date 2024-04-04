@@ -1,8 +1,5 @@
 "use strict";
 import {
-	CreateRepoRequest,
-	CreateRepoRequestType,
-	CreateRepoResponse,
 	FetchReposRequest,
 	FetchReposRequestType,
 	FetchReposResponse,
@@ -13,46 +10,53 @@ import {
 import { CSRepository } from "@codestream/protocols/api";
 
 import { lsp, lspHandler } from "../system";
-import { CachedEntityManagerBase, Id } from "./entityManager";
+import { SessionContainer } from "../container";
+import { getNrContainer } from "../providers/newrelic/nrContainer";
 
 @lsp
-export class ReposManager extends CachedEntityManagerBase<CSRepository> {
-	@lspHandler(CreateRepoRequestType)
-	createRepo(request: CreateRepoRequest): Promise<CreateRepoResponse> {
-		return this.session.api.createRepo(request);
-	}
-
+export class ReposManager {
 	@lspHandler(FetchReposRequestType)
 	async get(request?: FetchReposRequest): Promise<FetchReposResponse> {
-		let repos = await this.getAllCached();
-		if (request != null) {
-			if (request.repoIds != null && request.repoIds.length !== 0) {
-				repos = repos.filter(r => request.repoIds!.includes(r.id));
-			}
+		const { git, nr } = SessionContainer.instance();
+		const nrContainer = getNrContainer();
+
+		const observabilityReposResponse = await nrContainer.repos.getObservabilityRepos({});
+
+		const repos: CSRepository[] = [];
+		for (const observabilityRepo of observabilityReposResponse.repos!!) {
+			const repo: CSRepository = {
+				id: observabilityRepo.repoId,
+				name: observabilityRepo.repoName,
+				remotes: [
+					{
+						url: observabilityRepo.repoRemote,
+						normalizedUrl: observabilityRepo.repoRemote,
+						companyIdentifier: "",
+					},
+				],
+				teamId: "",
+				createdAt: 0,
+				modifiedAt: 0,
+				creatorId: "",
+			};
+			repos.push(repo);
 		}
 
-		return { repos: repos };
-	}
-
-	protected async loadCache() {
-		const response = await this.session.api.fetchRepos({});
-		const { repos, ...rest } = response;
-		this.cache.reset(repos);
-		this.cacheResponse(rest);
-	}
-
-	protected async fetchById(repoId: Id): Promise<CSRepository> {
-		const response = await this.session.api.getRepo({ repoId: repoId });
-		return response.repo;
+		return { repos };
 	}
 
 	@lspHandler(GetRepoRequestType)
-	protected async getRepo(request: GetRepoRequest): Promise<GetRepoResponse> {
+	async getRepo(request: GetRepoRequest): Promise<GetRepoResponse> {
 		const repo = await this.getById(request.repoId);
 		return { repo: repo };
 	}
 
 	protected getEntityName(): string {
 		return "Repository";
+	}
+
+	async getById(id: string): Promise<CSRepository> {
+		const response = await this.get();
+		return response.repos.find(repo => repo.id === id)!!;
 	}
 }

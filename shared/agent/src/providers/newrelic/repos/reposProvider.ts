@@ -118,13 +118,13 @@ export class ReposProvider implements Disposable {
 			if (request?.filters?.length) {
 				const repoIds = request.filters.map(_ => _.repoId);
 				filteredRepos = reposResponse.repositories?.filter(r => r.id && repoIds.includes(r.id))!;
+				filteredRepos = reposResponse.repositories;
 			}
 
-			filteredRepos = filteredRepos?.filter(_ => _.id);
 			if (!filteredRepos || !filteredRepos.length) return response;
 
 			for (const repo of filteredRepos) {
-				if (!repo.id || !repo.remotes || !repo.remotes.length) {
+				if (!repo.remotes || !repo.remotes.length) {
 					ContextLogger.warn(
 						"getObservabilityRepos skipping repo with missing id and/or repo.remotes",
 						{
@@ -275,7 +275,7 @@ export class ReposProvider implements Disposable {
 					`${a?.accountName}-${a?.entityName}`.localeCompare(`${b?.accountName}-${b?.entityName}`)
 				);
 				response.repos?.push({
-					repoId: repo.id,
+					repoId: mappedUniqueEntities[0]?.entityGuid!!,
 					repoName: folderName,
 					repoRemote: remote,
 					hasRepoAssociation,
