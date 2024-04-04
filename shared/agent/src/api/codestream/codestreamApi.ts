@@ -3134,6 +3134,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 				response.newRelicLandingServiceUrl = json.newRelicLandingServiceUrl;
 				response.newRelicApiUrl = json.newRelicApiUrl;
 				response.newRelicSecApiUrl = json.newRelicSecApiUrl;
+				response.telemetryEndpoint = json.telemetryEndpoint;
 				response.environmentHosts = json.environmentHosts;
 			}
 		} catch (err) {

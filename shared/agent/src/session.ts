@@ -882,7 +882,7 @@ export class CodeStreamSession {
 	}
 
 	get newRelicTaxonomyEnforcerUrl() {
-		return "https://taxonomy-enforcer.service.newrelic.com";
+		return this.environmentInfo.telemetryEndpoint;
 	}
 
 	get disableStrictSSL(): boolean {
@@ -1021,6 +1021,7 @@ export class CodeStreamSession {
 			newRelicLandingServiceUrl: response.newRelicLandingServiceUrl,
 			newRelicApiUrl: response.newRelicApiUrl,
 			newRelicSecApiUrl: response.newRelicSecApiUrl,
+			telemetryEndpoint: response.telemetryEndpoint,
 			environmentHosts: response.environmentHosts,
 		};
 		Logger.log("Got environment from connectivity response:", this._environmentInfo);
