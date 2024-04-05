@@ -185,12 +185,6 @@ function VulnerabilityView(props: {
 								url: vuln.url,
 							});
 						}
-						HostApi.instance.track("codestream/vulnerability_link clicked", {
-							entity_guid: props.entityGuid,
-							account_id: props.accountId,
-							target: "vulnerability",
-							event_type: "click",
-						});
 					}}
 				>
 					<Icon style={{ transform: "scale(0.9)", paddingRight: "10px" }} name="lock" />
@@ -247,6 +241,15 @@ function VulnerabilityRow(props: {
 	vulnerability: Vulnerability;
 }) {
 	const [expanded, setExpanded] = useState<boolean>(false);
+
+	if (expanded) {
+		HostApi.instance.track("codestream/vulnerability_link clicked", {
+			entity_guid: props.entityGuid,
+			account_id: props.accountId,
+			target: "vulnerability",
+			event_type: "click",
+		});
+	}
 
 	return (
 		<>
