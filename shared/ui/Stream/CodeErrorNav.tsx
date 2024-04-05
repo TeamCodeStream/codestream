@@ -53,7 +53,7 @@ import { RepositoryAssociator } from "./CodeError/RepositoryAssociator";
 import { BigTitle, Header, Meta } from "./Codemark/BaseCodemark";
 import Dismissable from "./Dismissable";
 import Icon from "./Icon";
-import { ClearModal, ComposeArea, Step, Subtext, Tip } from "./ReviewNav";
+import { ClearModal, Step, Subtext, Tip } from "./ReviewNav";
 import ScrollBox from "./ScrollBox";
 import { WarningBox } from "./WarningBox";
 import { isEmpty as _isEmpty } from "lodash";
@@ -718,18 +718,6 @@ export function CodeErrorNav(props: Props) {
 				<div>
 					Investigate the stack trace
 					<Subtext>By clicking on each frame to go to the specific file and line number</Subtext>
-					<Button onClick={() => setHoverButton("comment")}>Next &gt;</Button>
-				</div>
-			</Tip>
-		) : undefined;
-
-	const commentTip =
-		hoverButton === "comment" ? (
-			<Tip>
-				<Step>2</Step>
-				<div>
-					Comment by selecting code in the editor
-					<Subtext>CodeStream will automatically mention the code author</Subtext>
 					<Button
 						onClick={() => {
 							const el = document.getElementById("code-error-nav-header");
@@ -746,12 +734,12 @@ export function CodeErrorNav(props: Props) {
 	const resolutionTip =
 		hoverButton === "resolution" ? (
 			<Tip>
-				<Step>3</Step>
+				<Step>2</Step>
 				<div>
-					Explore CodeStream!
+					More performance data!
 					<Subtext>
-						Once you're done with the error, close it and see how you can discover other errors,
-						discuss code, and review pull requests from your IDE.
+						When you're done investigating this error, close it to see golden metrics, performance
+						issues, logs, and more.
 					</Subtext>
 					<Button onClick={tourDone}>Done</Button>
 				</div>
@@ -987,12 +975,6 @@ export function CodeErrorNav(props: Props) {
 					</ScrollBox>
 				</div>
 			)}
-			<TourTip title={commentTip} placement={sidebarLocation === "right" ? "right" : "left"}>
-				<ComposeArea
-					side={sidebarLocation === "right" ? "right" : "left"}
-					className={hoverButton == "comment" ? "pulse" : ""}
-				/>
-			</TourTip>
 		</Root>
 	);
 }
