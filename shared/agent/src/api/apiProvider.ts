@@ -6,9 +6,6 @@ import {
 	AccessToken,
 	AddEnterpriseProviderHostRequest,
 	AddEnterpriseProviderHostResponse,
-	AddMarkersResponse,
-	AddReferenceLocationRequest,
-	AddReferenceLocationResponse,
 	ArchiveStreamRequest,
 	ArchiveStreamResponse,
 	Capabilities,
@@ -19,60 +16,35 @@ import {
 	ConnectionStatus,
 	CreateChannelStreamRequest,
 	CreateChannelStreamResponse,
-	CreateCodemarkPermalinkRequest,
-	CreateCodemarkPermalinkResponse,
-	CreateCodemarkRequest,
-	CreateCodemarkResponse,
 	CreateDirectStreamRequest,
 	CreateDirectStreamResponse,
 	CreateExternalPostRequest,
-	CreateMarkerLocationRequest,
-	CreateMarkerLocationResponse,
-	CreateMarkerRequest,
 	CreatePostRequest,
 	CreatePostResponse,
+	CSAsyncError,
+	CSGrokStream,
 	DeclineInviteRequest,
 	DeclineInviteResponse,
-	LogoutCompanyRequest,
-	LogoutCompanyResponse,
 	DeleteCodeErrorRequest,
 	DeleteCodeErrorResponse,
-	DeleteCodemarkRequest,
-	DeleteCodemarkResponse,
 	DeleteCompanyRequest,
 	DeleteCompanyResponse,
-	DeleteMarkerRequest,
-	DeleteMarkerResponse,
 	DeletePostRequest,
 	DeletePostResponse,
-	DeleteReviewRequest,
-	DeleteReviewResponse,
 	DeleteUserRequest,
 	DeleteUserResponse,
 	EditPostRequest,
 	EditPostResponse,
 	FetchCodeErrorsRequest,
 	FetchCodeErrorsResponse,
-	FetchCodemarksRequest,
-	FetchCodemarksResponse,
 	FetchCompaniesRequest,
 	FetchCompaniesResponse,
 	FetchFileStreamsRequest,
 	FetchFileStreamsResponse,
-	FetchMarkerLocationsRequest,
-	FetchMarkerLocationsResponse,
-	FetchMarkersRequest,
-	FetchMarkersResponse,
 	FetchPostRepliesRequest,
 	FetchPostRepliesResponse,
 	FetchPostsRequest,
 	FetchPostsResponse,
-	FetchReviewCheckpointDiffsRequest,
-	FetchReviewCheckpointDiffsResponse,
-	FetchReviewDiffsRequest,
-	FetchReviewDiffsResponse,
-	FetchReviewsRequest,
-	FetchReviewsResponse,
 	FetchStreamsRequest,
 	FetchStreamsResponse,
 	FetchTeamsRequest,
@@ -85,19 +57,13 @@ import {
 	FetchUsersResponse,
 	FollowCodeErrorRequest,
 	FollowCodeErrorResponse,
-	FollowCodemarkRequest,
-	FollowCodemarkResponse,
-	FollowReviewRequest,
-	FollowReviewResponse,
 	GenerateLoginCodeRequest,
+	GenerateMSTeamsConnectCodeRequest,
+	GenerateMSTeamsConnectCodeResponse,
 	GetCodeErrorRequest,
 	GetCodeErrorResponse,
-	GetCodemarkRequest,
-	GetCodemarkResponse,
 	GetCompanyRequest,
 	GetCompanyResponse,
-	GetMarkerRequest,
-	GetMarkerResponse,
 	GetNewRelicSignupJwtTokenRequest,
 	GetNewRelicSignupJwtTokenResponse,
 	GetPostRequest,
@@ -105,8 +71,6 @@ import {
 	GetPostsRequest,
 	GetPostsResponse,
 	GetPreferencesResponse,
-	GetReviewRequest,
-	GetReviewResponse,
 	GetStreamRequest,
 	GetStreamResponse,
 	GetTeamRequest,
@@ -125,6 +89,8 @@ import {
 	KickUserResponse,
 	LeaveStreamRequest,
 	LeaveStreamResponse,
+	LogoutCompanyRequest,
+	LogoutCompanyResponse,
 	LookupNewRelicOrganizationsRequest,
 	LookupNewRelicOrganizationsResponse,
 	MarkItemReadRequest,
@@ -133,22 +99,16 @@ import {
 	MarkPostUnreadResponse,
 	MarkStreamReadRequest,
 	MarkStreamReadResponse,
-	MoveMarkerResponse,
 	MuteStreamRequest,
 	MuteStreamResponse,
 	OpenStreamRequest,
 	OpenStreamResponse,
-	PinReplyToCodemarkRequest,
-	PinReplyToCodemarkResponse,
+	PollForMaintenanceModeResponse,
 	ReactToPostRequest,
 	ReactToPostResponse,
 	RemoveEnterpriseProviderHostRequest,
 	RenameStreamRequest,
 	RenameStreamResponse,
-	SetCodemarkPinnedRequest,
-	SetCodemarkPinnedResponse,
-	SetCodemarkStatusRequest,
-	SetCodemarkStatusResponse,
 	SetStreamPurposeRequest,
 	SetStreamPurposeResponse,
 	SharePostViaServerRequest,
@@ -159,20 +119,14 @@ import {
 	Unreads,
 	UpdateCodeErrorRequest,
 	UpdateCodeErrorResponse,
-	UpdateCodemarkRequest,
-	UpdateCodemarkResponse,
 	UpdateInvisibleRequest,
 	UpdateInvisibleResponse,
-	UpdateMarkerRequest,
-	UpdateMarkerResponse,
 	UpdatePostSharingDataRequest,
 	UpdatePostSharingDataResponse,
 	UpdatePreferencesRequest,
 	UpdatePreferencesResponse,
 	UpdatePresenceRequest,
 	UpdatePresenceResponse,
-	UpdateReviewRequest,
-	UpdateReviewResponse,
 	UpdateStatusRequest,
 	UpdateStatusResponse,
 	UpdateStreamMembershipRequest,
@@ -180,23 +134,15 @@ import {
 	UpdateUserRequest,
 	UpdateUserResponse,
 	VerifyConnectivityResponse,
-	PollForMaintenanceModeResponse,
-	CSAsyncError,
-	CSGrokStream,
-	GenerateMSTeamsConnectCodeRequest,
-	GenerateMSTeamsConnectCodeResponse,
 } from "@codestream/protocols/agent";
 import {
 	CSApiCapabilities,
 	CSApiFeatures,
 	CSChannelStream,
 	CSCodeError,
-	CSCodemark,
 	CSCompany,
 	CSDirectStream,
 	CSLoginResponse,
-	CSMarker,
-	CSMarkerLocations,
 	CSMe,
 	CSMePreferences,
 	CSMsTeamsConversationRequest,
@@ -204,8 +150,6 @@ import {
 	CSNewRelicProviderInfo,
 	CSObjectStream,
 	CSPost,
-	CSRepository,
-	CSReview,
 	CSTeam,
 	CSUser,
 	ProviderType,
@@ -255,14 +199,9 @@ export type LoginOptions =
 export enum MessageType {
 	Connection = "connection",
 	Companies = "companies",
-	Codemarks = "codemarks",
 	Documents = "documents",
-	MarkerLocations = "markerLocations",
-	Markers = "markers",
 	Posts = "posts",
 	Preferences = "preferences",
-	Repositories = "repos",
-	Reviews = "reviews",
 	CodeErrors = "codeErrors",
 	Streams = "streams",
 	Teams = "teams",
@@ -278,24 +217,9 @@ export interface CompaniesRTMessage {
 	data: CSCompany[];
 }
 
-export interface CodemarksRTMessage {
-	type: MessageType.Codemarks;
-	data: CSCodemark[];
-}
-
 export interface ConnectionRTMessage {
 	type: MessageType.Connection;
 	data: { reset?: boolean; status: ConnectionStatus };
-}
-
-export interface MarkerLocationsRTMessage {
-	type: MessageType.MarkerLocations;
-	data: CSMarkerLocations[];
-}
-
-export interface MarkersRTMessage {
-	type: MessageType.Markers;
-	data: CSMarker[];
 }
 
 export interface PostsRTMessage {
@@ -306,16 +230,6 @@ export interface PostsRTMessage {
 export interface PreferencesRTMessage {
 	type: MessageType.Preferences;
 	data: CSMePreferences;
-}
-
-export interface RepositoriesRTMessage {
-	type: MessageType.Repositories;
-	data: CSRepository[];
-}
-
-export interface ReviewsRTMessage {
-	type: MessageType.Reviews;
-	data: CSReview[];
 }
 
 export interface CodeErrorsRTMessage {
@@ -376,15 +290,10 @@ export interface ApiError {
 }
 
 export type RTMessage =
-	| CodemarksRTMessage
 	| CompaniesRTMessage
 	| ConnectionRTMessage
-	| MarkerLocationsRTMessage
-	| MarkersRTMessage
 	| PostsRTMessage
 	| PreferencesRTMessage
-	| RepositoriesRTMessage
-	| ReviewsRTMessage
 	| CodeErrorsRTMessage
 	| StreamsRTMessage
 	| TeamsRTMessage
@@ -430,38 +339,7 @@ export interface ApiProvider {
 	// createFileStream(request: CreateFileStreamRequest): Promise<CreateFileStreamResponse>;
 	fetchFileStreams(request: FetchFileStreamsRequest): Promise<FetchFileStreamsResponse>;
 
-	createCodemark(request: CreateCodemarkRequest): Promise<CreateCodemarkResponse>;
-	deleteCodemark(request: DeleteCodemarkRequest): Promise<DeleteCodemarkResponse>;
-	fetchCodemarks(request: FetchCodemarksRequest): Promise<FetchCodemarksResponse>;
-	getCodemark(request: GetCodemarkRequest): Promise<GetCodemarkResponse>;
-	setCodemarkPinned(request: SetCodemarkPinnedRequest): Promise<SetCodemarkPinnedResponse>;
-	pinReplyToCodemark(request: PinReplyToCodemarkRequest): Promise<PinReplyToCodemarkResponse>;
-	setCodemarkStatus(request: SetCodemarkStatusRequest): Promise<SetCodemarkStatusResponse>;
-	updateCodemark(request: UpdateCodemarkRequest): Promise<UpdateCodemarkResponse>;
-	followCodemark(request: FollowCodemarkRequest): Promise<FollowCodemarkResponse>;
-	followReview(request: FollowReviewRequest): Promise<FollowReviewResponse>;
 	followCodeError(request: FollowCodeErrorRequest): Promise<FollowCodeErrorResponse>;
-
-	createCodemarkPermalink(
-		request: CreateCodemarkPermalinkRequest
-	): Promise<CreateCodemarkPermalinkResponse>;
-
-	createMarkerLocation(request: CreateMarkerLocationRequest): Promise<CreateMarkerLocationResponse>;
-	fetchMarkerLocations(request: FetchMarkerLocationsRequest): Promise<FetchMarkerLocationsResponse>;
-	addReferenceLocation(request: AddReferenceLocationRequest): Promise<AddReferenceLocationResponse>;
-
-	fetchMarkers(request: FetchMarkersRequest): Promise<FetchMarkersResponse>;
-	getMarker(request: GetMarkerRequest): Promise<GetMarkerResponse>;
-	updateMarker(request: UpdateMarkerRequest): Promise<UpdateMarkerResponse>;
-	moveMarker(request: {
-		oldMarkerId: string;
-		newMarker: CreateMarkerRequest;
-	}): Promise<MoveMarkerResponse>;
-	addMarkers(request: {
-		codemarkId: string;
-		newMarkers: CreateMarkerRequest[];
-	}): Promise<AddMarkersResponse>;
-	deleteMarker(request: DeleteMarkerRequest): Promise<DeleteMarkerResponse>;
 
 	createExternalPost(request: CreateExternalPostRequest): Promise<CreatePostResponse>;
 	createPost(request: CreatePostRequest): Promise<CreatePostResponse>;
@@ -484,16 +362,6 @@ export interface ApiProvider {
 	triggerMsTeamsProactiveMessage(
 		request: TriggerMsTeamsProactiveMessageRequest
 	): Promise<TriggerMsTeamsProactiveMessageResponse>;
-
-	fetchReviews(request: FetchReviewsRequest): Promise<FetchReviewsResponse>;
-	getReview(request: GetReviewRequest): Promise<GetReviewResponse>;
-	updateReview(request: UpdateReviewRequest): Promise<UpdateReviewResponse>;
-	deleteReview(request: DeleteReviewRequest): Promise<DeleteReviewResponse>;
-
-	fetchReviewDiffs(request: FetchReviewDiffsRequest): Promise<FetchReviewDiffsResponse>;
-	fetchReviewCheckpointDiffs(
-		request: FetchReviewCheckpointDiffsRequest
-	): Promise<FetchReviewCheckpointDiffsResponse>;
 
 	fetchCodeErrors(request: FetchCodeErrorsRequest): Promise<FetchCodeErrorsResponse>;
 	claimCodeError(request: ClaimCodeErrorRequest): Promise<ClaimCodeErrorResponse>;

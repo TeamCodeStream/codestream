@@ -7,19 +7,14 @@ import { GitServiceLite } from "./git/gitServiceLite";
 import { RepositoryLocator } from "./git/repositoryLocator";
 import { Logger } from "./logger";
 import { CodeErrorsManager } from "./managers/codeErrorsManager";
-import { CodemarksManager } from "./managers/codemarksManager";
 import { CompaniesManager } from "./managers/companiesManager";
-import { DocumentMarkerManager } from "./managers/documentMarkerManager";
 import { FilesManager } from "./managers/filesManager";
 import { IgnoreFilesManager } from "./managers/ignoreFilesManager";
-import { MarkerLocationManager } from "./managers/markerLocationManager";
-import { MarkersManager } from "./managers/markersManager";
 import { NRManager } from "./managers/NRManager";
 import { PostsManager } from "./managers/postsManager";
 import { RepoIdentificationManager } from "./managers/repoIdentificationManager";
 import { RepositoryMappingManager } from "./managers/repositoryMappingManager";
 import { ReposManager } from "./managers/reposManager";
-import { ReviewsManager } from "./managers/reviewsManager";
 import { ScmManager } from "./managers/scmManager";
 import { ServerManager } from "./managers/serverManager";
 import { StreamsManager } from "./managers/streamsManager";
@@ -44,21 +39,6 @@ export class SessionServiceContainer {
 	private readonly _files: FilesManager;
 	get files(): FilesManager {
 		return this._files;
-	}
-
-	private readonly _codemarks: CodemarksManager;
-	get codemarks(): CodemarksManager {
-		return this._codemarks;
-	}
-
-	private readonly _markerLocations: MarkerLocationManager;
-	get markerLocations(): MarkerLocationManager {
-		return this._markerLocations;
-	}
-
-	private readonly _markers: MarkersManager;
-	get markers(): MarkersManager {
-		return this._markers;
 	}
 
 	private readonly _posts: PostsManager;
@@ -96,11 +76,6 @@ export class SessionServiceContainer {
 		return this._users;
 	}
 
-	private readonly _documentMarkers: DocumentMarkerManager;
-	get documentMarkers() {
-		return this._documentMarkers;
-	}
-
 	private readonly _providerRegistry: ThirdPartyProviderRegistry;
 	get providerRegistry() {
 		return this._providerRegistry;
@@ -119,11 +94,6 @@ export class SessionServiceContainer {
 	private readonly _textFiles: TextFilesManager;
 	get textFiles() {
 		return this._textFiles;
-	}
-
-	private readonly _reviews: ReviewsManager;
-	get reviews() {
-		return this._reviews;
 	}
 
 	private readonly _codeErrors: CodeErrorsManager;
@@ -146,21 +116,16 @@ export class SessionServiceContainer {
 		this._git = new GitService(session, cinstance.repositoryLocator, cinstance.gitServiceLite);
 		this._scm = new ScmManager(session);
 		this._files = new FilesManager(session);
-		this._markerLocations = new MarkerLocationManager(session);
-		this._codemarks = new CodemarksManager(session);
-		this._markers = new MarkersManager(session);
 		this._posts = new PostsManager(session);
 		this._repos = new ReposManager();
 		this._streams = new StreamsManager(session);
 		this._teams = new TeamsManager(session);
 		this._users = new UsersManager(session);
-		this._documentMarkers = new DocumentMarkerManager(session);
 		this._providerRegistry = providerRegistry!.initialize(session);
 		this._repositoryMappings = new RepositoryMappingManager(session);
 		this._companies = new CompaniesManager(session);
 		this._ignoreFiles = new IgnoreFilesManager(session);
 		this._textFiles = new TextFilesManager(session);
-		this._reviews = new ReviewsManager(session);
 		this._codeErrors = new CodeErrorsManager(session);
 		this._nr = new NRManager(session);
 		this._repoIdentifier = new RepoIdentificationManager(session);

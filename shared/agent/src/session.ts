@@ -581,14 +581,6 @@ export class CodeStreamSession {
 		}
 
 		switch (e.type) {
-			case MessageType.Codemarks:
-				const codemarks = await SessionContainer.instance().codemarks.enrichCodemarks(e.data);
-				this._onDidChangeCodemarks.fire(codemarks);
-				this.agent.sendNotification(DidChangeDataNotificationType, {
-					type: ChangeDataType.Codemarks,
-					data: codemarks,
-				});
-				break;
 			case MessageType.Companies:
 				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.Companies,
@@ -606,20 +598,6 @@ export class CodeStreamSession {
 				}
 				this.agent.sendNotification(DidChangeConnectionStatusNotificationType, data);
 				break;
-			case MessageType.MarkerLocations:
-				this._onDidChangeMarkerLocations.fire(e.data);
-				this.agent.sendNotification(DidChangeDataNotificationType, {
-					type: ChangeDataType.MarkerLocations,
-					data: e.data,
-				});
-				break;
-			case MessageType.Markers:
-				this._onDidChangeMarkers.fire(e.data);
-				this.agent.sendNotification(DidChangeDataNotificationType, {
-					type: ChangeDataType.Markers,
-					data: e.data,
-				});
-				break;
 			case MessageType.Posts:
 				const posts = await SessionContainer.instance().posts.enrichPosts(e.data);
 				this._onDidChangePosts.fire(posts);
@@ -632,19 +610,6 @@ export class CodeStreamSession {
 				this._onDidChangePreferences.fire(e.data);
 				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.Preferences,
-					data: e.data,
-				});
-				break;
-			case MessageType.Repositories:
-				this._onDidChangeRepositories.fire(e.data);
-				this.agent.sendNotification(DidChangeDataNotificationType, {
-					type: ChangeDataType.Repositories,
-					data: e.data,
-				});
-				break;
-			case MessageType.Reviews:
-				this.agent.sendNotification(DidChangeDataNotificationType, {
-					type: ChangeDataType.Reviews,
 					data: e.data,
 				});
 				break;
@@ -1332,8 +1297,6 @@ export class CodeStreamSession {
 				data: data,
 			});
 		});
-
-		SessionContainer.instance().reviews.initializeCurrentBranches();
 
 		// this needs to happen before initializing telemetry, because super-properties are dependent
 		if (this.apiCapabilities.testGroups) {

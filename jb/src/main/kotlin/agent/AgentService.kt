@@ -565,23 +565,6 @@ class AgentService(private val project: Project) : Disposable {
         return result
     }
 
-    suspend fun documentMarkers(params: DocumentMarkersParams): DocumentMarkersResult {
-        val json = remoteEndpoint
-            .request("codestream/textDocument/markers", params)
-            .await() as JsonObject
-        val result = gson.fromJson<DocumentMarkersResult>(json)
-
-        // Numbers greater than Integer.MAX_VALUE are deserialized as -1. It should not happen,
-        // but some versions of the plugin might do that trying to represent a whole line.
-        for (marker in result.markers) {
-            if (marker.range.end.character == -1) {
-                marker.range.end.character = Integer.MAX_VALUE
-            }
-        }
-
-        return result
-    }
-
     suspend fun reviewCoverage(params: ReviewCoverageParams): ReviewCoverageResult {
         val json = remoteEndpoint
             .request("codestream/review/coverage", params)

@@ -17,13 +17,8 @@ import { CodeStreamApiProvider } from "./codestreamApi";
 
 const messageToType: {
 	[key: string]:
-		| MessageType.Codemarks
 		| MessageType.Companies
-		| MessageType.MarkerLocations
-		| MessageType.Markers
 		| MessageType.Posts
-		| MessageType.Repositories
-		| MessageType.Reviews
 		| MessageType.CodeErrors
 		| MessageType.Streams
 		| MessageType.Teams
@@ -33,21 +28,12 @@ const messageToType: {
 		| MessageType.GrokStream
 		| undefined;
 } = {
-	codemark: MessageType.Codemarks,
-	codemarks: MessageType.Codemarks,
 	codeError: MessageType.CodeErrors,
 	codeErrors: MessageType.CodeErrors,
 	company: MessageType.Companies,
 	companies: MessageType.Companies,
-	marker: MessageType.Markers,
-	markerLocations: MessageType.MarkerLocations,
-	markers: MessageType.Markers,
 	post: MessageType.Posts,
 	posts: MessageType.Posts,
-	repo: MessageType.Repositories,
-	repos: MessageType.Repositories,
-	review: MessageType.Reviews,
-	reviews: MessageType.Reviews,
 	stream: MessageType.Streams,
 	streams: MessageType.Streams,
 	team: MessageType.Teams,

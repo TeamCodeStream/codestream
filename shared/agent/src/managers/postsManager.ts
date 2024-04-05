@@ -1,53 +1,23 @@
 "use strict";
 import * as fs from "fs";
-import * as path from "path";
 
-import { ParsedDiff } from "diff";
-import { groupBy, last, orderBy } from "lodash";
-import { compressToBase64 } from "lz-string";
-import sizeof from "object-sizeof";
+import { last, orderBy } from "lodash";
 import {
-	CodemarkType,
-	CSChannelStream,
 	CSCodeError,
 	CSCreateCodemarkResponse,
-	CSDirectStream,
 	CSMarker,
-	CSObjectStream,
 	CSPost,
-	CSRepoChange,
 	CSReview,
-	CSStream,
-	CSTransformedReviewChangeset,
-	FileStatus,
 	isCSCodeError,
 	isCSReview,
-	ModifiedFile,
 	ProviderType,
-	StreamType,
 } from "@codestream/protocols/api";
 import {
 	CodeDelimiterStyles,
 	CodemarkPlus,
-	CodeStreamDiffUriData,
-	CreateCodeErrorRequest,
-	CreateCodemarkRequest,
-	CreatePassthroughCodemarkResponse,
 	CreatePostRequest,
 	CreatePostRequestType,
 	CreatePostResponse,
-	CreatePostWithMarkerRequest,
-	CreatePostWithMarkerRequestType,
-	CreateReviewRequest,
-	CreateShareableCodeErrorRequest,
-	CreateShareableCodeErrorRequestType,
-	CreateShareableCodeErrorResponse,
-	CreateShareableCodemarkRequest,
-	CreateShareableCodemarkRequestType,
-	CreateShareableCodemarkResponse,
-	CreateShareableReviewRequest,
-	CreateShareableReviewRequestType,
-	CreateShareableReviewResponse,
 	CrossPostIssueValues,
 	DeletePostRequest,
 	DeletePostRequestType,
@@ -55,11 +25,6 @@ import {
 	EditPostRequest,
 	EditPostRequestType,
 	EditPostResponse,
-	ERROR_REVIEW_BRANCH_NOT_FOUND,
-	ERROR_REVIEW_COMMITS_NOT_FOUND,
-	ERROR_REVIEW_NO_REMOTES,
-	ERROR_REVIEW_REPO_NOT_FOUND,
-	ERROR_REVIEW_SCM_NOT_FOUND,
 	FetchActivityRequest,
 	FetchActivityRequestType,
 	FetchActivityResponse,
@@ -85,35 +50,26 @@ import {
 	ReactToPostRequestType,
 	ReactToPostResponse,
 	ReportingMessageType,
-	ReviewPlus,
 	SharePostViaServerRequest,
 	SharePostViaServerRequestType,
 	SharePostViaServerResponse,
-	TelemetryData,
 	UpdatePostSharingDataRequest,
 	UpdatePostSharingDataRequestType,
 	UpdatePostSharingDataResponse,
 } from "@codestream/protocols/agent";
-import { ResponseError } from "vscode-jsonrpc/lib/messages";
 import { TextDocumentIdentifier } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 
 import { CodeStreamApiProvider } from "api/codestream/codestreamApi";
 import { Marker, MarkerLocation } from "../api/extensions";
 import { Container, SessionContainer } from "../container";
-import { EMPTY_TREE_SHA } from "../git/gitService";
-import { GitCommit } from "../git/models/commit";
-import * as gitUtils from "../git/utils";
 import { Logger } from "../logger";
-import { Directives } from "../providers/directives";
 import { providerDisplayNamesByNameKey } from "../providers/provider";
 import { Arrays, debug, log, lsp, lspHandler, Strings } from "../system";
-import * as csUri from "../system/uri";
 import { BaseIndex, IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { EntityCache, EntityCacheCfg } from "./cache/entityCache";
 import { EntityManagerBase, Id } from "./entityManager";
-import { MarkersBuilder } from "./markersBuilder";
 
 import getProviderDisplayName = Marker.getProviderDisplayName;
 
@@ -464,256 +420,6 @@ class PostsCache extends EntityCache<CSPost> {
 	}
 }
 
-function trackPostCreation(
-	request: CreatePostRequest,
-	textDocuments?: TextDocumentIdentifier[],
-	codemarkId?: string
-) {
-	process.nextTick(() => {
-		const { session, streams } = SessionContainer.instance();
-		try {
-			// Get stream so we can determine type
-			streams
-				.getById(request.streamId)
-				.then(async (stream: CSStream) => {
-					let streamType = "Unknown";
-					switch (stream.type) {
-						case StreamType.Channel:
-							stream.privacy === "private"
-								? (streamType = "Private Channel")
-								: (streamType = "Public Channel");
-							break;
-						case StreamType.Direct:
-							streamType = "Direct Message";
-							break;
-					}
-
-					let markerType = "Chat";
-					const telemetry = Container.instance().telemetry;
-					let isMarker = false;
-					// Check if it's a marker
-					if (request.codemark != null) {
-						isMarker = true;
-					}
-
-					// Get Type for codemark
-					if (request.codemark != null) {
-						switch (request.codemark.type) {
-							case CodemarkType.Question:
-								markerType = "Question";
-								break;
-							case CodemarkType.Comment:
-								markerType = "Comment";
-								break;
-							case CodemarkType.Trap:
-								markerType = "Trap";
-								break;
-							case CodemarkType.Bookmark:
-								markerType = "Bookmark";
-								break;
-							case CodemarkType.Issue:
-								markerType = "Issue";
-								break;
-							case CodemarkType.Link:
-								markerType = "Permalink";
-								break;
-						}
-					}
-
-					let entryPoint = "global_nav";
-					if (request.entryPoint != null) {
-						switch (request.entryPoint) {
-							case "Gutter":
-								entryPoint = "gutter";
-								break;
-							case "Global Nav":
-								entryPoint = "global_nav";
-								break;
-							case "Shortcut":
-								entryPoint = "shortcut";
-								break;
-							case "Lightbulb Menu":
-								entryPoint = "lightbulb_menu";
-								break;
-							case "Action List":
-								entryPoint = "action_list";
-								break;
-							case "Hover Icons":
-								entryPoint = "hover_icons";
-								break;
-							case "Advanced Link":
-								entryPoint = "advanced_link";
-								break;
-							case "Context Menu":
-								entryPoint = "context_menu";
-								break;
-						}
-					}
-
-					if (request.codemark) {
-						// this is a standard codemark -- note its event name includes "created" rather than "reply"
-						const { markers = [] } = request.codemark;
-						const codemarkProperties: TelemetryData = {
-							meta_data: `entry_point: ${entryPoint ?? ""}`,
-							meta_data_2: `linked_service: ${request.codemark.externalProvider}`,
-							meta_data_3: `error_group: false`,
-							meta_data_4: `codemark_type: ${
-								markerType === "Comment" ? "comment" : markerType === "Issue" ? "issue" : ""
-							}`,
-							event_type: "response",
-						};
-						if (request.codemark.codeErrorId) {
-							codemarkProperties["meta_data_3"] = `error_group: true`;
-						}
-						if (textDocuments && textDocuments.length) {
-							for (const textDocument of textDocuments) {
-								const firstError = await getGitError(textDocument);
-								// codemarkProperties["Git Error"] = firstError;
-								if (firstError) {
-									// stop after the first
-									break;
-								}
-							}
-						}
-						telemetry.track({
-							eventName: "codestream/codemarks/codemark created",
-							properties: codemarkProperties,
-						});
-					} else if (request.parentPostId) {
-						const parentPost = await SessionContainer.instance().posts.getById(
-							request.parentPostId
-						);
-						if (parentPost) {
-							if (parentPost.parentPostId) {
-								const grandParentPost = await SessionContainer.instance().posts.getById(
-									parentPost.parentPostId
-								);
-
-								if (parentPost.codemarkId && grandParentPost && grandParentPost.codeErrorId) {
-									// reply to a codemark in a code error
-
-									telemetry.track({
-										eventName: "codestream/codemarks/reply created",
-										properties: {
-											meta_data: "parent_type: error",
-											event_type: "response",
-										},
-									});
-								} else if (grandParentPost && grandParentPost.codeErrorId) {
-									// reply to a reply in a code error
-
-									telemetry.track({
-										eventName: "codestream/codemarks/reply created",
-										properties: {
-											meta_data: "parent_type: error",
-											event_type: "response",
-										},
-									});
-								}
-							} else if (parentPost.codeErrorId) {
-								// reply to a code error
-
-								telemetry.track({
-									eventName: "codestream/codemarks/reply created",
-									properties: {
-										meta_data: "parent_type: error",
-										event_type: "response",
-									},
-								});
-							} else if (parentPost.codemarkId) {
-								// reply to a standard codemark
-								const codemark = await SessionContainer.instance().codemarks.getById(
-									parentPost.codemarkId
-								);
-
-								telemetry.track({
-									eventName: "codestream/codemarks/reply created",
-									properties: {
-										meta_data: "parent_type: codemark",
-										event_type: "response",
-									},
-								});
-							}
-						}
-					}
-				})
-				.catch(ex => Logger.error(ex));
-		} catch (ex) {
-			Logger.error(ex);
-		}
-	});
-}
-
-// export function trackReviewPostCreation(
-// 	review: ReviewPlus,
-// 	totalExcludedFilesCount: number,
-// 	reviewChangesetsSizeInBytes: number,
-// 	skippedCommitsCount: number,
-// 	entryPoint?: string,
-// 	addedUsers?: string[]
-// ) {
-// 	process.nextTick(() => {
-// 		try {
-// 			const telemetry = Container.instance().telemetry;
-// 			const reviewProperties: {
-// 				[key: string]: any;
-// 			} = {
-// 				"Review ID": review.id,
-// 				"Entry Point": entryPoint,
-// 				Approvals: review.allReviewersMustApprove === true ? "Everyone" : "Anyone",
-// 				Reviewers: review.reviewers.length,
-// 				Files: review.reviewChangesets.map(_ => _.modifiedFiles.length).reduce((acc, x) => acc + x),
-// 				"Pushed Commits": review.reviewChangesets
-// 					.map(_ => _.commits.filter(c => !c.localOnly).length)
-// 					.reduce((acc, x) => acc + x),
-// 				"Local Commits": review.reviewChangesets
-// 					.map(_ => _.commits.filter(c => c.localOnly).length)
-// 					.reduce((acc, x) => acc + x),
-// 				"Staged Changes": review.reviewChangesets.some(_ => _.includeStaged),
-// 				"Saved Changes": review.reviewChangesets.some(_ => _.includeSaved),
-// 				"Excluded Files": totalExcludedFilesCount,
-// 				"Skipped Commits": skippedCommitsCount,
-// 				// rounds to 4 places
-// 				"Payload Size":
-// 					reviewChangesetsSizeInBytes > 0
-// 						? Math.round((reviewChangesetsSizeInBytes / 1048576) * 10000) / 10000
-// 						: 0,
-// 				"Invitee Reviewers": addedUsers ? addedUsers.length : 0,
-// 			};
-
-// 			telemetry.track({
-// 				eventName: "Review Created",
-// 				properties: reviewProperties,
-// 			});
-// 		} catch (ex) {
-// 			Logger.error(ex);
-// 		}
-// 	});
-// }
-
-// export function trackCodeErrorPostCreation(
-// 	codeError: CSCodeError,
-// 	entryPoint?: string,
-// 	addedUsers?: string[]
-// ) {
-// 	process.nextTick(() => {
-// 		try {
-// 			const telemetry = Container.instance().telemetry;
-// 			const codeErrorProperties: {
-// 				[key: string]: any;
-// 			} = {
-// 				"Code Error ID": codeError.id,
-// 				"Entry Point": entryPoint,
-// 				Assignees: codeError.assignees?.length ?? 0,
-// 				// rounds to 4 places
-// 				"Invitee Assignees": addedUsers ? addedUsers.length : 0,
-// 			};
-// 		} catch (ex) {
-// 			Logger.error(ex);
-// 		}
-// 	});
-// }
-
 function getGitError(textDocument?: TextDocumentIdentifier): Promise<string | void> {
 	return new Promise(resolve => {
 		if (textDocument) {
@@ -798,11 +504,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		await this.cache.ensureStreamInitialized(request.streamId);
 		const cacheResponse = await this.cache.getPosts(request);
 		const posts = await this.enrichPosts(cacheResponse.posts);
-		const { codemarks } = await SessionContainer.instance().codemarks.get({
-			streamId: request.streamId,
-		});
 		return {
-			codemarks: codemarks,
+			codemarks: [],
 			posts: posts,
 			more: cacheResponse.more,
 		};
@@ -821,17 +524,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		});
 
 		const unreads = await SessionContainer.instance().users.getUnreads({});
-		const {
-			codemarks: codemarksManager,
-			markers: markersManager,
-			posts: postsManager,
-			reviews: reviewsManager,
-			codeErrors: codeErrorsManager,
-		} = SessionContainer.instance();
-
-		const markers = response.markers ?? [];
-		// cache the markers
-		if (markers.length > 0) Promise.all(markers.map(marker => markersManager.cacheSet(marker)));
+		const { posts: postsManager, codeErrors: codeErrorsManager } = SessionContainer.instance();
 
 		const posts: PostPlus[] = [];
 		// filter out deleted posts and cache valid ones
@@ -842,11 +535,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			}
 		}
 
-		const codemarks: CodemarkPlus[] = [];
-		const reviews: CSReview[] = [];
 		const codeErrors: CSCodeError[] = [];
-
-		const markersByCodemark = groupBy(markers, "codemarkId");
 
 		let records = await Arrays.filterMapAsync(
 			[...(response.codemarks ?? []), ...(response.reviews ?? []), ...(response.codeErrors ?? [])],
@@ -857,15 +546,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					codeErrorsManager.cacheSet(object);
 					codeErrors.push(object);
 				} else if (isCSReview(object)) {
-					reviewsManager.cacheSet(object);
-					reviews.push(object);
 				} else {
 					if (object.reviewId != null || object.codeErrorId != null) return;
-					codemarksManager.cacheSet(object);
-					codemarks.push({
-						...object,
-						markers: markersByCodemark[object.id] || [],
-					});
 				}
 
 				if (unreads.unreads.lastReads[object.streamId]) {
@@ -897,8 +579,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		}
 
 		return {
-			codemarks,
-			reviews,
+			codemarks: [],
+			reviews: [],
 			codeErrors,
 			posts: await this.enrichPosts(posts),
 			records: this.createRecords(records),
@@ -919,32 +601,15 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	}
 
 	private async enrichPost(post: CSPost): Promise<PostPlus> {
-		let codemark;
-		let review;
 		let codeError;
-		let hasMarkers = false;
-		if (post.codemarkId) {
-			try {
-				codemark = await SessionContainer.instance().codemarks.getEnrichedCodemarkById(
-					post.codemarkId
-				);
-				hasMarkers = codemark.markers != null && codemark.markers.length !== 0;
-			} catch (ex) {
-				Logger.error(ex);
-			}
-		}
-		if (post.reviewId) {
-			try {
-				review = await SessionContainer.instance().reviews.getById(post.reviewId);
-			} catch (error) {}
-		}
+
 		if (post.codeErrorId) {
 			try {
 				codeError = await SessionContainer.instance().codeErrors.getById(post.codeErrorId);
 			} catch (error) {}
 		}
 
-		return { ...post, codemark: codemark, hasMarkers: hasMarkers, review, codeError };
+		return { ...post, codemark: undefined, hasMarkers: false, review: undefined, codeError };
 	}
 
 	async enrichPosts(posts: CSPost[]): Promise<PostPlus[]> {
@@ -983,909 +648,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			posts.push(...childPosts);
 		}
 
-		const codemarks = await SessionContainer.instance().codemarks.enrichCodemarksByIds(
-			Arrays.filterMap(posts, post => post.codemarkId)
-		);
-
-		return { posts, codemarks };
-	}
-
-	// this is what the webview will call to create codemarks in the sharing model
-	@lspHandler(CreateShareableCodemarkRequestType)
-	async createSharingCodemarkPost(
-		request: CreateShareableCodemarkRequest
-	): Promise<CreateShareableCodemarkResponse | CreatePassthroughCodemarkResponse | undefined> {
-		const codemarkRequest: CreateCodemarkRequest = {
-			...request.attributes,
-			status:
-				request.attributes.type === CodemarkType.Issue ? request.attributes.status : undefined,
-			markers: [],
-		};
-		if (
-			request.textDocuments &&
-			request.textDocuments.length &&
-			csUri.Uris.isCodeStreamDiffUri(request.textDocuments[0].uri)
-		) {
-			const { providerRegistry, git, repos } = SessionContainer.instance();
-			const uri = request.textDocuments[0].uri;
-			const parsedUri = csUri.Uris.fromCodeStreamDiffUri<CodeStreamDiffUriData>(uri);
-			if (!parsedUri) throw new Error(`Could not parse uri ${request.textDocuments[0].uri}`);
-			let providerId;
-			if (parsedUri.context && parsedUri.context.pullRequest) {
-				providerId = parsedUri.context.pullRequest.providerId;
-				if (!providerRegistry.providerSupportsPullRequests(providerId)) {
-					throw new Error(`UnsupportedProvider ${providerId}`);
-				}
-			} else {
-				throw new Error(`missing context for uri ${uri}`);
-			}
-
-			if (providerId === "bitbucket*org") {
-				const result: Promise<Directives> = await providerRegistry.executeMethod({
-					method: "createCommitComment",
-					providerId: parsedUri.context.pullRequest.providerId,
-					params: {
-						pullRequestId: parsedUri.context.pullRequest.id,
-						text: request.attributes.text,
-						path: parsedUri.path,
-						startLine: request.attributes.codeBlocks[0].range.start.line + 1,
-					},
-				});
-				return {
-					isPassThrough: true,
-					pullRequest: parsedUri.context.pullRequest,
-					success: result != null,
-					directives: result,
-				};
-			} else {
-				// get the git repo, so we can use the repo root
-				const gitRepo = await git.getRepositoryById(parsedUri.repoId);
-				// lines are 1-based on GH, and come in as 0based
-				const range = request.attributes.codeBlocks[0].range;
-				const startLine = range.start.line + 1;
-				const end = range.end;
-				let endLine = end.line + 1;
-				if (endLine === startLine + 1 && end.character === 0) {
-					// treat triple-clicked "single line" PR comments where the cursor
-					// moves to the next line as truly single line comments
-					endLine = startLine;
-				}
-
-				let diff;
-				if (parsedUri.previousFilePath && parsedUri.previousFilePath !== parsedUri.path) {
-					// file was renamed
-					diff = await git.getDiffBetweenCommitsAndFiles(
-						parsedUri.leftSha,
-						parsedUri.rightSha,
-						gitRepo?.path || "",
-						parsedUri.previousFilePath,
-						parsedUri.path,
-						true
-					);
-				} else {
-					// get the diff hunk between the two shas
-					diff = await git.getDiffBetweenCommits(
-						parsedUri.leftSha,
-						parsedUri.rightSha,
-						path.join(gitRepo ? gitRepo.path : "", parsedUri.path),
-						true
-					);
-				}
-
-				if (!diff) {
-					const errorMessage = `Could not find diff for leftSha=${parsedUri.leftSha} rightSha=${parsedUri.rightSha} path=${parsedUri.path} previousFilePath=${parsedUri.previousFilePath}`;
-					Logger.warn(errorMessage);
-					throw new Error(errorMessage);
-				}
-
-				const startHunk = diff.hunks.find(
-					_ => startLine >= _.newStart && startLine < _.newStart + _.newLines
-				);
-				const endHunk = diff.hunks.find(
-					_ => endLine >= _.newStart && endLine < _.newStart + _.newLines
-				);
-
-				let fileWithUrl;
-				const codeBlock = request.attributes.codeBlocks[0];
-				const repo = await repos.getById(parsedUri.repoId);
-				let remoteList: string[] | undefined;
-				if (repo && repo.remotes && repo.remotes.length) {
-					// if we have a list of remotes from the marker / repo (a.k.a. server)... use that
-					remoteList = repo.remotes.map(_ => _.normalizedUrl);
-				}
-				let remoteUrl;
-				if (remoteList) {
-					for (const remote of remoteList) {
-						remoteUrl = Marker.getRemoteCodeUrl(
-							remote,
-							parsedUri.rightSha,
-							codeBlock.scm?.file!,
-							startLine,
-							endLine
-						);
-
-						if (remoteUrl !== undefined) {
-							break;
-						}
-					}
-				}
-
-				if (remoteUrl) {
-					fileWithUrl = `[${codeBlock.scm?.file}](${remoteUrl.url})`;
-				} else {
-					fileWithUrl = codeBlock.scm?.file;
-				}
-
-				let result: Promise<Directives>;
-				// only fall in here if we don't have a start OR we have a range and we don't have both
-				if ((startLine !== endLine && (!startHunk || !endHunk)) || !startHunk) {
-					// if we couldn't find a hunk, we're going to go down the path of using
-					// a "code fence" aka ``` for showing the code comment
-					Logger.warn(
-						`Could not find hunk for startLine=${startLine} or endLine=${endLine} for ${JSON.stringify(
-							parsedUri.context
-						)}`
-					);
-
-					result = await providerRegistry.executeMethod({
-						method: "addComment",
-						providerId: parsedUri.context.pullRequest.providerId,
-						params: {
-							subjectId: parsedUri.context.pullRequest.id,
-							text: `${request.attributes.text || ""}\n\n\`\`\`\n${codeBlock.contents}\n\`\`\`
-								\n${fileWithUrl} (Line${startLine === endLine ? ` ${startLine}` : `s ${startLine}-${endLine}`})`,
-						},
-					});
-					return {
-						isPassThrough: true,
-						pullRequest: parsedUri.context.pullRequest,
-						success: result != null,
-						directives: result,
-					};
-				}
-
-				const { lineWithMetadata } = gitUtils.translateLineToPosition(
-					{
-						startLine,
-						startHunk,
-					},
-					{
-						endLine,
-						endHunk,
-					},
-					diff
-				);
-
-				if (request.isProviderReview) {
-					if (lineWithMetadata) {
-						if (
-							parsedUri.context.pullRequest.providerId &&
-							(parsedUri.context.pullRequest.providerId === "github*com" ||
-								parsedUri.context.pullRequest.providerId === "github/enterprise")
-						) {
-							result = await providerRegistry.executeMethod({
-								method: "createPullRequestReviewThread",
-								providerId: parsedUri.context.pullRequest.providerId,
-								params: {
-									pullRequestId: parsedUri.context.pullRequest.id,
-									// pullRequestReviewId will be looked up
-									text: request.attributes.text || "",
-									leftSha: parsedUri.leftSha,
-									sha: parsedUri.rightSha,
-									filePath: parsedUri.path,
-									startLine: startLine,
-									endLine: endLine,
-									position: lineWithMetadata.position,
-									side: parsedUri.side,
-								},
-							});
-						} else {
-							result = await providerRegistry.executeMethod({
-								method: "createPullRequestReviewComment",
-								providerId: parsedUri.context.pullRequest.providerId,
-								params: {
-									pullRequestId: parsedUri.context.pullRequest.id,
-									// pullRequestReviewId will be looked up
-									text: request.attributes.text || "",
-									leftSha: parsedUri.leftSha,
-									sha: parsedUri.rightSha,
-									filePath: parsedUri.path,
-									startLine: startLine,
-									endLine: endLine,
-									position: lineWithMetadata.position,
-								},
-							});
-						}
-					} else {
-						throw new Error("Failed to create review comment");
-					}
-				} else {
-					let calculatedEndLine;
-					const startingHunkEnd = startHunk.newStart + startHunk.newLines;
-					if (endLine >= startingHunkEnd) {
-						calculatedEndLine = startingHunkEnd - 1;
-					} else {
-						calculatedEndLine = endHunk ? endLine : undefined;
-					}
-					// is a single comment against a commit
-					result = (await providerRegistry.executeMethod({
-						method: "createCommitComment",
-						providerId: parsedUri.context.pullRequest.providerId,
-						params: {
-							pullRequestId: parsedUri.context.pullRequest.id,
-							leftSha: parsedUri.leftSha,
-							sha: parsedUri.rightSha,
-							text: request.attributes.text || "",
-							path: parsedUri.path,
-							startLine: startLine,
-							endLine: calculatedEndLine,
-							// legacy servers will need this
-							position: lineWithMetadata?.position,
-							metadata: {
-								contents: codeBlock.contents,
-								fileWithUrl: fileWithUrl,
-								startLine: startLine,
-								endLine: endLine,
-							},
-						},
-					})) as Promise<Directives>;
-				}
-
-				return {
-					isPassThrough: true,
-					pullRequest: parsedUri.context.pullRequest,
-					success: result != null,
-					directives: result,
-				};
-			}
-		}
-		let codemark: CodemarkPlus | undefined;
-
-		for (const codeBlock of request.attributes.codeBlocks) {
-			if (!codeBlock.range) continue;
-			const createMarkerRequest = await MarkersBuilder.buildCreateMarkerRequest(
-				{ uri: codeBlock.uri },
-				codeBlock.contents,
-				codeBlock.range,
-				codeBlock.scm
-			);
-			codemarkRequest.markers!.push(createMarkerRequest);
-
-			if (!codemarkRequest.remoteCodeUrl) {
-				codemarkRequest.remoteCodeUrl = createMarkerRequest.remoteCodeUrl;
-			}
-			if (!codemarkRequest.remotes) {
-				codemarkRequest.remotes = createMarkerRequest.remotes;
-			}
-		}
-
-		let stream: CSDirectStream | CSChannelStream | CSObjectStream | undefined;
-
-		if (request.memberIds && request.memberIds.length > 0) {
-			const response = await SessionContainer.instance().streams.get({
-				memberIds: request.memberIds,
-				types: [StreamType.Direct],
-			});
-			if (response.streams.length > 0) {
-				stream = response.streams[0] as CSDirectStream;
-			} else {
-				const response = await SessionContainer.instance().streams.createDirectStream({
-					memberIds: request.memberIds,
-					type: StreamType.Direct,
-				});
-				stream = response.stream;
-			}
-		} else if (request.attributes.parentPostId) {
-			const parentPost = await SessionContainer.instance().posts.getById(
-				request.attributes.parentPostId
-			);
-			if (parentPost) {
-				stream = await SessionContainer.instance().streams.getById(parentPost.streamId);
-			}
-		}
-		if (!stream) {
-			stream = await SessionContainer.instance().streams.getTeamStream();
-		}
-
-		const response = await this.session.api.createPost({
-			codemark: codemarkRequest,
-			text: codemarkRequest.text!,
-			streamId: stream.id,
-			parentPostId: request.parentPostId,
-			dontSendEmail: !!request.attributes.crossPostIssueValues,
-			mentionedUserIds: request.mentionedUserIds,
-			addedUsers: request.addedUsers,
-			files: request.files,
-		});
-		const { markers } = response!;
-		codemark = response.codemark!;
-
-		if (request.attributes.crossPostIssueValues) {
-			const cardResponse = await SessionContainer.instance().posts.createProviderCard(
-				{
-					codemark: {
-						title: codemark.title,
-						text: codemark.text,
-						markers: response.markers,
-						permalink: codemark.permalink,
-					},
-				},
-				request.attributes.crossPostIssueValues,
-				request.ideName
-			);
-
-			if (cardResponse != undefined) {
-				const { assignees, issueProvider } = request.attributes.crossPostIssueValues;
-				const r = await this.session.api.updateCodemark({
-					codemarkId: codemark.id,
-					externalProvider: issueProvider.name,
-					externalProviderHost: issueProvider.host,
-					externalProviderUrl: cardResponse.url,
-					externalAssignees:
-						assignees &&
-						assignees.map((a: any) => ({ displayName: a.displayName, email: a.email })),
-					wantEmailNotification: true,
-				});
-				codemark = r.codemark;
-			}
-		}
-
-		trackPostCreation(
-			{
-				streamId: stream.id,
-				codemark: { ...codemark, markers },
-				text: request.attributes.text!,
-				entryPoint: request.entryPoint,
-				isPseudoCodemark: request.isPseudoCodemark,
-				addedUsers: request.addedUsers,
-			},
-			request.textDocuments,
-			codemark.id
-		);
-		this.cacheResponse(response!);
-		return {
-			stream,
-			markerLocations: response.markerLocations,
-			post: await this.enrichPost(response!.post),
-			codemark: (codemark as CodemarkPlus).markers
-				? codemark
-				: await SessionContainer.instance().codemarks.enrichCodemark(codemark),
-		};
-	}
-
-	// this is what the webview will call to create reviews in the sharing model
-	@lspHandler(CreateShareableReviewRequestType)
-	@log()
-	async createSharingReviewPost(
-		request: CreateShareableReviewRequest
-	): Promise<CreateShareableReviewResponse> {
-		const reviewRequest: CreateReviewRequest = {
-			...request.attributes,
-			markers: [],
-			reviewChangesets: [],
-		};
-
-		let review: ReviewPlus | undefined;
-		let totalExcludedFilesCount = 0;
-
-		for (const repoChange of request.attributes.repoChanges!) {
-			totalExcludedFilesCount += repoChange.excludedFiles.length;
-			const changeset = await this.buildChangeset(repoChange);
-
-			// WTF typescript, this is defined above
-			if (reviewRequest.reviewChangesets) {
-				reviewRequest.reviewChangesets.push(changeset);
-			}
-			/*for (const patch of localDiffs) {
-				const file = patch.newFileName;
-				if (file && !excludedFiles.includes(file)) {
-					for (const hunk of patch.hunks) {
-						const range: Range = {
-							start: { line: hunk.newStart, character: 0 },
-							end: { line: hunk.newStart + hunk.newLines + 1, character: 0 }
-						};
-
-						const descriptor = await MarkersManager.prepareMarkerCreationDescriptor(
-							hunk.lines.join("\n"),
-							// FIXME -- this isn't the best way to construct this URI
-							{ uri: "file://" + scm.repoPath + "/" + file },
-							range,
-							{
-								file,
-								repoPath: scm.repoPath,
-								revision: "",
-								authors: [],
-								// FIXME where do we get the remotes?
-								remotes,
-								branch: scm.branch
-							}
-						);
-
-						markerCreationDescriptors.push(descriptor);
-						reviewRequest.markers!.push(descriptor.marker);
-
-						if (!reviewRequest.remoteCodeUrl) {
-							reviewRequest.remoteCodeUrl = descriptor.marker.remoteCodeUrl;
-						}
-						if (!reviewRequest.remotes) {
-							reviewRequest.remotes = descriptor.marker.remotes;
-						}
-					}
-				}
-			}*/
-		}
-
-		const reviewChangesetsSizeInBytes = sizeof(reviewRequest.reviewChangesets);
-		if (reviewChangesetsSizeInBytes > 10 * 1024 * 1024) {
-			throw new Error("Cannot create review. Payload exceeds 10MB");
-		}
-
-		// FIXME -- not sure if this is the right way to do this
-		delete reviewRequest.repoChanges;
-
-		let stream: CSDirectStream | CSChannelStream;
-
-		if (request.memberIds && request.memberIds.length > 0) {
-			const response = await SessionContainer.instance().streams.get({
-				memberIds: request.memberIds,
-				types: [StreamType.Direct],
-			});
-			if (response.streams.length > 0) {
-				stream = response.streams[0] as CSDirectStream;
-			} else {
-				const response = await SessionContainer.instance().streams.createDirectStream({
-					memberIds: request.memberIds,
-					type: StreamType.Direct,
-				});
-				stream = response.stream;
-			}
-		} else {
-			stream = await SessionContainer.instance().streams.getTeamStream();
-		}
-
-		const response = await this.session.api.createPost({
-			review: reviewRequest,
-			text: reviewRequest.title!,
-			streamId: stream.id,
-			dontSendEmail: false,
-			mentionedUserIds: request.mentionedUserIds,
-			addedUsers: request.addedUsers,
-			files: request.attributes.files,
-		});
-
-		review = response.review!;
-
-		let skippedCommitsCount = 0;
-		const repoChanges = request.attributes.repoChanges && request.attributes.repoChanges[0];
-		if (repoChanges) {
-			type ObjectKey = keyof typeof repoChanges.excludeCommit;
-			for (const commit of repoChanges.scm.commits || []) {
-				const sha = commit.sha as ObjectKey;
-				if (!repoChanges.excludeCommit[sha]) {
-					break;
-				}
-				skippedCommitsCount++;
-			}
-			if ((repoChanges.scm.commits || []).length === skippedCommitsCount) {
-				skippedCommitsCount = 0;
-			}
-		}
-
-		// trackReviewPostCreation(
-		// 	review,
-		// 	totalExcludedFilesCount,
-		// 	reviewChangesetsSizeInBytes,
-		// 	skippedCommitsCount,
-		// 	request.entryPoint,
-		// 	request.addedUsers
-		// );
-		this.cacheResponse(response!);
-		return {
-			stream,
-			post: await this.enrichPost(response!.post),
-			review,
-		};
-	}
-
-	// this is what the webview will call to create codeErrors in the sharing model
-	@lspHandler(CreateShareableCodeErrorRequestType)
-	@log()
-	async createSharingCodeErrorPost(
-		request: CreateShareableCodeErrorRequest
-	): Promise<CreateShareableCodeErrorResponse> {
-		const codeErrorRequest: CreateCodeErrorRequest = {
-			...request.attributes,
-			markers: [],
-		};
-
-		let codeError: CSCodeError | undefined;
-		const stream = await SessionContainer.instance().streams.getTeamStream();
-
-		const response = await this.session.api.createPost({
-			codeError: codeErrorRequest,
-			text: "",
-			streamId: stream.id,
-			dontSendEmail: false,
-			mentionedUserIds: request.mentionedUserIds,
-			addedUsers: request.addedUsers,
-			codeBlock: request.codeBlock?.code,
-			language: request.language,
-			analyze: request.analyze,
-			reinitialize: request.reinitialize,
-			parentPostId: request.parentPostId, // For grok reinitialization
-		});
-
-		codeError = response.codeError!;
-
-		// trackCodeErrorPostCreation(codeError, request.entryPoint, request.addedUsers);
-		this.cacheResponse(response!);
-
-		let replyPostResponse: CreatePostResponse | undefined = undefined;
-		if (request.replyPost) {
-			replyPostResponse = await this.session.api.createPost({
-				streamId: stream.id,
-				text: request.replyPost.text,
-				parentPostId: response.post.id,
-			});
-		}
-
-		return {
-			stream,
-			post: await this.enrichPost(response!.post),
-			codeError,
-			replyPost: replyPostResponse?.post,
-		};
-	}
-
-	async buildChangeset(
-		repoChange: CSRepoChange,
-		amendingReviewId?: string
-	): Promise<CSTransformedReviewChangeset> {
-		// FIXME the logic for amendments became significantly different, so it should be a separate method
-		//  or a builder class similar to MarkersBuilder
-		const { scm, includeSaved, includeStaged, excludedFiles, newFiles } = repoChange;
-		if (!scm)
-			throw new ResponseError(
-				ERROR_REVIEW_SCM_NOT_FOUND,
-				"Unable to create review: SCM info not found",
-				scm
-			);
-		if (!scm.remotes?.length)
-			throw new ResponseError(
-				ERROR_REVIEW_NO_REMOTES,
-				"Unable to create review: git repository has no remotes",
-				scm
-			);
-		if (!scm.repoId)
-			throw new ResponseError(
-				ERROR_REVIEW_REPO_NOT_FOUND,
-				"Unable to create review: git repository not found",
-				scm
-			);
-		if (!scm.branch)
-			throw new ResponseError(
-				ERROR_REVIEW_BRANCH_NOT_FOUND,
-				"Unable to create review: branch not found",
-				scm
-			);
-		if (!scm.commits)
-			throw new ResponseError(
-				ERROR_REVIEW_COMMITS_NOT_FOUND,
-				"Unable to create review: commit history not found",
-				scm
-			);
-		const { git, reviews, scm: scmManager } = SessionContainer.instance();
-
-		let checkpoint = 0;
-		const removeExcluded = (diff: ParsedDiff) =>
-			diff.newFileName && !excludedFiles.includes(diff.newFileName);
-
-		const modifiedFilesInCheckpoint = scm.modifiedFiles.filter(
-			f => !excludedFiles.includes(f.file)
-		);
-		let modifiedFiles: ModifiedFile[];
-		let startCommit = repoChange.startCommit;
-		const endCommit = repoChange.endCommit;
-		let leftBaseShaForFirstChangesetInThisRepo: string | undefined = undefined;
-		let rightBaseShaForFirstChangesetInThisRepo: string | undefined = undefined;
-		if (amendingReviewId) {
-			const review = await reviews.getById(amendingReviewId);
-			const firstChangesetForThisRepo = review.reviewChangesets.find(
-				rc => rc.repoId === scm.repoId && rc.checkpoint === 0
-			);
-
-			if (!firstChangesetForThisRepo) {
-				// FIXME support amending a review including changes from a repo not previously included in this review
-				throw new Error(
-					`Could not find first changeset for review ${amendingReviewId}, repo ${scm.repoId}`
-				);
-			}
-
-			const lastChangesetForAnyRepo = review.reviewChangesets[review.reviewChangesets.length - 1];
-			checkpoint = (lastChangesetForAnyRepo!.checkpoint || 0) + 1;
-			const firstCommitInReview =
-				firstChangesetForThisRepo.commits[firstChangesetForThisRepo.commits.length - 1];
-			const diffs = await reviews.getDiffs(amendingReviewId, scm.repoId);
-			const firstDiff = diffs[0];
-			if (!firstDiff) {
-				throw new Error(
-					`Cannot find first initial diff for review ${amendingReviewId}, repo ${scm.repoId}`
-				);
-			}
-			leftBaseShaForFirstChangesetInThisRepo = firstDiff.diff.leftBaseSha;
-			rightBaseShaForFirstChangesetInThisRepo = firstDiff.diff.leftBaseSha;
-			startCommit = firstCommitInReview
-				? (await git.getParentCommitShas(scm.repoPath, firstCommitInReview.sha))[0]
-				: firstDiff.diff.latestCommitSha;
-
-			const statusFromBeginningOfReview = await scmManager.getRepoStatus({
-				includeSaved,
-				includeStaged,
-				uri: URI.file(scm.repoPath).toString(),
-				currentUserEmail: "", // FIXME
-				startCommit,
-				endCommit,
-			});
-			modifiedFiles = statusFromBeginningOfReview.scm!.modifiedFiles.filter(
-				mf => !excludedFiles.includes(mf.file)
-			);
-
-			const deletedFiles: string[] = modifiedFilesInCheckpoint
-				.filter(mf => mf.status === FileStatus.deleted)
-				.map(mf => mf.oldFile);
-			for (const previousChangeset of review.reviewChangesets.slice().reverse()) {
-				deletedFiles.push(
-					...previousChangeset.modifiedFilesInCheckpoint
-						.filter(mf => mf.status === FileStatus.deleted)
-						.map(mf => mf.oldFile)
-				);
-
-				for (const modifiedFileInPreviousChangeset of previousChangeset.modifiedFiles) {
-					const file = modifiedFileInPreviousChangeset.file;
-					// FIXME that might be a problem for files that were added/committed
-					//  after being included as untracked in a previous changeset
-					if (
-						modifiedFileInPreviousChangeset.status === FileStatus.untracked &&
-						!newFiles.find(f => f === file)
-					) {
-						newFiles.push(file);
-					}
-					if (!deletedFiles.some(f => f === file) && !modifiedFiles.find(mf => mf.file === file)) {
-						modifiedFiles.push(modifiedFileInPreviousChangeset);
-					}
-				}
-			}
-		} else {
-			modifiedFiles = modifiedFilesInCheckpoint;
-		}
-
-		// filter out only to those commits that were chosen in the review
-		// see if the startCommit is in the list, if it is then filter out
-		// otherwise the startCommit is probably the parent of the oldest commit
-		// so that means just take the whole commit list
-		const startIndex = scm.commits.findIndex(commit => commit.sha === startCommit);
-		const endIndex = scm.commits.findIndex(commit => commit.sha === endCommit);
-		// starting commit is at the end and vice versa
-		const sliceStart = endIndex >= 0 ? endIndex : 0;
-		const sliceEnd = startIndex >= 0 ? startIndex : undefined;
-		const commits = scm.commits.slice(sliceStart, sliceEnd);
-
-		// perform a diff against the most recent pushed commit
-		const pushedCommit = scm.commits.find(commit => !commit.localOnly);
-		const latestCommitSha = await git.getHeadSha(scm.repoPath);
-		if (latestCommitSha == null) {
-			throw new Error("Could not determine HEAD of current branch for review creation");
-		}
-
-		const newestCommitInReview = commits[0];
-		const oldestCommitInReview = commits[commits.length - 1];
-		let leftBaseSha;
-		let leftBaseAuthor;
-		let leftDiffs: ParsedDiff[];
-
-		const newestCommitNotInReview = scm.commits[sliceEnd != undefined ? sliceEnd : commits.length];
-		const userEmail = await git.getConfig(scm.repoPath, "user.email");
-		const ancestorSearchStartingSha =
-			oldestCommitInReview != null ? oldestCommitInReview.sha : "HEAD";
-		const ancestorFromAnotherAuthor = await git.findAncestor(
-			scm.repoPath,
-			ancestorSearchStartingSha,
-			100,
-			c => c.email !== userEmail
-		);
-
-		if (leftBaseShaForFirstChangesetInThisRepo != null) {
-			// It means we're amending. There are 2 optimizations that need to be done:
-			// 1 - if there's a newer pushed commit, then we could find a newer leftBaseSha
-			// 2 - we only need to include left contents the first time a file is included in a review
-			leftBaseSha = leftBaseShaForFirstChangesetInThisRepo;
-			leftBaseAuthor = (await git.getCommit(scm.repoPath, leftBaseShaForFirstChangesetInThisRepo))!
-				.author;
-
-			const baseSha =
-				scm.commits && scm.commits.length > 0
-					? (
-							await git.getParentCommitShas(scm.repoPath, scm.commits[scm.commits.length - 1].sha)
-					  )[0]
-					: latestCommitSha;
-			leftDiffs = (
-				await git.getDiffs(
-					scm.repoPath,
-					{ includeSaved: false, includeStaged: false },
-					leftBaseShaForFirstChangesetInThisRepo,
-					baseSha // this will be the parent of the first commit in this checkpoint
-				)
-			).filter(removeExcluded);
-		} else {
-			if (ancestorFromAnotherAuthor) {
-				leftBaseSha = ancestorFromAnotherAuthor.ref;
-				leftBaseAuthor = ancestorFromAnotherAuthor.author;
-			} else if (newestCommitNotInReview) {
-				leftBaseSha = newestCommitNotInReview.sha;
-				leftBaseAuthor = (newestCommitNotInReview.info as GitCommit)!.author;
-			} else if (oldestCommitInReview) {
-				const firstAncestor = await git.findAncestor(
-					scm.repoPath,
-					oldestCommitInReview.sha,
-					1,
-					() => true
-				);
-				if (firstAncestor) {
-					leftBaseSha = firstAncestor.ref;
-					leftBaseAuthor = firstAncestor.author;
-				} else {
-					// User might be including the entire commits history. This is a common scenario when somebody
-					// is kicking the tires in a brand new repo with just a initial commit.
-					leftBaseSha = EMPTY_TREE_SHA;
-					leftBaseAuthor = "Empty Tree";
-				}
-			} else {
-				leftBaseSha = latestCommitSha;
-				leftBaseAuthor = (await git.getCommit(scm.repoPath, latestCommitSha))!.author;
-			}
-
-			let leftContentSha;
-			if (newestCommitNotInReview) {
-				leftContentSha = newestCommitNotInReview.sha;
-			} else if (oldestCommitInReview) {
-				const firstAncestor = await git.findAncestor(
-					scm.repoPath,
-					oldestCommitInReview.sha,
-					1,
-					() => true
-				);
-				if (firstAncestor) {
-					leftContentSha = firstAncestor.ref;
-				} else {
-					leftContentSha = EMPTY_TREE_SHA;
-				}
-			} else {
-				leftContentSha = latestCommitSha;
-			}
-
-			leftDiffs = (
-				await git.getDiffs(
-					scm.repoPath,
-					{ includeSaved: false, includeStaged: false },
-					leftBaseSha,
-					leftContentSha
-				)
-			).filter(removeExcluded);
-		}
-
-		const newFileDiffs: ParsedDiff[] = [];
-		const newFileReverseDiffs: ParsedDiff[] = [];
-		if (newFiles) {
-			await Promise.all(
-				newFiles.map(async file => {
-					let result: ParsedDiff | undefined;
-					let resultReverse: ParsedDiff | undefined;
-					try {
-						result = await git.getNewDiff(scm.repoPath, file);
-						resultReverse = await git.getNewDiff(scm.repoPath, file, { reverse: true });
-					} catch {}
-					if (result && resultReverse) {
-						newFileDiffs.push(result);
-						newFileReverseDiffs.push(resultReverse);
-					}
-				})
-			);
-		}
-
-		let rightBaseSha: string;
-		let rightBaseAuthor: string;
-		let rightDiffs: ParsedDiff[];
-		let rightReverseDiffs: ParsedDiff[];
-
-		if (rightBaseShaForFirstChangesetInThisRepo != null) {
-			// It means we're amending. There is 1 optimization that need to be done:
-			// 1 - if there's a newer pushed commit, then we could find a newer rightBaseSha
-			rightBaseSha = rightBaseShaForFirstChangesetInThisRepo;
-			rightBaseAuthor = (await git.getCommit(scm.repoPath, rightBaseSha))!.author;
-		} else {
-			rightBaseSha = leftBaseSha;
-			rightBaseAuthor = leftBaseAuthor;
-		}
-
-		const rightContentSha = commits[0]?.sha;
-		rightDiffs = (
-			await git.getDiffs(
-				scm.repoPath,
-				{ includeSaved, includeStaged },
-				rightBaseSha,
-				rightContentSha
-			)
-		).filter(removeExcluded);
-		rightReverseDiffs = (
-			await git.getDiffs(
-				scm.repoPath,
-				{ includeSaved, includeStaged, reverse: true },
-				rightBaseSha,
-				rightContentSha
-			)
-		).filter(removeExcluded);
-		rightDiffs.push(...newFileDiffs);
-		rightReverseDiffs.push(...newFileReverseDiffs);
-
-		let rightToLatestCommitDiffs = (
-			await git.getDiffs(
-				scm.repoPath,
-				{ includeSaved, includeStaged, reverse: true },
-				latestCommitSha,
-				rightContentSha
-			)
-		).filter(removeExcluded);
-		rightToLatestCommitDiffs.push(...newFileReverseDiffs);
-
-		let latestCommitToRightDiffs =
-			includeSaved || includeStaged
-				? (
-						await git.getDiffs(
-							scm.repoPath,
-							{ includeSaved, includeStaged },
-							latestCommitSha,
-							rightContentSha
-						)
-				  ).filter(removeExcluded)
-				: [];
-		latestCommitToRightDiffs.push(...newFileDiffs);
-
-		const modifiedFilesContains = (fileName?: string) =>
-			fileName != null && modifiedFiles.find(_ => _.file === fileName || _.oldFile === fileName);
-		const excludeUnnecesaryDiffs = (diff: ParsedDiff) =>
-			modifiedFilesContains(diff.newFileName) || modifiedFilesContains(diff.oldFileName);
-		leftDiffs = leftDiffs.filter(excludeUnnecesaryDiffs);
-		rightDiffs = rightDiffs.filter(excludeUnnecesaryDiffs);
-		rightReverseDiffs = rightReverseDiffs.filter(excludeUnnecesaryDiffs);
-		rightToLatestCommitDiffs = rightToLatestCommitDiffs.filter(excludeUnnecesaryDiffs);
-		latestCommitToRightDiffs = latestCommitToRightDiffs.filter(excludeUnnecesaryDiffs);
-
-		return {
-			repoId: scm.repoId,
-			branch: scm.branch,
-			commits,
-			modifiedFiles,
-			modifiedFilesInCheckpoint,
-			includeSaved,
-			includeStaged,
-			checkpoint,
-			diffs: {
-				leftBaseAuthor,
-				leftBaseSha,
-				leftDiffsCompressed: compressToBase64(JSON.stringify(leftDiffs)),
-				rightBaseAuthor,
-				rightBaseSha,
-				rightDiffsCompressed: compressToBase64(JSON.stringify(rightDiffs)),
-				rightReverseDiffsCompressed: compressToBase64(JSON.stringify(rightReverseDiffs)),
-				latestCommitSha: rightContentSha || latestCommitSha,
-				rightToLatestCommitDiffsCompressed: compressToBase64(
-					JSON.stringify(rightToLatestCommitDiffs)
-				), // for backtracking
-				latestCommitToRightDiffsCompressed: compressToBase64(
-					JSON.stringify(latestCommitToRightDiffs)
-				),
-			},
-		};
+		return { posts, codemarks: [] };
 	}
 
 	@lspHandler(CreatePostRequestType)
@@ -1906,26 +669,26 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		let requiresUpdate;
 		let codemarkId;
 		if (this.session.api.providerType !== ProviderType.CodeStream) {
-			if (request.codemark) {
-				codemarkResponse = await this.session.api.createCodemark({
-					...request.codemark,
-					parentPostId: request.parentPostId,
-					providerType: this.session.api.providerType,
-				});
-				if (request.crossPostIssueValues) {
-					providerCardRequest = {
-						codemark: {
-							title: request.codemark.title,
-							text: request.codemark.text,
-							markers: codemarkResponse.markers,
-							permalink: codemarkResponse.codemark.permalink,
-						},
-						remotes: request.codemark.remotes,
-					};
-				}
-				codemarkId = codemarkResponse.codemark.id;
-				requiresUpdate = true;
-			}
+			// if (request.codemark) {
+			// 	codemarkResponse = await this.session.api.createCodemark({
+			// 		...request.codemark,
+			// 		parentPostId: request.parentPostId,
+			// 		providerType: this.session.api.providerType,
+			// 	});
+			// 	if (request.crossPostIssueValues) {
+			// 		providerCardRequest = {
+			// 			codemark: {
+			// 				title: request.codemark.title,
+			// 				text: request.codemark.text,
+			// 				markers: codemarkResponse.markers,
+			// 				permalink: codemarkResponse.codemark.permalink,
+			// 			},
+			// 			remotes: request.codemark.remotes,
+			// 		};
+			// 	}
+			// 	codemarkId = codemarkResponse.codemark.id;
+			// 	requiresUpdate = true;
+			// }
 		} else {
 			// is CS team -- this createPost will create a Post and a Codemark
 			response = await this.session.api.createPost(request);
@@ -1989,108 +752,11 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			requiresUpdate = true;
 		}
 
-		if (codemarkId && requiresUpdate) {
-			await this.session.api.updateCodemark({
-				codemarkId: codemarkId,
-				streamId: streamId,
-				postId: postId,
-				externalProvider: externalProvider,
-				externalProviderHost: externalProviderHost,
-				externalAssignees:
-					externalAssignees &&
-					externalAssignees.map((a: any) => ({ displayName: a.displayName, email: a.email })),
-				externalProviderUrl: externalProviderUrl,
-			});
-		}
-
-		trackPostCreation(request, textDocuments, codemarkId);
 		this.cacheResponse(response!);
 		return {
 			...response!,
 			post: await this.enrichPost(response!.post),
 		};
-	}
-
-	@lspHandler(CreatePostWithMarkerRequestType)
-	async createPostWithMarker({
-		textDocuments,
-		text,
-		markers,
-		streamId,
-		parentPostId,
-		mentionedUserIds,
-		title,
-		type,
-		assignees,
-		entryPoint,
-		status = "open",
-		tags,
-		relatedCodemarkIds,
-		crossPostIssueValues,
-	}: CreatePostWithMarkerRequest): Promise<CreatePostResponse | undefined> {
-		const codemarkRequest: CreateCodemarkRequest = {
-			title,
-			text,
-			type,
-			assignees,
-			status: type === CodemarkType.Issue ? status : undefined,
-			tags,
-			relatedCodemarkIds,
-			markers: [],
-		};
-
-		codemarkRequest.streamId = streamId;
-		Logger.log(`createPostWithMarker: preparing descriptors for ${markers.length} markers`);
-		for (const m of markers) {
-			if (!m.range) continue;
-			const createMarkerRequest = await MarkersBuilder.buildCreateMarkerRequest(
-				m.documentId,
-				m.code,
-				m.range,
-				m.source
-			);
-			codemarkRequest.markers!.push(createMarkerRequest);
-
-			if (!codemarkRequest.remoteCodeUrl) {
-				codemarkRequest.remoteCodeUrl = createMarkerRequest.remoteCodeUrl;
-			}
-			if (!codemarkRequest.remotes) {
-				codemarkRequest.remotes = createMarkerRequest.remotes;
-			}
-		}
-
-		try {
-			Logger.log(`createPostWithMarker: creating post`);
-			const response = await this.createPost(
-				{
-					streamId,
-					text: "",
-					parentPostId,
-					codemark: codemarkRequest,
-					mentionedUserIds,
-					entryPoint,
-					crossPostIssueValues,
-				},
-				textDocuments
-			);
-			Logger.log(`createPostWithMarker: post creation completed`);
-
-			response.codemark!.markers = response.markers || [];
-			Logger.log(`createPostWithMarker: returning`);
-			return response;
-		} catch (ex) {
-			Logger.error(ex);
-			Container.instance().errorReporter.reportMessage({
-				type: ReportingMessageType.Error,
-				source: "agent",
-				message: "Post creation with markers failed",
-				extra: {
-					message: ex.message,
-					streamId,
-				},
-			});
-			throw ex;
-		}
 	}
 
 	@lspHandler(DeletePostRequestType)

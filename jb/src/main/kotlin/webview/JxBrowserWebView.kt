@@ -43,6 +43,7 @@ class JxBrowserWebView(val jxBrowser: Browser, override val router: WebViewRoute
 
     override fun loadUrl(url: String) {
         jxBrowser.navigation().loadUrl(url)
+        println(jxBrowser.devTools().remoteDebuggingUrl())
     }
 
     override fun dispose() {

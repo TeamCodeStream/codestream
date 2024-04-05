@@ -16,7 +16,6 @@ import {
 	DeleteTeamTagRequestType,
 	DeleteThirdPartyPostRequestType,
 	EditPostRequestType,
-	FetchCodemarksRequestType,
 	FetchPostsRequestType,
 	FetchUsersRequestType,
 	GetPostRequestType,
@@ -1026,8 +1025,8 @@ export const changeStreamMuteState =
 
 export const fetchCodemarks = () => async dispatch => {
 	try {
-		const response = await HostApi.instance.send(FetchCodemarksRequestType, {});
-		if (response) dispatch(saveCodemarks(response.codemarks));
+		// const response = await HostApi.instance.send(FetchCodemarksRequestType, {});
+		// if (response) dispatch(saveCodemarks(response.codemarks));
 	} catch (error) {
 		logError(error, { detail: `failed to fetch codemarks` });
 	}

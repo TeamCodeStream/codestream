@@ -5,7 +5,6 @@ import {
 	CSChannelStream,
 	CSCodemark,
 	CSDirectStream,
-	CSMarker,
 	CSPost,
 	CSRepository,
 	CSTeam,
@@ -14,7 +13,6 @@ import {
 } from "@codestream/protocols/api";
 import { ActionsBlock, KnownBlock, MessageAttachment } from "@slack/web-api";
 
-import { SessionContainer } from "../../container";
 import { Logger } from "../../logger";
 import { providerDisplayNamesByNameKey } from "../../providers/provider";
 import {
@@ -277,28 +275,6 @@ export async function fromSlackPost(
 	if (post.attachments != null && post.attachments.length !== 0) {
 		// Filter out unfurled links
 		// TODO: Turn unfurled images into files
-
-		if (codemark == null) {
-			// legacy slack posts with codemarks
-			const attachments = post.attachments.filter((a: any) => a.from_url == null);
-			if (attachments.length !== 0) {
-				codemark = await fromSlackPostAttachmentToCodemark(attachments, teamId);
-				if (codemark == null) {
-					// legacy markers
-					const marker = await fromSlackPostAttachmentToMarker(attachments);
-					if (marker) {
-						codemark = await SessionContainer.instance().codemarks.getById(marker.codemarkId);
-					}
-				}
-				if (codemark == null) {
-					// Get text/fallback for attachments
-					text += "\n";
-					for (const attachment of attachments) {
-						text += `\n${attachment.text || attachment.fallback}`;
-					}
-				}
-			}
-		}
 	}
 
 	let files;
@@ -390,12 +366,7 @@ async function fromSlackPostAttachmentToCodemark(
 		return undefined;
 	}
 
-	try {
-		return await SessionContainer.instance().codemarks.getById(codemarkId);
-	} catch (ex) {
-		Logger.error(ex, `Failed to find codemark=${codemarkId}`);
-		return undefined;
-	}
+	return undefined;
 }
 
 async function fromSlackPostBlocksToCodemark(
@@ -417,12 +388,7 @@ async function fromSlackPostBlocksToCodemark(
 		return undefined;
 	}
 
-	try {
-		return await SessionContainer.instance().codemarks.getById(codemarkId);
-	} catch (ex) {
-		Logger.error(ex, `Failed to find codemark=${codemarkId}`);
-		return undefined;
-	}
+	return undefined;
 }
 
 export function fromSlackPostFile(file: any) {
@@ -466,27 +432,6 @@ export function fromSlackPostFile(file: any) {
 		url: file.permalink,
 		preview: preview,
 	};
-}
-
-export async function fromSlackPostAttachmentToMarker(
-	attachments: MessageAttachment[]
-): Promise<CSMarker | undefined> {
-	const attachment = attachments.find(
-		(a: any) => a.callback_id != null && markerAttachmentRegex.test(a.callback_id)
-	);
-	if (attachment == null) return undefined;
-
-	const match = markerAttachmentRegex.exec(attachment.callback_id || "");
-	if (match == null) return undefined;
-
-	const [, markerId] = match;
-
-	try {
-		return await SessionContainer.instance().markers.getById(markerId);
-	} catch (ex) {
-		Logger.error(ex, `Failed to find marker=${markerId}`);
-		return undefined;
-	}
 }
 
 export function fromSlackPostText(

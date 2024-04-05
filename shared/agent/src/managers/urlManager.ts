@@ -14,7 +14,6 @@ import { Logger } from "../logger";
 import { lsp, lspHandler } from "../system";
 import { openUrl } from "../system/openUrl";
 import * as csUri from "../system/uri";
-import { ReviewsManager } from "./reviewsManager";
 
 @lsp
 export class UrlManager {
@@ -38,7 +37,7 @@ export class UrlManager {
 			if (csUri.Uris.isCodeStreamDiffUri(uri)) {
 				parsedUri = csUri.Uris.fromCodeStreamDiffUri<CodeStreamDiffUriData>(uri);
 			} else {
-				parsedUri = ReviewsManager.parseUri(uri);
+				// parsedUri = ReviewsManager.parseUri(uri);
 			}
 			const repo = parsedUri?.repoId && (await git.getRepositoryById(parsedUri?.repoId));
 			filePath = repo && parsedUri?.path && path.join(repo.path, parsedUri.path);

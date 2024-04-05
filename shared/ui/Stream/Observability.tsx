@@ -1403,6 +1403,7 @@ export const Observability = React.memo((props: Props) => {
 												{repo.entityAccounts
 													.filter(_ => _)
 													.map(ea => {
+														debugger;
 														const _observabilityRepo = observabilityRepos.find(
 															_ => _.repoId === currentRepoId
 														);

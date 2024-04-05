@@ -18,8 +18,6 @@ import {
 	AddBlameMapRequestType,
 	AddEnterpriseProviderHostRequest,
 	AddEnterpriseProviderHostResponse,
-	AddMarkersResponse,
-	AddReferenceLocationRequest,
 	AgentOpenUrlRequestType,
 	ArchiveStreamRequest,
 	Capabilities,
@@ -29,8 +27,6 @@ import {
 	CloseStreamRequest,
 	CodeStreamEnvironment,
 	CreateChannelStreamRequest,
-	CreateCodemarkPermalinkRequest,
-	CreateCodemarkRequest,
 	CreateCompanyRequest,
 	CreateCompanyRequestType,
 	CreateDirectStreamRequest,
@@ -38,8 +34,6 @@ import {
 	CreateForeignCompanyRequest,
 	CreateForeignCompanyRequestType,
 	CreateForeignCompanyResponse,
-	CreateMarkerLocationRequest,
-	CreateMarkerRequest,
 	CreatePostRequest,
 	CreateTeamRequest,
 	CreateTeamRequestType,
@@ -49,12 +43,9 @@ import {
 	DeleteBlameMapRequest,
 	DeleteBlameMapRequestType,
 	DeleteCodeErrorRequest,
-	DeleteCodemarkRequest,
 	DeleteCompanyRequest,
 	DeleteCompanyRequestType,
 	DeleteCompanyResponse,
-	DeleteMarkerRequest,
-	DeleteMarkerResponse,
 	DeleteMeUserRequest,
 	DeleteMeUserRequestType,
 	DeleteMeUserResponse,
@@ -68,12 +59,9 @@ import {
 	EditPostRequest,
 	FetchCodeErrorsRequest,
 	FetchCodeErrorsResponse,
-	FetchCodemarksRequest,
 	FetchCompaniesRequest,
 	FetchCompaniesResponse,
 	FetchFileStreamsRequest,
-	FetchMarkerLocationsRequest,
-	FetchMarkersRequest,
 	FetchPostRepliesRequest,
 	FetchPostsRequest,
 	FetchReviewCheckpointDiffsRequest,
@@ -90,19 +78,13 @@ import {
 	FetchUsersRequest,
 	FollowCodeErrorRequest,
 	FollowCodeErrorResponse,
-	FollowCodemarkRequest,
-	FollowCodemarkResponse,
-	FollowReviewRequest,
-	FollowReviewResponse,
 	GenerateLoginCodeRequest,
 	GenerateMSTeamsConnectCodeRequest,
 	GenerateMSTeamsConnectCodeResponse,
 	GetCodeErrorRequest,
 	GetCodeErrorResponse,
-	GetCodemarkRequest,
 	GetCompanyRequest,
 	GetCompanyResponse,
-	GetMarkerRequest,
 	GetNewRelicSignupJwtTokenRequest,
 	GetNewRelicSignupJwtTokenRequestType,
 	GetNewRelicSignupJwtTokenResponse,
@@ -130,10 +112,8 @@ import {
 	MarkItemReadRequest,
 	MarkPostUnreadRequest,
 	MarkStreamReadRequest,
-	MoveMarkerResponse,
 	MuteStreamRequest,
 	OpenStreamRequest,
-	PinReplyToCodemarkRequest,
 	PollForMaintenanceModeResponse,
 	ProviderTokenRequest,
 	ProviderTokenRequestType,
@@ -146,8 +126,6 @@ import {
 	ServiceEntitiesViewedRequest,
 	ServiceEntitiesViewedRequestType,
 	SessionTokenStatus,
-	SetCodemarkPinnedRequest,
-	SetCodemarkStatusRequest,
 	SetPasswordRequest,
 	SetPasswordRequestType,
 	SetStreamPurposeRequest,
@@ -156,12 +134,10 @@ import {
 	UnarchiveStreamRequest,
 	Unreads,
 	UpdateCodeErrorRequest,
-	UpdateCodemarkRequest,
 	UpdateCompanyRequest,
 	UpdateCompanyRequestType,
 	UpdateCompanyResponse,
 	UpdateInvisibleRequest,
-	UpdateMarkerRequest,
 	UpdatePostSharingDataRequest,
 	UpdatePreferencesRequest,
 	UpdatePresenceRequest,
@@ -182,12 +158,8 @@ import {
 } from "@codestream/protocols/agent";
 import {
 	CSAccessTokenType,
-	CSAddMarkersRequest,
-	CSAddMarkersResponse,
 	CSAddProviderHostRequest,
 	CSAddProviderHostResponse,
-	CSAddReferenceLocationRequest,
-	CSAddReferenceLocationResponse,
 	CSApiCapabilities,
 	CSApiFeatures,
 	CSChannelStream,
@@ -197,19 +169,10 @@ import {
 	CSConfirmRegistrationRequest,
 	CSCreateChannelStreamRequest,
 	CSCreateChannelStreamResponse,
-	CSCreateCodemarkPermalinkRequest,
-	CSCreateCodemarkPermalinkResponse,
-	CSCreateCodemarkRequest,
-	CSCreateCodemarkResponse,
 	CSCreateDirectStreamRequest,
 	CSCreateDirectStreamResponse,
-	CSCreateMarkerLocationRequest,
-	CSCreateMarkerLocationResponse,
-	CSCreateMarkerRequest,
-	CSCreateMarkerResponse,
 	CSCreatePostRequest,
 	CSCreatePostResponse,
-	CSDeleteCodemarkResponse,
 	CSDeletePostResponse,
 	CSDirectStream,
 	CSEditPostRequest,
@@ -218,15 +181,10 @@ import {
 	CSGetApiCapabilitiesResponse,
 	CSGetCodeErrorResponse,
 	CSGetCodeErrorsResponse,
-	CSGetCodemarkResponse,
-	CSGetCodemarksResponse,
 	CSGetCompaniesResponse,
 	CSGetCompanyResponse,
 	CSGetInviteInfoRequest,
 	CSGetInviteInfoResponse,
-	CSGetMarkerLocationsResponse,
-	CSGetMarkerResponse,
-	CSGetMarkersResponse,
 	CSGetMeResponse,
 	CSGetPostResponse,
 	CSGetPostsResponse,
@@ -260,8 +218,6 @@ import {
 	CSNRRegisterRequest,
 	CSNRRegisterResponse,
 	CSObjectStream,
-	CSPinReplyToCodemarkRequest,
-	CSPinReplyToCodemarkResponse,
 	CSPost,
 	CSProviderShareRequest,
 	CSProviderShareResponse,
@@ -270,8 +226,6 @@ import {
 	CSRegisterRequest,
 	CSRegisterResponse,
 	CSRemoveProviderHostResponse,
-	CSSetCodemarkPinnedRequest,
-	CSSetCodemarkPinnedResponse,
 	CSSetPasswordRequest,
 	CSSetPasswordResponse,
 	CSStream,
@@ -281,10 +235,6 @@ import {
 	CSTrackProviderPostRequest,
 	CSUpdateCodeErrorRequest,
 	CSUpdateCodeErrorResponse,
-	CSUpdateCodemarkRequest,
-	CSUpdateCodemarkResponse,
-	CSUpdateMarkerRequest,
-	CSUpdateMarkerResponse,
 	CSUpdatePostSharingDataRequest,
 	CSUpdatePostSharingDataResponse,
 	CSUpdatePresenceRequest,
@@ -800,29 +750,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 		// Resolve any directives in the message data
 		switch (e.type) {
-			case MessageType.Codemarks:
-				e.data = await SessionContainer.instance().codemarks.resolve(e, { onlyIfNeeded: false });
-				if (e.data == null || e.data.length === 0) return;
-
-				break;
 			case MessageType.Companies: {
 				const { companies } = SessionContainer.instance();
 				e.data = await companies.resolve(e);
 				if (e.data == null || e.data.length === 0) return;
 				break;
 			}
-			case MessageType.MarkerLocations:
-				e.data = await SessionContainer.instance().markerLocations.resolve(e, {
-					onlyIfNeeded: false,
-				});
-				if (e.data == null || e.data.length === 0) return;
-
-				break;
-			case MessageType.Markers:
-				e.data = await SessionContainer.instance().markers.resolve(e, { onlyIfNeeded: false });
-				if (e.data == null || e.data.length === 0) return;
-
-				break;
 			case MessageType.Posts:
 				const ids = (e.data as CSPost[]).map(o => o.id);
 				const oldPosts = await Promise.all(
@@ -841,44 +774,15 @@ export class CodeStreamApiProvider implements ApiProvider {
 				await this.fetchAndStoreUnknownAuthors(e.data as CSPost[]);
 
 				break;
-			case MessageType.Repositories:
-				break;
-			case MessageType.Reviews: {
-				e.data = await SessionContainer.instance().reviews.resolve(e, { onlyIfNeeded: false });
-				if (e.data == null || e.data.length === 0) return;
-				break;
-			}
 			case MessageType.CodeErrors: {
 				e.data = await SessionContainer.instance().codeErrors.resolve(e, { onlyIfNeeded: false });
 				if (e.data == null || e.data.length === 0) return;
-
-				/*
-				if (this._events !== undefined) {
-					for (const codeError of e.data as CSCodeError[]) {
-						this._events.subscribeToObject(codeError.id);
-					}
-				}
-				*/
 
 				break;
 			}
 			case MessageType.Streams:
 				e.data = await SessionContainer.instance().streams.resolve(e, { onlyIfNeeded: false });
 				if (e.data == null || e.data.length === 0) return;
-
-				/*
-				if (this._events !== undefined) {
-					for (const stream of e.data as (CSChannelStream | CSDirectStream | CSObjectStream)[]) {
-						if (
-							CodeStreamApiProvider.isStreamSubscriptionRequired(stream, this.userId, this.teamId)
-						) {
-							this._events.subscribeToStream(stream.id);
-						} else if (CodeStreamApiProvider.isStreamUnsubscribeRequired(stream, this.userId)) {
-							this._events.unsubscribeFromStream(stream.id);
-						}
-					}
-				}
-				*/
 				break;
 			case MessageType.Teams:
 				const { session, teams } = SessionContainer.instance();
@@ -1120,199 +1024,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	createMarkerLocation(request: CreateMarkerLocationRequest) {
-		return this.put<CSCreateMarkerLocationRequest, CSCreateMarkerLocationResponse>(
-			`/marker-locations`,
-			{ ...request, teamId: this.teamId },
-			tokenHolder.accessToken
-		);
-	}
-
-	@log()
-	fetchMarkerLocations(request: FetchMarkerLocationsRequest) {
-		return this.get<CSGetMarkerLocationsResponse>(
-			`/marker-locations?teamId=${this.teamId}&streamId=${request.streamId}&commitHash=${request.commitHash}`,
-			tokenHolder.accessToken
-		);
-	}
-
-	@log()
-	addReferenceLocation(request: AddReferenceLocationRequest) {
-		return this.put<CSAddReferenceLocationRequest, CSAddReferenceLocationResponse>(
-			`/markers/${request.markerId}/reference-location`,
-			request,
-			tokenHolder.accessToken
-		);
-	}
-
-	@log()
-	fetchMarkers(request: FetchMarkersRequest) {
-		// TODO: This doesn't handle all the request params
-		return this.get<CSGetMarkersResponse>(
-			`/markers?teamId=${this.teamId}&streamId=${request.streamId}${
-				request.commitHash ? `&commitHash=${request.commitHash}` : ""
-			}`,
-			tokenHolder.accessToken
-		);
-	}
-
-	@log()
-	getMarker(request: GetMarkerRequest) {
-		return this.get<CSGetMarkerResponse>(`/markers/${request.markerId}`, tokenHolder.accessToken);
-	}
-
-	@log()
-	updateMarker(request: UpdateMarkerRequest) {
-		return this.put<CSUpdateMarkerRequest, CSUpdateMarkerResponse>(
-			`/markers/${request.markerId}`,
-			request,
-			tokenHolder.accessToken
-		);
-	}
-
-	@log()
-	moveMarker(request: {
-		oldMarkerId: string;
-		newMarker: CreateMarkerRequest;
-	}): Promise<MoveMarkerResponse> {
-		return this.put<CSCreateMarkerRequest, CSCreateMarkerResponse>(
-			`/markers/${request.oldMarkerId}/move`,
-			request.newMarker,
-			tokenHolder.accessToken
-		);
-	}
-
-	@log()
-	addMarkers(request: {
-		codemarkId: string;
-		newMarkers: CreateMarkerRequest[];
-	}): Promise<AddMarkersResponse> {
-		return this.put<CSAddMarkersRequest, CSAddMarkersResponse>(
-			`/codemarks/${request.codemarkId}/add-markers`,
-			{ markers: request.newMarkers },
-			tokenHolder.accessToken
-		);
-	}
-
-	@log()
-	deleteMarker(request: DeleteMarkerRequest): Promise<DeleteMarkerResponse> {
-		return this.delete<{}>(`/markers/${request.markerId}`, tokenHolder.accessToken);
-	}
-
-	@log()
-	createCodemark(request: CreateCodemarkRequest) {
-		return this.post<CSCreateCodemarkRequest, CSCreateCodemarkResponse>(
-			"/codemarks",
-			{ ...request, teamId: this.teamId },
-			tokenHolder.accessToken
-		);
-	}
-
-	@log()
-	deleteCodemark(request: DeleteCodemarkRequest) {
-		const { codemarkId } = request;
-		return this.delete<CSDeleteCodemarkResponse>(
-			`/codemarks/${codemarkId}`,
-			tokenHolder.accessToken
-		);
-	}
-
-	@log()
-	fetchCodemarks(request: FetchCodemarksRequest) {
-		return this.get<CSGetCodemarksResponse>(
-			`/codemarks?${qs.stringify({
-				teamId: this.teamId,
-				byLastAcivityAt: request.byLastAcivityAt,
-			})}${request.before ? `&before=${request.before}` : ""}`,
-			tokenHolder.accessToken
-		);
-	}
-
-	@log()
-	getCodemark(request: GetCodemarkRequest) {
-		return this.get<CSGetCodemarkResponse>(
-			`/codemarks/${request.codemarkId}?${qs.stringify({
-				byLastAcivityAt: request.sortByActivity,
-			})}`,
-			tokenHolder.accessToken
-		);
-	}
-
-	@log()
-	setCodemarkPinned(request: SetCodemarkPinnedRequest) {
-		return this.put<CSSetCodemarkPinnedRequest, CSSetCodemarkPinnedResponse>(
-			`${request.value ? "/pin" : "/unpin"}/${request.codemarkId}`,
-			request,
-			tokenHolder.accessToken
-		);
-	}
-
-	@log()
-	pinReplyToCodemark(request: PinReplyToCodemarkRequest) {
-		return this.put<CSPinReplyToCodemarkRequest, CSPinReplyToCodemarkResponse>(
-			request.value ? "/pin-post" : "/unpin-post",
-			request,
-			tokenHolder.accessToken
-		);
-	}
-
-	@log()
-	followCodemark(request: FollowCodemarkRequest) {
-		const pathType = request.value ? "follow" : "unfollow";
-		return this.put<FollowCodemarkRequest, FollowCodemarkResponse>(
-			`/codemarks/${pathType}/${request.codemarkId}`,
-			request,
-			tokenHolder.accessToken
-		);
-	}
-
-	@log()
-	followReview(request: FollowReviewRequest) {
-		const pathType = request.value ? "follow" : "unfollow";
-		return this.put<FollowReviewRequest, FollowReviewResponse>(
-			`/reviews/${pathType}/${request.id}`,
-			request,
-			tokenHolder.accessToken
-		);
-	}
-
-	@log()
 	followCodeError(request: FollowCodeErrorRequest) {
 		const pathType = request.value ? "follow" : "unfollow";
 		return this.put<FollowCodeErrorRequest, FollowCodeErrorResponse>(
 			`/code-errors/${pathType}/${request.id}`,
 			request,
-			tokenHolder.accessToken
-		);
-	}
-
-	@log()
-	setCodemarkStatus(request: SetCodemarkStatusRequest) {
-		return this.updateCodemark(request);
-	}
-
-	@log()
-	async updateCodemark(request: UpdateCodemarkRequest) {
-		const { codemarkId, ...attributes } = request;
-		const response = await this.put<CSUpdateCodemarkRequest, CSUpdateCodemarkResponse>(
-			`/codemarks/${codemarkId}`,
-			attributes,
-			tokenHolder.accessToken
-		);
-
-		const [codemark] = await SessionContainer.instance().codemarks.resolve({
-			type: MessageType.Codemarks,
-			data: [response.codemark],
-		});
-
-		return { codemark };
-	}
-
-	@log()
-	createCodemarkPermalink(request: CreateCodemarkPermalinkRequest) {
-		return this.post<CSCreateCodemarkPermalinkRequest, CSCreateCodemarkPermalinkResponse>(
-			`/codemarks/${request.codemarkId}/permalink`,
-			{ isPublic: request.isPublic },
 			tokenHolder.accessToken
 		);
 	}
@@ -1350,14 +1066,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 		const [post] = await SessionContainer.instance().posts.resolve({
 			type: MessageType.Posts,
 			data: response.posts,
-		});
-		await SessionContainer.instance().codemarks.resolve({
-			type: MessageType.Codemarks,
-			data: response.codemarks || [],
-		});
-		await SessionContainer.instance().markers.resolve({
-			type: MessageType.Markers,
-			data: response.markers || [],
 		});
 
 		return { ...response, post };

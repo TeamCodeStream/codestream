@@ -24,7 +24,6 @@ import {
 import { Logger } from "../../../logger";
 import { SessionServiceContainer } from "../../../container";
 import * as csUri from "../../../system/uri";
-import { ReviewsManager } from "../../../managers/reviewsManager";
 import path from "path";
 import { URI } from "vscode-uri";
 import Cache from "@codestream/utils/system/timedCache";
@@ -93,7 +92,7 @@ export class ClmManager implements Disposable {
 			if (csUri.Uris.isCodeStreamDiffUri(request.fileUri)) {
 				parsedUri = csUri.Uris.fromCodeStreamDiffUri<CodeStreamDiffUriData>(request.fileUri);
 			} else {
-				parsedUri = ReviewsManager.parseUri(request.fileUri);
+				// parsedUri = ReviewsManager.parseUri(request.fileUri);
 			}
 			const repo = parsedUri?.repoId && (await git.getRepositoryById(parsedUri?.repoId));
 			filePath = repo && parsedUri?.path && path.join(repo.path, parsedUri.path);
