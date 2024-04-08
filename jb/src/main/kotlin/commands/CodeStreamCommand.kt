@@ -6,6 +6,7 @@ import com.codestream.gson
 import com.codestream.protocols.webview.HostNotifications
 import com.codestream.webViewService
 import com.github.salomonbrys.kotson.fromJson
+import com.intellij.ide.AppLifecycleListener
 import com.intellij.ide.RecentProjectListActionProvider
 import com.intellij.ide.ReopenProjectAction
 import com.intellij.ide.impl.ProjectUtil
@@ -27,7 +28,13 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
 
     override fun perform(target: String?, parameters: Map<String, String>, fragment: String?): Future<String?> {
         val future = CompletableFuture<String?>()
-        WindowFocusWorkaround.bringToFront()
+
+        ApplicationManager.getApplication().messageBus.connect()
+            .subscribe(AppLifecycleListener.TOPIC, object : AppLifecycleListener {
+                override fun appStarted() {
+                    WindowFocusWorkaround.bringToFront()
+                }
+            })
 
         ApplicationManager.getApplication().invokeLater {
             logger.info("Handling $target $parameters")
@@ -56,37 +63,26 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
             } else {
                 logger.info("Could not find open or recent project based on repo mappings")
                 val openProjects = projectManager.openProjects
-                if (openProjects.isNotEmpty()) {
+                project = if (openProjects.isNotEmpty()) {
                     logger.info("Defaulting to first open project")
-                    project = openProjects.firstOrNull()
+                    openProjects.firstOrNull()
                 } else if (repoMapping != null) {
                     try {
                         logger.info("Attempting to open ${repoMapping.defaultPath}")
-                        project = ProjectUtil.openOrImport(repoMapping.defaultPath, null, true)
+                        ProjectUtil.openOrImport(repoMapping.defaultPath, null, true)
                     } catch (ex: Exception) {
                         logger.warn(ex)
+                        projectManager.defaultProject
                     }
                 } else {
-                    logger.info("No open projects or repo mapping")
+                    logger.info("No open projects or repo mapping - using default project")
+                    projectManager.defaultProject
                 }
             }
 
-            if (project == null) {
-                logger.info("Awaiting for open project")
-                ApplicationManager.getApplication().messageBus.connect()
-                    .subscribe(ProjectManager.TOPIC, object : ProjectManagerListener {
-                        var posted = false
-                        override fun projectOpened(project: Project) {
-                            if (!posted) {
-                                project.handleUrlWhenReady(project, target, parameters.toMutableMap())
-                                posted = true
-                                future.complete(null)
-                            }
-                        }
-                    })
-            } else {
-                project.ensureOpened()
-                project.handleUrlWhenReady(project, target, parameters.toMutableMap())
+            project?.let {
+                it.ensureOpened()
+                it.handleUrlWhenReady(it, target, parameters.toMutableMap())
                 future.complete(null)
             }
         }
