@@ -144,9 +144,11 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
         val url = "codestream://codestream/$target?" +
             parameters.map { entry -> entry.key + "=" + entry.value }.joinToString("&")
         logger.info("Will open $url in project $basePath")
-        webViewService?.onDidInitialize {
-            project.codeStream?.show {
-                webViewService?.postNotification(HostNotifications.DidReceiveRequest(url), true)
+        ApplicationManager.getApplication().runReadAction {
+            webViewService?.onDidInitialize {
+                project.codeStream?.show {
+                    webViewService?.postNotification(HostNotifications.DidReceiveRequest(url), true)
+                }
             }
         }
     }
