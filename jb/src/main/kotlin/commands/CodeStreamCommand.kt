@@ -74,10 +74,8 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
                         logger.warn(ex)
                         null
                     }
-                } else if (projectManager.defaultProject != null) {
-                    logger.info("No open projects or repo mapping - using default project")
-                    projectManager.defaultProject
-                } else {
+                }  else {
+                    logger.info("No open projects or repo mapping")
                     findMostRecentProject()
                 }
             }
