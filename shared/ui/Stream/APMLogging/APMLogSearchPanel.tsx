@@ -33,7 +33,6 @@ import { isEmpty as _isEmpty } from "lodash";
 import { APMLogTableLoading } from "./APMLogTableLoading";
 import { APMPartitions } from "./APMPartitions";
 import { TableWindow } from "../TableWindow";
-import { debounce } from "lodash-es";
 import { DropdownWithSearch } from "../DropdownWithSearch";
 import { SelectCustomStyles } from "../AsyncPaginateCustomStyles";
 
@@ -194,10 +193,6 @@ const defaultPartition: SelectedOption = {
 	disabled: true,
 };
 
-const debouncedSave = debounce((value, fn) => {
-	fn(value);
-}, 1000);
-
 export const APMLogSearchPanel = (props: {
 	entryPoint: string;
 	entityGuid?: string;
@@ -239,10 +234,6 @@ export const APMLogSearchPanel = (props: {
 	const [currentTraceId, setTraceId] = useState<string | undefined>(props.traceId);
 
 	useEffect(() => {
-		debouncedSave(searchTerm, setQuery);
-	}, [searchTerm]);
-
-	useEffect(() => {
 		if (isInitializing) {
 			return;
 		}
@@ -261,7 +252,8 @@ export const APMLogSearchPanel = (props: {
 				}
 
 				if (e.query && e.query !== query) {
-					setSearchTerm(e.query!);
+					setSearchTerm(e.query);
+					setQuery(e.query);
 				}
 			})
 		);
@@ -409,7 +401,7 @@ export const APMLogSearchPanel = (props: {
 	const checkKeyPress = (e: { keyCode: Number }) => {
 		const { keyCode } = e;
 		if (keyCode === 13) {
-			fetchLogs();
+			setQuery(searchTerm);
 		}
 	};
 
