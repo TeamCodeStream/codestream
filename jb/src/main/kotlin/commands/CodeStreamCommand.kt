@@ -29,13 +29,6 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
     override fun perform(target: String?, parameters: Map<String, String>, fragment: String?): Future<String?> {
         val future = CompletableFuture<String?>()
 
-        ApplicationManager.getApplication().messageBus.connect()
-            .subscribe(AppLifecycleListener.TOPIC, object : AppLifecycleListener {
-                override fun appStarted() {
-//                    WindowFocusWorkaround.bringToFront()
-                }
-            })
-
         ApplicationManager.getApplication().invokeLater {
             logger.info("Handling $target $parameters")
 
@@ -159,6 +152,7 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
         logger.info("Will open $url in project $basePath")
         ApplicationManager.getApplication().executeOnPooledThread {
             webViewService?.onDidInitialize {
+                WindowFocusWorkaround.bringToFront()
                 project.codeStream?.show {
                     webViewService?.postNotification(HostNotifications.DidReceiveRequest(url), true)
                 }
