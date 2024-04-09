@@ -226,6 +226,7 @@ export const APMLogSearchPanel = (props: {
 	>(undefined);
 	const [queriedWithNonEmptyString, setQueriedWithNonEmptyString] = useState<boolean>(false);
 	const [totalItems, setTotalItems] = useState<number>(0);
+	const [logInformation, setLogInformation] = useState<string | undefined>("");
 	const [logError, setLogError] = useState<string | undefined>("");
 	const { height, ref } = useResizeDetector();
 	const { width: entitySearchWidth, ref: entitySearchRef } = useResizeDetector();
@@ -316,9 +317,7 @@ export const APMLogSearchPanel = (props: {
 							finishHandlingEntityAccount(entity);
 						})
 						.catch(ex => {
-							handleError(
-								"We ran into an error fetching a default service. Please select a service from the list above."
-							);
+							setLogInformation("Please select an entity from the list above.");
 							trackOpenTelemetry(props.entryPoint);
 						});
 				} else {
@@ -606,6 +605,7 @@ export const APMLogSearchPanel = (props: {
 			trackSearchTelemetry(
 				entityAccount.entityGuid,
 				entityAccount.accountId,
+				entityAccount.displayName,
 				(response?.logs?.length ?? 0) > 0
 			);
 		} catch (ex) {
@@ -618,6 +618,7 @@ export const APMLogSearchPanel = (props: {
 	const trackSearchTelemetry = (
 		entityGuid: string,
 		accountId: number,
+		entityDisplayName: string,
 		resultsReturned: boolean
 	) => {
 		HostApi.instance.track("codestream/logs/search succeeded", {
@@ -625,6 +626,7 @@ export const APMLogSearchPanel = (props: {
 			account_id: accountId,
 			event_type: "response",
 			meta_data: `results_returned: ${resultsReturned}`,
+			meta_data_2: `entity_type: ${entityDisplayName}`,
 		});
 	};
 
@@ -889,6 +891,11 @@ export const APMLogSearchPanel = (props: {
 						<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
 							<h4>Uh oh, we've encounted an error!</h4>
 							<span>{logError}</span>
+						</div>
+					)}
+					{logInformation && !isInitializing && (
+						<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
+							<h4>{logInformation}</h4>
 						</div>
 					)}
 				</div>
