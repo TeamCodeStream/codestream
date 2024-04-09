@@ -82,6 +82,7 @@ describe("APM Logging Panel UI", () => {
 										entityName: "Test Entity",
 										entityType: "APM_APPLICATION_ENTITY",
 										domain: "apm",
+										displayName: "APM",
 										tags: [
 											{
 												key: "",
@@ -163,6 +164,7 @@ describe("APM Logging Panel UI", () => {
 				entity_guid: ENTITY_GUID,
 				account_id: ACCOUNT_ID,
 				meta_data: `results_returned: true`,
+				meta_data_2: `entity_type: APM`,
 			});
 		});
 	});
