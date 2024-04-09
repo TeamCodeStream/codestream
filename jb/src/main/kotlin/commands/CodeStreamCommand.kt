@@ -32,7 +32,7 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
         ApplicationManager.getApplication().messageBus.connect()
             .subscribe(AppLifecycleListener.TOPIC, object : AppLifecycleListener {
                 override fun appStarted() {
-                    WindowFocusWorkaround.bringToFront()
+//                    WindowFocusWorkaround.bringToFront()
                 }
             })
 
