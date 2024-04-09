@@ -72,11 +72,13 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
                         ProjectUtil.openOrImport(repoMapping.defaultPath, null, true)
                     } catch (ex: Exception) {
                         logger.warn(ex)
-                        projectManager.defaultProject
+                        null
                     }
-                } else {
+                } else if (projectManager.defaultProject != null) {
                     logger.info("No open projects or repo mapping - using default project")
                     projectManager.defaultProject
+                } else {
+                    findMostRecentProject()
                 }
             }
 
@@ -117,6 +119,19 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
         }
 
         return null
+    }
+
+    private fun findMostRecentProject(): Project? {
+        logger.info("Checking most recent project")
+        val manager = RecentProjectListActionProvider.getInstance()
+        val actions = manager.getActions(false, false)
+        val recentPaths = actions.filterIsInstance<ReopenProjectAction>().map { it.projectPath }
+        val mostRecentPath = recentPaths.firstOrNull()
+        val project = mostRecentPath?.let {
+            logger.info("Opening most recent project: $mostRecentPath")
+            ProjectUtil.openOrImport(it, null, true)
+        } ?: null
+        return project
     }
 
     private fun readMappings(): CodeStreamMappings {
