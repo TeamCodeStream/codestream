@@ -24,11 +24,13 @@ const formatXAxisTime = time => {
 	return `${date.toLocaleTimeString()}`;
 };
 
-const getUniqueDataKeyAndFacetValues = results => {
+const getUniqueDataKeyAndFacetValues = (results, facet) => {
 	const result = results ? results[0] : undefined;
-	const dataKeys = Object.keys(result || {}).filter(
-		key => !["beginTimeSeconds", "endTimeSeconds", "facet", "name"].includes(key)
-	);
+
+	const defaultFilterKeys = ["beginTimeSeconds", "endTimeSeconds", "facet"];
+	const filterKeys = defaultFilterKeys.concat(facet);
+
+	const dataKeys = Object.keys(result || {}).filter(key => !filterKeys.includes(key));
 	const uniqueFacetValues = [...new Set(results.map(obj => obj.facet))];
 	return { dataKeys, uniqueFacetValues };
 };
@@ -97,7 +99,7 @@ export const NRQLResultsLine: React.FC<NRQLResultsLineProps> = ({
 	const [activeDotKey, setActiveDotKey] = useState(undefined);
 	const [activeIndex, setActiveIndex] = useState(undefined);
 
-	const { dataKeys, uniqueFacetValues } = getUniqueDataKeyAndFacetValues(results);
+	const { dataKeys, uniqueFacetValues } = getUniqueDataKeyAndFacetValues(results, facet);
 	const resultsForLineChart = formatResultsForLineChart(results, uniqueFacetValues, dataKeys);
 
 	const customMouseOver = (key, index) => {
