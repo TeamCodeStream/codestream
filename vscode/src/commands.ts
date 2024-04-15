@@ -322,8 +322,8 @@ export class Commands implements Disposable {
 		try {
 			const query =
 				(await window.showInputBox({
-					value: args && args.state.query,
-					placeHolder: ""
+					value: "",
+					placeHolder: "Paste a url here"
 				})) || "";
 			if (query) {
 				Container.sidebar.handleProtocol(Uri.parse(query));
