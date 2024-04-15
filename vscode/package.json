@@ -177,6 +177,11 @@
 		},
 		"commands": [
 			{
+				"command": "codestream.debugProtocol",
+				"title": "debugProtocol",
+				"category": "CodeStream"
+			},
+			{
 				"command": "codestream.goOffline",
 				"title": "Go Offline",
 				"category": "CodeStream"

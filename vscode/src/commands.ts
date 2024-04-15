@@ -317,6 +317,24 @@ export class Commands implements Disposable {
 		return true;
 	}
 
+	@command("debugProtocol")
+	async debugProtocol(args: any) {
+		try {
+			const query =
+				(await window.showInputBox({
+					value: args && args.state.query,
+					placeHolder: ""
+				})) || "";
+			if (query) {
+				Container.sidebar.handleProtocol(Uri.parse(query));
+			} else {
+				Logger.warn("invalid query");
+			}
+		} catch (ex) {
+			Logger.error(ex);
+		}
+	}
+
 	async showLocalDiff(args: {
 		repoId: string;
 		filePath: string;
