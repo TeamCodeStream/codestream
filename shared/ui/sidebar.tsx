@@ -751,7 +751,7 @@ function listenForEvents(store: StoreType) {
 						HostApi.instance.notify(OpenEditorViewNotificationType, {
 							panel: "logs",
 							title: "Logs",
-							entryPoint: "apm_logs",
+							entryPoint: "open_in_ide",
 							entityGuid: definedQuery.query.entityId,
 							ide: {},
 						});

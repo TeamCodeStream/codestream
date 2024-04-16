@@ -326,7 +326,7 @@ export interface OpenEditorViewNotification {
 	| "global_nav"
 		| "context_menu"
 		| "tree_view"
-		| "apm_logs"
+		| "open_in_ide"
 		| "code_error"
 		// nrql
 		| "query_builder"
