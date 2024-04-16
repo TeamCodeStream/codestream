@@ -149,3 +149,17 @@ export const DeleteBlameMapRequestType = new RequestType<
 	void,
 	void
 >("codestream/team/delete-blame-map");
+
+export interface ServiceEntitiesViewedRequest {
+	teamId: string;
+	entityId: string;
+}
+
+export interface ServiceEntitiesViewedResponse {}
+
+export const ServiceEntitiesViewedRequestType = new RequestType<
+	ServiceEntitiesViewedRequest,
+	ServiceEntitiesViewedResponse,
+	void,
+	void
+>("codestream/team/entities");

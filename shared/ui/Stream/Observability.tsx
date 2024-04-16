@@ -15,6 +15,7 @@ import {
 	ObservabilityRepo,
 	GetObservabilityAnomaliesResponse,
 	ObservabilityRepoError,
+	ServiceEntitiesViewedRequestType,
 	ServiceLevelObjectiveResult,
 	isNRErrorResponse,
 	GetIssuesResponse,
@@ -326,6 +327,7 @@ export const Observability = React.memo((props: Props) => {
 			company,
 			showLogSearch: state.ide.name === "VSC" || state.ide.name === "JETBRAINS",
 			demoMode: state.codeErrors.demoMode,
+			teamId: team?.id,
 		};
 	}, shallowEqual);
 
@@ -1040,6 +1042,10 @@ export const Observability = React.memo((props: Props) => {
 	// Separate useEffect to prevent duplicate requests
 	useEffect(() => {
 		if (expandedEntity && currentRepoId) {
+			HostApi.instance.send(ServiceEntitiesViewedRequestType, {
+				teamId: derivedState.teamId,
+				entityId: expandedEntity,
+			});
 			setExpandedEntityUserPref(currentRepoId, expandedEntity);
 			fetchGoldenMetrics(expandedEntity, true);
 			fetchServiceLevelObjectives(expandedEntity);

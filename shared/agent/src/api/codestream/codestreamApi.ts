@@ -148,6 +148,8 @@ import {
 	ReportingMessageType,
 	SendPasswordResetEmailRequest,
 	SendPasswordResetEmailRequestType,
+	ServiceEntitiesViewedRequest,
+	ServiceEntitiesViewedRequestType,
 	SessionTokenStatus,
 	SetCodemarkPinnedRequest,
 	SetCodemarkStatusRequest,
@@ -2245,6 +2247,15 @@ export class CodeStreamApiProvider implements ApiProvider {
 		await this.put(
 			`/delete-blame-map/${request.teamId}`,
 			{ email: request.email },
+			tokenHolder.accessToken
+		);
+	}
+
+	@lspHandler(ServiceEntitiesViewedRequestType)
+	async serviceEntitiesViewed(request: ServiceEntitiesViewedRequest) {
+		await this.post(
+			`/entities`,
+			{ teamId: request.teamId, entityId: request.entityId },
 			tokenHolder.accessToken
 		);
 	}
