@@ -201,7 +201,7 @@ export const APMLogSearchPanel = (props: {
 	ide?: { name?: IdeNames };
 }) => {
 	const [fieldDefinitions, setFieldDefinitions] = useState<LogFieldDefinition[]>([]);
-	const [isInitializing, setIsInitializing] = useState<boolean>();
+	const [isInitializing, setIsInitializing] = useState<boolean>(true);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [query, setQuery] = useState<string>("");
 	const [searchTerm, setSearchTerm] = useState<string>("");
@@ -244,8 +244,6 @@ export const APMLogSearchPanel = (props: {
 	}, [currentTraceId, query, selectedEntityAccount, selectedPartitions, selectedSinceOption]);
 
 	useDidMount(() => {
-		setIsInitializing(true);
-
 		disposables.push(
 			HostApi.instance.on(OpenEditorViewNotificationType, e => {
 				if (e.traceId && e.traceId !== currentTraceId) {
@@ -285,17 +283,25 @@ export const APMLogSearchPanel = (props: {
 				entityAccount: entityAccount,
 			});
 
-			fetchFieldDefinitions(entityAccount);
-			fetchPartitions(entityAccount);
-
-			// not trusting state to be fully set here, so we'll pass everything in as overrides
-			fetchLogs({
-				overrideEntityAccount: entityAccount,
-				overrideQuery: props.suppliedQuery,
-				overrideTraceId: props.traceId,
-				overridePartitions: [defaultPartition],
-				overrideSince: props.traceId ? maxSinceOption : defaultSinceOption,
-			});
+			Promise.all([
+				fetchFieldDefinitions(entityAccount),
+				fetchPartitions(entityAccount),
+				// not trusting state to be fully set here, so we'll pass everything in as overrides
+				fetchLogs({
+					overrideEntityAccount: entityAccount,
+					overrideQuery: props.suppliedQuery,
+					overrideTraceId: props.traceId,
+					overridePartitions: [defaultPartition],
+					overrideSince: props.traceId ? maxSinceOption : defaultSinceOption,
+				}),
+			])
+				.then(results => {
+					setIsInitializing(false);
+				})
+				.catch(error => {
+					console.error("At least one promise encountered an error:", error);
+					setIsInitializing(false);
+				});
 		};
 
 		let entityAccounts: EntityAccount[] = [];
@@ -322,18 +328,20 @@ export const APMLogSearchPanel = (props: {
 						.catch(ex => {
 							setLogInformation("Please select an entity from the list above.");
 							trackOpenTelemetry(props.entryPoint);
+							setIsInitializing(false);
 						});
 				} else {
 					// its possible a race condition could get us here and the entity guid passed in doesn't match any in the list
 					// allow it, so the user can still use the panel - it just won't have a default selection/query/execution.
 					trackOpenTelemetry(props.entryPoint);
+					setIsInitializing(false);
 				}
 			})
 			.catch(ex => {
 				setLogInformation("Please select an entity from the list above.");
+				setIsInitializing(false);
 			})
 			.finally(() => {
-				setIsInitializing(false);
 				setEntitiesLoading(false);
 			});
 
