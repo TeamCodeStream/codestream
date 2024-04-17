@@ -1516,7 +1516,7 @@ export const Observability = React.memo((props: Props) => {
 																						entityGoldenMetrics={entityGoldenMetrics}
 																						loadingGoldenMetrics={loadingGoldenMetrics}
 																						entityGoldenMetricsErrors={entityGoldenMetricsErrors}
-																						recentIssues={recentIssues ? recentIssues : {}}
+																						recentIssues={recentIssues?.recentIssues}
 																						entityGuid={ea.entityGuid}
 																						accountId={ea.accountId}
 																						serviceLevelObjectives={serviceLevelObjectives}
@@ -1525,26 +1525,6 @@ export const Observability = React.memo((props: Props) => {
 																						currentRepoId={currentRepoId}
 																						hasServiceLevelObjectives={hasServiceLevelObjectives}
 																					/>
-
-																					{/* <ObservabilityAlertViolations
-																						issues={recentIssues?.recentIssues}
-																						customPadding={"2px 10px 2px 27px"}
-																						entityGuid={ea.entityGuid}
-																					/>
-																					<ObservabilityGoldenMetricDropdown
-																						entityGoldenMetrics={entityGoldenMetrics}
-																						loadingGoldenMetrics={loadingGoldenMetrics}
-																						errors={entityGoldenMetricsErrors}
-																						recentIssues={recentIssues ? recentIssues : {}}
-																						entityGuid={ea.entityGuid}
-																						accountId={ea.accountId}
-																					/>
-																					{hasServiceLevelObjectives && ea?.domain !== "INFRA" && (
-																						<ObservabilityServiceLevelObjectives
-																							serviceLevelObjectives={serviceLevelObjectives}
-																							errorMsg={serviceLevelObjectiveError}
-																						/>
-																					)} */}
 																					{anomalyDetectionSupported && (
 																						<ObservabilityAnomaliesWrapper
 																							accountId={ea.accountId}
@@ -1562,7 +1542,6 @@ export const Observability = React.memo((props: Props) => {
 																							}
 																						/>
 																					)}
-
 																					{showErrors && (
 																						<>
 																							{observabilityErrors?.find(

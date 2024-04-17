@@ -1,4 +1,4 @@
-import { EntityGoldenMetrics, GetIssuesResponse } from "@codestream/protocols/agent";
+import { EntityGoldenMetrics } from "@codestream/protocols/agent";
 import { isEmpty as _isEmpty } from "lodash-es";
 import React from "react";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
@@ -17,7 +17,6 @@ interface Props {
 	errors: string[];
 	loadingGoldenMetrics: boolean;
 	noDropdown?: boolean;
-	recentIssues?: GetIssuesResponse;
 	entityGuid: string;
 	accountId?: number;
 }

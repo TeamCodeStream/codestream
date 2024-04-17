@@ -4,24 +4,27 @@ import Icon from "./Icon";
 import { setUserPreference } from "./actions";
 import { useAppSelector, useAppDispatch } from "../utilities/hooks";
 import { CodeStreamState } from "@codestream/webview/store";
-
+import {
+	EntityGoldenMetrics,
+	ServiceLevelObjectiveResult,
+	RecentIssue,
+} from "@codestream/protocols/agent";
 import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
 import { ObservabilityServiceLevelObjectives } from "./ObservabilityServiceLevelObjectives";
 import { ObservabilityRelatedWrapper } from "./ObservabilityRelatedWrapper";
 import { ObservabilityAlertViolations } from "./ObservabilityAlertViolations";
 
-//@TODO replace anys
 interface Props {
-	entityGoldenMetrics?: any;
+	entityGoldenMetrics?: EntityGoldenMetrics;
 	loadingGoldenMetrics: boolean;
-	entityGoldenMetricsErrors: any;
-	recentIssues: any;
+	entityGoldenMetricsErrors: string[];
+	recentIssues?: RecentIssue[];
 	entityGuid: string;
 	accountId: number;
-	domain: string | undefined;
+	domain?: string;
 	hasServiceLevelObjectives: boolean;
-	serviceLevelObjectives: any;
-	serviceLevelObjectiveError: any;
+	serviceLevelObjectives: ServiceLevelObjectiveResult[];
+	serviceLevelObjectiveError?: string;
 	currentRepoId: string;
 }
 
@@ -47,20 +50,23 @@ export const ObservabilitySummary = React.memo((props: Props) => {
 	};
 
 	const unmetObjectives = props.serviceLevelObjectives.filter(v => v.result === "UNDER");
-	const percentChange = props.entityGoldenMetrics?.metrics.reduce((change, gm) => {
-		switch (gm.name) {
-			case "errorRate":
-				return props.entityGoldenMetrics?.pillsData?.errorRateData?.percentChange;
-			case "responseTimeMs":
-				return props.entityGoldenMetrics?.pillsData?.responseTimeData?.percentChange;
-			default:
-				return change;
-		}
-	}, undefined);
+	const percentChange = props.entityGoldenMetrics?.metrics.reduce(
+		(change: number | undefined, gm) => {
+			switch (gm.name) {
+				case "errorRate":
+					return props.entityGoldenMetrics?.pillsData?.errorRateData?.percentChange;
+				case "responseTimeMs":
+					return props.entityGoldenMetrics?.pillsData?.responseTimeData?.percentChange;
+				default:
+					return change;
+			}
+		},
+		undefined
+	);
 	const showWarningIcon =
 		unmetObjectives.length > 0 ||
 		(percentChange && percentChange >= 0) ||
-		props.recentIssues.length > 0;
+		(props.recentIssues && props.recentIssues.length > 0);
 
 	return (
 		<>
@@ -86,7 +92,7 @@ export const ObservabilitySummary = React.memo((props: Props) => {
 			{derivedState.summaryIsExpanded && (
 				<>
 					<ObservabilityAlertViolations
-						issues={props.recentIssues?.recentIssues}
+						issues={props.recentIssues}
 						customPadding={"2px 10px 2px 27px"}
 						entityGuid={props.entityGuid}
 					/>
@@ -94,7 +100,6 @@ export const ObservabilitySummary = React.memo((props: Props) => {
 						entityGoldenMetrics={props.entityGoldenMetrics}
 						loadingGoldenMetrics={props.loadingGoldenMetrics}
 						errors={props.entityGoldenMetricsErrors}
-						recentIssues={props.recentIssues ? props.recentIssues : {}}
 						entityGuid={props.entityGuid}
 						accountId={props.accountId}
 					/>
