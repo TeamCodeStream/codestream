@@ -42,7 +42,7 @@ export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 		<>
 			<Row
 				style={{
-					padding: "2px 10px 2px 30px",
+					padding: "2px 10px 2px 40px",
 				}}
 				className={"pr-row"}
 				onClick={() => handleRowOnClick()}

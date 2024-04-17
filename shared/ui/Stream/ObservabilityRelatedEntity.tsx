@@ -160,7 +160,7 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 				<>
 					<ObservabilityAlertViolations
 						issues={recentIssues?.recentIssues}
-						customPadding={"2px 10px 2px 55px"}
+						customPadding={"2px 10px 2px 65px"}
 						entityGuid={relatedEntity.guid}
 					/>
 					<ObservabilityGoldenMetricDropdown

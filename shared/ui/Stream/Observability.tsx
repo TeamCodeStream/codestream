@@ -33,20 +33,12 @@ import styled from "styled-components";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 import { setEditorContext } from "../store/editorContext/actions";
 import { isNotOnDisk } from "../utils";
-
-import { ObservabilityRelatedWrapper } from "@codestream/webview/Stream/ObservabilityRelatedWrapper";
-import { ObservabilityPreview } from "@codestream/webview/Stream/ObservabilityPreview";
-import {
-	ObservabilityLoadingServiceEntities,
-	ObservabilityLoadingServiceEntity,
-} from "@codestream/webview/Stream/ObservabilityLoading";
 import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
 import {
 	setCurrentEntityGuid,
 	setEntityAccounts,
 	setRefreshAnomalies,
 } from "../store/context/actions";
-
 import { HealthIcon } from "@codestream/webview/src/components/HealthIcon";
 import {
 	HostDidChangeWorkspaceFoldersNotificationType,
@@ -55,7 +47,6 @@ import {
 	OpenEditorViewNotificationType,
 } from "@codestream/protocols/webview";
 import { SecurityIssuesWrapper } from "@codestream/webview/Stream/SecurityIssuesWrapper";
-import { ObservabilityServiceLevelObjectives } from "@codestream/webview/Stream/ObservabilityServiceLevelObjectives";
 import { WebviewPanels, CLMSettings, DEFAULT_CLM_SETTINGS } from "@codestream/protocols/api";
 import { Button } from "../src/components/Button";
 import { NoContent, PaneNode, PaneNodeName, PaneState } from "../src/components/Pane";
@@ -76,16 +67,11 @@ import { Row } from "./CrossPostIssueControls/IssuesPane";
 import { EntityAssociator } from "./EntityAssociator";
 import Icon from "./Icon";
 import { Link } from "./Link";
-import { ObservabilityAddAdditionalService } from "./ObservabilityAddAdditionalService";
-import { ObservabilityErrorWrapper } from "./ObservabilityErrorWrapper";
-import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
 import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
 import { WarningBox } from "./WarningBox";
-import { ObservabilityAnomaliesWrapper } from "@codestream/webview/Stream/ObservabilityAnomaliesWrapper";
 import { throwIfError } from "@codestream/webview/store/common";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
-import { ObservabilityAlertViolations } from "./ObservabilityAlertViolations";
 import { parseId } from "../utilities/newRelic";
 import { bootstrapNrCapabilities } from "../store/nrCapabilities/thunks";
 import { doGetObservabilityErrors } from "@codestream/webview/store/codeErrors/thunks";
@@ -99,6 +85,15 @@ import {
 } from "@codestream/webview/store/codeErrors/api/apiResolver";
 import { getNrAiUserId } from "@codestream/webview/store/users/reducer";
 import { setDemoMode } from "@codestream/webview/store/codeErrors/actions";
+import { ObservabilityAddAdditionalService } from "./ObservabilityAddAdditionalService";
+import { ObservabilityErrorWrapper } from "./ObservabilityErrorWrapper";
+import { ObservabilityAnomaliesWrapper } from "@codestream/webview/Stream/ObservabilityAnomaliesWrapper";
+import { ObservabilityPreview } from "@codestream/webview/Stream/ObservabilityPreview";
+import {
+	ObservabilityLoadingServiceEntities,
+	ObservabilityLoadingServiceEntity,
+} from "@codestream/webview/Stream/ObservabilityLoading";
+import { ObservabilitySummary } from "./ObservabilitySummary";
 
 interface Props {
 	paneState: PaneState;
@@ -1517,7 +1512,21 @@ export const Observability = React.memo((props: Props) => {
 																		) : (
 																			<>
 																				<>
-																					<ObservabilityAlertViolations
+																					<ObservabilitySummary
+																						entityGoldenMetrics={entityGoldenMetrics}
+																						loadingGoldenMetrics={loadingGoldenMetrics}
+																						entityGoldenMetricsErrors={entityGoldenMetricsErrors}
+																						recentIssues={recentIssues ? recentIssues : {}}
+																						entityGuid={ea.entityGuid}
+																						accountId={ea.accountId}
+																						serviceLevelObjectives={serviceLevelObjectives}
+																						serviceLevelObjectiveError={serviceLevelObjectiveError}
+																						domain={ea?.domain}
+																						currentRepoId={currentRepoId}
+																						hasServiceLevelObjectives={hasServiceLevelObjectives}
+																					/>
+
+																					{/* <ObservabilityAlertViolations
 																						issues={recentIssues?.recentIssues}
 																						customPadding={"2px 10px 2px 27px"}
 																						entityGuid={ea.entityGuid}
@@ -1535,7 +1544,7 @@ export const Observability = React.memo((props: Props) => {
 																							serviceLevelObjectives={serviceLevelObjectives}
 																							errorMsg={serviceLevelObjectiveError}
 																						/>
-																					)}
+																					)} */}
 																					{anomalyDetectionSupported && (
 																						<ObservabilityAnomaliesWrapper
 																							accountId={ea.accountId}
@@ -1584,13 +1593,13 @@ export const Observability = React.memo((props: Props) => {
 																							setHasVulnerabilities={setIsVulnPresent}
 																						/>
 																					)}
-																					{currentRepoId && ea?.domain !== "INFRA" && (
+																					{/* {currentRepoId && ea?.domain !== "INFRA" && (
 																						<ObservabilityRelatedWrapper
 																							accountId={ea.accountId}
 																							currentRepoId={currentRepoId}
 																							entityGuid={ea.entityGuid}
 																						/>
-																					)}
+																					)} */}
 
 																					{derivedState.showLogSearch &&
 																						(ea?.domain === "APM" || ea?.domain === "EXT") && (

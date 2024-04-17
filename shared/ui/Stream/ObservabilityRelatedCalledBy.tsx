@@ -44,7 +44,7 @@ export const ObservabilityRelatedCalledBy = React.memo((props: Props) => {
 		<>
 			<Row
 				style={{
-					padding: "2px 10px 2px 40px",
+					padding: "2px 10px 2px 50px",
 				}}
 				className={"pr-row"}
 				onClick={() => setExpanded(!expanded)}

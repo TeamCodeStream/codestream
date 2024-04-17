@@ -119,7 +119,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 						<Row
 							className={"pr-row no-shrink"}
 							style={{
-								padding: noDropdown ? "0 10px 0 60px" : "0 10px 0 42px",
+								padding: noDropdown ? "0 10px 0 60px" : "0 10px 0 50px",
 							}}
 						>
 							<div data-testid={`${gm.name}-${entityGuid}`}>
@@ -187,7 +187,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 				<>
 					<Row
 						style={{
-							padding: "2px 10px 2px 30px",
+							padding: "2px 10px 2px 40px",
 						}}
 						className={"pr-row"}
 						onClick={() => handleRowOnClick()}
