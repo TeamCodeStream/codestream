@@ -1572,13 +1572,6 @@ export const Observability = React.memo((props: Props) => {
 																							setHasVulnerabilities={setIsVulnPresent}
 																						/>
 																					)}
-																					{/* {currentRepoId && ea?.domain !== "INFRA" && (
-																						<ObservabilityRelatedWrapper
-																							accountId={ea.accountId}
-																							currentRepoId={currentRepoId}
-																							entityGuid={ea.entityGuid}
-																						/>
-																					)} */}
 
 																					{derivedState.showLogSearch &&
 																						(ea?.domain === "APM" || ea?.domain === "EXT") && (
