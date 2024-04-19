@@ -1,6 +1,7 @@
 import {
 	EnvironmentHost,
 	GetFileScmInfoResponse,
+	RelatedRepository,
 	SessionTokenStatus,
 } from "@codestream/protocols/agent";
 import { CSEligibleJoinCompany, WebviewPanels } from "@codestream/protocols/api";
@@ -108,9 +109,15 @@ export interface CodeErrorData {
 	occurrenceId?: string;
 	lineIndex?: number;
 	timestamp?: number;
-	openType?: "Open in IDE Flow" | "Observability Section" | "Activity Feed";
+	openType?: "Open in IDE Flow" | "Observability Section" | "Activity Feed" | "CLM Details";
 	multipleRepos?: boolean;
+	relatedRepos?: RelatedRepository;
 	claimWhenConnected?: boolean;
+	environment?: string;
+	pendingRequiresConnection?: boolean;
+	stackSourceMap?: string;
+	domain?: string;
+	traceId?: string;
 }
 
 export interface TeamlessContext {

@@ -272,6 +272,7 @@ describe("Observability", () => {
 					repositories: [
 						{
 							id: "repoid",
+							name: "blah",
 							currentBranch: "main",
 							path: "myrepopath",
 							folder: { name: "myfolder", uri: "file:///my-uri" },

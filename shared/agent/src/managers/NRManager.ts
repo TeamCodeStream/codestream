@@ -449,11 +449,11 @@ export class NRManager {
 	async resolveStackTracePosition({
 		ref,
 		repoId,
-		filePath,
+		fileRelativePath,
 		line,
 		column,
 	}: ResolveStackTracePositionRequest): Promise<ResolveStackTracePositionResponse> {
-		const { git, repositoryMappings } = SessionContainer.instance();
+		const { git } = SessionContainer.instance();
 
 		const matchingRepo = await git.getRepositoryById(repoId);
 		const repoPath = matchingRepo?.path;
@@ -461,7 +461,7 @@ export class NRManager {
 			return { error: "Unable to find repo " + repoId };
 		}
 
-		const fullPath = path.join(repoPath, filePath);
+		const fullPath = path.join(repoPath, fileRelativePath);
 		let normalizedPath = Strings.normalizePath(fullPath, isWindows, {
 			addLeadingSlash: isWindows && !fullPath.startsWith("\\\\"),
 		});

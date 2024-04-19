@@ -21,17 +21,23 @@ import {
 } from "@codestream/protocols/agent";
 import Cache from "@codestream/utils/system/timedCache";
 import { Logger } from "../../../logger";
-import { flatten as _flatten, isEmpty as _isEmpty, memoize, uniq as _uniq } from "lodash";
+import {
+	flatten as _flatten,
+	isEmpty as _isEmpty,
+	memoize,
+	uniq as _uniq,
+	MemoizedFunction,
+} from "lodash";
 import { GitRemoteParser } from "../../../git/parsers/remoteParser";
 import { log } from "../../../system/decorators/log";
 import { lsp, lspHandler } from "../../../system/decorators/lsp";
 import { SessionContainer, SessionServiceContainer } from "../../../container";
-import { URI } from "vscode-uri";
 import semver from "semver";
 import { NrApiConfig } from "../nrApiConfig";
 import { mapNRErrorResponse, findEntityTypeDisplayName } from "../utils";
 import { ContextLogger } from "../../contextLogger";
 import { Disposable } from "../../../system/disposable";
+import { getRepoName } from "@codestream/utils/system/string";
 
 const REQUIRED_AGENT_VERSIONS = {
 	go: "3.24.0",
@@ -51,9 +57,8 @@ export class ReposProvider implements Disposable {
 	private _observabilityReposCache = new Cache<GetObservabilityReposResponse>({
 		defaultTtl: 30 * 1000,
 	});
-	private _memoizedBuildRepoRemoteVariants:
-		| ((remotes: string[] | undefined) => Promise<string[]>)
-		| undefined;
+	private _memoizedBuildRepoRemoteVariants: ((remotes: string[]) => Promise<string[]>) &
+		MemoizedFunction;
 
 	constructor(
 		private graphqlClient: NewRelicGraphqlClient,
@@ -66,9 +71,9 @@ export class ReposProvider implements Disposable {
 		);
 	}
 
-	async buildRepoRemoteVariants(remotes: string[] | undefined): Promise<string[]> {
+	async buildRepoRemoteVariants(remotes: string[]): Promise<string[]> {
 		const set = new Set<string>();
-		if (!remotes) {
+		if (!remotes || remotes.length === 0) {
 			return [];
 		}
 
@@ -116,8 +121,8 @@ export class ReposProvider implements Disposable {
 			const reposResponse = await scm.getRepos({ includeRemotes: true });
 			let filteredRepos: ReposScm[] | undefined = reposResponse?.repositories;
 			if (request?.filters?.length) {
-				const repoIds = request.filters.map(_ => _.repoId);
-				filteredRepos = reposResponse.repositories?.filter(r => r.id && repoIds.includes(r.id))!;
+				// const repoIds = request.filters.map(_ => _.repoId); // TODO fix filter? Maybe separate method getById?
+				// filteredRepos = reposResponse.repositories?.filter(r => r.id && repoIds.includes(r.id))!;
 				filteredRepos = reposResponse.repositories;
 			}
 
@@ -133,7 +138,7 @@ export class ReposProvider implements Disposable {
 					);
 					continue;
 				}
-				const folderName = this.getRepoName({ path: repo.path });
+				const folderName = getRepoName({ path: repo.path });
 
 				if (response.repos?.some(_ => _?.repoName === folderName)) {
 					ContextLogger.warn("getObservabilityRepos skipping duplicate repo name", {
@@ -275,7 +280,7 @@ export class ReposProvider implements Disposable {
 					`${a?.accountName}-${a?.entityName}`.localeCompare(`${b?.accountName}-${b?.entityName}`)
 				);
 				response.repos?.push({
-					repoId: mappedUniqueEntities[0]?.entityGuid!!,
+					repoId: repo.path,
 					repoName: folderName,
 					repoRemote: remote,
 					hasRepoAssociation,
@@ -295,30 +300,6 @@ export class ReposProvider implements Disposable {
 		this._observabilityReposCache.put(cacheKey, response);
 
 		return response;
-	}
-
-	getRepoName(repoLike: { folder?: { name?: string; uri: string }; path: string }) {
-		try {
-			if (!repoLike) return "repo";
-
-			if (repoLike.folder && (repoLike.folder.name || repoLike.folder.uri)) {
-				const folderName = (repoLike.folder.name ||
-					URI.parse(repoLike.folder.uri)
-						.fsPath.split(/[\\/]+/)
-						.pop())!;
-				return folderName;
-			}
-			if (repoLike.path) {
-				const folderName = repoLike.path.split(/[\\/]+/).pop()!;
-				return folderName;
-			}
-		} catch (ex) {
-			ContextLogger.warn("getRepoName", {
-				repoLike: repoLike,
-				error: ex,
-			});
-		}
-		return "repo";
 	}
 
 	async findRelatedEntityByRepositoryGuids(
@@ -373,6 +354,7 @@ export class ReposProvider implements Disposable {
 		);
 	}
 
+	// TODO Shouldn't this be findRelatedEntityByEntityGuid??
 	@log()
 	async findRelatedEntityByRepositoryGuid(repositoryGuid: string): Promise<{
 		actor: {
@@ -442,11 +424,6 @@ export class ReposProvider implements Disposable {
 		force = false,
 		isMultiRegion = false
 	): Promise<RepoEntitiesByRemotesResponse | NRErrorResponse> {
-		if (!this._memoizedBuildRepoRemoteVariants) {
-			throw new Error(
-				"findRepositoryEntitiesByRepoRemotes: _memoizedBuildRepoRemoteVariants undefined"
-			);
-		}
 		const cacheKey = JSON.stringify(remotes);
 		if (!force) {
 			const cached = this._repositoryEntitiesByRepoRemotes.get(cacheKey);
@@ -580,17 +557,9 @@ export class ReposProvider implements Disposable {
 	): Promise<RelatedRepoWithRemotes[] | undefined> {
 		if (!entityGuid) return undefined;
 
-		if (!this._memoizedBuildRepoRemoteVariants) {
-			throw new Error(
-				"findRepositoryEntitiesByRepoRemotes: _memoizedBuildRepoRemoteVariants undefined"
-			);
-		}
-		const memoizedBuildRepoRemoteVariants: (remotes: string[] | undefined) => Promise<string[]> =
-			this._memoizedBuildRepoRemoteVariants;
-
 		const relatedEntityResponse = await this.findRelatedEntityByRepositoryGuid(entityGuid);
 		if (relatedEntityResponse) {
-			let relatedRepoData = this.findRelatedReposFromServiceEntity(
+			const relatedRepoData = this.findRelatedReposFromServiceEntity(
 				relatedEntityResponse.actor.entity.relatedEntities.results
 			);
 
@@ -602,7 +571,7 @@ export class ReposProvider implements Disposable {
 						async (
 							_
 						): Promise<{ url?: string; remotes?: string[]; error?: any; name?: string }> => {
-							let remotes = await memoizedBuildRepoRemoteVariants(_.url ? [_.url] : undefined);
+							const remotes = await this._memoizedBuildRepoRemoteVariants(_.url ? [_.url] : []);
 							if (!_isEmpty(remotes)) {
 								return { ..._, remotes };
 							}
@@ -720,6 +689,6 @@ export class ReposProvider implements Disposable {
 	dispose(): void {
 		this._repositoryEntitiesByRepoRemotes.clear();
 		this._observabilityReposCache.clear();
-		delete this._memoizedBuildRepoRemoteVariants;
+		this._memoizedBuildRepoRemoteVariants.cache.clear?.();
 	}
 }

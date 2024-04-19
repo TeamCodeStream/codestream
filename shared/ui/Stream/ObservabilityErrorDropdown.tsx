@@ -11,6 +11,8 @@ import { HostApi } from "../webview-api";
 import {
 	GetObservabilityErrorGroupMetadataRequestType,
 	GetObservabilityErrorGroupMetadataResponse,
+	ObservabilityRepo,
+	ObservabilityRepoError,
 } from "@codestream/protocols/agent";
 import { CodeErrorTimeWindow } from "@codestream/protocols/api";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
@@ -18,8 +20,8 @@ import { setUserPreference } from "./actions";
 import styled from "styled-components";
 
 interface Props {
-	observabilityErrors?: any;
-	observabilityRepo?: any;
+	observabilityErrors: ObservabilityRepoError[];
+	observabilityRepo?: ObservabilityRepo;
 	entityGuid?: string;
 	domain?: string;
 }

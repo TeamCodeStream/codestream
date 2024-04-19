@@ -10,6 +10,7 @@ import { ReposProvider } from "../repos/reposProvider";
 import { lsp } from "../../../system/decorators/lsp";
 import { errorTypeMapper } from "../utils";
 import { ContextLogger } from "../../contextLogger";
+import { getRepoName } from "@codestream/utils/system/string";
 
 @lsp
 export class EntityAccountResolver {
@@ -85,7 +86,7 @@ export class EntityAccountResolver {
 				error: <NRErrorResponse>{
 					repo: {
 						id: repoForFile.id,
-						name: this.reposProvider.getRepoName(repoForFile),
+						name: getRepoName(repoForFile),
 						remote: remote,
 					},
 					error: {

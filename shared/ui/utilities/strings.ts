@@ -47,3 +47,21 @@ export function isWordy(value: string): boolean {
 	// blacklist chars %<>^$:/ and 'space'
 	return /^[^%<>^$:\/ ]+$/.test(value);
 }
+
+export function booleanify(value: number | string | boolean): boolean {
+	if (typeof value === "string") {
+		value = value.toLowerCase();
+	}
+	switch (value) {
+		case true:
+		case "true":
+		case "t":
+		case 1:
+		case "1":
+		case "on":
+		case "yes":
+			return true;
+		default:
+			return false;
+	}
+}

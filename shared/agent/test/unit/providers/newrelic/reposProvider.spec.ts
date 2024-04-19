@@ -18,6 +18,7 @@ describe("ReposProvider", () => {
 							repositories: [
 								{
 									id: "123",
+									name: "bar",
 									path: "",
 									folder: { uri: "", name: "repo" },
 									remotes: [

@@ -16,6 +16,7 @@ describe("scmManager", () => {
 			const repos: ReposScm[] = [
 				{
 					id: "1234",
+					name: "bar",
 					path: "/blah",
 					folder: {
 						uri: "uri",
@@ -24,6 +25,7 @@ describe("scmManager", () => {
 				},
 				{
 					id: "1234",
+					name: "bar",
 					path: "/blah/bin/default",
 					folder: {
 						uri: "uri",
@@ -32,6 +34,7 @@ describe("scmManager", () => {
 				},
 				{
 					id: "2345",
+					name: "bar",
 					path: "/project",
 					folder: {
 						uri: "uri",
@@ -43,6 +46,7 @@ describe("scmManager", () => {
 			expect(response).toStrictEqual([
 				{
 					id: "1234",
+					name: "bar",
 					path: "/blah",
 					folder: {
 						uri: "uri",
@@ -51,6 +55,7 @@ describe("scmManager", () => {
 				},
 				{
 					id: "2345",
+					name: "bar",
 					path: "/project",
 					folder: {
 						uri: "uri",
@@ -65,6 +70,7 @@ describe("scmManager", () => {
 			const repos: ReposScm[] = [
 				{
 					id: "1234",
+					name: "bar",
 					path: "/blah/bin/default",
 					folder: {
 						uri: "uri",
@@ -73,6 +79,7 @@ describe("scmManager", () => {
 				},
 				{
 					id: "2345",
+					name: "bar",
 					path: "/project",
 					folder: {
 						uri: "uri",
@@ -81,6 +88,7 @@ describe("scmManager", () => {
 				},
 				{
 					id: "1234",
+					name: "bar",
 					path: "/blah",
 					folder: {
 						uri: "uri",
@@ -92,6 +100,7 @@ describe("scmManager", () => {
 			expect(response).toStrictEqual([
 				{
 					id: "2345",
+					name: "bar",
 					path: "/project",
 					folder: {
 						uri: "uri",
@@ -101,6 +110,7 @@ describe("scmManager", () => {
 				{
 					id: "1234",
 					path: "/blah",
+					name: "bar",
 					folder: {
 						uri: "uri",
 						name: "repo1",
@@ -114,6 +124,7 @@ describe("scmManager", () => {
 			const repos: ReposScm[] = [
 				{
 					id: "1234",
+					name: "bar",
 					path: "/blah",
 					folder: {
 						uri: "uri",
@@ -122,6 +133,7 @@ describe("scmManager", () => {
 				},
 				{
 					id: "1234",
+					name: "bar",
 					path: "/blah/bin/default",
 					folder: {
 						uri: "uri",
@@ -130,6 +142,7 @@ describe("scmManager", () => {
 				},
 				{
 					id: "2345",
+					name: "bar",
 					path: "/project",
 					folder: {
 						uri: "uri",
@@ -138,6 +151,7 @@ describe("scmManager", () => {
 				},
 				{
 					id: "3456",
+					name: "bar",
 					path: "workspace/project/bin/default",
 					folder: {
 						uri: "uri",
@@ -146,6 +160,7 @@ describe("scmManager", () => {
 				},
 				{
 					id: "3456",
+					name: "bar",
 					path: "workspace/project",
 					folder: {
 						uri: "uri",
@@ -158,6 +173,7 @@ describe("scmManager", () => {
 				{
 					id: "1234",
 					path: "/blah",
+					name: "bar",
 					folder: {
 						uri: "uri",
 						name: "repo1",
@@ -166,6 +182,7 @@ describe("scmManager", () => {
 				{
 					id: "2345",
 					path: "/project",
+					name: "bar",
 					folder: {
 						uri: "uri",
 						name: "repo2",
@@ -174,6 +191,7 @@ describe("scmManager", () => {
 				{
 					id: "3456",
 					path: "workspace/project",
+					name: "bar",
 					folder: {
 						uri: "uri",
 						name: "repo3",

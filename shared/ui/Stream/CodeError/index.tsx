@@ -1365,7 +1365,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 					// This might be different from the jumpToLine lineIndex if jumpToLine is an anonymous function
 					// This also might not be the best approach, but it's a start
 					const line = extractMethodName(stackInfo.lines);
-					if (line?.fileRelativePath) {
+					if (line?.fileFullPath) {
 						const { stackTraces } = codeError;
 						const stackInfo = stackTraces?.[0];
 						// console.debug(`===--- symbol useEffect`, line.method);
@@ -1384,7 +1384,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 							try {
 								// console.debug(`===--- symbol useEffect calling jumpToStackLine`);
 								const stackLine = stackInfo.lines[jumpLocation];
-								if (stackLine.fileFullPath && stackInfo.repoId) {
+								if (stackLine.fileFullPath) {
 									console.log("setCurrentNrAiFile", stackLine.fileFullPath);
 									props.setCurrentNrAiFile(stackLine.fileFullPath);
 									// Open actual file for NRAI - no ref param
@@ -1396,10 +1396,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 										})
 									);
 								} else {
-									console.warn(
-										"nrai jumpToStackLine missing fileRelativePath, or repoId",
-										stackLine
-									);
+									console.warn("nrai jumpToStackLine missing fileFullPath", stackLine);
 								}
 							} catch (ex) {
 								console.warn(ex);

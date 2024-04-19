@@ -17,6 +17,7 @@ describe("fossaProvider", () => {
 				path: "/Users/foo/bar",
 				providerGuess: "example",
 				id: "1234",
+				name: "bar",
 			},
 			[
 				{
@@ -41,6 +42,7 @@ describe("fossaProvider", () => {
 				path: "/Users/foo/bar",
 				providerGuess: "example",
 				id: "1234",
+				name: "bar",
 			},
 			[
 				{
@@ -65,6 +67,7 @@ describe("fossaProvider", () => {
 				path: "/Users/foo/bar",
 				providerGuess: "example",
 				id: "1234",
+				name: "bar",
 			},
 			[
 				{

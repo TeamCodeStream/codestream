@@ -31,15 +31,8 @@ export class GitRepository {
 		this.normalizedPath = (this.path.endsWith("/") ? this.path : `${this.path}/`).toLowerCase();
 	}
 
-	async withKnownRepo(knownRepos: Map<string, CSRepository>): Promise<GitRepository> {
-		await this.searchForKnownRepository(knownRepos);
-		this._defaultRemoteBranchReferencesPromise = this.getDefaultRemoteBranchReferencesPromise();
-
-		return this;
-	}
-
 	get id() {
-		return this._knownRepository !== undefined ? this._knownRepository.id : undefined;
+		return this.path;
 	}
 
 	getRemotes() {

@@ -131,6 +131,7 @@ import translations from "./translations/en";
 import { parseProtocol } from "./utilities/urls";
 import { HostApi } from "./webview-api";
 import { parseId } from "./utilities/newRelic";
+import { booleanify } from "@codestream/webview/utilities/strings";
 
 // import translationsEs from "./translations/es";
 
@@ -667,6 +668,7 @@ function listenForEvents(store: StoreType) {
 								occurrenceId: definedQuery.query.occurrenceId,
 								data: {
 									...definedQuery.query,
+									multipleRepos: booleanify(definedQuery.query.multipleRepos),
 									// cache the sessionStart here in case the IDE is restarted
 									sessionStart: state.context.sessionStart,
 									relatedRepos: response?.relatedRepos,

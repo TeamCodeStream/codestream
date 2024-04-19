@@ -41,6 +41,7 @@ import { ContextLogger } from "../../contextLogger";
 
 const ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS = ["APM", "BROWSER", "EXT", "INFRA"];
 import { SourceMapProvider } from "./sourceMapProvider";
+import { getRepoName } from "@codestream/utils/system/string";
 
 @lsp
 export class ObservabilityErrorsProvider {
@@ -58,7 +59,7 @@ export class ObservabilityErrorsProvider {
 	 *
 	 * @param {GetObservabilityErrorsRequest} request
 	 * @return {Promise<GetObservabilityErrorsResponse>}
-	 * @memberof NewRelicProvider
+	 * @memberof ObservabilityErrorsProvider
 	 */
 	@lspHandler(GetObservabilityErrorsRequestType)
 	@log()
@@ -190,7 +191,7 @@ export class ObservabilityErrorsProvider {
 				}
 				response.repos?.push({
 					repoId: repo.id!,
-					repoName: this.reposProvider.getRepoName(repo),
+					repoName: getRepoName(repo),
 					errors: observabilityErrors!,
 				});
 			}
@@ -703,7 +704,7 @@ export class ObservabilityErrorsProvider {
 				  exception(occurrenceId: $occurrenceId) {
 					stackTrace {
 					  frames {
-						filepath						
+						filepath
 						formatted
 						line
 						name
@@ -713,7 +714,7 @@ export class ObservabilityErrorsProvider {
 				  crash(occurrenceId: $occurrenceId) {
 					stackTrace {
 					  frames {
-						filepath						
+						filepath
 						formatted
 						line
 						name
@@ -961,15 +962,15 @@ export class ObservabilityErrorsProvider {
 				if (!metricResponse) return undefined;
 
 				const mappedRepoEntities = await this.reposProvider.findMappedRemoteByEntity(
-					metricResponse?.entityGuid
+					metricResponse.entityGuid
 				);
 				return {
 					entityId: metricResponse?.entityGuid,
 					traceId: metricResponse?.traceId,
 					occurrenceId: metricResponse?.traceId,
 					stackSourceMap: metricResponse?.stackSourceMap,
-					relatedRepos: mappedRepoEntities || [],
-				} as GetObservabilityErrorGroupMetadataResponse;
+					relatedRepos: mappedRepoEntities ?? [],
+				};
 			}
 
 			if (request.entityGuid) {
@@ -978,8 +979,8 @@ export class ObservabilityErrorsProvider {
 				);
 				return {
 					entityId: request.entityGuid,
-					relatedRepos: mappedRepoEntities || [],
-				} as GetObservabilityErrorGroupMetadataResponse;
+					relatedRepos: mappedRepoEntities ?? [],
+				};
 			}
 		} catch (ex) {
 			ContextLogger.error(ex, "getErrorGroupMetadata", {
@@ -1125,7 +1126,6 @@ export class ObservabilityErrorsProvider {
 							if (result.length) {
 								errorGroup.releaseTag = result[0]["tags.releaseTag"];
 								errorGroup.commit = result[0]["tags.commit"];
-								errorGroup.traceId = errorGroup.traceId;
 							}
 						} catch (e) {
 							// This query is fragile with invalid nrql escape characters - Strings.escapeNrql
@@ -1200,7 +1200,7 @@ export class ObservabilityErrorsProvider {
 					errorGroupGuid: errorGroup.guid,
 					occurrenceId: request.occurrenceId,
 					entityGuid: entityGuid,
-					hasErrorGroup: errorGroup != null,
+					hasErrorGroup: !!errorGroup,
 					hasStackTrace: errorGroup?.hasStackTrace === true,
 				});
 			} else {

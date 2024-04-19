@@ -41,6 +41,7 @@ import { Disposable } from "../../../system/disposable";
 import { isEmpty } from "lodash";
 import { keyFromFacet } from "./FLTCodeAttributeStrategy";
 import { DeploymentsProvider } from "../deployments/deploymentsProvider";
+import { getRepoName } from "@codestream/utils/system/string";
 
 @lsp
 export class ClmManager implements Disposable {
@@ -51,7 +52,7 @@ export class ClmManager implements Disposable {
 		private nrApiConfig: NrApiConfig,
 		private graphqlClient: NewRelicGraphqlClient,
 		private entityAccountResolver: EntityAccountResolver,
-		private deploymentsProvider: DeploymentsProvider,
+		private deploymentsProvider: DeploymentsProvider
 	) {}
 
 	// 2 minute cache
@@ -221,12 +222,12 @@ export class ClmManager implements Disposable {
 				newRelicEntityAccounts: observabilityRepo.entityAccounts,
 				repo: {
 					id: repoForFile.id!,
-					name: this.reposProvider.getRepoName(repoForFile),
+					name: getRepoName(repoForFile),
 					remote: remote,
 				},
 				relativeFilePath: relativeFilePath,
 				newRelicUrl: `${this.nrApiConfig.productUrl}/redirect/entity/${newRelicEntityGuid}`,
-        deploymentCommit,
+				deploymentCommit,
 			};
 
 			if (sampleSize?.length > 0) {
@@ -330,10 +331,10 @@ export class ClmManager implements Disposable {
 			} else {
 				const metric: FileLevelTelemetryMetric = {
 					facet: [anomaly.metricTimesliceName],
-          functionName: anomaly.codeAttrs?.codeFunction,
-          className: anomaly.codeAttrs?.codeNamespace,
-          namespace: anomaly.codeAttrs?.codeNamespace,
-          anomaly: anomaly,
+					functionName: anomaly.codeAttrs?.codeFunction,
+					className: anomaly.codeAttrs?.codeNamespace,
+					namespace: anomaly.codeAttrs?.codeNamespace,
+					anomaly: anomaly,
 				};
 				metrics.push(metric);
 			}
@@ -354,20 +355,22 @@ export class ClmManager implements Disposable {
 			results.averageDuration.find(_ => !_.commit) !== undefined;
 		if (!missingCommit) return undefined;
 		Logger.log("getDeploymentCommitIfNeeded: missing commit - calling getLatestDeployment");
-		const result = await this.deploymentsProvider.getLatestDeployment({ entityGuid: newRelicEntityGuid });
+		const result = await this.deploymentsProvider.getLatestDeployment({
+			entityGuid: newRelicEntityGuid,
+		});
 		Logger.log(
 			`getDeploymentCommitIfNeeded: getLatestDeployment found commit ${result?.deployment.commit}`
 		);
 		return result?.deployment.commit;
 	}
 
-  /*
+	/*
 Not actually used - agent is restarted at logout but keeping for
 possible future use
 */
-  dispose(): void {
-    this._mltTimedCache.clear();
-  }
+	dispose(): void {
+		this._mltTimedCache.clear();
+	}
 }
 
 // Use type guard so that list of languages can be defined once and shared with union type LanguageId

@@ -3,6 +3,7 @@ import {
 	CSAsyncGrokError,
 	DeleteCodeErrorRequestType,
 	GetCodeErrorRequestType,
+	NewRelicErrorGroup,
 } from "@codestream/protocols/agent";
 import { CSCodeError, CSStackTraceInfo } from "@codestream/protocols/api";
 import { logError } from "@codestream/webview/logger";
@@ -126,7 +127,7 @@ export const _clearProviderError = (providerId: string, errorGroupGuid: string) 
 		undefined,
 	});
 
-export const _setErrorGroup = (errorGroupGuid: string, data: any) =>
+export const _setErrorGroup = (errorGroupGuid: string, data: NewRelicErrorGroup) =>
 	action(CodeErrorsActionsTypes.SetErrorGroup, {
 		providerId: "newrelic*com",
 		id: errorGroupGuid,

@@ -224,7 +224,7 @@ export class GitRepositories {
 							existingRepo.root,
 							existingRepo.folder,
 							true
-						).withKnownRepo(remoteToRepoMap);
+						);
 						upgradedRepos.push(repo);
 					}
 					allAddedRepositories = [...upgradedRepos];
@@ -258,7 +258,7 @@ export class GitRepositories {
 								foundRepo.root,
 								foundRepo.folder,
 								true
-							).withKnownRepo(remoteToRepoMap);
+							);
 
 							repos.push(repo);
 						}
@@ -428,7 +428,7 @@ export class GitRepositories {
 					foundRepo.root,
 					foundRepo.folder,
 					foundRepo.isInWorkspace
-				).withKnownRepo(remoteToRepoMap);
+				);
 				reposWithIds.push(repoWithId);
 			}
 

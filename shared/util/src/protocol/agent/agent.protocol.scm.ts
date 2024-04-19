@@ -235,6 +235,7 @@ export interface ReposScm {
 	projects?: { path: string; name?: string }[];
 
 	directories?: DirectoryTree;
+	name: string;
 }
 
 export interface DirectoryTree {

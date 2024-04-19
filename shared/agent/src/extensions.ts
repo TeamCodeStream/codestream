@@ -2,6 +2,7 @@ import { ReposScm } from "@codestream/protocols/agent";
 
 import { GitRemote, GitRepository } from "git/models/models";
 import { xfs } from "./xfs";
+import { getRepoName } from "@codestream/utils/system/string";
 
 export namespace GitRepositoryExtensions {
 	/**
@@ -20,13 +21,14 @@ export namespace GitRepositoryExtensions {
 		remotes: GitRemote[],
 		withSubDirectoriesDepth?: number
 	): ReposScm {
-		const result = {
+		const result: ReposScm = {
 			id: repo.id,
 			path: repo.path,
 			folder: repo.folder,
 			root: repo.root,
 			currentBranch: currentBranch,
 			remotes: remotes,
+			name: getRepoName({ path: repo.path, folder: repo.folder }),
 			providerGuess:
 				// FIXME -- not sure how to map remotes to github enterprise, gitlab onprem, etc.
 				remotes

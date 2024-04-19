@@ -1,9 +1,7 @@
 import {
 	GetNewRelicErrorGroupResponse,
 	MatchReposRequestType,
-	MatchReposResponse,
 	NormalizeUrlRequestType,
-	NormalizeUrlResponse,
 	ResolveStackTraceRequest,
 	ResolveStackTraceResponse,
 	TelemetryData,
@@ -34,7 +32,6 @@ import {
 	useDidMount,
 	usePrevious,
 } from "@codestream/webview/utilities/hooks";
-import { isSha } from "@codestream/webview/utilities/strings";
 import { HostApi } from "@codestream/webview/webview-api";
 import React, { useEffect } from "react";
 import { shallowEqual, useSelector } from "react-redux";
@@ -61,6 +58,7 @@ import ScrollBox from "./ScrollBox";
 import { WarningBox } from "./WarningBox";
 import { isEmpty as _isEmpty } from "lodash";
 import { codeErrorsApi } from "@codestream/webview/store/codeErrors/api/apiResolver";
+import { isSha } from "@codestream/webview/utilities/strings";
 
 const NavHeader = styled.div`
 	// flex-grow: 0;
@@ -422,7 +420,6 @@ export function CodeErrorNav(props: Props) {
 			} else {
 				if (errorGroupResult?.errorGroup?.entity?.relationship?.error?.message != null) {
 					const title = "Repository Relationship Error";
-					// @ts-ignore
 					const description = errorGroupResult.errorGroup.entity.relationship.error.message!;
 					setError({
 						title,
@@ -437,7 +434,7 @@ export function CodeErrorNav(props: Props) {
 					return;
 				}
 
-				targetRemote = newRemote || remote;
+				targetRemote = newRemote ?? remote;
 				const entityName =
 					codeError?.objectInfo?.entityName || errorGroup?.entityName || "selected";
 
@@ -475,9 +472,9 @@ export function CodeErrorNav(props: Props) {
 
 				if (targetRemote) {
 					// we have a remote, try to find a repo.
-					const normalizationResponse = (await HostApi.instance.send(NormalizeUrlRequestType, {
+					const normalizationResponse = await HostApi.instance.send(NormalizeUrlRequestType, {
 						url: targetRemote,
-					})) as NormalizeUrlResponse;
+					});
 					if (!normalizationResponse || !normalizationResponse.normalizedUrl) {
 						const title = "Error";
 						const description = `Could not find a matching repo for the remote ${targetRemote}`;
@@ -495,14 +492,14 @@ export function CodeErrorNav(props: Props) {
 						return;
 					}
 
-					const reposResponse = (await HostApi.instance.send(MatchReposRequestType, {
+					const reposResponse = await HostApi.instance.send(MatchReposRequestType, {
 						repos: [
 							{
 								remotes: [normalizationResponse.normalizedUrl],
 								knownCommitHashes: refToUse && isSha(refToUse) ? [refToUse] : [],
 							},
 						],
-					})) as MatchReposResponse;
+					});
 
 					if (reposResponse?.repos?.length === 0) {
 						const title = "Repo Not Found";

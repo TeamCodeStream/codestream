@@ -82,7 +82,7 @@ export const DidResolveStackTraceLineNotificationType = new NotificationType<
 export interface ResolveStackTracePositionRequest {
 	ref?: string;
 	repoId: string;
-	filePath: string;
+	fileRelativePath: string;
 	line?: number;
 	column?: number;
 }

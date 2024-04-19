@@ -5,6 +5,7 @@ import {
 	DidResolveStackTraceLineNotification,
 	GetNewRelicErrorGroupRequest,
 	GetObservabilityErrorsRequest,
+	ResolveStackTracePositionResponse,
 	ResolveStackTraceRequest,
 } from "@codestream/protocols/agent";
 import { CSCodeError, CSStackTraceLine } from "@codestream/protocols/api";
@@ -48,6 +49,7 @@ import {
 	codeErrorsApi,
 	codeErrorsIDEApi,
 } from "@codestream/webview/store/codeErrors/api/apiResolver";
+import { CodeErrorData } from "@codestream/protocols/webview";
 
 export const updateCodeErrors =
 	(codeErrors: CSCodeError[]) => async (dispatch, getState: () => CodeStreamState) => {
@@ -177,14 +179,14 @@ export const fetchErrorGroup = createAppAsyncThunk(
 				fetchNewRelicErrorGroup({
 					errorGroupGuid: objectId!,
 					// might not have a codeError.stackTraces from discussions
-					occurrenceId:
-						occurrenceId ||
-						(codeError.stackTraces ? codeError.stackTraces[0].occurrenceId! : undefined),
+					occurrenceId: occurrenceId ?? codeError.stackTraces[0].occurrenceId,
 					entityGuid: entityGuid,
 				})
 			).unwrap();
 			dispatch(_isLoadingErrorGroup(objectId, { isLoading: true }));
-			return dispatch(_setErrorGroup(codeError.objectId!, result.errorGroup));
+			if (result.errorGroup) {
+				dispatch(_setErrorGroup(codeError.objectId!, result.errorGroup));
+			}
 		} catch (error) {
 			logError(error, { detail: `failed to fetchErrorGroup`, objectId });
 			return undefined;
@@ -257,7 +259,7 @@ export const setErrorGroup = (errorGroupGuid: string, data?: any) => dispatch =>
 export type OpenErrorGroupParameters = {
 	errorGroupGuid: string;
 	occurrenceId?: string;
-	data: any;
+	data: CodeErrorData;
 };
 
 export const openErrorGroup = createAppAsyncThunk(
@@ -572,11 +574,11 @@ export const copySymbolFromIde = createAppAsyncThunk(
 			return;
 		}
 		const currentPosition =
-			ref && repoId && stackLine.fileRelativePath
+			ref && repoId && stackLine.fileRelativePath && stackLine.fileFullPath
 				? await codeErrorsApi.resolveStackTracePosition({
 						ref,
 						repoId,
-						filePath: stackLine.fileRelativePath,
+						fileRelativePath: stackLine.fileRelativePath,
 						line: stackLine.line,
 						column: stackLine.column,
 				  })
@@ -622,7 +624,7 @@ export const copySymbolFromIde = createAppAsyncThunk(
 export type JumpToStackLineRequest = {
 	lineIndex: number;
 	stackLine: CSStackTraceLine;
-	repoId: string;
+	repoId?: string;
 	ref?: string;
 };
 
@@ -637,17 +639,32 @@ export const jumpToStackLine = createAppAsyncThunk(
 			})
 		);
 
-		if (!stackLine.fileRelativePath) {
-			console.error(`Unable to jump to stack trace line: missing fileRelativePath`);
-			return;
+		let currentPosition: ResolveStackTracePositionResponse;
+
+		if (!ref && stackLine.fileFullPath) {
+			// skip resolveStackTracePosition since this is a local file
+			currentPosition = {
+				column: stackLine.column,
+				line: stackLine.line,
+				path: URI.file(stackLine.fileFullPath).toString(),
+			};
+		} else {
+			if (!stackLine.fileRelativePath) {
+				console.error(`Unable to jump to stack trace line: missing fileRelativePath`);
+				return;
+			}
+			if (!repoId) {
+				console.error(`Unable to jump to stack trace line: missing repoId`);
+				return;
+			}
+			currentPosition = await codeErrorsApi.resolveStackTracePosition({
+				ref,
+				repoId,
+				fileRelativePath: stackLine.fileRelativePath,
+				line: stackLine.line,
+				column: stackLine.column,
+			});
 		}
-		const currentPosition = await codeErrorsApi.resolveStackTracePosition({
-			ref,
-			repoId,
-			filePath: stackLine.fileRelativePath!,
-			line: stackLine.line!,
-			column: stackLine.column!,
-		});
 		if (currentPosition.error) {
 			logError(`Unable to jump to stack trace line: ${currentPosition.error}`);
 			return;
@@ -665,19 +682,21 @@ export const jumpToStackLine = createAppAsyncThunk(
 			range.end.character = 2147483647;
 		}
 
-		const revealResponse = await codeErrorsIDEApi.editorRevealRange({
-			uri: path!,
-			preserveFocus: true,
-			range,
-			ref,
-		});
-		if (revealResponse?.success) {
-			highlightRange({
-				uri: path!,
+		if (path) {
+			const revealResponse = await codeErrorsIDEApi.editorRevealRange({
+				uri: path,
+				preserveFocus: true,
 				range,
-				highlight: true,
 				ref,
 			});
+			if (revealResponse?.success) {
+				highlightRange({
+					uri: path,
+					range,
+					highlight: true,
+					ref,
+				});
+			}
 		}
 	}
 );

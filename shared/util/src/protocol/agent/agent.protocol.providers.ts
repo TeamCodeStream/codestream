@@ -1690,8 +1690,8 @@ export interface GetObservabilityErrorGroupMetadataResponse {
 	occurrenceId?: string;
 	entityId?: string;
 	remote?: string;
-	relatedRepos: RelatedRepository;
-	stackSourceMap?: any;
+	relatedRepos: RelatedRepoWithRemotes[];
+	stackSourceMap?: string;
 	traceId?: string;
 }
 

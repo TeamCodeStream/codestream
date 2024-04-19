@@ -6,40 +6,53 @@ import {
 	GetRepoRequest,
 	GetRepoRequestType,
 	GetRepoResponse,
+	MatchReposRequest,
+	MatchReposRequestType,
+	MatchReposResponse,
 } from "@codestream/protocols/agent";
-import { CSRepository } from "@codestream/protocols/api";
-
+import { CSRemote, CSRepository } from "@codestream/protocols/api";
 import { lsp, lspHandler } from "../system";
 import { SessionContainer } from "../container";
-import { getNrContainer } from "../providers/newrelic/nrContainer";
 
 @lsp
 export class ReposManager {
 	@lspHandler(FetchReposRequestType)
 	async get(request?: FetchReposRequest): Promise<FetchReposResponse> {
-		const { git, nr } = SessionContainer.instance();
-		const nrContainer = getNrContainer();
+		const { scm } = SessionContainer.instance();
+		const repositoryMappings = SessionContainer.instance().repositoryMappings;
 
-		const observabilityReposResponse = await nrContainer.repos.getObservabilityRepos({});
+		const reposResponse = await scm.getRepos({ includeRemotes: true });
 
 		const repos: CSRepository[] = [];
-		for (const observabilityRepo of observabilityReposResponse.repos!!) {
-			const repo: CSRepository = {
-				id: observabilityRepo.repoId,
-				name: observabilityRepo.repoName,
-				remotes: [
-					{
-						url: observabilityRepo.repoRemote,
-						normalizedUrl: observabilityRepo.repoRemote,
+		for (const repoInstance of reposResponse.repositories ?? []) {
+			// const name = getRepoName({ path: repoInstance.path });
+			const remotesPromise: Promise<CSRemote[]> = Promise.all(
+				repoInstance.remotes?.map(async remote => {
+					const normalizedUrlResult = await repositoryMappings.normalizeUrl({
+						url: remote.rawUrl!,
+					});
+					return <CSRemote>{
+						url: remote.rawUrl,
 						companyIdentifier: "",
-					},
-				],
-				teamId: "",
-				createdAt: 0,
-				modifiedAt: 0,
-				creatorId: "",
-			};
-			repos.push(repo);
+						normalizedUrl: normalizedUrlResult.normalizedUrl,
+					};
+				}) || []
+			);
+
+			const remotes = await remotesPromise;
+
+			if (repoInstance.id) {
+				const repo: CSRepository = {
+					id: repoInstance.id,
+					name: repoInstance.name,
+					remotes,
+					teamId: "",
+					createdAt: 0,
+					modifiedAt: 0,
+					creatorId: "",
+				};
+				repos.push(repo);
+			}
 		}
 
 		return { repos };
@@ -55,8 +68,31 @@ export class ReposManager {
 		return "Repository";
 	}
 
-	async getById(id: string): Promise<CSRepository> {
+	// TODO Maybe this should either be 1 remote at a time or correlate
+	//  response array entries to request entries
+	@lspHandler(MatchReposRequestType)
+	async matchRepos(request: MatchReposRequest): Promise<MatchReposResponse> {
+		const knownRepos = await this.get();
+		const foundRepos: CSRepository[] = [];
+		for (const repo of request.repos) {
+			for (const remote of repo.remotes) {
+				const lowerRemote = remote.toLocaleLowerCase();
+				const found = knownRepos.repos.find(_ =>
+					_.remotes.map(_ => _.normalizedUrl.toLocaleLowerCase()).includes(lowerRemote)
+				);
+				if (found) {
+					foundRepos.push(found);
+					break;
+				}
+			}
+		}
+		return {
+			repos: foundRepos,
+		};
+	}
+
+	async getById(id: string): Promise<CSRepository | undefined> {
 		const response = await this.get();
-		return response.repos.find(repo => repo.id === id)!!;
+		return response.repos.find(repo => repo.id === id);
 	}
 }

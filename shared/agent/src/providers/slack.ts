@@ -185,10 +185,9 @@ export class SlackProvider
 			if (request.remotes == undefined) {
 				request.remotes = flatten(
 					await Promise.all(
-						request.codemark.markers.map(async m => {
-							return (await SessionContainer.instance().repos.getById(m.repoId)).remotes.map(
-								r => r.url
-							);
+						request.codemark.markers.flatMap(async m => {
+							const repo = await SessionContainer.instance().repos.getById(m.repoId);
+							return repo?.remotes.map(r => r.url) ?? [];
 						})
 					)
 				);

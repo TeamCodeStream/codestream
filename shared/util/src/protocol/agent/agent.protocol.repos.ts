@@ -38,7 +38,7 @@ export interface GetRepoRequest {
 }
 
 export interface GetRepoResponse {
-	repo: CSRepository;
+	repo?: CSRepository;
 }
 
 export const GetRepoRequestType = new RequestType<GetRepoRequest, GetRepoResponse, void, void>(
