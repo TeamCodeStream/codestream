@@ -38,6 +38,7 @@ import { mapNRErrorResponse, findEntityTypeDisplayName } from "../utils";
 import { ContextLogger } from "../../contextLogger";
 import { Disposable } from "../../../system/disposable";
 import { getRepoName } from "@codestream/utils/system/string";
+import { gate } from "../../../system/decorators/gate";
 
 const REQUIRED_AGENT_VERSIONS = {
 	go: "3.24.0",
@@ -57,7 +58,7 @@ export class ReposProvider implements Disposable {
 	private _observabilityReposCache = new Cache<GetObservabilityReposResponse>({
 		defaultTtl: 30 * 1000,
 	});
-	private _memoizedBuildRepoRemoteVariants: ((remotes: string[]) => Promise<string[]>) &
+	private readonly _memoizedBuildRepoRemoteVariants: ((remotes: string[]) => Promise<string[]>) &
 		MemoizedFunction;
 
 	constructor(
@@ -97,10 +98,11 @@ export class ReposProvider implements Disposable {
 	 *
 	 * @param {GetObservabilityReposRequest} request
 	 * @return {*}
-	 * @memberof NewRelicProvider
+	 * @memberof ReposProvider
 	 */
 	@lspHandler(GetObservabilityReposRequestType)
 	@log()
+	@gate() // Give the cache a chance to work - otherwise calls come at the same time and cache is never hit
 	async getObservabilityRepos(
 		request: GetObservabilityReposRequest
 	): Promise<GetObservabilityReposResponse> {
@@ -121,9 +123,8 @@ export class ReposProvider implements Disposable {
 			const reposResponse = await scm.getRepos({ includeRemotes: true });
 			let filteredRepos: ReposScm[] | undefined = reposResponse?.repositories;
 			if (request?.filters?.length) {
-				// const repoIds = request.filters.map(_ => _.repoId); // TODO fix filter? Maybe separate method getById?
-				// filteredRepos = reposResponse.repositories?.filter(r => r.id && repoIds.includes(r.id))!;
-				filteredRepos = reposResponse.repositories;
+				const repoIds = request.filters.map(_ => _.repoId);
+				filteredRepos = reposResponse.repositories?.filter(r => r.id && repoIds.includes(r.id));
 			}
 
 			if (!filteredRepos || !filteredRepos.length) return response;
@@ -417,7 +418,7 @@ export class ReposProvider implements Disposable {
 	 * @param {string[]} remotes
 	 * @param {boolean} force
 	 * @return {*}  {(Promise<RepoEntitiesByRemotesResponse | undefined >)}
-	 * @memberof NewRelicProvider
+	 * @memberof ReposProvider
 	 */
 	async findRepositoryEntitiesByRepoRemotes(
 		remotes: string[],
@@ -630,7 +631,7 @@ export class ReposProvider implements Disposable {
 	 * @param {boolean} skipRepoFetch - Don't error out, let it be skipped
 	 * @param {boolean} force - Don't use cache, force live request
 	 * @return {*}
-	 * @memberof NewRelicProvider
+	 * @memberof ReposProvider
 	 */
 	async getObservabilityEntityRepos(
 		repoId: string,

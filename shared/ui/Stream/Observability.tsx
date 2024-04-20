@@ -407,7 +407,6 @@ export const Observability = React.memo((props: Props) => {
 	};
 
 	function setExpandedEntityUserPref(repoId: string, entityGuid: string | undefined) {
-		// console.debug(`etCurrentEntityGuid and activeO11y ${entityGuid} ${repoId}`);
 		dispatch(setCurrentEntityGuid(entityGuid!));
 		dispatch(setUserPreference({ prefPath: ["activeO11y", repoId], value: entityGuid }));
 	}
@@ -607,9 +606,6 @@ export const Observability = React.memo((props: Props) => {
 					: _currentEntityAccounts[0].entityGuid;
 
 				if (_expandedEntity !== entityGuid) {
-					// console.debug(
-					// 	`uesEffect _expandedEntity ${JSON.stringify({ _expandedEntity, entityGuid })}`
-					// );
 					setExpandedEntity(entityGuid);
 					if (entityGuid === demoEntityId) {
 						doSetDemoMode(true);
@@ -1001,23 +997,16 @@ export const Observability = React.memo((props: Props) => {
 			const collapsed = currentExpandedEntityGuid && currentExpandedEntityGuid === entityGuid;
 
 			if (!collapsed) {
-				// console.debug(
-				// 	`handleClickTopLevelService setExpandedEntityUserPref ${currentRepoId} ${entityGuid}`
-				// );
 				setExpandedEntityUserPref(currentRepoId, entityGuid);
 			}
 		}
 
 		if (entityGuid === expandedEntity) {
-			// console.debug(
-			// 	`handleClickTopLevelService setExpandedEntity set <undefined> ${entityGuid} ${expandedEntity}`
-			// );
 			setExpandedEntity(undefined);
 		} else {
 			setTimeout(() => {
 				setPendingServiceClickedTelemetryCall(true);
 			}, 500);
-			// console.debug(`handleClickTopLevelService setExpandedEntity set to ${expandedEntity}`);
 			setExpandedEntity(entityGuid);
 			if (entityGuid === demoEntityId) {
 				doSetDemoMode(true);
@@ -1053,9 +1042,6 @@ export const Observability = React.memo((props: Props) => {
 	// Separate useEffect to prevent duplicate requests
 	useEffect(() => {
 		if (expandedEntity && currentRepoId) {
-      // console.debug(
-      // 	`useEffect setExpandedEntityUserPref dup requests ${currentRepoId} ${expandedEntity}`
-      // );
 			HostApi.instance.send(ServiceEntitiesViewedRequestType, {
 				teamId: derivedState.teamId,
 				entityId: expandedEntity,
@@ -1098,7 +1084,6 @@ export const Observability = React.memo((props: Props) => {
 				const _expandedEntity = userPrefExpanded
 					? userPrefExpanded
 					: _currentEntityAccounts[0].entityGuid;
-				// console.debug(`useEffect When current repo changes in IDE set to ${expandedEntity}`);
 				setExpandedEntity(_expandedEntity);
 				if (_expandedEntity === demoEntityId) {
 					doSetDemoMode(true);
@@ -1126,9 +1111,7 @@ export const Observability = React.memo((props: Props) => {
 			callObservabilityTelemetry();
 			// Expand top repo by default if no currentRepoId is set from editor context
 			setTimeout(() => {
-				// console.log(`setTimeout fired with`, currentRepoId, observabilityRepos);
 				if (!currentRepoId && !_isEmpty(observabilityRepos) && observabilityRepos[0]?.repoId) {
-					// console.log(`setTimeout setCurrentRepoId`, observabilityRepos[0].repoId);
 					setCurrentRepoId(observabilityRepos[0].repoId);
 				}
 			}, 2500);
@@ -1136,10 +1119,8 @@ export const Observability = React.memo((props: Props) => {
 	}, [loadingEntities, didMount, currentEntityAccounts]);
 
 	useEffect(() => {
-		// console.log(`useEffect repo fired`, { currentRepoId, observabilityRepos });
 		if (!_isEmpty(currentRepoId) && !_isEmpty(observabilityRepos)) {
 			const currentRepo = _head(observabilityRepos.filter(_ => _.repoId === currentRepoId));
-			// console.log(`useEffect repo assoc current repo ${JSON.stringify(currentRepo)}`);
 
 			// Show repo entity associator UI if needed
 			if (
@@ -1149,10 +1130,8 @@ export const Observability = React.memo((props: Props) => {
 					oe => oe?.repoId === currentRepo?.repoId && oe?.errors.length > 0
 				)
 			) {
-				// console.log(`setting setRepoForEntityAssociator to a thing`);
 				setRepoForEntityAssociator(currentRepo);
 			} else {
-				// console.log(`setting setRepoForEntityAssociator undefined`);
 				setRepoForEntityAssociator(undefined);
 			}
 
@@ -1214,10 +1193,6 @@ export const Observability = React.memo((props: Props) => {
 			if (!isRefreshing) {
 				const currentRepoId = repo.id || scmInfo?.scm?.repoId;
 
-				// console.debug(
-				// 	`o11y: currentRepoContext: setting currentRepoCallback currentRepo?.id: ${repo.id} scmInfo?.scm?.repoId: ${scmInfo?.scm?.repoId}`
-				// );
-				// console.debug(`onFileChanged setCurrentRepoId ${currentRepoId}`);
 				setCurrentRepoId(currentRepoId);
 				dispatch(
 					setUserPreference({
@@ -1258,12 +1233,6 @@ export const Observability = React.memo((props: Props) => {
 			);
 			await dispatch(setEditorContext({ scmInfo }));
 			if (currentRepo) {
-				// console.debug(
-				// 	`file opened from different repo setCurrentRepo ${JSON.stringify({
-				// 		currentRepo,
-				// 		scmInfo,
-				// 	})}`
-				// );
 				setCurrentRepo(currentRepo, scmInfo);
 			}
 		}
@@ -1294,7 +1263,6 @@ export const Observability = React.memo((props: Props) => {
 				const repoIsCollapsed = currentRepoId !== repo.repoId;
 				const isLoadingCurrentRepo =
 					loadingEntities === repo.repoId || (isRefreshing && !repoIsCollapsed);
-				// console.debug(`renderState ${JSON.stringify({hasEntities, repoIsCollapsed, repoForEntityAssociator, isLoadingCurrentRepo})}`)
 				return (
 					<>
 						<PaneNode>
@@ -1333,10 +1301,8 @@ export const Observability = React.memo((props: Props) => {
 									if (repo.repoId === currentRepoId) {
 										e.preventDefault();
 										e.stopPropagation();
-										// console.debug(`PaneNodeName onClick setCurrentRepoId <undefined>`);
 										setCurrentRepoId(undefined);
 									} else {
-										// console.debug(`PaneNodeName onClick setCurrentRepoId ${repo.repoId}`);
 										setCurrentRepoId(repo.repoId);
 										setLoadingEntities(repo.repoId);
 									}
@@ -1665,9 +1631,6 @@ export const Observability = React.memo((props: Props) => {
 																	event_type: "response",
 																	meta_data: "first_association: false",
 																});
-																// console.debug(
-																// 	`ObservabilityAddAdditionalService setExpandedEntity ${e?.entityGuid}`
-																// );
 																setExpandedEntity(e?.entityGuid);
 															}}
 															remote={currentObsRepo.repoRemote}
@@ -1705,10 +1668,6 @@ export const Observability = React.memo((props: Props) => {
 																meta_data: "first_association: true",
 															});
 															_useDidMount(true);
-															// console.debug(
-															// 	`EntityAssociator onSuccess setExpandedEntity ${e?.entityGuid}`
-															// );
-															setExpandedEntity(e?.entityGuid);
 														}}
 														remote={repoForEntityAssociator.repoRemote}
 														remoteName={repoForEntityAssociator.repoName}
