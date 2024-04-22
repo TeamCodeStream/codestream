@@ -1,5 +1,7 @@
 import {
 	CodeBlock,
+	CreateCodeErrorRequest,
+	CreateShareableCodeErrorRequest,
 	CSAsyncGrokError,
 	CSGrokStream,
 	DidResolveStackTraceLineNotification,
@@ -22,7 +24,6 @@ import {
 	_updateCodeErrors,
 	addCodeErrors,
 	handleDirectives,
-	NewCodeErrorAttributes,
 	PENDING_CODE_ERROR_ID_FORMAT,
 	PENDING_CODE_ERROR_ID_PREFIX,
 	removeCodeError,
@@ -98,20 +99,10 @@ export interface CreateCodeErrorError {
 	message?: string;
 }
 
-export const createCodeError = (attributes: NewCodeErrorAttributes) => async dispatch => {
+export const createCodeError = (request: CreateShareableCodeErrorRequest) => async dispatch => {
 	// console.debug("createCodeError", attributes);
 	try {
-		const response = await codeErrorsApi.createShareableCodeError({
-			attributes,
-			entryPoint: attributes.entryPoint,
-			addedUsers: attributes.addedUsers,
-			replyPost: attributes.replyPost,
-			codeBlock: attributes.codeBlock,
-			language: attributes.language,
-			analyze: attributes.analyze,
-			reinitialize: attributes.reinitialize,
-			parentPostId: attributes.parentPostId,
-		});
+		const response = await codeErrorsApi.createShareableCodeError(request);
 		if (response.codeError) {
 			dispatch(addCodeErrors([response.codeError]));
 			dispatch(addStreams([response.stream]));
@@ -386,7 +377,7 @@ export const upgradePendingCodeError =
 				// console.debug("===--- PENDING_CODE_ERROR_ID_PREFIX ===---")
 				const { accountId, objectId, objectType, title, text, stackTraces, objectInfo, postId } =
 					existingCodeError;
-				const newCodeError: NewCodeErrorAttributes = {
+				const newCodeError: CreateCodeErrorRequest = {
 					accountId,
 					objectId,
 					objectType,

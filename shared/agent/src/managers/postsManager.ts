@@ -661,16 +661,11 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	async createSharingCodeErrorPost(
 		request: CreateShareableCodeErrorRequest
 	): Promise<CreateShareableCodeErrorResponse> {
-		const codeErrorRequest: CreateCodeErrorRequest = {
-			...request.attributes,
-			markers: [],
-		};
-
 		let codeError: CSCodeError | undefined;
 		const stream = await SessionContainer.instance().streams.getTeamStream();
 
 		const response = await this.session.api.createPost({
-			codeError: codeErrorRequest,
+			codeError: request,
 			text: "",
 			streamId: stream.id,
 			dontSendEmail: false,

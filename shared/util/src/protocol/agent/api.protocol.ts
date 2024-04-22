@@ -1,5 +1,5 @@
 "use strict";
-import { CodeStreamEnvironmentInfo, EnvironmentHost } from "./agent.protocol";
+import { CodeBlock, CodeStreamEnvironmentInfo, EnvironmentHost } from "./agent.protocol";
 import { RepoScmStatus } from "./agent.protocol.scm";
 import {
 	Attachment,
@@ -690,19 +690,44 @@ export interface CSCreateCodeErrorResponse {
 }
 
 export interface CSCreateCodeErrorRequest {
-	teamId: string;
-	stackTraces: CSStackTraceInfo[];
-	providerUrl?: string;
-	streamId?: string;
-	postId?: string;
+	accountId?: number;
+	objectId?: string;
 	parentPostId?: string;
-	status?: string;
+	objectType?: "errorGroup";
+	objectInfo?: {
+		repoId: string;
+		remote: string;
+		accountId: string;
+		entityName: string;
+		hasRelatedRepos: boolean;
+	};
+	title: string;
+	text?: string;
+	stackTraces: CSStackTraceInfo[];
 	assignees?: string[];
-	followerIds?: string[];
-	codeAuthorIds?: string[];
+	addedUsers?: string[];
+	entryPoint?: string;
+	mentionedUserIds?: string[];
+	replyPost?: {
+		text: string;
+		mentionedUserIds?: string[];
+	};
+	codeBlock?: CodeBlock;
+	language?: string;
+	analyze: boolean;
+	reinitialize: boolean;
+	// providerUrl?: string;
+	// parentPostId?: string;
+	// providerUrl?: string;
+	// streamId?: string;
+	// postId?: string;
+	// parentPostId?: string;
+	// status?: string;
+	// followerIds?: string[];
+	// codeAuthorIds?: string[];
 
 	markers?: CSCreateMarkerRequest[];
-	remotes?: string[];
+	// remotes?: string[];
 }
 
 export interface CSCreateCodeErrorResponse {

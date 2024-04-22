@@ -1052,11 +1052,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 			};
 		}
 
-		return this.post<CSCreatePostRequest, CSCreatePostResponse>(
+		const result = this.post<CSCreatePostRequest, CSCreatePostResponse>(
 			`/posts`,
 			{ ...request, teamId: this.teamId },
 			tokenHolder.accessToken
 		);
+		return result;
 	}
 
 	@log()

@@ -1,11 +1,10 @@
 import {
-	CodeBlock,
 	CSAsyncGrokError,
 	DeleteCodeErrorRequestType,
 	GetCodeErrorRequestType,
 	NewRelicErrorGroup,
 } from "@codestream/protocols/agent";
-import { CSCodeError, CSStackTraceInfo } from "@codestream/protocols/api";
+import { CSCodeError } from "@codestream/protocols/api";
 import { logError } from "@codestream/webview/logger";
 import { HostApi } from "@codestream/webview/webview-api";
 import { action } from "../common";
@@ -46,29 +45,6 @@ export const setDemoMode = (enabled: boolean) =>
 	action(CodeErrorsActionsTypes.SetDemoMode, enabled);
 
 export const resetNrAi = () => action(CodeErrorsActionsTypes.ResetNrAi);
-
-export interface NewCodeErrorAttributes {
-	accountId?: number;
-	objectId?: string;
-	objectType?: "errorGroup";
-	objectInfo?: any;
-	title: string;
-	text?: string;
-	stackTraces: CSStackTraceInfo[];
-	assignees?: string[];
-	addedUsers?: string[];
-	entryPoint?: string;
-	replyPost?: {
-		text: string;
-		mentionedUserIds?: string[];
-	};
-	providerUrl?: string;
-	codeBlock?: CodeBlock;
-	language?: string;
-	analyze: boolean;
-	reinitialize: boolean;
-	parentPostId?: string;
-}
 
 export const _deleteCodeError = (id: string) => action(CodeErrorsActionsTypes.Delete, id);
 

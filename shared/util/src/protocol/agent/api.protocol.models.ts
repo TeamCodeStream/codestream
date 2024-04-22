@@ -394,7 +394,14 @@ export interface CSCodeError extends CSEntity {
 	resolvedAt?: number;
 	objectId?: string;
 	objectType?: "errorGroup";
-	objectInfo?: { [key: string]: string | boolean };
+	objectInfo?: {
+		repoId: string;
+		remote: string;
+		accountId: string;
+		entityName: string;
+		hasRelatedRepos: boolean;
+		entityId: string;
+	};
 	accountId?: number;
 	traceId?: string;
 }

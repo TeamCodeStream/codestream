@@ -25,10 +25,7 @@ export interface CodeErrorPlus extends CSCodeError {
 	errorGroup?: NewRelicErrorGroup;
 }
 
-export interface CreateCodeErrorRequest extends Omit<CSCreateCodeErrorRequest, "teamId"> {
-	markers?: CreateMarkerRequest[];
-	entryPoint?: string;
-}
+export type CreateCodeErrorRequest = CSCreateCodeErrorRequest;
 
 export interface CreateCodeErrorResponse {
 	codeError: CSCodeError;
@@ -44,8 +41,6 @@ export const CreateCodeErrorRequestType = new RequestType<
 	void
 >("codestream/codeErrors/create");
 
-export type ShareableCodeErrorAttributes = CreateCodeErrorRequest;
-
 export type CodeBlock = {
 	uri: string;
 	code: string;
@@ -53,18 +48,7 @@ export type CodeBlock = {
 	// scm?: CodeBlockSource;
 };
 
-export interface CreateShareableCodeErrorRequest {
-	attributes: ShareableCodeErrorAttributes;
-	entryPoint?: string;
-	mentionedUserIds?: string[];
-	addedUsers?: string[];
-	replyPost?: { text: string; mentionedUserIds?: string[] };
-	codeBlock?: CodeBlock;
-	language?: string;
-	analyze: boolean;
-	reinitialize: boolean;
-	parentPostId?: string;
-}
+export type CreateShareableCodeErrorRequest = CreateCodeErrorRequest;
 
 export interface CreateShareableCodeErrorResponse {
 	codeError: CodeErrorPlus;

@@ -4,6 +4,7 @@ import {
 	CodemarkPlus,
 	CreateChannelStreamRequestType,
 	CreateChannelStreamResponse,
+	CreateCodeErrorRequest,
 	CreateDirectStreamRequestType,
 	CreateDirectStreamResponse,
 	CreatePostRequestType,
@@ -57,7 +58,6 @@ import { createAppAsyncThunk } from "@codestream/webview/store/helper";
 import { createReview } from "@codestream/webview/store/reviews/thunks";
 import { logError } from "../logger";
 import { CodeStreamState } from "../store";
-import { NewCodeErrorAttributes } from "../store/codeErrors/actions";
 import {
 	isLegacyNewCodemarkAttributes,
 	NewCodemarkAttributes,
@@ -293,11 +293,11 @@ export const createPostAndReview =
 	};
 
 export const createPostAndCodeError =
-	(attributes: NewCodeErrorAttributes, entryPoint?: PostEntryPoint) =>
+	(request: CreateCodeErrorRequest, entryPoint?: PostEntryPoint) =>
 	async (dispatch, getState: () => CodeStreamState) => {
 		return dispatch(
 			createCodeError({
-				...attributes,
+				...request,
 				entryPoint: entryPoint,
 			})
 		);
