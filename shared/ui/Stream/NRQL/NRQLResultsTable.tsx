@@ -3,6 +3,7 @@ import { NRQLResult } from "@codestream/protocols/agent";
 import { GridWindow } from "../GridWindow";
 import copy from "copy-to-clipboard";
 import Icon from "../Icon";
+import { isEmpty as _isEmpty } from "lodash-es";
 
 const MIN_COL_WIDTH = 140;
 const MAX_COL_WIDTH = 400;
@@ -81,21 +82,23 @@ export const NRQLResultsTable = (props: Props) => {
 						<div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
 							{value}
 						</div>
-						{showCopyIcon[0] === columnIndex && showCopyIcon[1] === rowIndex && (
-							<Icon
-								title="Copy"
-								placement="bottom"
-								name="copy"
-								className="clickable icon"
-								style={{
-									position: "absolute",
-									right: "0",
-									top: "3px",
-									background: "var(--app-background-color)",
-								}}
-								onClick={e => copy(value)}
-							/>
-						)}
+						{showCopyIcon[0] === columnIndex &&
+							showCopyIcon[1] === rowIndex &&
+							!_isEmpty(value) && (
+								<Icon
+									title="Copy"
+									placement="bottom"
+									name="copy"
+									className="clickable icon"
+									style={{
+										position: "absolute",
+										right: "0",
+										top: "3px",
+										background: "var(--app-background-color)",
+									}}
+									onClick={e => copy(value)}
+								/>
+							)}
 					</div>
 				) : (
 					<div
