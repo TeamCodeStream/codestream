@@ -3,6 +3,7 @@ import { NRQLResult } from "@codestream/protocols/agent";
 import { GridWindow } from "../GridWindow";
 import copy from "copy-to-clipboard";
 import Icon from "../Icon";
+import Tooltip from "../Tooltip";
 import { isEmpty as _isEmpty } from "lodash-es";
 
 const MIN_COL_WIDTH = 140;
@@ -79,9 +80,18 @@ export const NRQLResultsTable = (props: Props) => {
 							position: "relative",
 						}}
 					>
-						<div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-							{value}
-						</div>
+						<Tooltip placement="top" title={value} delay={2}>
+							<div
+								style={{
+									cursor: "default",
+									whiteSpace: "nowrap",
+									overflow: "hidden",
+									textOverflow: "ellipsis",
+								}}
+							>
+								{value}
+							</div>
+						</Tooltip>
 						{showCopyIcon[0] === columnIndex &&
 							showCopyIcon[1] === rowIndex &&
 							!_isEmpty(value) && (
