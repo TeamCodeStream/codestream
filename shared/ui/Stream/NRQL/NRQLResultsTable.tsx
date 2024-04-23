@@ -1,13 +1,15 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { NRQLResult } from "@codestream/protocols/agent";
 import { GridWindow } from "../GridWindow";
+import copy from "copy-to-clipboard";
+import Icon from "../Icon";
 
 const MIN_COL_WIDTH = 140;
 const MAX_COL_WIDTH = 400;
 const MIN_ROW_HEIGHT = 100;
 
 const cellStyle = {
-	padding: "4px",
+	padding: "5px 4px 4px 4px",
 	borderRight: "1px solid var(--base-border-color)",
 	borderBottom: "1px solid var(--base-border-color)",
 	fontFamily: "'Courier New', Courier, monospace",
@@ -20,6 +22,9 @@ interface Props {
 }
 
 export const NRQLResultsTable = (props: Props) => {
+	// [columnIndex, rowIndex]]
+	const [showCopyIcon, setShowCopyIcon] = useState<[number, number][]>([]);
+
 	const hasKey = (obj, key) => {
 		return obj.hasOwnProperty(key);
 	};
@@ -36,7 +41,12 @@ export const NRQLResultsTable = (props: Props) => {
 
 	const Cell = ({ columnIndex, rowIndex, style }) => {
 		const rowArray = Object.values(gridData.resultsWithHeaders[rowIndex]);
-		const value = rowArray[columnIndex];
+		let value: string;
+		if (typeof rowArray[columnIndex] === "string") {
+			value = rowArray[columnIndex] as string;
+		} else {
+			value = String(rowArray[columnIndex]);
+		}
 
 		//@TODO - for later use, columnName will be "timestamp" or "name", etc.
 		// const columnNames = Object.keys(gridData.resultsWithHeaders[rowIndex]);
@@ -54,12 +64,38 @@ export const NRQLResultsTable = (props: Props) => {
 					borderTop: rowIndex === 0 ? "1px solid var(--base-border-color)" : "none",
 					color: rowIndex === 0 ? "var(--text-color-highlight)" : "default",
 					fontWeight: rowIndex === 0 ? "bold" : "default",
-					wordBreak: rowIndex === 0 ? "break-word" : "normal",
 				}}
+				onMouseEnter={() => setShowCopyIcon([columnIndex, rowIndex])}
+				onMouseLeave={() => setShowCopyIcon([])}
 			>
 				{rowIndex !== 0 ? (
-					<div style={{ display: "flex", alignItems: "center", height: "100%" }}>
-						<div style={{ wordBreak: "break-word" }}>{value}</div>
+					<div
+						style={{
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "space-between",
+							height: "100%",
+							position: "relative",
+						}}
+					>
+						<div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+							{value}
+						</div>
+						{showCopyIcon[0] === columnIndex && showCopyIcon[1] === rowIndex && (
+							<Icon
+								title="Copy"
+								placement="bottom"
+								name="copy"
+								className="clickable icon"
+								style={{
+									position: "absolute",
+									right: "0",
+									top: "3px",
+									background: "var(--app-background-color)",
+								}}
+								onClick={e => copy(value)}
+							/>
+						)}
 					</div>
 				) : (
 					<div
@@ -97,12 +133,8 @@ export const NRQLResultsTable = (props: Props) => {
 	})();
 
 	const calculateRowHeights = rowCalcData => {
-		return rowCalcData.map(([index, longestLength, columnWidthValue]) => {
-			let lengthOfString = longestLength * 9;
-			const numLines = Math.ceil(lengthOfString / columnWidthValue);
-			const lineHeight = 22;
-			const totalHeight = numLines * lineHeight;
-			return totalHeight;
+		return rowCalcData.map(() => {
+			return 35;
 		});
 	};
 
