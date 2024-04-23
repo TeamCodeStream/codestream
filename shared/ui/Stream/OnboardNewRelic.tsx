@@ -206,7 +206,7 @@ export const OnboardNewRelic = React.memo(function OnboardNewRelic() {
 				});
 				if (!reposResponse.error) {
 					const knownRepo = (reposResponse.repositories || []).find(repo => {
-						return repo.id && repo.projectType !== RepoProjectType.Unknown;
+						return repo.id;
 					});
 					if (knownRepo) {
 						dispatch(
