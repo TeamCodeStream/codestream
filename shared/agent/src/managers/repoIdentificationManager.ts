@@ -48,7 +48,13 @@ export class RepoIdentificationManager {
 	}
 
 	private async repoIsJava(repo: ReposScm, files: string[]): Promise<boolean> {
-		return await this._findFileWithExtension(repo.path, ".java", files, 15, 0);
+		return await this._findFile(
+			repo.path,
+			["pom.xml", "build.gradle", "build.kts", "build.xml"],
+			files,
+			2,
+			0
+		);
 	}
 
 	// TODO consolidate with other method
@@ -145,6 +151,32 @@ export class RepoIdentificationManager {
 				}
 			} else if (path.extname(filePath) === extension) {
 				return true;
+			}
+		}
+		return false;
+	}
+	private async _findFile(
+		basePath: string,
+		fileNames: string[],
+		files: string[],
+		maxDepth: number,
+		depth: number
+	): Promise<boolean> {
+		for (const file of files) {
+			const filePath = path.join(basePath, file);
+			const isDir = (await fsPromises.stat(filePath)).isDirectory();
+			if (isDir) {
+				if (depth < maxDepth) {
+					const dirPath = path.join(basePath, file);
+					const subFiles = await fsPromises.readdir(dirPath);
+					return await this._findFile(dirPath, fileNames, subFiles, maxDepth, depth + 1);
+				}
+			} else {
+				for (const fileName of fileNames) {
+					if (path.basename(filePath) === fileName) {
+						return true;
+					}
+				}
 			}
 		}
 		return false;
