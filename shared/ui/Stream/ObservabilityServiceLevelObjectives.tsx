@@ -1,13 +1,11 @@
 import { ServiceLevelObjectiveResult } from "@codestream/protocols/agent";
 import React, { useState } from "react";
-import { useAppSelector, useAppDispatch } from "../utilities/hooks";
-import { CodeStreamState } from "@codestream/webview/store";
+import { useAppDispatch } from "../utilities/hooks";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import Tooltip from "@codestream/webview/Stream/Tooltip";
 import { HostApi } from "@codestream/webview/webview-api";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
-import { setUserPreference } from "./actions";
 
 interface Props {
 	serviceLevelObjectives: ServiceLevelObjectiveResult[];
@@ -60,17 +58,7 @@ export const ObjectiveRow = (props: {
 export const ObservabilityServiceLevelObjectives = React.memo((props: Props) => {
 	const dispatch = useAppDispatch();
 
-	const derivedState = useAppSelector((state: CodeStreamState) => {
-		const { preferences } = state;
-
-		const serviceLevelObjectivesIsExpanded = preferences?.serviceLevelObjectivesIsExpanded ?? false;
-
-		return {
-			serviceLevelObjectivesIsExpanded,
-		};
-	});
-
-	const [expanded, setExpanded] = useState<boolean>(false);
+	const [isExpanded, setIsExpanded] = useState<boolean>(false);
 	const { errorMsg, serviceLevelObjectives } = props;
 
 	const unmetObjectives = serviceLevelObjectives.filter(v => {
@@ -83,14 +71,7 @@ export const ObservabilityServiceLevelObjectives = React.memo((props: Props) => 
 			: `${unmetObjectives?.length} non-compliant SLOs`;
 
 	const handleRowOnClick = () => {
-		const { serviceLevelObjectivesIsExpanded } = derivedState;
-
-		dispatch(
-			setUserPreference({
-				prefPath: ["serviceLevelObjectivesIsExpanded"],
-				value: !serviceLevelObjectivesIsExpanded,
-			})
-		);
+		setIsExpanded(!isExpanded);
 	};
 
 	return (
@@ -102,8 +83,8 @@ export const ObservabilityServiceLevelObjectives = React.memo((props: Props) => 
 				className={"pr-row"}
 				onClick={() => handleRowOnClick()}
 			>
-				{derivedState.serviceLevelObjectivesIsExpanded && <Icon name="chevron-down-thin" />}
-				{!derivedState.serviceLevelObjectivesIsExpanded && <Icon name="chevron-right-thin" />}
+				{isExpanded && <Icon name="chevron-down-thin" />}
+				{!isExpanded && <Icon name="chevron-right-thin" />}
 				<span style={{ marginLeft: "2px", marginRight: "5px" }}>Service Level Objectives</span>
 				{showWarningIcon && (
 					<Icon
@@ -116,7 +97,7 @@ export const ObservabilityServiceLevelObjectives = React.memo((props: Props) => 
 				)}
 				{errorMsg && <Icon name="alert" className="alert" title={errorMsg} delay={1} />}
 			</Row>
-			{derivedState.serviceLevelObjectivesIsExpanded && (
+			{isExpanded && (
 				<>
 					{serviceLevelObjectives.map((slo, index) => {
 						return (

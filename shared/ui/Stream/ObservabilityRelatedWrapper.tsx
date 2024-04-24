@@ -3,9 +3,6 @@ import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
 import { ObservabilityRelatedCalledBy } from "./ObservabilityRelatedCalledBy";
 import { ObservabilityRelatedCalls } from "./ObservabilityRelatedCalls";
-import { setUserPreference } from "./actions";
-import { useAppSelector, useAppDispatch } from "../utilities/hooks";
-import { CodeStreamState } from "@codestream/webview/store";
 
 interface Props {
 	accountId: number;
@@ -14,28 +11,10 @@ interface Props {
 }
 
 export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
-	const [expanded, setExpanded] = useState<boolean>(false);
-	const dispatch = useAppDispatch();
-
-	const derivedState = useAppSelector((state: CodeStreamState) => {
-		const { preferences } = state;
-
-		const relatedServicesIsExpanded = preferences?.relatedServicesIsExpanded ?? false;
-
-		return {
-			relatedServicesIsExpanded,
-		};
-	});
+	const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
 	const handleRowOnClick = () => {
-		const { relatedServicesIsExpanded } = derivedState;
-
-		dispatch(
-			setUserPreference({
-				prefPath: ["relatedServicesIsExpanded"],
-				value: !relatedServicesIsExpanded,
-			})
-		);
+		setIsExpanded(!isExpanded);
 	};
 
 	return (
@@ -47,13 +26,13 @@ export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 				className={"pr-row"}
 				onClick={() => handleRowOnClick()}
 			>
-				{derivedState.relatedServicesIsExpanded && <Icon name="chevron-down-thin" />}
-				{!derivedState.relatedServicesIsExpanded && <Icon name="chevron-right-thin" />}
+				{isExpanded && <Icon name="chevron-down-thin" />}
+				{!isExpanded && <Icon name="chevron-right-thin" />}
 				<span data-testid={`related-services-${props.entityGuid}`} style={{ marginLeft: "2px" }}>
 					Related Services
 				</span>
 			</Row>
-			{derivedState.relatedServicesIsExpanded && (
+			{isExpanded && (
 				<>
 					<ObservabilityRelatedCalls
 						accountId={props.accountId}
