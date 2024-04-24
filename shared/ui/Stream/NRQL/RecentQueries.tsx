@@ -11,7 +11,7 @@ const overrideStyles = {
 	menu: provided => ({
 		...provided,
 		// Set the desired width here
-		width: "400px",
+		width: "80vw",
 		// align the menu to the right
 		right: "0",
 		left: "auto",
