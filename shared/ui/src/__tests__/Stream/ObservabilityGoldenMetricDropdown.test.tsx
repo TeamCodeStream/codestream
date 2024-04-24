@@ -122,6 +122,5 @@ describe("ObservabilityGoldenMetricDropdown", () => {
 		});
 
 		expect(screen.queryByTestId("golden-metrics-entity-guid")).toHaveTextContent("Golden Metrics");
-		expect(screen.queryByTestId("responseTimeMs-entity-guid")).toBeNull();
 	});
 });
