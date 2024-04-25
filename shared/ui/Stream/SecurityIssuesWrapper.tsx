@@ -14,7 +14,7 @@ import styled from "styled-components";
 import { Link } from "@codestream/webview/Stream/Link";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { HostApi } from "@codestream/webview/webview-api";
-import { ErrorRow } from "@codestream/webview/Stream/Observability";
+import { ErrorRow } from "@codestream/webview/Stream/ErrorRow";
 import { MarkdownText } from "@codestream/webview/Stream/MarkdownText";
 import { Modal } from "@codestream/webview/Stream/Modal";
 import { InlineMenu, MenuItem } from "@codestream/webview/src/components/controls/InlineMenu";

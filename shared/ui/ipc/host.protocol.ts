@@ -2,11 +2,13 @@ import {
 	ApiVersionCompatibility,
 	Capabilities,
 	CodeStreamEnvironmentInfo,
+	ObservabilityAnomaly,
 	ThirdPartyProviders,
 	Unreads,
 	VersionCompatibility,
 } from "@codestream/protocols/agent";
 import {
+	CLMSettings,
 	CSApiCapabilities,
 	CSCompany,
 	CSMarker,
@@ -320,7 +322,7 @@ export enum ViewColumn {
 }
 
 export interface OpenEditorViewNotification {
-	panel: "logs" | "nrql" | "whatsnew";
+	panel: "anomaly" | "logs" | "nrql" | "whatsnew";
 	title: string;
 	entryPoint: // logs
 	| "global_nav"
@@ -347,6 +349,13 @@ export interface OpenEditorViewNotification {
 	query?: string;
 	hash?: string;
 	traceId?: string;
+	entityName?: string;
+	anomaly?: ObservabilityAnomaly;
+	clmSettings?: CLMSettings;
+	isProductionCloud?: boolean;
+	nrAiUserId?: string;
+	userId?: string;
+	demoMode?: boolean;
 }
 
 export const OpenEditorViewNotificationType = new NotificationType<

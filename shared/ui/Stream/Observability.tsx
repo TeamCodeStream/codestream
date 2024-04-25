@@ -27,7 +27,7 @@ import {
 	GetObservabilityAnomaliesRequestType,
 } from "@codestream/protocols/agent";
 import cx from "classnames";
-import { head as _head, isEmpty as _isEmpty } from "lodash-es";
+import { head as _head, isEmpty as _isEmpty, isNil as _isNil } from "lodash-es";
 import React, { useEffect, useMemo, useState } from "react";
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
@@ -68,6 +68,9 @@ import { Row } from "./CrossPostIssueControls/IssuesPane";
 import { EntityAssociator } from "./EntityAssociator";
 import Icon from "./Icon";
 import { Link } from "./Link";
+import { ObservabilityAddAdditionalService } from "./ObservabilityAddAdditionalService";
+import { ObservabilityErrorWrapper } from "./ObservabilityErrorWrapper";
+import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
 import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
 import { WarningBox } from "./WarningBox";
@@ -81,10 +84,7 @@ import {
 	setApiCurrentEntityId,
 	setApiCurrentRepoId,
 	setApiDemoMode,
-	setApiNrAiUserId,
-	setApiUserId,
 } from "@codestream/webview/store/codeErrors/api/apiResolver";
-import { getNrAiUserId } from "@codestream/webview/store/users/reducer";
 import { setDemoMode } from "@codestream/webview/store/codeErrors/actions";
 import { ObservabilityAddAdditionalService } from "./ObservabilityAddAdditionalService";
 import { ObservabilityErrorWrapper } from "./ObservabilityErrorWrapper";
@@ -174,15 +174,6 @@ const GenericCopy = styled.div`
 	margin: 5px 0 10px 0;
 `;
 
-const SubtleRight = styled.time`
-	color: var(--text-color-subtle);
-	font-weight: normal;
-	padding-left: 5px;
-
-	&.no-padding {
-		padding-left: 0;
-	}
-`;
 const RepoHeader = styled.span`
 	color: var(--text-color-highlight);
 	display: flex;
@@ -190,93 +181,6 @@ const RepoHeader = styled.span`
 `;
 
 type TelemetryState = "no_entities" | "no_services" | "services" | "Not Connected";
-
-export const ErrorRow = (props: {
-	title: string;
-	subtle?: string;
-	tooltip?: string;
-	timestamp?: number;
-	alternateSubtleRight?: string;
-	isLoading?: boolean;
-	url?: string;
-	onClick?: Function;
-	customPadding?: any;
-	icon?: "alert" | "thumbsup";
-	dataTestId?: string;
-}) => {
-	const ideName = useAppSelector((state: CodeStreamState) =>
-		encodeURIComponent(state.ide.name || "")
-	);
-	const nrAiUserId = useAppSelector(getNrAiUserId);
-	const userId = useAppSelector((state: CodeStreamState) => state.session.userId);
-	const demoMode = useAppSelector((state: CodeStreamState) => state.codeErrors.demoMode);
-
-	useMemo(() => {
-		if (nrAiUserId && demoMode.enabled) {
-			setApiNrAiUserId(nrAiUserId);
-		}
-	}, [nrAiUserId, demoMode.enabled]);
-
-	useMemo(() => {
-		if (userId && demoMode.enabled) {
-			setApiUserId(userId);
-		}
-	}, [userId, demoMode.enabled]);
-
-	return (
-		<Row
-			className="pr-row error-row"
-			onClick={e => {
-				props.onClick && props.onClick();
-			}}
-			style={{ padding: props.customPadding ? props.customPadding : "0 10px 0 40px" }}
-			data-testid={props.dataTestId}
-		>
-			<div>
-				{props.isLoading ? (
-					<Icon className="spin" name="sync" />
-				) : props.icon === "thumbsup" ? (
-					"👍"
-				) : (
-					<Icon name="alert" />
-				)}
-			</div>
-			<div>
-				<Tooltip title={props.tooltip} delay={1} placement="bottom">
-					<div>
-						<span>{props.title}</span>
-						{props.subtle && <span className="subtle-tight"> {props.subtle}</span>}
-					</div>
-				</Tooltip>
-			</div>
-			<div className="icons">
-				{props.url && (
-					<span
-						onClick={e => {
-							e.preventDefault();
-							e.stopPropagation();
-							HostApi.instance.track("codestream/newrelic_link clicked", {
-								meta_data: "destination: error_group",
-								meta_data_2: `codestream_section: error`,
-								event_type: "click",
-							});
-							HostApi.instance.send(OpenUrlRequestType, {
-								url: `${props.url}&utm_source=codestream&utm_medium=ide-${ideName}&utm_campaign=error_group_link`,
-							});
-						}}
-					>
-						<Icon name="globe" title="View on New Relic" placement="bottomLeft" delay={1} />
-					</span>
-				)}
-
-				{props.timestamp && <Timestamp time={props.timestamp} relative abbreviated />}
-				{!props.timestamp && props.alternateSubtleRight && (
-					<SubtleRight>{props.alternateSubtleRight}</SubtleRight>
-				)}
-			</div>
-		</Row>
-	);
-};
 
 // EXT for Otel, INFRA for AWSLambda
 const ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS = ["APM", "BROWSER"];

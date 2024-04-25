@@ -2,13 +2,16 @@ import React, { useMemo, useState } from "react";
 import { shallowEqual } from "react-redux";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { CodeStreamState } from "../store";
-import { ErrorRow } from "./Observability";
+import { ErrorRow } from "./ErrorRow";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import { HostApi } from "@codestream/webview/webview-api";
-import { EditorRevealSymbolRequestType } from "@codestream/protocols/webview";
-import { WebviewPanels } from "@codestream/protocols/api";
 import {
-	openPanel,
+	EditorRevealSymbolRequestType,
+	IdeNames,
+	OpenEditorViewNotificationType,
+} from "@codestream/protocols/webview";
+import { CLMSettings } from "@codestream/protocols/api";
+import {
 	setCurrentObservabilityAnomaly,
 } from "@codestream/webview/store/context/actions";
 import { closeAllPanels } from "@codestream/webview/store/context/thunks";
@@ -22,6 +25,7 @@ import {
 import Icon from "./Icon";
 import styled from "styled-components";
 import { isEmpty as _isEmpty } from "lodash-es";
+import { getNrAiUserId } from "@codestream/webview/store/users/reducer";
 
 interface Props {
 	accountId: number;
@@ -62,6 +66,8 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 		const clmSettings = state.preferences.clmSettings || {};
 		return {
 			clmSettings,
+			isProductionCloud: state.configs.isProductionCloud,
+			sessionStart: state.context.sessionStart,
 		};
 	}, shallowEqual);
 	const [numToShow, setNumToShow] = useState(5);
@@ -106,7 +112,29 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 		});
 		dispatch(closeAllPanels());
 		dispatch(setCurrentObservabilityAnomaly(anomaly, props.entityGuid!, props.entityName));
-		dispatch(openPanel(WebviewPanels.ObservabilityAnomaly));
+		const ideName = useAppSelector((state: CodeStreamState) =>
+			encodeURIComponent(state.ide.name || "")
+		);
+		const nrAiUserId = useAppSelector(getNrAiUserId);
+		const userId = useAppSelector((state: CodeStreamState) => state.session.userId);
+		const demoMode = useAppSelector((state: CodeStreamState) => state.codeErrors.demoMode);
+		HostApi.instance.notify(OpenEditorViewNotificationType, {
+			panel: "anomaly",
+			title: "Anomaly",
+			entryPoint: "tree_view",
+			entityGuid: props.entityGuid,
+			entityName: props.entityName,
+			anomaly: anomaly,
+			clmSettings: derivedState.clmSettings as CLMSettings,
+			isProductionCloud: derivedState.isProductionCloud,
+			nrAiUserId,
+			userId,
+			demoMode: demoMode.enabled,
+			ide: {
+				name: ideName as IdeNames,
+			},
+		});
+		// dispatch(openPanel(WebviewPanels.ObservabilityAnomaly));
 	};
 
 	const formatFilePath = (filepath: String) => {

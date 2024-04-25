@@ -21,7 +21,7 @@ import {
 	PaneState,
 	NoContent,
 } from "@codestream/webview/src/components/Pane";
-import { ErrorRow } from "@codestream/webview/Stream/Observability";
+import { ErrorRow } from "@codestream/webview/Stream/ErrorRow";
 import { CurrentRepoContext } from "@codestream/webview/Stream/CurrentRepoContext";
 import { ConnectFossa } from "./ConnectFossa";
 import { FossaIssues } from "./FossaIssues";

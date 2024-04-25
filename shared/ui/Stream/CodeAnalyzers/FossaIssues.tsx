@@ -10,7 +10,7 @@ import Icon from "../Icon";
 import Tooltip from "../Tooltip";
 import { Link } from "@codestream/webview/Stream/Link";
 import { Row } from "../CrossPostIssueControls/IssuesPane";
-import { ErrorRow } from "@codestream/webview/Stream/Observability";
+import { ErrorRow } from "@codestream/webview/Stream/ErrorRow";
 import { Modal } from "@codestream/webview/Stream/Modal";
 import { MarkdownText } from "@codestream/webview/Stream/MarkdownText";
 import { CardTitle } from "@codestream/webview/Stream/SecurityIssuesWrapper";

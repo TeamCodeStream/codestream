@@ -121,6 +121,7 @@ runIde {
 //    jvmArgs '-Dkotlinx.coroutines.debug=on'
 //    jvmArgs '-Dcom.codestream.recordRequests=true'
     jvmArgs "-Dcom.codestream.webviewSidebar=$projectDir/src/main/resources/webviews/sidebar"
+    jvmArgs "-Dcom.codestream.webviewEditor=$projectDir/src/main/resources/webviews/editor"
     jvmArgs "-Dcom.codestream.agent=$projectDir/../shared/agent/dist"
     jvmArgs '-Xmx2048m'
     jvmArgs '-Xms128m'

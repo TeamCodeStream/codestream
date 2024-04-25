@@ -7,7 +7,7 @@ import { mapOrder } from "../utils";
 import { ALERT_SEVERITY_SORTING_ORDER } from "./CodeError/index";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
-import { ErrorRow } from "./Observability";
+import { ErrorRow } from "./ErrorRow";
 import { ObservabilityRelatedEntity } from "./ObservabilityRelatedEntity";
 import { ObservabilityRelatedSearch } from "./ObservabilityRelatedSearch";
 import { ObservabilityLoadingRelatedServiceEntities } from "@codestream/webview/Stream/ObservabilityLoading";

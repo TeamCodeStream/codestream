@@ -7,7 +7,7 @@ import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
 import { Link } from "./Link";
 import { ObservabilityAnomaliesGroup } from "./ObservabilityAnomaliesGroup";
-import { ErrorRow } from "@codestream/webview/Stream/Observability";
+import { ErrorRow } from "@codestream/webview/Stream/ErrorRow";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { openModal } from "../store/context/actions";
 import { WebviewModals } from "@codestream/protocols/webview";

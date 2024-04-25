@@ -4,6 +4,7 @@ import { ThemeProvider } from "styled-components";
 import { APMLogSearchPanel } from "./Stream/APMLogging/APMLogSearchPanel";
 import { ModalRoot } from "./Stream/Modal";
 import { NRQLPanel } from "./Stream/NRQL/NRQLPanel";
+import { ObservabilityAnomalyPanel } from "./Stream/MethodLevelTelemetry/ObservabilityAnomalyPanel";
 import { WhatsNewPanel } from "./Stream/WhatsNew";
 import { OpenEditorViewNotification } from "./ipc/host.protocol";
 import { createTheme } from "./src/themes";
@@ -20,6 +21,9 @@ function App() {
 		<ThemeProvider theme={createTheme()}>
 			<div className="stream">
 				<ModalRoot />
+				{codestreamProps.panel === "anomaly" && (
+					<ObservabilityAnomalyPanel {...codestreamProps}></ObservabilityAnomalyPanel>
+				)}
 				{codestreamProps.panel === "logs" && (
 					<APMLogSearchPanel
 						entityGuid={codestreamProps.entityGuid}

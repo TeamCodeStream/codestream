@@ -51,7 +51,7 @@ import {
 	RubyPluginLanguageServer,
 } from "./MissingExtension";
 import { MetaLabel } from "../Codemark/BaseCodemark";
-import { ErrorRow } from "../Observability";
+import { ErrorRow } from "../ErrorRow";
 import { openErrorGroup } from "@codestream/webview/store/codeErrors/thunks";
 
 const Root = styled.div``;
