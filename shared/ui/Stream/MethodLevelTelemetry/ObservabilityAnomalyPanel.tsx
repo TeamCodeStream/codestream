@@ -267,11 +267,11 @@ export const ObservabilityAnomalyPanel = () => {
 	const avgDurationTitle = goldenMetricAvgDuration?.title || "";
 	const errorRateTitle = goldenMetricErrorRate?.title || "";
 	const avgDurationHeaderText =
-		chartHeaderTexts[avgDurationTitle] != null
+		chartHeaderTexts && chartHeaderTexts[avgDurationTitle]
 			? "Average duration " + chartHeaderTexts[avgDurationTitle]
 			: null;
 	const errorRateHeaderText =
-		chartHeaderTexts[errorRateTitle] != null
+		chartHeaderTexts && chartHeaderTexts[errorRateTitle]
 			? "Errors rate " + chartHeaderTexts[errorRateTitle]
 			: null;
 	const isAvgDurationAnomaly = avgDurationHeaderText != null;

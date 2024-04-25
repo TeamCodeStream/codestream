@@ -224,3 +224,18 @@ export type LookupNewRelicOrganizationsResponse = {
 	accountId: number;
 	orgId: number;
 }[];
+
+export interface DetectTeamAnomaliesRequest {
+}
+
+export interface DetectTeamAnomaliesResponse {
+	[key: string]: any;
+}
+
+export const DetectTeamAnomaliesRequestType = new RequestType<
+	DetectTeamAnomaliesRequest,
+	DetectTeamAnomaliesResponse,
+	void,
+	void
+>("codestream/detectTeamAnomalies");
+	

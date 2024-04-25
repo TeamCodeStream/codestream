@@ -79,19 +79,18 @@ export class NotificationsController implements Disposable {
       { title: "Ignore", isCloseAffordance: true }
     ];
     const { duration, errorRate } = notification;
-
+    const count = duration.length + errorRate.length;
+    if (count === 0) return;
+    
 		Container.agent.telemetry.track("codestream/toast displayed", {
 			meta_data: `content: anomaly`,
 			event_type: "modal_display"
 		});
-    const count = duration.length + errorRate.length;
     const title = count === 1 ? "Performance issue found" : `${count} performance issues found`;
     const allAnomalies = [...duration, ...errorRate].sort((a, b) => b.ratio - a.ratio);
     const firstAnomaly = allAnomalies[0];
-    const message =
-      count === 1
-        ? `${title} - ${firstAnomaly.notificationText} (${firstAnomaly.entityName})`
-        : `${title} - #1: ${firstAnomaly.notificationText} (${firstAnomaly.entityName})`;
+    const anomalyCounter = count > 1? "#1:" : ""; 
+    const message = `${title} ${anomalyCounter} ${firstAnomaly.notificationText} (${firstAnomaly.entityName})`
     const result = await window.showInformationMessage(message, ...actions);
 
     if (result === actions[0]) {

@@ -33,6 +33,8 @@ import {
 	DeletePostResponse,
 	DeleteUserRequest,
 	DeleteUserResponse,
+	DetectTeamAnomaliesRequest,
+	DetectTeamAnomaliesResponse,
 	EditPostRequest,
 	EditPostResponse,
 	FetchCodeErrorsRequest,
@@ -210,6 +212,7 @@ export enum MessageType {
 	Echo = "echo",
 	AsyncError = "asyncError",
 	GrokStream = "grokStream",
+	AnomalyData = "anomalyData",
 }
 
 export interface CompaniesRTMessage {
@@ -245,6 +248,11 @@ export interface AsyncErrorRTMessage {
 export interface GrokStreamRTMessage {
 	type: MessageType.GrokStream;
 	data: CSGrokStream[];
+}
+
+export interface AnomalyDataRTMessage {
+	type: MessageType.AnomalyData;
+	data: any;
 }
 
 export interface StreamsRTMessage {
@@ -301,6 +309,7 @@ export type RTMessage =
 	| UsersRTMessage
 	| AsyncErrorRTMessage
 	| GrokStreamRTMessage
+	| AnomalyDataRTMessage
 	| EchoMessage;
 
 export interface ApiProvider {
@@ -449,6 +458,8 @@ export interface ApiProvider {
 	announceHistoryFetch(info: HistoryFetchInfo): void;
 
 	fetchBuilds(request: FetchThirdPartyBuildsRequest): Promise<FetchThirdPartyBuildsResponse>;
+
+	detectTeamAnomalies(request: DetectTeamAnomaliesRequest): Promise<DetectTeamAnomaliesResponse>;
 
 	get usingServiceGatewayAuth(): boolean;
 	setUsingServiceGatewayAuth(): void;

@@ -1439,6 +1439,13 @@ export interface ObservabilityAnomaly {
 	entityName: string;
 }
 
+export interface EntityObservabilityAnomalies {
+	entityGuid: string;
+	durationAnomalies: ObservabilityAnomaly[];
+	errorRateAnomalies: ObservabilityAnomaly[];
+	detectionMethod?: DetectionMethod;
+}
+
 export type DetectionMethod = "Release Based" | "Time Based";
 
 export interface Named {

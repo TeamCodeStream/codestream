@@ -9,7 +9,7 @@ import { HttpClient } from "../../api/httpClient";
 import { Container, SessionServiceContainer } from "../../container";
 import { CodeStreamSession } from "../../session";
 import { Disposable } from "../../system/disposable";
-import { AnomaliesProvider } from "./anomalies/anomaliesProvider";
+//import { AnomaliesProvider } from "./anomalies/anomaliesProvider";
 import { ClmManager } from "./clm/clmManager";
 import { ClmProvider } from "./clm/clmProvider";
 import { EntityAccountResolver } from "./clm/entityAccountResolver";
@@ -152,6 +152,7 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 		reposProvider
 	);
 
+	/* Deprecated, observability anomalies now being handled server-side
 	const anomaliesProvider = new AnomaliesProvider(
 		codeStreamAgent,
 		entityAccountResolver,
@@ -161,9 +162,10 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 	);
 
 	disposables.push(anomaliesProvider);
+	*/
 
 	const clmManager = new ClmManager(
-		anomaliesProvider,
+		//anomaliesProvider,
 		reposProvider,
 		sessionServiceContainer,
 		nrApiConfig,

@@ -74,6 +74,7 @@ export enum ChangeDataType {
 	Workspace = "workspace",
 	AsyncError = "asyncError",
 	GrokStream = "grokStream",
+	AnomalyData = "anomalyData"
 }
 
 export interface CodemarksChangedNotification {

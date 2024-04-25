@@ -32,6 +32,7 @@ import reduceIde from "./ide/slice";
 import providerPullRequests from "./providerPullRequests/slice";
 import { reduceReviews } from "./reviews/reducer";
 import { reduceNrCapabilities } from "./nrCapabilities/reducer";
+import { reduceAnomalyData } from "./anomalyData/reducer";
 
 const pluginVersion = (state = "", action) => {
 	if (action.type === "@pluginVersion/Set") return action.payload;
@@ -70,6 +71,7 @@ export const store = configureStore({
 		codeErrors: reduceCodeErrors,
 		dynamicLogging: reduceDynamicLogging,
 		nrCapabilities: reduceNrCapabilities,
+		anomalyData: reduceAnomalyData
 	},
 	middleware: getDefaultMiddleware => getDefaultMiddleware().concat(middleware),
 	enhancers: [batchedSubscribe(debounceToAnimationFrame((notify: Function) => notify()))],

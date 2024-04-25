@@ -28,7 +28,7 @@ import path from "path";
 import { URI } from "vscode-uri";
 import Cache from "@codestream/utils/system/timedCache";
 import { FLTStrategyFactory } from "./FLTStrategy";
-import { AnomaliesProvider } from "../anomalies/anomaliesProvider";
+//import { AnomaliesProvider } from "../anomalies/anomaliesProvider";
 import { ReposProvider } from "../repos/reposProvider";
 import { NrApiConfig } from "../nrApiConfig";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
@@ -45,7 +45,7 @@ import { getRepoName } from "@codestream/utils/system/string";
 @lsp
 export class ClmManager implements Disposable {
 	constructor(
-		private anomaliesProvider: AnomaliesProvider,
+		//private anomaliesProvider: AnomaliesProvider,
 		private reposProvider: ReposProvider,
 		private sessionServiceContainer: SessionServiceContainer,
 		private nrApiConfig: NrApiConfig,
@@ -171,6 +171,7 @@ export class ClmManager implements Disposable {
 			const errorRate = this.mergeResults(results.map(_ => _.errorRate));
 			const sampleSize = this.mergeResults(results.map(_ => _.sampleSize));
 
+			/* Deprecated, observability anomalies now being handled server-side
 			const anomalies =
 				this.anomaliesProvider.getLastObservabilityAnomaliesResponse(newRelicEntityGuid);
 			if (anomalies) {
@@ -197,6 +198,7 @@ export class ClmManager implements Disposable {
 					);
 				}
 			}
+			*/
 
 			const deploymentCommit = await this.getDeploymentCommitIfNeeded(newRelicEntityGuid, {
 				averageDuration,

@@ -9,6 +9,7 @@ import {
 	DidChangeProcessBufferNotificationType,
 	DidChangeServerUrlNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
+	DidDetectObservabilityAnomaliesNotificationType,
 	DidEncounterMaintenanceModeNotificationType,
 	RefreshMaintenancePollNotificationType,
 	DidResolveStackTraceLineNotificationType,
@@ -46,6 +47,7 @@ import {
 import { updateConfigs } from "@codestream/webview/store/configs/slice";
 import { fetchReview } from "@codestream/webview/store/reviews/thunks";
 import { switchToTeam } from "@codestream/webview/store/session/thunks";
+import { setAnomalyData} from "@codestream/webview/store/anomalyData/actions";
 import "@formatjs/intl-listformat/polyfill-locales";
 import { isEmpty as _isEmpty } from "lodash-es";
 
@@ -372,6 +374,16 @@ function listenForEvents(store: StoreType) {
 		);
 	});
 
+	api.on(DidDetectObservabilityAnomaliesNotificationType, params => {
+		store.dispatch(
+			setAnomalyData({
+				entityGuid: params.entityGuid,
+				durationAnomalies: params.duration,
+				errorRateAnomalies: params.errorRate
+			})
+		);
+	});
+		
 	const onShowStreamNotificationType = async function (streamId, threadId, codemarkId) {
 		if (codemarkId) {
 			let {

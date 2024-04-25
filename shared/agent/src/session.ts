@@ -40,6 +40,7 @@ import {
 	DidChangeDataNotificationType,
 	DidChangeServerUrlNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
+	DidDetectObservabilityAnomaliesNotificationType,
 	DidEncounterMaintenanceModeNotificationType,
 	DidFailLoginCodeGenerationNotificationType,
 	DidFailLoginNotificationType,
@@ -669,6 +670,20 @@ export class CodeStreamSession {
 			case MessageType.Echo:
 				this.echoReceived();
 				break;
+			case MessageType.AnomalyData:
+				if (!(e.data instanceof Array)) return;
+				for (let datum of e.data) {
+					if (typeof datum === "object") {
+						for (let entityGuid in datum) {
+							this.agent.sendNotification(DidDetectObservabilityAnomaliesNotificationType, {
+								entityGuid,
+								duration: datum[entityGuid].durationAnomalies,
+								errorRate: datum[entityGuid].errorRateAnomalies,
+							});
+						}
+					}
+				}
+				break;
 		}
 	}
 
@@ -850,6 +865,10 @@ export class CodeStreamSession {
 		return this.environmentInfo.telemetryEndpoint;
 	}
 
+	get o11yServerUrl() {
+		return this.environmentInfo.o11yServerUrl;
+	}
+
 	get disableStrictSSL(): boolean {
 		return this._options.disableStrictSSL != null ? this._options.disableStrictSSL : false;
 	}
@@ -986,6 +1005,7 @@ export class CodeStreamSession {
 			newRelicLandingServiceUrl: response.newRelicLandingServiceUrl,
 			newRelicApiUrl: response.newRelicApiUrl,
 			newRelicSecApiUrl: response.newRelicSecApiUrl,
+			o11yServerUrl: response.o11yServerUrl,
 			telemetryEndpoint: response.telemetryEndpoint,
 			environmentHosts: response.environmentHosts,
 		};

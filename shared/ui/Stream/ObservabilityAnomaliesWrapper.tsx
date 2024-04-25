@@ -186,7 +186,7 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 					)}
 				</div>
 
-				<div className="icons">
+				{false && <div className="icons">
 					<span
 						onClick={e => {
 							e.preventDefault();
@@ -202,7 +202,7 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 							delay={1}
 						/>
 					</span>
-				</div>
+				</div>}
 			</Row>
 			{derivedState.anomaliesDropdownIsExpanded &&
 				props.observabilityAnomalies.error &&

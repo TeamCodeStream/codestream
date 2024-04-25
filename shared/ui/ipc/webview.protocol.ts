@@ -1,5 +1,6 @@
 import {
 	ObservabilityAnomaly,
+	GetObservabilityAnomaliesResponse,
 	PixieDynamicLoggingFunctionParameter,
 } from "@codestream/protocols/agent";
 import { CodemarkType } from "@codestream/protocols/api";

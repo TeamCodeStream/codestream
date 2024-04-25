@@ -20,6 +20,8 @@ import {
 	DidChangeSessionTokenStatusNotificationType,
 	DidChangeVersionCompatibilityNotification,
 	DidChangeVersionCompatibilityNotificationType,
+	DidDetectObservabilityAnomaliesNotification,
+	DidDetectObservabilityAnomaliesNotificationType,
 	DidEncounterMaintenanceModeNotificationType,
 	DidResolveStackTraceLineNotificationType,
 	RefreshMaintenancePollNotificationType,
@@ -171,6 +173,10 @@ export class SidebarController implements Disposable {
 	) {
 		this._disposable = Disposable.from(
 			this.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
+			Container.agent.onDidDetectObservabilityAnomalies(
+				(...args) => this.onDidDetectObservabilityAnomalies(webview, ...args),
+				this
+			),
 			window.onDidChangeActiveTextEditor(this.onActiveEditorChanged, this),
 			window.onDidChangeVisibleTextEditors(this.onVisibleEditorsChanged, this),
 			workspace.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this),
@@ -729,6 +735,10 @@ export class SidebarController implements Disposable {
 		webview.notify(DidChangeDataNotificationType, e);
 	}
 
+	private onDidDetectObservabilityAnomalies(webview: WebviewLike, e: DidDetectObservabilityAnomaliesNotification) {
+		webview.notify(DidDetectObservabilityAnomaliesNotificationType, e);
+	}
+		
 	private onDocumentMarkersChanged(webview: WebviewLike, e: DidChangeDocumentMarkersNotification) {
 		webview.notify(DidChangeDocumentMarkersNotificationType, e);
 	}

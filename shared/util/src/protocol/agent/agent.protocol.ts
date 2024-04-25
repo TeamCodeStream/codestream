@@ -110,6 +110,7 @@ export interface CodeStreamEnvironmentInfo {
 	newRelicLandingServiceUrl?: string;
 	newRelicApiUrl?: string;
 	newRelicSecApiUrl?: string;
+	o11yServerUrl?: string;
 	telemetryEndpoint?: string;
 	environmentHosts?: EnvironmentHost[];
 }
@@ -202,6 +203,7 @@ export interface VerifyConnectivityResponse {
 	newRelicLandingServiceUrl?: string;
 	newRelicApiUrl?: string;
 	newRelicSecApiUrl?: string;
+	o11yServerUrl?: string;
 	telemetryEndpoint?: string;
 	environmentHosts?: EnvironmentHost[];
 }
