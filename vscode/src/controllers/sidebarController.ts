@@ -1432,7 +1432,7 @@ export class SidebarController implements Disposable {
 					fileName: workspace.asRelativePath(uri),
 					languageId: e.document.languageId,
 					metrics: Editor.getMetrics(uri),
-					selections: Editor.toEditorSelections(e.selections),
+					selections: [],
 					visibleRanges: Editor.toSerializableRange(e.visibleRanges),
 					lineCount: e.document.lineCount
 				};
