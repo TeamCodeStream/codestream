@@ -2016,10 +2016,17 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 	function scrollToNew() {
 		const target = scrollNewTarget?.current;
 		if (target) {
-			// console.debug("===--- scrollToNew ", target);
 			target.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
-		} else {
-			// console.debug("===--- scrollToNew no target", scrollNewTarget);
+			// This is a rough hack.
+			// Using scrollIntoView within a modal where the scroll goes to the end, offsets our
+			// non-modal sidebar view by 3px, thus cutting off the top of the sidebar content by 3px.
+			// I see no reason why this is occurring, and have tried a few different failed solutions
+			// like passing the modalRef and using scrollTo() instead, but no luck.
+			// Either way, this works for now.
+			const globalNavElement = document.getElementById("global-nav");
+			if (globalNavElement) {
+				globalNavElement.style.paddingTop = "3px";
+			}
 		}
 	}
 
@@ -2029,13 +2036,11 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 
 	useEffect(() => {
 		if ((isGrokRequested || isGrokLoading) && currentGrokRepliesLength > 0) {
-			// console.debug(`---=== useEffect calling scrollToNew ${currentGrokRepliesLength} ===---`);
 			scrollToNew();
 		}
 	}, [currentGrokRepliesLength, isGrokLoading, derivedState.post]);
 
 	function scrollNewTargetCallback(ref: RefObject<HTMLElement>) {
-		// console.debug("===--- scrollNewTargetCallback setScrollNewTarget ", ref);
 		setScrollNewTarget(ref);
 	}
 
