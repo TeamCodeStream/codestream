@@ -53,6 +53,10 @@ export const bootstrap = (data?: SignedInBootstrapData) => async (dispatch, getS
 	if (data == undefined) {
 		const api = HostApi.instance;
 		const bootstrapCore = await api.send(BootstrapInHostRequestType, undefined);
+		// Delete legacy properties we don't want to bring into redux store from WebViewContext
+		delete bootstrapCore.context["panelStack"];
+		delete bootstrapCore.context["onboardStep"];
+		delete bootstrapCore.context["wantNewRelicOptions"];
 		if (bootstrapCore.session.userId === undefined) {
 			dispatch(
 				bootstrapEssentials({

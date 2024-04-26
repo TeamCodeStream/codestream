@@ -3,7 +3,6 @@ import {
 	clearCurrentErrorsInboxOptions,
 	clearCurrentInstrumentationOptions,
 	clearCurrentPullRequest,
-	clearWantNewRelicOptions,
 	closeModal,
 	openPanel,
 	setCurrentCodeError,
@@ -24,7 +23,6 @@ export const closeAllPanels = createAppAsyncThunk(
 		dispatch(clearCurrentPullRequest());
 		dispatch(clearCurrentErrorsInboxOptions());
 		dispatch(clearCurrentInstrumentationOptions());
-		dispatch(clearWantNewRelicOptions());
 		dispatch(setCurrentMethodLevelTelemetry(undefined));
 	}
 );

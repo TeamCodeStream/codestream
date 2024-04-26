@@ -4,7 +4,7 @@ import {
 	RelatedRepository,
 	SessionTokenStatus,
 } from "@codestream/protocols/agent";
-import { CSEligibleJoinCompany, WebviewPanels } from "@codestream/protocols/api";
+import { CSEligibleJoinCompany } from "@codestream/protocols/api";
 import { Position, Range } from "vscode-languageserver-types";
 
 import { NewPullRequestBranch } from "./webview.protocol";
@@ -168,10 +168,7 @@ export interface WebviewContext {
 	hasFocus: boolean;
 	/** the first page seen after registration */
 	isFirstPageview?: boolean;
-	panelStack?: (WebviewPanels | string)[];
-	activePanel?: WebviewPanels;
 	startWorkCard?: any; // TODO figure out how to type CardView which include JSX.Element
-	onboardStep: number;
 	pendingProtocolHandlerUrl?: string;
 	pendingProtocolHandlerQuery?: any;
 	forceRegion?: string;

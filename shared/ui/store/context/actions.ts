@@ -2,7 +2,6 @@ import {
 	EntityAccount,
 	ObservabilityAnomaly,
 	RegisterUserRequest,
-	RepoProjectType,
 } from "@codestream/protocols/agent";
 import { CodemarkType, WebviewPanels } from "@codestream/protocols/api";
 
@@ -59,7 +58,6 @@ export const closePrDetailModal =
 		dispatch(setCurrentPullRequest(providerId, id, "", "", "sidebar-diffs", groupIndex));
 		dispatch(clearCurrentErrorsInboxOptions());
 		dispatch(clearCurrentInstrumentationOptions());
-		dispatch(clearWantNewRelicOptions());
 		dispatch(setCurrentMethodLevelTelemetry(undefined));
 	};
 
@@ -71,7 +69,6 @@ export const closeAllModals = () => dispatch => {
 	dispatch(clearCurrentPullRequest());
 	dispatch(clearCurrentErrorsInboxOptions());
 	dispatch(clearCurrentInstrumentationOptions());
-	dispatch(clearWantNewRelicOptions());
 	dispatch(setCurrentMethodLevelTelemetry(undefined));
 };
 
@@ -255,13 +252,6 @@ export const setCurrentInstrumentationOptions = (options?: any) =>
 export const setCurrentPixieDynamicLoggingOptions = (options?: any) =>
 	action(ContextActionsType.SetCurrentPixieDynamicLoggingOptions, { options });
 
-export const setWantNewRelicOptions = (
-	projectType: RepoProjectType,
-	repoId?: string,
-	path?: string,
-	projects?: { path: string; name?: string; version?: string }[]
-) => action(ContextActionsType.SetWantNewRelicOptions, { projectType, repoId, path, projects });
-
 export const setNewPullRequestOptions = (options?: { branch: NewPullRequestBranch }) =>
 	action(ContextActionsType.SetNewPullRequestOptions, { options });
 
@@ -274,9 +264,6 @@ export const clearCurrentInstrumentationOptions = () =>
 export const clearCurrentPixieDynamicLoggingOptions = () =>
 	action(ContextActionsType.SetCurrentPixieDynamicLoggingOptions, { options: {} });
 
-export const clearWantNewRelicOptions = () =>
-	action(ContextActionsType.SetClearNewRelicOptions, {});
-
 export const clearCurrentPullRequest = () =>
 	action(ContextActionsType.SetCurrentPullRequest, {
 		providerId: "",
@@ -285,8 +272,6 @@ export const clearCurrentPullRequest = () =>
 		source: "",
 		view: undefined,
 	});
-
-export const setOnboardStep = (step: number) => action(ContextActionsType.SetOnboardStep, { step });
 
 export const setStartWorkCard = (card: any) =>
 	action(ContextActionsType.SetStartWorkCard, { card });

@@ -1,14 +1,9 @@
-import {
-	GetNewRelicSignupJwtTokenRequestType,
-	GetReposScmRequestType,
-	RepoProjectType,
-} from "@codestream/protocols/agent";
+import { GetNewRelicSignupJwtTokenRequestType } from "@codestream/protocols/agent";
 import { CSProviderInfo } from "@codestream/protocols/api";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { CodeStreamState } from "@codestream/webview/store";
 import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import React, { useEffect, useRef, useState } from "react";
-import { setWantNewRelicOptions } from "../store/context/actions";
 import { closeAllPanels } from "@codestream/webview/store/context/thunks";
 import { configureProvider, disconnectProvider, ViewLocation } from "../store/providers/actions";
 import { isConnected } from "../store/providers/reducer";
@@ -16,7 +11,7 @@ import { getUserProviderInfoFromState } from "../store/providers/utils";
 import { HostApi } from "../webview-api";
 import Button from "./Button";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
-import Icon from "./Icon";
+import { Icon } from "./Icon";
 import { Link } from "./Link";
 
 interface Props {
@@ -141,28 +136,6 @@ export default function ConfigureNewRelic(props: Props) {
 			}
 		}
 
-		if (!props.disablePostConnectOnboarding) {
-			const reposResponse = await HostApi.instance.send(GetReposScmRequestType, {
-				inEditorOnly: true,
-				guessProjectTypes: true,
-			});
-			if (!reposResponse.error) {
-				const knownRepo = (reposResponse.repositories || []).find(repo => {
-					return repo.id && repo.projectType !== RepoProjectType.Unknown;
-				});
-				if (knownRepo && knownRepo.projectType) {
-					await dispatch(
-						setWantNewRelicOptions(
-							knownRepo.projectType,
-							knownRepo.id,
-							knownRepo.path,
-							knownRepo.projects
-						)
-					);
-				}
-			}
-		}
-
 		if (!isOnSubmittedPromise) {
 			setLoading(false);
 		}
@@ -214,7 +187,7 @@ export default function ConfigureNewRelic(props: Props) {
 	if (derivedState.didConnect) {
 		return null;
 	}
-	const { providerId, headerChildren, showSignupUrl } = props;
+	const { headerChildren, showSignupUrl } = props;
 	const { displayName, getUrl } = derivedState.providerDisplay;
 	return (
 		<div className="standard-form vscroll">

@@ -26,7 +26,6 @@ const initialState: ContextState = {
 	issueProvider: undefined,
 	threadId: undefined,
 	currentRepo: undefined,
-	onboardStep: 0,
 
 	panelStack: [WebviewPanels.LandingRedirect],
 
@@ -51,7 +50,6 @@ const initialState: ContextState = {
 	errorsInboxOptions: undefined,
 	currentInstrumentation: undefined,
 	currentPixieDynamicLoggingOptions: undefined,
-	wantNewRelicOptions: undefined,
 	currentPullRequestNeedsRefresh: { needsRefresh: false, providerId: "", pullRequestId: "" },
 	entityAccounts: [],
 };
@@ -216,16 +214,8 @@ export function reduceContext(
 				currentPixieDynamicLoggingOptions: action.payload.options,
 			};
 		}
-		case ContextActionsType.SetWantNewRelicOptions: {
-			return {
-				...state,
-				wantNewRelicOptions: action.payload,
-			};
-		}
 		case ContextActionsType.SetStartWorkCard:
 			return { ...state, startWorkCard: action.payload.card };
-		case ContextActionsType.SetOnboardStep:
-			return { ...state, onboardStep: action.payload.step };
 		case ContextActionsType.SetProfileUser:
 			return { ...state, profileUserId: action.payload };
 		case ContextActionsType.SetShowFeedbackSmiley:

@@ -93,7 +93,9 @@ import {
 	WebviewIpcRequestMessage,
 	IdeNames,
 	LogoutReason,
-	EditorUndoType
+	EditorUndoType,
+	EditorRevealRangeRequestType,
+	EditorHighlightRangeRequestType
 } from "@codestream/protocols/webview";
 import {
 	authentication,
@@ -135,6 +137,7 @@ import * as csUri from "../system/uri";
 import * as TokenManager from "../api/tokenManager";
 import { SaveTokenReason } from "../api/tokenManager";
 import { copySymbol, editorUndo, replaceSymbol } from "./symbolEditController";
+import { toCSGitUri } from "../providers/gitContentProvider";
 
 const emptyObj = {};
 
@@ -240,7 +243,6 @@ export class SidebarController implements Disposable {
 					this._context = {
 						currentTeamId: "_",
 						hasFocus: true,
-						onboardStep: 0,
 						__teamless__: state.teamless
 					};
 				}
@@ -994,43 +996,43 @@ export class SidebarController implements Disposable {
 				}));
 				break;
 			}
-			// case EditorHighlightRangeRequestType.method: {
-			// 	webview.onIpcRequest(EditorHighlightRangeRequestType, e, async (_type, params) => {
-			// 		let uri = Uri.parse(params.uri);
-			// 		if (params.ref) {
-			// 			uri = toCSGitUri(uri, params.ref);
-			// 		}
-			// 		const success = await Editor.highlightRange(
-			// 			uri,
-			// 			Editor.fromSerializableRange(params.range),
-			// 			this._lastEditor,
-			// 			!params.highlight
-			// 		);
-			// 		return { success: success };
-			// 	});
+			case EditorHighlightRangeRequestType.method: {
+				webview.onIpcRequest(EditorHighlightRangeRequestType, e, async (_type, params) => {
+					let uri = Uri.parse(params.uri);
+					if (params.ref) {
+						uri = toCSGitUri(uri, params.ref);
+					}
+					const success = await Editor.highlightRange(
+						uri,
+						Editor.fromSerializableRange(params.range),
+						this._lastEditor,
+						!params.highlight
+					);
+					return { success: success };
+				});
 
-			// 	break;
-			// }
-			// case EditorRevealRangeRequestType.method: {
-			// 	webview.onIpcRequest(EditorRevealRangeRequestType, e, async (_type, params) => {
-			// 		let uri = Uri.parse(params.uri);
-			// 		if (params.ref) {
-			// 			uri = toCSGitUri(uri, params.ref);
-			// 		}
-			// 		const success = await Editor.revealRange(
-			// 			uri,
-			// 			Editor.fromSerializableRange(params.range),
-			// 			this._lastEditor,
-			// 			{
-			// 				preserveFocus: params.preserveFocus,
-			// 				atTop: params.atTop
-			// 			}
-			// 		);
-			// 		return { success: success };
-			// 	});
+				break;
+			}
+			case EditorRevealRangeRequestType.method: {
+				webview.onIpcRequest(EditorRevealRangeRequestType, e, async (_type, params) => {
+					let uri = Uri.parse(params.uri);
+					if (params.ref) {
+						uri = toCSGitUri(uri, params.ref);
+					}
+					const success = await Editor.revealRange(
+						uri,
+						Editor.fromSerializableRange(params.range),
+						this._lastEditor,
+						{
+							preserveFocus: params.preserveFocus,
+							atTop: params.atTop
+						}
+					);
+					return { success: success };
+				});
 
-			// 	break;
-			// }
+				break;
+			}
 			case EditorCopySymbolType.method: {
 				webview.onIpcRequest(EditorCopySymbolType, e, async (_type, params) => {
 					return await copySymbol(params);

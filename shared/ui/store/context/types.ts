@@ -2,13 +2,11 @@ import {
 	EntityAccount,
 	MetricTimesliceNameMapping,
 	ObservabilityAnomaly,
-	RepoProjectType,
 } from "@codestream/protocols/agent";
-import { CodemarkType } from "@codestream/protocols/api";
+import { CodemarkType, WebviewPanels } from "@codestream/protocols/api";
 
 import { NewPullRequestBranch } from "@codestream/protocols/webview";
 import { WebviewContext, WebviewModals } from "@codestream/webview/ipc/webview.protocol.common";
-import { WebviewPanels } from "@codestream/protocols/api";
 import { AnyObject } from "@codestream/webview/utils";
 
 export enum ContextActionsType {
@@ -56,11 +54,8 @@ export enum ContextActionsType {
 	SetCurrentPullRequestAndBranch = "@context/SetCurrentPullRequestAndBranch",
 	SetNewPullRequestOptions = "@context/SetNewPullRequestOptions",
 	SetStartWorkCard = "@context/SetStartWorkCard",
-	SetOnboardStep = "@context/SetOnboardStep",
 	SetIsFirstPageview = "@context/SetIsFirstPageview",
 	SetPendingProtocolHandlerUrl = "@context/SetPendingProtocolHandlerUrl",
-	SetWantNewRelicOptions = "@context/SetWantNewRelicOptions",
-	SetClearNewRelicOptions = "@context/SetClearNewRelicOptions",
 	SetCurrentMethodLevelTelemetry = "@context/SetCurrentMethodLevelTelemetry",
 	SetCurrentObservabilityAnomaly = "@context/SetCurrentObservabilityAnomaly",
 	SetEntityAccounts = "@context/SetEntityAccounts",
@@ -81,13 +76,6 @@ export type PostEntryPoint =
 	| "Advanced"
 	| string
 	| undefined;
-
-export interface WantNewRelicOptions {
-	projectType: RepoProjectType;
-	repoId?: string;
-	path?: string;
-	projects?: { path: string; name?: string; version?: string }[];
-}
 
 export interface ContextState extends WebviewContext {
 	channelFilter: string;
@@ -138,7 +126,6 @@ export interface ContextState extends WebviewContext {
 	};
 	errorsInboxOptions?: { stack?: string; customAttributes?: string; url?: string };
 
-	wantNewRelicOptions?: WantNewRelicOptions;
 	currentMethodLevelTelemetry?: CurrentMethodLevelTelemetry;
 	currentObservabilityAnomaly?: ObservabilityAnomaly;
 	currentObservabilityAnomalyEntityGuid?: string;

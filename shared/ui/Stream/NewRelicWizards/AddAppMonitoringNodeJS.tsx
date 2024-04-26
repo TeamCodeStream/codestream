@@ -10,7 +10,7 @@ import {
 	NewRelicOptions,
 	RepoProjectType,
 } from "@codestream/protocols/agent";
-import * as path from "path-browserify";
+import path from "path-browserify";
 import React, { useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { useDispatch, useSelector } from "react-redux";
@@ -38,7 +38,7 @@ export const AddAppMonitoringNodeJS = (props: {
 }) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
-		const { repoId, path } = state.context.wantNewRelicOptions || {};
+		const { repoId, path } = props.newRelicOptions;
 		const repo = repoId ? state.repos[repoId] : undefined;
 		return { repo, repoPath: path };
 	});

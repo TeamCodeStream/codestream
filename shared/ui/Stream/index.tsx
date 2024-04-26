@@ -5,7 +5,7 @@ import {
 	PostPlus,
 	SetCodemarkPinnedRequestType,
 } from "@codestream/protocols/agent";
-import { CodemarkType, CSMe, CSUser } from "@codestream/protocols/api";
+import { CodemarkType, CSMe, CSUser, WebviewPanels } from "@codestream/protocols/api";
 import cx from "classnames";
 import PropTypes from "prop-types";
 import React, { PureComponent } from "react";
@@ -33,7 +33,6 @@ import {
 	PixieDynamicLoggingType,
 } from "../ipc/webview.protocol";
 import { WebviewModals } from "@codestream/webview/ipc/webview.protocol.common";
-import { WebviewPanels } from "@codestream/protocols/api";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { canCreateCodemark } from "../store/codemarks/actions";
 import { getCodemark } from "../store/codemarks/reducer";

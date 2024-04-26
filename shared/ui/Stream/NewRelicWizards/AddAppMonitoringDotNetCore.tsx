@@ -6,7 +6,7 @@ import {
 	NewRelicOptions,
 	RepoProjectType,
 } from "@codestream/protocols/agent";
-import * as path from "path-browserify";
+import path from "path-browserify";
 import React, { useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { Range } from "vscode-languageserver-types";
@@ -33,7 +33,7 @@ export const AddAppMonitoringDotNetCore = (props: {
 }) => {
 	const dispatch = useAppDispatch();
 	const derivedState = useAppSelector((state: CodeStreamState) => {
-		const { repoId, path } = state.context.wantNewRelicOptions ?? {};
+		const { repoId, path } = props.newRelicOptions;
 		const repo = repoId ? state.repos[repoId] : undefined;
 
 		return { repo, repoPath: path, bufferText: state.editorContext.buffer?.text };
@@ -52,6 +52,7 @@ export const AddAppMonitoringDotNetCore = (props: {
 	const [unexpectedError, setUnexpectedError] = useState(false);
 	const [specificError, setSpecificError] = useState("");
 	const [step, setStep] = useState(1);
+	const [userCancelled, setUserCancelled] = useState(false);
 
 	const { repo, repoPath } = derivedState;
 
@@ -74,7 +75,7 @@ export const AddAppMonitoringDotNetCore = (props: {
 		return () => {
 			dispatch(clearProcessBuffer({}));
 
-			if (repoPath) {
+			if (repoPath && !userCancelled) {
 				void HostApi.instance.send(EditorRevealRangeRequestType, {
 					uri: path.join("file://", repoPath, "NrStart.cmd"),
 					range: Range.create(0, 0, 0, 0),
@@ -309,7 +310,14 @@ export const AddAppMonitoringDotNetCore = (props: {
 						</fieldset>
 					</div>
 				</Dialog>
-				<SkipLink onClick={() => props.skip(999)}>I'll do this later</SkipLink>
+				<SkipLink
+					onClick={() => {
+						props.skip(999);
+						setUserCancelled(true);
+					}}
+				>
+					I'll do this later
+				</SkipLink>
 			</div>
 		</Step>
 	);

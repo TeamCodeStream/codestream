@@ -12,27 +12,34 @@ import {
 
 import { CodeStreamSession } from "../session";
 import { lsp } from "../system/decorators/lsp";
+import { Logger } from "../logger";
 
 @lsp
 export class RepoIdentificationManager {
 	constructor(readonly session: CodeStreamSession) {}
 
 	async identifyRepo(repo: ReposScm): Promise<IdentifyRepoResult> {
+		Logger.log(`identifyRepo: ${repo.path}`);
 		const files = await fsPromises.readdir(repo.path);
 		if (await this.repoIsNodeJS(repo, files)) {
+			Logger.log(`identifyRepo:  ${repo.path} repoIsNodeJS`);
 			return { projectType: RepoProjectType.NodeJS };
 		} else if (await this.repoIsJava(repo, files)) {
+			Logger.log(`identifyRepo: ${repo.path} repoIsJava`);
 			return { projectType: RepoProjectType.Java };
 		} else {
 			const dotNetCore = await this.repoIsDotNetCore(repo, files);
 			if (dotNetCore && dotNetCore.projects && dotNetCore.projects.length) {
+				Logger.log(`identifyRepo: ${repo.path} repoIsDotNetCore`);
 				return {
 					projectType: RepoProjectType.DotNetCore,
 					projects: dotNetCore.projects,
 				};
 			} else if (await this.repoIsDotNetFramework(repo, files)) {
+				Logger.log(`identifyRepo: ${repo.path} is repoIsDotNetFramework`);
 				return { projectType: RepoProjectType.DotNetFramework };
 			} else {
+				Logger.log(`identifyRepo: ${repo.path} is Unknown`);
 				return { projectType: RepoProjectType.Unknown };
 			}
 		}
@@ -42,7 +49,10 @@ export class RepoIdentificationManager {
 		for (const file of files) {
 			const filePath = path.join(repo.path, file);
 			const isDir = (await fsPromises.stat(filePath)).isDirectory();
-			if ((isDir && file === "node_modules") || (!isDir && file === "package.json")) return true;
+			if ((isDir && file === "node_modules") || (!isDir && file === "package.json")) {
+				Logger.log(`identifyRepo: repoIsNodeJS found ${file}`);
+				return true;
+			}
 		}
 		return false;
 	}
@@ -129,9 +139,9 @@ export class RepoIdentificationManager {
 		return false;
 	}
 
-	private async _findFileWithExtension(
+	private async _findFile(
 		basePath: string,
-		extension: string,
+		searchFileNames: string[],
 		files: string[],
 		maxDepth: number,
 		depth: number
@@ -143,37 +153,13 @@ export class RepoIdentificationManager {
 				if (depth < maxDepth) {
 					const dirPath = path.join(basePath, file);
 					const subFiles = await fsPromises.readdir(dirPath);
-					if (
-						await this._findFileWithExtension(dirPath, extension, subFiles, maxDepth, depth + 1)
-					) {
+					if (await this._findFile(dirPath, searchFileNames, subFiles, maxDepth, depth + 1)) {
 						return true;
 					}
 				}
-			} else if (path.extname(filePath) === extension) {
-				return true;
-			}
-		}
-		return false;
-	}
-	private async _findFile(
-		basePath: string,
-		fileNames: string[],
-		files: string[],
-		maxDepth: number,
-		depth: number
-	): Promise<boolean> {
-		for (const file of files) {
-			const filePath = path.join(basePath, file);
-			const isDir = (await fsPromises.stat(filePath)).isDirectory();
-			if (isDir) {
-				if (depth < maxDepth) {
-					const dirPath = path.join(basePath, file);
-					const subFiles = await fsPromises.readdir(dirPath);
-					return await this._findFile(dirPath, fileNames, subFiles, maxDepth, depth + 1);
-				}
 			} else {
-				for (const fileName of fileNames) {
-					if (path.basename(filePath) === fileName) {
+				for (const searchFile of searchFileNames) {
+					if (path.basename(filePath) === searchFile) {
 						return true;
 					}
 				}

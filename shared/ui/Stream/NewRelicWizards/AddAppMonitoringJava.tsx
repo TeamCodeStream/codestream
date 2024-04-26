@@ -30,7 +30,7 @@ export const AddAppMonitoringJava = (props: {
 }) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
-		const { repoId, path } = state.context.wantNewRelicOptions || {};
+		const { repoId, path } = props.newRelicOptions;
 		const repo = repoId ? state.repos[repoId] : undefined;
 		return { repo, repoPath: path };
 	});
