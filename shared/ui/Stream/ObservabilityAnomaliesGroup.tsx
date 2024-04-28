@@ -11,9 +11,7 @@ import {
 	OpenEditorViewNotificationType,
 } from "@codestream/protocols/webview";
 import { CLMSettings } from "@codestream/protocols/api";
-import {
-	setCurrentObservabilityAnomaly,
-} from "@codestream/webview/store/context/actions";
+import { setCurrentObservabilityAnomaly } from "@codestream/webview/store/context/actions";
 import { closeAllPanels } from "@codestream/webview/store/context/thunks";
 import Tooltip from "./Tooltip";
 import {
@@ -62,9 +60,14 @@ const FilePathMiddleSection = styled.span`
 
 export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 	const dispatch = useAppDispatch();
+
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const clmSettings = state.preferences.clmSettings || {};
 		return {
+			ideName: encodeURIComponent(state.ide.name || ""),
+			nrAiUserId: getNrAiUserId(state),
+			userId: state.session.userId,
+			demoMode: state.codeErrors.demoMode,
 			clmSettings,
 			isProductionCloud: state.configs.isProductionCloud,
 			sessionStart: state.context.sessionStart,
@@ -112,12 +115,7 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 		});
 		dispatch(closeAllPanels());
 		dispatch(setCurrentObservabilityAnomaly(anomaly, props.entityGuid!, props.entityName));
-		const ideName = useAppSelector((state: CodeStreamState) =>
-			encodeURIComponent(state.ide.name || "")
-		);
-		const nrAiUserId = useAppSelector(getNrAiUserId);
-		const userId = useAppSelector((state: CodeStreamState) => state.session.userId);
-		const demoMode = useAppSelector((state: CodeStreamState) => state.codeErrors.demoMode);
+
 		HostApi.instance.notify(OpenEditorViewNotificationType, {
 			panel: "anomaly",
 			title: "Anomaly",
@@ -127,14 +125,13 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 			anomaly: anomaly,
 			clmSettings: derivedState.clmSettings as CLMSettings,
 			isProductionCloud: derivedState.isProductionCloud,
-			nrAiUserId,
-			userId,
-			demoMode: demoMode.enabled,
+			nrAiUserId: derivedState.nrAiUserId,
+			userId: derivedState.userId,
+			demoMode: derivedState.demoMode.enabled,
 			ide: {
-				name: ideName as IdeNames,
+				name: derivedState.ideName as IdeNames,
 			},
 		});
-		// dispatch(openPanel(WebviewPanels.ObservabilityAnomaly));
 	};
 
 	const formatFilePath = (filepath: String) => {

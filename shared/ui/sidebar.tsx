@@ -78,6 +78,7 @@ import {
 	OpenEditorViewNotificationType,
 	InitiateNrqlExecutionNotificationType,
 	ViewColumn,
+	OpenErrorGroupNotificationType,
 } from "./ipc/webview.protocol";
 import { CodeStreamState, store, StoreType } from "./store";
 import { bootstrap, reset } from "./store/actions";
@@ -1025,6 +1026,30 @@ function listenForEvents(store: StoreType) {
 		};
 
 		HostApi.instance.notify(OpenEditorViewNotificationType, props);
+	});
+
+	api.on(OpenErrorGroupNotificationType, async params => {
+		const response = (await HostApi.instance.send(GetObservabilityErrorGroupMetadataRequestType, {
+			errorGroupGuid: params.errorGroupGuid,
+		})) as GetObservabilityErrorGroupMetadataResponse;
+		store.dispatch(
+			openErrorGroup({
+				errorGroupGuid: params.errorGroupGuid,
+				occurrenceId: params.occurrenceId,
+				data: {
+					multipleRepos: response?.relatedRepos?.length > 1,
+					relatedRepos: response?.relatedRepos || undefined,
+					timestamp: params.lastOccurrence,
+					sessionStart: params.sessionStart,
+					pendingEntityId: response?.entityId || params.entityId,
+					occurrenceId: response?.occurrenceId || params.occurrenceId,
+					pendingErrorGroupGuid: params.errorGroupGuid,
+					openType: "CLM Details",
+					remote: params.remote,
+					stackSourceMap: response?.stackSourceMap,
+				},
+			})
+		);
 	});
 }
 

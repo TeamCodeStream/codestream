@@ -174,6 +174,26 @@ export const SaveFileRequestType = new RequestType<SaveFileRequest, SaveFileResp
 	`${IpcRoutes.Host}/file/save`
 );
 
+export interface OpenErrorGroupRequest {
+	errorGroupGuid: string;
+	occurrenceId: string;
+	lastOccurrence: number;
+	sessionStart?: number;
+	openType: string;
+	remote?: string;
+	entityId: string;
+}
+export interface OpenErrorGroupResponse {
+	success: boolean;
+}
+
+export const OpenErrorGroupRequestType = new RequestType<
+	OpenErrorGroupRequest,
+	OpenErrorGroupResponse,
+	void,
+	void
+>(`${IpcRoutes.Host}/errorGroup/open`);
+
 export interface OpenInBufferRequest {
 	contentType: "json" | "csv";
 	data: any;

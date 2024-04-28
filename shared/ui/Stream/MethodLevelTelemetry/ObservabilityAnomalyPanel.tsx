@@ -13,8 +13,6 @@ import {
 	CriticalPathSpan,
 	GetMethodLevelTelemetryRequestType,
 	GetMethodLevelTelemetryResponse,
-	GetObservabilityErrorGroupMetadataRequestType,
-	GetObservabilityErrorGroupMetadataResponse,
 	MethodGoldenMetricsResult,
 	ObservabilityAnomaly,
 	ObservabilityError,
@@ -22,7 +20,12 @@ import {
 } from "@codestream/protocols/agent";
 import styled from "styled-components";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
-import { IdeNames, OpenUrlRequestType } from "@codestream/webview/ipc/host.protocol";
+import {
+	IdeNames,
+	OpenErrorGroupRequestType,
+	OpenErrorGroupResponse,
+	OpenUrlRequestType,
+} from "@codestream/webview/ipc/host.protocol";
 import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";
@@ -621,28 +624,16 @@ const Errors = (props: ErrorsProps) => {
 							onClick={async e => {
 								try {
 									setIsLoadingErrorGroupGuid(indexedErrorGroupGuid);
-									const response = (await HostApi.instance.send(
-										GetObservabilityErrorGroupMetadataRequestType,
-										{ errorGroupGuid: _.errorGroupGuid }
-									)) as GetObservabilityErrorGroupMetadataResponse;
-									// dispatch(
-									// 	openErrorGroup({
-									// 		errorGroupGuid: _.errorGroupGuid,
-									// 		occurrenceId: _.occurrenceId,
-									// 		data: {
-									// 			multipleRepos: response?.relatedRepos?.length > 1,
-									// 			relatedRepos: response?.relatedRepos || undefined,
-									// 			timestamp: _.lastOccurrence,
-									// 			sessionStart: props.sessionStart,
-									// 			pendingEntityId: response?.entityId || _.entityId,
-									// 			occurrenceId: response?.occurrenceId || _.occurrenceId,
-									// 			pendingErrorGroupGuid: _.errorGroupGuid,
-									// 			openType: "CLM Details",
-									// 			remote: _?.remote || undefined,
-									// 			stackSourceMap: response?.stackSourceMap,
-									// 		},
-									// 	})
-									// );
+
+									const response = (await HostApi.instance.send(OpenErrorGroupRequestType, {
+										errorGroupGuid: _.errorGroupGuid,
+										occurrenceId: _.occurrenceId,
+										lastOccurrence: _.lastOccurrence,
+										sessionStart: props.sessionStart,
+										openType: "CLM Details",
+										remote: _?.remote || undefined,
+										entityId: _.entityId,
+									})) as OpenErrorGroupResponse;
 								} catch (ex) {
 									console.error(ex);
 								} finally {

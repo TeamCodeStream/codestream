@@ -29,6 +29,7 @@ import com.codestream.protocols.webview.LogoutRequest
 import com.codestream.protocols.webview.MarkerApplyRequest
 import com.codestream.protocols.webview.MarkerCompareRequest
 import com.codestream.protocols.webview.MarkerInsertTextRequest
+import com.codestream.protocols.webview.OpenErrorGroupResponse
 import com.codestream.protocols.webview.OpenUrlRequest
 import com.codestream.protocols.webview.ReviewShowDiffRequest
 import com.codestream.protocols.webview.ReviewShowLocalDiffRequest
@@ -69,6 +70,7 @@ import com.intellij.testFramework.LightVirtualFile
 import com.teamdev.jxbrowser.js.JsAccessible
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonObject
 import org.eclipse.lsp4j.jsonrpc.ResponseErrorException
 import org.eclipse.lsp4j.jsonrpc.messages.ResponseError
 import org.jetbrains.kotlin.idea.scratch.ScratchFile
@@ -116,7 +118,6 @@ class WebViewRouter(val project: Project) {
 
     private suspend fun processAgentMessage(message: WebViewMessage) {
         val agentService = project.agentService ?: return
-        val webViewService = project.webViewService ?: return
         val response = agentService.remoteEndpoint.request(message.method, message.params).await()
         if (message.id != null) {
             logger.debug("Posting response (agent) ${message.id}")
@@ -154,6 +155,7 @@ class WebViewRouter(val project: Project) {
             "host/editor/symbol/copy" -> editorSymbolCopy(message)
             "host/editor/symbol/replace" -> editorSymbolReplace(message)
             "host/editors/codelens/refresh" -> editorsCodelensRefresh(message)
+            "host/errorGroup/open" -> openErrorGroup(message)
             "host/shell/prompt/folder" -> shellPromptFolder(message)
             "host/review/showDiff" -> reviewShowDiff(message)
             "host/review/showLocalDiff" -> reviewShowLocalDiff(message)
@@ -304,11 +306,15 @@ class WebViewRouter(val project: Project) {
         project.editorService?.scroll(sanitizeURI(request.uri)!!, request.position, request.atTop)
     }
 
-
-
     private fun editorsCodelensRefresh(message: WebViewMessage): EditorsCodelensRefreshResponse {
         project.sessionService?.didChangeCodelenses()
         return EditorsCodelensRefreshResponse(true)
+    }
+
+    private fun openErrorGroup(message: WebViewMessage): OpenErrorGroupResponse {
+        val webview = project.webViewService ?: return OpenErrorGroupResponse(false)
+        webview.postNotification("webview/errorGroup/open", message.params)
+        return OpenErrorGroupResponse(true)
     }
 
     private suspend fun shellPromptFolder(message: WebViewMessage): ShellPromptFolderResponse {
