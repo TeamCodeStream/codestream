@@ -614,13 +614,20 @@ export const Observability = React.memo((props: Props) => {
 	useInterval(
 		() => {
 			fetchGoldenMetrics(expandedEntity, true);
-			fetchServiceLevelObjectives(expandedEntity);
 			// fetchAnomalies(expandedEntity || "", currentRepoId);
 		},
 		300000,
 		true
 	);
 
+	// Update SLO/SLI metrics every 2 hours
+	useInterval(
+		() => {
+			fetchServiceLevelObjectives(expandedEntity);
+		},
+		7200000,
+		true
+	);
 	/*
 	 *	After initial load, every time repo context changes, do telemetry tracking
 	 */
