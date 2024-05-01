@@ -1,13 +1,11 @@
 import {
 	DetectTeamAnomaliesRequestType,
 	DidChangeObservabilityDataNotificationType,
-	DidDetectObservabilityAnomaliesNotificationType,
 	EntityAccount,
 	EntityGoldenMetrics,
 	ERROR_GENERIC_USE_ERROR_MESSAGE,
 	ERROR_NR_INSUFFICIENT_API_KEY,
 	GetEntityCountRequestType,
-	GetObservabilityAnomaliesRequestType,
 	GetObservabilityErrorAssignmentsRequestType,
 	GetObservabilityReposRequestType,
 	GetObservabilityReposResponse,
@@ -28,7 +26,7 @@ import {
 	ReposScm,
 } from "@codestream/protocols/agent";
 import cx from "classnames";
-import { head as _head, isEmpty as _isEmpty, isNil as _isNil } from "lodash-es";
+import { head as _head, isEmpty as _isEmpty } from "lodash-es";
 import React, { useEffect, useMemo, useState } from "react";
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
@@ -36,11 +34,7 @@ import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 import { setEditorContext } from "../store/editorContext/actions";
 import { isNotOnDisk } from "../utils";
 import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
-import {
-	setCurrentEntityGuid,
-	setEntityAccounts,
-	setRefreshAnomalies,
-} from "../store/context/actions";
+import { setCurrentEntityGuid, setEntityAccounts } from "../store/context/actions";
 import { HealthIcon } from "@codestream/webview/src/components/HealthIcon";
 import {
 	HostDidChangeWorkspaceFoldersNotificationType,
@@ -49,7 +43,7 @@ import {
 	OpenEditorViewNotificationType,
 } from "@codestream/protocols/webview";
 import { SecurityIssuesWrapper } from "@codestream/webview/Stream/SecurityIssuesWrapper";
-import { WebviewPanels, CLMSettings, DEFAULT_CLM_SETTINGS } from "@codestream/protocols/api";
+import { WebviewPanels } from "@codestream/protocols/api";
 import { Button } from "../src/components/Button";
 import { NoContent, PaneNode, PaneNodeName, PaneState } from "../src/components/Pane";
 import { CodeStreamState } from "../store";
@@ -713,9 +707,6 @@ export const Observability = React.memo((props: Props) => {
 			const filteredAssignments = observabilityAssignments?.filter(
 				_ => _.entityId === expandedEntity
 			);
-			const hasAnomalies =
-				observabilityAnomalies.errorRate.length > 0 ||
-				observabilityAnomalies.responseTime.length > 0;
 
 			const entity = derivedState.observabilityRepoEntities.find(_ => _.repoId === currentRepoId);
 
@@ -728,7 +719,6 @@ export const Observability = React.memo((props: Props) => {
 					!_isEmpty(filteredCurrentRepoErrors) || !_isEmpty(filteredAssignments)
 				}`,
 				meta_data_2: `slos_listed: ${hasServiceLevelObjectives}`,
-				meta_data_4: `anomalies_listed: ${hasAnomalies}`,
 				meta_data_3: `vulnerabilities_listed: ${isVulnPresent}`,
 				event_type: "modal_display",
 			};
@@ -1454,7 +1444,6 @@ export const Observability = React.memo((props: Props) => {
 												{repo.entityAccounts
 													.filter(_ => _)
 													.map(ea => {
-														debugger;
 														const _observabilityRepo = observabilityRepos.find(
 															_ => _.repoId === currentRepoId
 														);

@@ -1,23 +1,11 @@
 /**
  * @jest-environment jsdom
  */
-import { CSRepository, CSTeam, CSUser } from "@codestream/protocols/api";
-import { lightTheme } from "@codestream/webview/src/themes";
-import { CodeStreamState } from "@codestream/webview/store";
-import { ContextState } from "@codestream/webview/store/context/types";
-import * as providerSelectors from "@codestream/webview/store/providers/reducer";
-import { TeamsState } from "@codestream/webview/store/teams/types";
-import { HostApi } from "@codestream/webview/webview-api";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import * as React from "react";
-import { act } from "react-dom/test-utils";
-import { Provider } from "react-redux";
-import configureStore from "redux-mock-store";
-import thunk from "redux-thunk";
-import { ThemeProvider } from "styled-components";
-import { Observability } from "@codestream/webview/Stream/Observability";
-import { PaneState } from "@codestream/webview/src/components/Pane";
 import {
+	DetectTeamAnomaliesRequest,
+	DetectTeamAnomaliesRequestType,
+	DetectTeamAnomaliesResponse,
+	EntityObservabilityAnomalies,
 	GetEntityCountRequest,
 	GetEntityCountRequestType,
 	GetEntityCountResponse,
@@ -44,12 +32,28 @@ import {
 	GetServiceLevelObjectivesResponse,
 	RemoteType,
 } from "@codestream/protocols/agent";
-import { afterEach, beforeEach, describe, it, jest } from "@jest/globals";
-import { IntlProvider } from "react-intl";
-import translations from "@codestream/webview/translations/en";
-import { ConfigsState } from "@codestream/webview/store/configs/types";
+import { CSRepository, CSTeam, CSUser } from "@codestream/protocols/api";
+import { Observability } from "@codestream/webview/Stream/Observability";
+import { PaneState } from "@codestream/webview/src/components/Pane";
+import { lightTheme } from "@codestream/webview/src/themes";
+import { CodeStreamState } from "@codestream/webview/store";
 import { isFeatureEnabled } from "@codestream/webview/store/apiVersioning/reducer";
 import { CodeErrorsState } from "@codestream/webview/store/codeErrors/types";
+import { ConfigsState } from "@codestream/webview/store/configs/types";
+import { ContextState } from "@codestream/webview/store/context/types";
+import * as providerSelectors from "@codestream/webview/store/providers/reducer";
+import { TeamsState } from "@codestream/webview/store/teams/types";
+import translations from "@codestream/webview/translations/en";
+import { HostApi } from "@codestream/webview/webview-api";
+import { afterEach, beforeEach, describe, it, jest } from "@jest/globals";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import * as React from "react";
+import { act } from "react-dom/test-utils";
+import { IntlProvider } from "react-intl";
+import { Provider } from "react-redux";
+import configureStore from "redux-mock-store";
+import thunk from "redux-thunk";
+import { ThemeProvider } from "styled-components";
 
 jest.mock("@codestream/webview/store/apiVersioning/reducer");
 jest.mock("@codestream/webview/webview-api");
@@ -145,6 +149,30 @@ function createState(): Partial<CodeStreamState> {
 		repos: {
 			repoid: myrepo as CSRepository,
 		},
+		anomalyData: {
+			abcd1234: {
+				entityGuid: "",
+				durationAnomalies: [
+					{
+						name: "durationAnomaly",
+						language: "",
+						type: "duration",
+						oldValue: 0,
+						newValue: 0,
+						ratio: 0,
+						text: "",
+						totalDays: 0,
+						sinceText: "",
+						metricTimesliceName: "",
+						errorMetricTimesliceName: "",
+						chartHeaderTexts: {},
+						notificationText: "",
+						entityName: "",
+					},
+				],
+				errorRateAnomalies: [],
+			},
+		},
 		codeErrors: {
 			demoMode: {
 				enabled: false,
@@ -179,6 +207,9 @@ describe("Observability", () => {
 
 	const mockGetObservabilityErrors =
 		jest.fn<(params: GetObservabilityErrorsRequest) => GetObservabilityErrorsResponse>();
+
+	const mockDetectTeamAnomalies =
+		jest.fn<(params: DetectTeamAnomaliesRequest) => DetectTeamAnomaliesResponse>();
 
 	function mockServiceClickedMethods() {
 		mockGetServiceLevelObjectives.mockImplementation(
@@ -367,6 +398,12 @@ describe("Observability", () => {
 			};
 			return response;
 		});
+		mockDetectTeamAnomalies.mockImplementation((_params: DetectTeamAnomaliesRequest) => {
+			const response: DetectTeamAnomaliesResponse = {
+				abcd1234: {} as EntityObservabilityAnomalies,
+			};
+			return response;
+		});
 
 		mockHostApi.send.mockImplementation((type, params) => {
 			switch (type) {
@@ -395,6 +432,9 @@ describe("Observability", () => {
 				}
 				case GetObservabilityErrorsRequestType: {
 					return mockGetObservabilityErrors(params as GetObservabilityErrorsRequest);
+				}
+				case DetectTeamAnomaliesRequestType: {
+					return mockDetectTeamAnomalies(params as DetectTeamAnomaliesRequest);
 				}
 			}
 			return undefined;
@@ -570,7 +610,6 @@ describe("Observability", () => {
 				account_id: undefined,
 				meta_data: `errors_listed: true`,
 				meta_data_2: `slos_listed: true`,
-				meta_data_4: `anomalies_listed: true`,
 				meta_data_3: `vulnerabilities_listed: false`,
 				event_type: "modal_display",
 			});
