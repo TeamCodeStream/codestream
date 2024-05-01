@@ -1,37 +1,65 @@
 import React from "react";
 import Icon from "./Icon";
-import { CodeStreamState } from "@codestream/webview/store";
-import { setUserPreference } from "./actions";
-import { useAppSelector, useAppDispatch } from "../utilities/hooks";
-import { shallowEqual } from "react-redux";
+import { useAppDispatch } from "../utilities/hooks";
 import { PaneNode, PaneNodeName } from "../src/components/Pane";
 import { RepoHeader } from "./Observability";
 
-interface Props {}
+interface Props {
+	// alertSeverityColor: string;
+	// anomalyDetectionSupported: boolean;
+	// calculatingAnomalies: boolean;
+	// collapsed: boolean;
+	// currentRepoId: string;
+	// ea: EntityAccount;
+	// entityGoldenMetrics?: EntityGoldenMetrics;
+	// entityGoldenMetricsErrors: string[];
+	// errorInboxError?: string;
+	// handleClickTopLevelService: Function;
+	// hasServiceLevelObjectives: boolean;
+	// loadingGoldenMetrics: boolean;
+	// loadingPane?: string;
+	// noErrorsAccess?: string;
+	// observabilityAnomalies: GetObservabilityAnomaliesResponse;
+	// observabilityAssignments: ObservabilityErrorCore[];
+	// observabilityErrors: ObservabilityRepoError[];
+	// observabilityErrorsError?: string;
+	// observabilityRepo?: ObservabilityRepo;
+	// recentIssues?: GetIssuesResponse;
+	// serviceLevelObjectiveError?: string;
+	// serviceLevelObjectives: ServiceLevelObjectiveResult[];
+	// setIsVulnPresent: Function;
+	// showErrors: boolean;
+}
 
 export const ObservabilityServiceSearch = React.memo((props: Props) => {
 	const dispatch = useAppDispatch();
 
-	const derivedState = useAppSelector((state: CodeStreamState) => {
-		const { preferences } = state;
-
-		const serviceSearchDropdownIsExpanded = preferences?.serviceSearchDropdownIsExpanded ?? false;
-
-		return {
-			serviceSearchDropdownIsExpanded,
-		};
-	}, shallowEqual);
-
-	const handleRowOnClick = () => {
-		const { serviceSearchDropdownIsExpanded } = derivedState;
-
-		dispatch(
-			setUserPreference({
-				prefPath: ["serviceSearchDropdownIsExpanded"],
-				value: !serviceSearchDropdownIsExpanded,
-			})
-		);
-	};
+	// const {
+	// 	alertSeverityColor,
+	// 	anomalyDetectionSupported,
+	// 	calculatingAnomalies,
+	// 	collapsed,
+	// 	currentRepoId,
+	// 	ea,
+	// 	entityGoldenMetrics,
+	// 	entityGoldenMetricsErrors,
+	// 	errorInboxError,
+	// 	handleClickTopLevelService,
+	// 	hasServiceLevelObjectives,
+	// 	loadingGoldenMetrics,
+	// 	loadingPane,
+	// 	noErrorsAccess,
+	// 	observabilityAnomalies,
+	// 	observabilityAssignments,
+	// 	observabilityErrors,
+	// 	observabilityErrorsError,
+	// 	observabilityRepo,
+	// 	recentIssues,
+	// 	serviceLevelObjectiveError,
+	// 	serviceLevelObjectives,
+	// 	setIsVulnPresent,
+	// 	showErrors,
+	// } = props;
 
 	return (
 		<>
@@ -69,7 +97,35 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 				>
 					icon?
 				</PaneNodeName>
-				Dropdown Content here
+
+				{/* {false && (
+					<ObservabilityServiceEntity
+						alertSeverityColor={alertSeverityColor}
+						anomalyDetectionSupported={anomalyDetectionSupported}
+						calculatingAnomalies={calculatingAnomalies}
+						collapsed={collapsed}
+						currentRepoId={currentRepoId}
+						ea={ea}
+						entityGoldenMetrics={entityGoldenMetrics}
+						entityGoldenMetricsErrors={entityGoldenMetricsErrors}
+						errorInboxError={errorInboxError}
+						handleClickTopLevelService={handleClickTopLevelService}
+						hasServiceLevelObjectives={hasServiceLevelObjectives}
+						loadingGoldenMetrics={loadingGoldenMetrics}
+						loadingPane={loadingPane}
+						noErrorsAccess={noErrorsAccess}
+						observabilityAnomalies={observabilityAnomalies}
+						observabilityAssignments={observabilityAssignments}
+						observabilityErrors={observabilityErrors}
+						observabilityErrorsError={observabilityErrorsError}
+						observabilityRepo={_observabilityRepo}
+						recentIssues={recentIssues}
+						serviceLevelObjectiveError={serviceLevelObjectiveError}
+						serviceLevelObjectives={serviceLevelObjectives}
+						setIsVulnPresent={setIsVulnPresent}
+						showErrors={showErrors}
+					/>
+				)} */}
 			</PaneNode>
 		</>
 	);
