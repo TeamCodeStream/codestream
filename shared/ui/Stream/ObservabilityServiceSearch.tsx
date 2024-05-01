@@ -68,7 +68,10 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 					data-testid={`observability-service-search`}
 					title={
 						<RepoHeader>
-							<Icon style={{ transform: "scale(0.7)", display: "inline-block" }} name="search" />{" "}
+							<Icon
+								style={{ transform: "scale(0.7)", display: "inline-block", marginLeft: "1px" }}
+								name="search"
+							/>{" "}
 							<span
 								style={{
 									fontSize: "11px",
@@ -93,10 +96,9 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 					collapsed={false}
 					showChildIconOnCollapse={true}
 					actionsVisibleIfOpen={true}
-					customPadding="2px 10px 2px 4px"
-				>
-					icon?
-				</PaneNodeName>
+					customPadding="2px 10px 2px 19px"
+					noChevron={true}
+				></PaneNodeName>
 
 				{/* {false && (
 					<ObservabilityServiceEntity

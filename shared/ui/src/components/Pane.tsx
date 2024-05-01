@@ -47,6 +47,7 @@ interface PaneNodeNameProps {
 	showChildIconOnCollapse?: boolean;
 	customPadding?: string;
 	"data-testid"?: string;
+	noChevron?: boolean;
 }
 export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>) => {
 	const dispatch = useAppDispatch();
@@ -83,7 +84,7 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 		<div className={props.className} onClick={props.onClick || toggleNode}>
 			<div style={{ display: props.labelIsFlex ? "flex" : "block" }} className="label">
 				{props.isLoading && <Icon name="sync" className="spin" />}
-				{!props.isLoading && (
+				{!props.isLoading && !props.noChevron && (
 					<Icon
 						data-testid={
 							props["data-testid"]
