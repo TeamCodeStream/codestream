@@ -54,7 +54,7 @@ export const closePrDetailModal =
 		dispatch(openPanel(WebviewPanels.Sidebar));
 		dispatch(setCurrentCodemark());
 		dispatch(setCurrentReview());
-		dispatch(setCurrentCodeError());
+		dispatch(setCurrentCodeErrorData());
 		dispatch(setCurrentPullRequest(providerId, id, "", "", "sidebar-diffs", groupIndex));
 		dispatch(clearCurrentErrorsInboxOptions());
 		dispatch(clearCurrentInstrumentationOptions());
@@ -65,7 +65,7 @@ export const closeAllModals = () => dispatch => {
 	dispatch(closeModal());
 	dispatch(setCurrentCodemark());
 	dispatch(setCurrentReview());
-	dispatch(setCurrentCodeError());
+	dispatch(setCurrentCodeErrorData());
 	dispatch(clearCurrentPullRequest());
 	dispatch(clearCurrentErrorsInboxOptions());
 	dispatch(clearCurrentInstrumentationOptions());
@@ -183,13 +183,8 @@ export const setCurrentReview =
 export const setCurrentReviewOptions = (options: any) =>
 	action(ContextActionsType.SetCurrentReviewOptions, { options });
 
-export const _setCurrentCodeError = (codeErrorId?: string, data?: any) =>
-	action(ContextActionsType.SetCurrentCodeError, { codeErrorId, data });
-
-export const setCurrentCodeError =
-	(codeErrorId?: string, data?: CodeErrorData) => (dispatch, getState) => {
-		return dispatch(_setCurrentCodeError(codeErrorId, data));
-	};
+export const setCurrentCodeErrorData = (errorGuid?: string, data?: CodeErrorData) =>
+	action(ContextActionsType.SetCurrentCodeErrorData, { errorGuid, data });
 
 export const setCurrentRepo = (id?: string, path?: string) =>
 	action(ContextActionsType.SetCurrentRepo, { id, path });

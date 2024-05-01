@@ -5,7 +5,7 @@ import {
 	clearCurrentPullRequest,
 	closeModal,
 	openPanel,
-	setCurrentCodeError,
+	setCurrentCodeErrorData,
 	setCurrentCodemark,
 	setCurrentMethodLevelTelemetry,
 	setCurrentReview,
@@ -19,7 +19,7 @@ export const closeAllPanels = createAppAsyncThunk(
 		dispatch(openPanel(WebviewPanels.Sidebar));
 		dispatch(setCurrentCodemark());
 		dispatch(setCurrentReview());
-		dispatch(setCurrentCodeError());
+		dispatch(setCurrentCodeErrorData());
 		dispatch(clearCurrentPullRequest());
 		dispatch(clearCurrentErrorsInboxOptions());
 		dispatch(clearCurrentInstrumentationOptions());

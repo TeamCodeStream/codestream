@@ -97,24 +97,24 @@ export enum WebviewModals {
 
 export interface CodeErrorData {
 	// REMOVE BELOW
-	parsedStack?: any;
+	// parsedStack?: any;
 	// REMOVE ABOVE
 	remote?: string;
 	commit?: string;
 	tag?: string;
 	/** caches when the last user session started  */
 	sessionStart?: number;
-	pendingErrorGroupGuid?: string;
-	pendingEntityId?: string;
+	// pendingErrorGroupGuid?: string;
+	// pendingEntityId?: string;
 	occurrenceId?: string;
 	lineIndex?: number;
 	timestamp?: number;
 	openType?: "Open in IDE Flow" | "Observability Section" | "Activity Feed" | "CLM Details";
 	multipleRepos?: boolean;
 	relatedRepos?: RelatedRepository;
-	claimWhenConnected?: boolean;
+	// claimWhenConnected?: boolean;
 	environment?: string;
-	pendingRequiresConnection?: boolean;
+	// pendingRequiresConnection?: boolean;
 	stackSourceMap?: string;
 	domain?: string;
 	traceId?: string;
@@ -157,7 +157,7 @@ export interface WebviewContext {
 	/**
 	 * This could be a real codeErorr.id or a PENDING-${id}
 	 */
-	currentCodeErrorId?: string;
+	currentCodeErrorGuid?: string;
 	currentCodeErrorData?: CodeErrorData;
 	createPullRequestReviewId?: string;
 	createPullRequestOptions?: NewPullRequestBranch;

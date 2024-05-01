@@ -441,6 +441,8 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 					functionLocator = {
 						namespace: `${this.parseJavaPackage(document.getText())}.${thePackage.parent.name}`
 					};
+				} else {
+					Logger.warn(`instrumentationCodeLensProvider: no package found for java file ${document.fileName}`);
 				}
 			}
 
@@ -460,6 +462,8 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 				functionLocator = { namespaces };
 			}
 
+			Logger.log(`Using functionLocator ${JSON.stringify(functionLocator)} for language ${document.languageId}`);
+
 			const fileLevelTelemetryResponse = await this.observabilityService.getFileLevelTelemetry(
 				document.uri.toString(),
 				document.languageId,
@@ -470,7 +474,7 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			this.resetCache = false;
 
 			if (fileLevelTelemetryResponse == null) {
-				Logger.log("provideCodeLenses no response", {
+				Logger.log("fileLevelTelemetry no response", {
 					fileName: document.fileName,
 					languageId: document.languageId,
 					methodLevelTelemetryRequestOptions

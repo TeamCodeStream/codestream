@@ -1151,6 +1151,23 @@ export const WebviewErrorRequestType = new RequestType<WebviewErrorRequest, void
 	`codestream/webview/error`
 );
 
+export interface AssociateErrorToPostRequest {
+	errorGroupGuid: string;
+}
+
+export interface AssociateErrorToPostResponse {
+	accountId: number;
+	parentPostId: string;
+	streamId: string;
+}
+
+export const AssociateErrorToPostRequestType = new RequestType<
+	AssociateErrorToPostRequest,
+	AssociateErrorToPostResponse,
+	void,
+	void
+>("codestream/newrelic/errorGroupDetails");
+
 export interface GetNewRelicErrorGroupRequest {
 	errorGroupGuid: string;
 	/** allow the lookup of errors without stack traces */
@@ -1160,6 +1177,24 @@ export interface GetNewRelicErrorGroupRequest {
 	src?: string;
 	timestamp?: number;
 }
+
+export interface GetNewRelicErrorGroupResponse {
+	errorGroup?: NewRelicErrorGroup;
+	accountId: number;
+	error?: {
+		message: string;
+		details?: {
+			settings?: { key: string; value: any }[];
+		};
+	};
+}
+
+export const GetNewRelicErrorGroupRequestType = new RequestType<
+	GetNewRelicErrorGroupRequest,
+	GetNewRelicErrorGroupResponse,
+	void,
+	void
+>("codestream/newrelic/errorGroup");
 
 export interface GetNewRelicRelatedEntitiesRequest {
 	entityGuid: string;
@@ -1243,17 +1278,6 @@ export interface NewRelicErrorGroup {
 	releaseTag?: string;
 }
 
-export interface GetNewRelicErrorGroupResponse {
-	errorGroup?: NewRelicErrorGroup;
-	accountId: number;
-	error?: {
-		message: string;
-		details?: {
-			settings?: { key: string; value: any }[] | undefined;
-		};
-	};
-}
-
 export interface GetNewRelicRelatedEntitiesResponse extends Array<RelatedEntityByType> {
 	error?: {
 		message: string;
@@ -1264,13 +1288,6 @@ export interface GetNewRelicRelatedEntitiesResponse extends Array<RelatedEntityB
 export interface GetNewRelicUrlResponse {
 	newRelicUrl: string;
 }
-
-export const GetNewRelicErrorGroupRequestType = new RequestType<
-	GetNewRelicErrorGroupRequest,
-	GetNewRelicErrorGroupResponse,
-	void,
-	void
->("codestream/newrelic/errorGroup");
 
 export const GetNewRelicRelatedEntitiesRequestType = new RequestType<
 	GetNewRelicRelatedEntitiesRequest,

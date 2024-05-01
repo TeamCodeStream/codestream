@@ -689,18 +689,21 @@ export interface CSCreateCodeErrorResponse {
 	repos?: CSRepository[];
 }
 
+export interface ObjectInfo {
+	repoId: string;
+	remote: string;
+	accountId: string;
+	hasRelatedRepos: boolean;
+	entityName?: string;// TODO what name - APM, repo, or error??
+	entityId?: string; // TODO what id - APM, repo, or error??
+}
+
 export interface CSCreateCodeErrorRequest {
 	accountId?: number;
-	objectId?: string;
+	entityGuid: string;
 	parentPostId?: string;
 	objectType?: "errorGroup";
-	objectInfo?: {
-		repoId: string;
-		remote: string;
-		accountId: string;
-		entityName: string;
-		hasRelatedRepos: boolean;
-	};
+	objectInfo?: ObjectInfo;
 	title: string;
 	text?: string;
 	stackTraces: CSStackTraceInfo[];

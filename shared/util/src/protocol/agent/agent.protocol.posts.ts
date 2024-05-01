@@ -226,7 +226,7 @@ export interface FetchActivityResponse {
 	posts: PostPlus[];
 	codemarks: CodemarkPlus[];
 	reviews: CSReview[];
-	codeErrors: CSCodeError[];
+	// codeErrors: CSCodeError[];
 	records: string[];
 	more?: boolean;
 }

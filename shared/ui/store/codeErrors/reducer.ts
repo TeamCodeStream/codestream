@@ -1,4 +1,4 @@
-import { CSCodeError } from "@codestream/protocols/api";
+import { CSCodeError, CSUser } from "@codestream/protocols/api";
 import { createSelector } from "reselect";
 
 import { CodeStreamState } from "..";
@@ -39,18 +39,12 @@ export function reduceCodeErrors(
 				functionToEditFailed: state.functionToEditFailed,
 				codeErrors: {
 					...state.codeErrors,
-					...toMapBy(
-						"id",
-						action.payload.filter(_ => !_.deactivated)
-					),
+					...toMapBy("entityGuid", action.payload),
 				},
 				demoMode: state.demoMode,
 			};
 		case CodeErrorsActionsTypes.AddCodeErrors: {
-			const newCodeErrors = toMapBy(
-				"id",
-				action.payload.filter(_ => !_.deactivated)
-			);
+			const newCodeErrors = toMapBy("entityGuid", action.payload);
 			for (const id in newCodeErrors) {
 				const existingCodeError = state.codeErrors[id];
 				if (existingCodeError) {
@@ -76,7 +70,7 @@ export function reduceCodeErrors(
 				errorGroups: state.errorGroups,
 				grokRepliesLength: state.grokRepliesLength,
 				grokError: state.grokError,
-				codeErrors: { ...state.codeErrors, ...toMapBy("id", action.payload) },
+				codeErrors: { ...state.codeErrors, ...toMapBy("entityGuid", action.payload) },
 				functionToEdit: state.functionToEdit,
 				functionToEditFailed: state.functionToEditFailed,
 				demoMode: state.demoMode,
@@ -209,14 +203,9 @@ export function getErrorGroup(
 	state: CodeErrorsState,
 	codeError: CSCodeError | undefined
 ): NewRelicErrorGroup | undefined {
-	if (
-		!codeError ||
-		codeError.objectType !== "errorGroup" ||
-		!codeError.objectId ||
-		codeError.deactivated
-	)
+	if (!codeError || codeError.objectType !== "errorGroup" || !codeError.entityGuid)
 		return undefined;
-	return state.errorGroups[codeError.objectId!]?.errorGroup;
+	return state.errorGroups[codeError.entityGuid!]?.errorGroup;
 }
 
 const getCodeErrors = (state: CodeStreamState) => state.codeErrors.codeErrors;
@@ -224,7 +213,7 @@ const getCodeErrors = (state: CodeStreamState) => state.codeErrors.codeErrors;
 export const getCurrentCodeErrorId = createSelector(
 	(state: CodeStreamState) => state.context,
 	(context: ContextState) => {
-		return context.currentCodeErrorId || "";
+		return context.currentCodeErrorGuid || "";
 	}
 );
 
@@ -232,10 +221,12 @@ export const getCodeErrorCreator = createSelector(
 	getCodeErrors,
 	getCurrentCodeErrorId,
 	getTeamMates,
-	(codeErrors, id, teamMates) => {
+	(codeErrors, id, teamMates): CSUser | undefined => {
 		if (!teamMates) return undefined;
 		const codeError = codeErrors[id];
-		if (!codeError || !codeError.creatorId) return undefined;
-		return teamMates.find(_ => _.id === codeError.creatorId);
+		// if (!codeError || !codeError.creatorId) return undefined;
+		// return teamMates.find(_ => _.id === codeError.creatorId);
+		// TODO do
+		return undefined;
 	}
 );

@@ -11,7 +11,7 @@ import {
 	FetchCodeErrorsResponse,
 	FetchPostRepliesRequest,
 	FetchPostRepliesRequestType,
-	FetchPostRepliesResponse,
+	FetchPostRepliesResponse, AssociateErrorToPostRequest, AssociateErrorToPostRequestType, AssociateErrorToPostResponse,
 	GetNewRelicErrorGroupRequest,
 	GetNewRelicErrorGroupRequestType,
 	GetNewRelicErrorGroupResponse,
@@ -28,11 +28,13 @@ import {
 	TelemetryEventName,
 	UpdateCodeErrorRequest,
 	UpdateCodeErrorRequestType,
-	UpdateCodeErrorResponse,
+	UpdateCodeErrorResponse
 } from "@codestream/protocols/agent";
 
 import { CodeErrorsApi } from "@codestream/webview/store/codeErrors/api/CodeErrorsApi";
 import { HostApi } from "@codestream/webview/webview-api";
+import { method, result } from "lodash-es";
+import { postId, streamId } from "@codestream/webview/store/codeErrors/api/data/createSharableCodeErrorResponse";
 
 class CodeErrorsApiImpl implements CodeErrorsApi {
 	async createShareableCodeError(
@@ -53,8 +55,13 @@ class CodeErrorsApiImpl implements CodeErrorsApi {
 		return result;
 	}
 
-	async fetchCodeErrors(request: FetchCodeErrorsRequest): Promise<FetchCodeErrorsResponse> {
-		const result = await HostApi.instance.send(FetchCodeErrorsRequestType, request);
+	// async fetchCodeErrors(request: FetchCodeErrorsRequest): Promise<FetchCodeErrorsResponse> {
+	// 	const result = await HostApi.instance.send(FetchCodeErrorsRequestType, request);
+	// 	return result;
+	// }
+
+	async getErrorDetails(request: AssociateErrorToPostRequest): Promise<AssociateErrorToPostResponse> {
+		const result = await HostApi.instance.send(AssociateErrorToPostRequestType, request);
 		return result;
 	}
 

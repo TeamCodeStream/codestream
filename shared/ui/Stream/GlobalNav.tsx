@@ -45,7 +45,7 @@ export function GlobalNav() {
 			totalMentions: Object.values(umis.mentions).reduce(sum, 0),
 
 			currentReviewId: state.context.currentReviewId,
-			currentCodeErrorId: state.context.currentCodeErrorId,
+			currentCodeErrorGuid: state.context.currentCodeErrorGuid,
 
 			currentPullRequestId: state.context.currentPullRequest
 				? state.context.currentPullRequest.id
@@ -72,7 +72,7 @@ export function GlobalNav() {
 		totalMentions,
 
 		currentReviewId,
-		currentCodeErrorId,
+		currentCodeErrorGuid,
 		currentPullRequestId,
 	} = derivedState;
 
@@ -246,7 +246,7 @@ export function GlobalNav() {
 
 		derivedState.currentEntityGuid,
 		currentReviewId,
-		currentCodeErrorId,
+		currentCodeErrorGuid,
 		currentPullRequestId,
 
 		plusMenuOpen,

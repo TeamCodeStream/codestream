@@ -15,13 +15,13 @@ export function getCreateSharableCodeErrorResponse(
 	repoId: string
 ): CreateShareableCodeErrorResponse {
 	const codeError: CSCodeError = {
-		version: 2,
-		deactivated: false,
+		// version: 2,
+		// deactivated: false,
 		numReplies: 1,
-		createdAt: createdAt,
-		modifiedAt: modifiedAt,
+		// createdAt: createdAt,
+		// modifiedAt: modifiedAt,
 		accountId: 11879688,
-		objectId: "MTE4Nzk2ODh8RVJUfEVSUl9HUk9VUHwzMTY4NTFkZS1hMjVmLTNlMzMtYmI2ZS0zMTc2ZGRiYjIwYjU",
+		entityGuid: "MTE4Nzk2ODh8RVJUfEVSUl9HUk9VUHwzMTY4NTFkZS1hMjVmLTNlMzMtYmI2ZS0zMTc2ZGRiYjIwYjU",
 		objectType: "errorGroup",
 		title: "java.lang.NullPointerException",
 		text: 'Cannot invoke "acme.storefront.action.report.UserDataManager$Phone.getCountryCode()" because the return value of "acme.storefront.action.report.UserDataManager$User.getPhone()" is null',
@@ -407,12 +407,12 @@ export function getCreateSharableCodeErrorResponse(
 		postId: parentPostId,
 		teamId: "651ed16ac2f7dee11c938922",
 		streamId: streamId,
-		creatorId: "652db11a7c271413e88b4ae3",
+		// creatorId: "652db11a7c271413e88b4ae3",
 		followerIds: ["652db11a7c271413e88b4ae3"],
 		permalink:
 			"https://codestream-pd.staging-service.nr-ops.net/e/ZR7RasL33uEck4ki/EjOgI79MSwC2JWYROgOBBw",
 		lastActivityAt: 1708549069594,
-		id: codeErrorId,
+		// id: codeErrorId,
 	};
 
 	return {

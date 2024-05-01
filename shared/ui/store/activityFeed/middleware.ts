@@ -27,9 +27,10 @@ export const activityFeedMiddleware: Middleware = store => next => async action 
 					store.dispatch(addNewActivity("codemark", [post.codemark]));
 				} else if (post.review) {
 					store.dispatch(addNewActivity("review", [post.review]));
-				} else if (post.codeError) {
-					store.dispatch(addNewActivity("codeError", [post.codeError]));
 				}
+				// else if (post.codeError) {
+				// 	store.dispatch(addNewActivity("codeError", [post.codeError]));
+				// }
 			}
 		});
 	}
@@ -63,5 +64,5 @@ const fetchPostForActivity =
 
 		if (post.codemark) dispatch(addNewActivity("codemark", [post.codemark]));
 		if (post.review) dispatch(addNewActivity("review", [post.review]));
-		if (post.codeError) dispatch(addNewActivity("codeError", [post.codeError]));
+		// if (post.codeError) dispatch(addNewActivity("codeError", [post.codeError]));
 	};

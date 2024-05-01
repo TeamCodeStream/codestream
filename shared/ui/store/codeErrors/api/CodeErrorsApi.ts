@@ -1,12 +1,8 @@
 import {
-	ClaimCodeErrorRequest,
-	ClaimCodeErrorResponse,
 	CreateShareableCodeErrorRequest,
 	CreateShareableCodeErrorResponse,
-	FetchCodeErrorsRequest,
-	FetchCodeErrorsResponse,
 	FetchPostRepliesRequest,
-	FetchPostRepliesResponse,
+	FetchPostRepliesResponse, AssociateErrorToPostRequest, AssociateErrorToPostResponse,
 	GetNewRelicErrorGroupRequest,
 	GetNewRelicErrorGroupResponse,
 	GetObservabilityErrorsRequest,
@@ -18,7 +14,7 @@ import {
 	TelemetryData,
 	TelemetryEventName,
 	UpdateCodeErrorRequest,
-	UpdateCodeErrorResponse,
+	UpdateCodeErrorResponse
 } from "@codestream/protocols/agent";
 
 export interface CodeErrorsApi {
@@ -28,7 +24,7 @@ export interface CodeErrorsApi {
 
 	fetchPostReplies(request: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse>;
 
-	fetchCodeErrors(request: FetchCodeErrorsRequest): Promise<FetchCodeErrorsResponse>;
+	// fetchCodeErrors(request: FetchCodeErrorsRequest): Promise<FetchCodeErrorsResponse>;
 
 	updateCodeErrors(request: UpdateCodeErrorRequest): Promise<UpdateCodeErrorResponse>;
 
@@ -42,11 +38,15 @@ export interface CodeErrorsApi {
 		request: GetNewRelicErrorGroupRequest
 	): Promise<GetNewRelicErrorGroupResponse>;
 
+	getErrorDetails(
+		request: AssociateErrorToPostRequest
+	): Promise<AssociateErrorToPostResponse>;
+
 	getObservabilityErrors(
 		request: GetObservabilityErrorsRequest
 	): Promise<GetObservabilityErrorsResponse>;
 
-	claimCodeError(request: ClaimCodeErrorRequest): Promise<ClaimCodeErrorResponse>;
+	// claimCodeError(request: ClaimCodeErrorRequest): Promise<ClaimCodeErrorResponse>;
 
 	executeThirdPartyTyped<T, R>(method: string, providerId: string, params: any): Promise<any>;
 

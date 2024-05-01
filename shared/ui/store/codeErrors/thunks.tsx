@@ -11,14 +11,11 @@ import {
 	ResolveStackTraceRequest,
 } from "@codestream/protocols/agent";
 import { CSCodeError, CSStackTraceLine } from "@codestream/protocols/api";
-import { clearResolvedFlag } from "@codestream/utils/api/codeErrorCleanup";
 import { logError } from "@codestream/webview/logger";
 import { CodeStreamState } from "@codestream/webview/store";
 import {
 	_addProviderError,
-	_bootstrapCodeErrors,
 	_clearProviderError,
-	_deleteCodeError,
 	_isLoadingErrorGroup,
 	_setErrorGroup,
 	_updateCodeErrors,
@@ -34,7 +31,7 @@ import {
 	setGrokRepliesLength,
 } from "@codestream/webview/store/codeErrors/actions";
 import { getCodeError } from "@codestream/webview/store/codeErrors/reducer";
-import { setCurrentCodeError } from "@codestream/webview/store/context/actions";
+import { setCurrentCodeErrorData } from "@codestream/webview/store/context/actions";
 import { createAppAsyncThunk } from "@codestream/webview/store/helper";
 import { addPosts, appendGrokStreamingResponse } from "@codestream/webview/store/posts/actions";
 import { getNrAiPostLength } from "@codestream/webview/store/posts/reducer";
@@ -42,8 +39,6 @@ import { GrokStreamEvent } from "@codestream/webview/store/posts/types";
 import { addStreams } from "@codestream/webview/store/streams/actions";
 import { createPostAndCodeError, deletePost } from "@codestream/webview/Stream/actions";
 import { highlightRange } from "@codestream/webview/Stream/api-functions";
-import { confirmPopup } from "@codestream/webview/Stream/Confirm";
-import React from "react";
 import { Position, Range } from "vscode-languageserver-types";
 import { URI } from "vscode-uri";
 import {
@@ -57,7 +52,7 @@ export const updateCodeErrors =
 		const state = getState();
 		codeErrors = codeErrors.map(_ => ({
 			..._,
-			stackTraces: state.codeErrors.codeErrors[_.id].stackTraces,
+			stackTraces: state.codeErrors.codeErrors[_.entityGuid].stackTraces,
 		}));
 		dispatch(_updateCodeErrors(codeErrors));
 	};
@@ -128,20 +123,20 @@ export const setProviderError =
 		}
 	};
 
-export const processCodeErrorsMessage =
-	(codeErrors: CSCodeError[]) => async (dispatch, getState: () => CodeStreamState) => {
-		const newCodeErrors = codeErrors.filter(_ => !_.deactivated);
-		clearResolvedFlag(newCodeErrors);
-		const deleteCodeErrors = codeErrors.filter(_ => _.deactivated);
-		dispatch(addCodeErrors(newCodeErrors));
-		const context = getState().context;
-		for (const deleteCodeError of deleteCodeErrors) {
-			dispatch(_deleteCodeError(deleteCodeError.id));
-			if (context.currentCodeErrorId === deleteCodeError.id) {
-				dispatch(setCurrentCodeError());
-			}
-		}
-	};
+// export const processCodeErrorsMessage =
+// 	(codeErrors: CSCodeError[]) => async (dispatch, getState: () => CodeStreamState) => {
+// 		const newCodeErrors = codeErrors.filter(_ => !_.deactivated);
+// 		clearResolvedFlag(newCodeErrors);
+// 		const deleteCodeErrors = codeErrors.filter(_ => _.deactivated);
+// 		dispatch(addCodeErrors(newCodeErrors));
+// 		const context = getState().context;
+// 		for (const deleteCodeError of deleteCodeErrors) {
+// 			dispatch(_deleteCodeError(deleteCodeError.id));
+// 			if (context.currentCodeErrorId === deleteCodeError.id) {
+// 				dispatch(setCurrentCodeError());
+// 			}
+// 		}
+// 	};
 
 export const clearProviderError =
 	(providerId: string, id: string, error?: { message: string }) => dispatch => {
@@ -164,7 +159,7 @@ export const fetchErrorGroup = createAppAsyncThunk(
 		let objectId;
 		try {
 			// this is an errorGroupGuid
-			objectId = codeError?.objectId;
+			objectId = codeError?.entityGuid;
 			dispatch(_isLoadingErrorGroup(objectId, { isLoading: true }));
 			const result = await dispatch(
 				fetchNewRelicErrorGroup({
@@ -176,7 +171,7 @@ export const fetchErrorGroup = createAppAsyncThunk(
 			).unwrap();
 			dispatch(_isLoadingErrorGroup(objectId, { isLoading: true }));
 			if (result.errorGroup) {
-				dispatch(_setErrorGroup(codeError.objectId!, result.errorGroup));
+				dispatch(_setErrorGroup(codeError.entityGuid, result.errorGroup));
 			}
 		} catch (error) {
 			logError(error, { detail: `failed to fetchErrorGroup`, objectId });
@@ -207,19 +202,19 @@ export const findErrorGroupByObjectId = createAppAsyncThunk(
 			const locator = (state: CodeStreamState, oid: string, tid?: string) => {
 				const codeError = Object.values(state.codeErrors.codeErrors).find(
 					(_: CSCodeError) =>
-						_.objectId ===
+						_.entityGuid ===
 						oid /*&& (tid ? _.stackTraces.find(st => st.occurrenceId === tid) : true)*/
 				);
 				return codeError;
 			};
 			const state = getState();
-			if (!state.codeErrors.bootstrapped) {
-				return dispatch(bootstrapCodeErrors()).then(_ => {
-					return locator(getState(), objectId, occurrenceId);
-				});
-			} else {
-				return locator(state, objectId, occurrenceId);
-			}
+			// if (!state.codeErrors.bootstrapped) {
+			// 	return dispatch(bootstrapCodeErrors()).then(_ => {
+			// 		return locator(getState(), objectId, occurrenceId);
+			// 	});
+			// } else {
+			return locator(state, objectId, occurrenceId);
+			// }
 		} catch (error) {
 			logError(error, {
 				detail: `failed to findErrorGroupByObjectId`,
@@ -231,13 +226,13 @@ export const findErrorGroupByObjectId = createAppAsyncThunk(
 	}
 );
 
-export const bootstrapCodeErrors = createAppAsyncThunk(
-	"codeErrors/bootstrapCodeErrors",
-	async (_, { dispatch }) => {
-		const { codeErrors } = await codeErrorsApi.fetchCodeErrors({});
-		dispatch(_bootstrapCodeErrors(codeErrors));
-	}
-);
+// export const bootstrapCodeErrors = createAppAsyncThunk(
+// 	"codeErrors/bootstrapCodeErrors",
+// 	async (_, { dispatch }) => {
+// 		const { codeErrors } = await codeErrorsApi.fetchCodeErrors({});
+// 		dispatch(_bootstrapCodeErrors(codeErrors));
+// 	}
+// );
 
 export const setErrorGroup = (errorGroupGuid: string, data?: any) => dispatch => {
 	try {
@@ -247,104 +242,162 @@ export const setErrorGroup = (errorGroupGuid: string, data?: any) => dispatch =>
 	}
 };
 
-export type OpenErrorGroupParameters = {
+export type GetRelatedPost = {
 	errorGroupGuid: string;
-	occurrenceId?: string;
-	data: CodeErrorData;
-};
+}
 
-export const openErrorGroup = createAppAsyncThunk(
-	"codeErrors/openErrorGroup",
-	async (
-		{ errorGroupGuid, occurrenceId, data }: OpenErrorGroupParameters,
-		{ dispatch, getState }
-	) => {
-		dispatch(setFunctionToEdit(undefined));
-		const { environment } = getState().configs;
-		let message, response;
-		if (data.environment && data.environment !== environment) {
-			message = "This error group belongs to an account in a different region.";
-		} else {
-			response = await codeErrorsApi.claimCodeError({
-				objectId: errorGroupGuid,
-				objectType: "errorGroup",
-			});
-
-			if (response.unauthorized) {
-				if (response.unauthorizedAccount) {
-					message = "You do not have access to this New Relic account.";
-				} else if (response.unauthorizedErrorGroup) {
-					message = "You do not have access to this error group.";
-				} else {
-					const orgDesc = response.ownedBy
-						? `the ${response.ownedBy} organization`
-						: "another organization";
-					message = (
-						<div>
-							<div>
-								This error can't be displayed because it's owned by {orgDesc} on CodeStream.
-							</div>
-							<div style={{ fontSize: "smaller", marginTop: "25px" }} className="subtle">
-								{response?.companyId}
-							</div>
-						</div>
-					);
-				}
-			}
-		}
-
-		if (message) {
-			codeErrorsApi.track("codestream/errors/error_group_roadblock displayed", {
-				meta_data: `error_group_id: ${errorGroupGuid}`,
-				event_type: "response",
-			});
-			confirmPopup({
-				title: "Error Can't Be Opened",
-				message,
-				centered: true,
-				buttons: [
-					{
-						label: "OK",
-						className: "control-button",
-					},
-				],
-			});
-			logError(`Error Can't Be Opened`, { message, errorGroupGuid, occurrenceId, data });
-			return;
-		} else if (response && response.codeError) {
-			await dispatch(addCodeErrors([response.codeError]));
-		}
-		try {
-			const codeError = await dispatch(
-				findErrorGroupByObjectId({ objectId: errorGroupGuid, occurrenceId })
-			).unwrap();
-			// if we found an existing codeError, it exists in the data store
-			const pendingId = codeError ? codeError.id : PENDING_CODE_ERROR_ID_FORMAT(errorGroupGuid);
-
-			// this signals that when the user provides an API key (which they don't have yet),
-			// we will circle back to this action to try to claim the code error again
-			if (response.needNRToken) {
-				data.claimWhenConnected = true;
-			} else {
-				data.pendingRequiresConnection = data.claimWhenConnected = false;
-			}
-
-			// NOTE don't really like this "PENDING" business, but it's something to say we need to CREATE a codeError
-			// rationalie is: instead of creating _another_ codeError router-like UI,
-			// just re-use the CodeErrorNav component which already does some work for
-			// directing / opening a codeError
-			dispatch(setCurrentCodeError(pendingId, data));
-		} catch (ex) {
-			logError(`failed to findErrorGroupByObjectId`, {
-				ex,
+export const getRelatedPostForErrorGroup = createAppAsyncThunk("codeErrors/getRelatedPostForErrorGroup",
+	async({errorGroupGuid}: GetRelatedPost, { dispatch, getState}) => {
+		const errorDetails = await codeErrorsApi.getErrorDetails({
 				errorGroupGuid,
-				occurrenceId,
-				claimResponse: response,
-				data,
 			});
-		}
-	}
-);
+		return errorDetails;
+	})
+
+// export type OpenErrorGroupParameters = {
+// 	errorGroupGuid: string;
+// 	occurrenceId?: string;
+// 	data: CodeErrorData;
+// };
+
+// export const openErrorGroup = createAppAsyncThunk(
+// 	"codeErrors/openErrorGroup",
+// 	async (
+// 		{ errorGroupGuid, occurrenceId, data }: OpenErrorGroupParameters,
+// 		{ dispatch, getState }
+// 	) => {
+// 		dispatch(setFunctionToEdit(undefined));
+// 		// const { environment } = getState().configs;
+// 		// let message, response;
+// 		// if (data.environment && data.environment !== environment) {
+// 		// 	message = "This error group belongs to an account in a different region.";
+// 		// } else {
+// 		// 	response = await codeErrorsApi.claimCodeError({
+// 		// 		objectId: errorGroupGuid,
+// 		// 		objectType: "errorGroup",
+// 		// 	});
+// 		//
+// 		// 	if (response.unauthorized) {
+// 		// 		if (response.unauthorizedAccount) {
+// 		// 			message = "You do not have access to this New Relic account.";
+// 		// 		} else if (response.unauthorizedErrorGroup) {
+// 		// 			message = "You do not have access to this error group.";
+// 		// 		} else {
+// 		// 			const orgDesc = response.ownedBy
+// 		// 				? `the ${response.ownedBy} organization`
+// 		// 				: "another organization";
+// 		// 			message = (
+// 		// 				<div>
+// 		// 					<div>
+// 		// 						This error can't be displayed because it's owned by {orgDesc} on CodeStream.
+// 		// 					</div>
+// 		// 					<div style={{ fontSize: "smaller", marginTop: "25px" }} className="subtle">
+// 		// 						{response?.companyId}
+// 		// 					</div>
+// 		// 				</div>
+// 		// 			);
+// 		// 		}
+// 		// 	}
+// 		// }
+//
+// 		// if (message) {
+// 		// 	codeErrorsApi.track("codestream/errors/error_group_roadblock displayed", {
+// 		// 		meta_data: `error_group_id: ${errorGroupGuid}`,
+// 		// 		event_type: "response",
+// 		// 	});
+// 		// 	confirmPopup({
+// 		// 		title: "Error Can't Be Opened",
+// 		// 		message,
+// 		// 		centered: true,
+// 		// 		buttons: [
+// 		// 			{
+// 		// 				label: "OK",
+// 		// 				className: "control-button",
+// 		// 			},
+// 		// 		],
+// 		// 	});
+// 		// 	logError(`Error Can't Be Opened`, { message, errorGroupGuid, occurrenceId, data });
+// 		// 	return;
+// 		// } else if (response && response.codeError) {
+// 		// 	await dispatch(addCodeErrors([response.codeError]));
+// 		// }
+// 		try {
+// 			const { currentEntityGuid } = getState().context;
+// 			const errorDetails = await codeErrorsApi.getNewRelicErrorGroup({
+// 				errorGroupGuid,
+// 				timestamp: data.timestamp,
+// 				entityGuid: currentEntityGuid,
+// 			});
+// 			const errorGroup = errorDetails.errorGroup;
+// 			if (errorGroup?.entityGuid) {
+// 				const stackTraceLines: string[] =
+// 					errorDetails?.errorGroup?.errorTrace?.stackTrace?.map(_ => _.formatted) ?? [];
+// 				if (stackTraceLines) {
+// 					const request: ResolveStackTraceRequest = {
+// 						entityGuid: currentEntityGuid!,
+// 						errorGroupGuid: errorGroupGuidToUse!,
+// 						repoId: repoId!,
+// 						ref: refToUse!,
+// 						occurrenceId: occurrenceIdToUse!,
+// 						stackTrace: stack!,
+// 						codeErrorId: derivedState.currentCodeErrorGuid!,
+// 						stackSourceMap: derivedState.currentCodeErrorData?.stackSourceMap,
+// 						domain: derivedState.currentCodeErrorData?.domain!, // TODO no !
+// 					};
+// 					stackInfo = await dispatch(resolveStackTrace(request)).unwrap();
+// 				}
+// 				dispatch(
+// 					addCodeErrors([
+// 						{
+// 							entityGuid: errorGroup.entityGuid,
+// 							title: errorGroup.title,
+// 							text: errorGroup.message,
+// 							stackTraces: [],
+// 							numReplies: 3,
+// 							lastActivityAt: Date.now(),
+// 							objectInfo: {
+// 								accountId: String(errorDetails.accountId),
+// 								repoId: "blah",
+// 								remote: data.remote!,
+// 								hasRelatedRepos: !!data.relatedRepos
+// 							}
+// 						},
+// 					])
+// 				);
+// 			}
+//
+// 			// const codeError = await dispatch(
+// 			// 	findErrorGroupByObjectId({ objectId: errorGroupGuid, occurrenceId })
+// 			// ).unwrap();
+// 			// // if we found an existing codeError, it exists in the data store
+// 			// const pendingId = codeError
+// 			// 	? codeError.entityGuid
+// 			// 	: PENDING_CODE_ERROR_ID_FORMAT(errorGroupGuid);
+//
+// 			// this signals that when the user provides an API key (which they don't have yet),
+// 			// we will circle back to this action to try to claim the code error again
+// 			// if (response.needNRToken) {
+// 			// 	data.claimWhenConnected = true;
+// 			// } else {
+// 			// 	data.pendingRequiresConnection = data.claimWhenConnected = false;
+// 			// }
+//
+// 			// NOTE don't really like this "PENDING" business, but it's something to say we need to CREATE a codeError
+// 			// rationalie is: instead of creating _another_ codeError router-like UI,
+// 			// just re-use the CodeErrorNav component which already does some work for
+// 			// directing / opening a codeError
+// 			dispatch(setCurrentCodeErrorData(currentEntityGuid, data));
+// 		} catch (ex) {
+// 			logError(`failed to findErrorGroupByObjectId`, {
+// 				ex,
+// 				errorGroupGuid,
+// 				occurrenceId,
+// 				// claimResponse: response,
+// 				data,
+// 			});
+// 		}
+// 	}
+// );
 
 /**
  * codeErrors (CodeStream's representation of a NewRelic error group error) can be ephemeral
@@ -375,11 +428,11 @@ export const upgradePendingCodeError =
 			const isPending = codeErrorId?.indexOf(PENDING_CODE_ERROR_ID_PREFIX) === 0;
 			if (isPending || analyze) {
 				// console.debug("===--- PENDING_CODE_ERROR_ID_PREFIX ===---")
-				const { accountId, objectId, objectType, title, text, stackTraces, objectInfo, postId } =
+				const { accountId, entityGuid, objectType, title, text, stackTraces, objectInfo, postId } =
 					existingCodeError;
 				const newCodeError: CreateCodeErrorRequest = {
 					accountId,
-					objectId,
+					entityGuid,
 					objectType,
 					title,
 					text,
@@ -411,10 +464,10 @@ export const upgradePendingCodeError =
 				}
 
 				dispatch(
-					setCurrentCodeError(response.codeError.id, {
+					setCurrentCodeErrorData(response.codeError.id, {
 						// need to reset this back to undefined now that we aren't
 						// pending any longer
-						pendingErrorGroupGuid: undefined,
+						// pendingErrorGroupGuid: undefined,
 						// if there's already a selected line, retain it
 						lineIndex: state.context.currentCodeErrorData?.lineIndex ?? undefined,
 						// same with timestamp
@@ -624,7 +677,7 @@ export const jumpToStackLine = createAppAsyncThunk(
 	async ({ lineIndex, stackLine, repoId, ref }: JumpToStackLineRequest, { dispatch, getState }) => {
 		const state = getState();
 		dispatch(
-			setCurrentCodeError(state.context.currentCodeErrorId, {
+			setCurrentCodeErrorData(state.context.currentCodeErrorGuid, {
 				...(state.context.currentCodeErrorData || {}),
 				lineIndex: lineIndex || 0,
 			})

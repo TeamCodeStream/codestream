@@ -776,12 +776,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 				await this.fetchAndStoreUnknownAuthors(e.data as CSPost[]);
 
 				break;
-			case MessageType.CodeErrors: {
-				e.data = await SessionContainer.instance().codeErrors.resolve(e, { onlyIfNeeded: false });
-				if (e.data == null || e.data.length === 0) return;
-
-				break;
-			}
 			case MessageType.Streams:
 				e.data = await SessionContainer.instance().streams.resolve(e, { onlyIfNeeded: false });
 				if (e.data == null || e.data.length === 0) return;

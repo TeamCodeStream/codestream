@@ -28,11 +28,7 @@ import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { HealthIcon } from "@codestream/webview/src/components/HealthIcon";
 import { TourTip } from "@codestream/webview/src/components/TourTip";
 import { CodeStreamState } from "@codestream/webview/store";
-import {
-	fetchCodeError,
-	PENDING_CODE_ERROR_ID_PREFIX,
-	setFunctionToEditFailed,
-} from "@codestream/webview/store/codeErrors/actions";
+import { setFunctionToEditFailed } from "@codestream/webview/store/codeErrors/actions";
 import { getCodeError, getCodeErrorCreator } from "@codestream/webview/store/codeErrors/reducer";
 import {
 	api,
@@ -344,7 +340,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 			});
 
 			setIsAssigneeChanging(true);
-			await dispatch(upgradePendingCodeError(props.codeError.id, "Assignee Change"));
+			await dispatch(upgradePendingCodeError(props.codeError.entityGuid, "Assignee Change"));
 			await dispatch(
 				api("setAssignee", {
 					errorGroupGuid: props.errorGroup?.guid!,
@@ -414,10 +410,10 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 		e.stopPropagation();
 		setIsAssigneeChanging(true);
 
-		await dispatch(upgradePendingCodeError(props.codeError.id, "Assignee Change"));
+		await dispatch(upgradePendingCodeError(props.codeError.entityGuid, "Assignee Change"));
 		await dispatch(
 			api("removeAssignee", {
-				errorGroupGuid: props.errorGroup?.guid!,
+				errorGroupGuid: props.errorGroup?.guid,
 				emailAddress: emailAddress,
 				userId: userId,
 			})
@@ -443,7 +439,9 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 							label: STATES_TO_ACTION_STRINGS[_],
 							action: async e => {
 								setIsStateChanging(true);
-								await dispatch(upgradePendingCodeError(props.codeError.id, "Status Change"));
+								await dispatch(
+									upgradePendingCodeError(props.codeError.entityGuid, "Status Change")
+								);
 								await dispatch(
 									api("setState", {
 										errorGroupGuid: props.errorGroup?.guid!,
@@ -930,7 +928,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 								<Tooltip
 									title={
 										derivedState.isCurrentUserInternal
-											? props.codeError?.id
+											? props.codeError?.entityGuid
 											: props.errorGroup?.errorGroupUrl && props.codeError?.title
 											? "Open Error on New Relic"
 											: ""
@@ -996,15 +994,16 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 	const dispatch = useAppDispatch();
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const post =
-			codeError && codeError.postId
-				? getPost(state.posts, codeError!.streamId, codeError.postId)
+			codeError && codeError.postId && codeError.streamId
+				? getPost(state.posts, codeError.streamId, codeError.postId)
 				: undefined;
 
 		return {
 			post,
 			currentUserId: state.session.userId!,
 			currentUser: state.users[state.session.userId!],
-			author: props.codeError ? state.users[props.codeError.creatorId] : undefined,
+			// TODO get author from parentPost
+			// author: props.codeError ? state.users[props.codeError.creatorId] : undefined,
 			userIsFollowing: props.codeError
 				? (props.codeError.followerIds || []).includes(state.session.userId!)
 				: [],
@@ -1036,7 +1035,8 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 				},
 			});
 		}
-		if (props.codeError?.id?.indexOf(PENDING_CODE_ERROR_ID_PREFIX) === -1) {
+		// no postId means pending
+		if (!props.codeError?.postId) {
 			items.push({
 				label: "Copy Link",
 				icon: <Icon name="copy" />,
@@ -1196,19 +1196,20 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	const dispatch = useAppDispatch();
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
-		const codeError: CSCodeError = state.codeErrors[props.codeError.id] || props.codeError;
+		const codeError: CSCodeError = state.codeErrors[props.codeError.entityGuid] || props.codeError;
 		const codeAuthorId = (props.codeError.codeAuthorIds || [])[0];
 		const currentCodeErrorData = state.context.currentCodeErrorData;
 
 		return {
 			providers: state.providers,
 			isInVscode: state.ide.name === "VSC",
-			author: props.codeError ? state.users[props.codeError.creatorId] : undefined,
-			codeAuthor: state.users[codeAuthorId || props.codeError?.creatorId],
+			// TODO use only codeError.creatorId or get author from parentPost
+			// author: props.codeError ? state.users[props.codeError.creatorId] : undefined,
+			// codeAuthor: state.users[codeAuthorId || props.codeError?.creatorId],
 			codeError,
 			errorGroup: props.errorGroup,
-			errorGroupIsLoading: codeError.objectId
-				? state.codeErrors.errorGroups[codeError.objectId]?.isLoading
+			errorGroupIsLoading: codeError.entityGuid
+				? state.codeErrors.errorGroups[codeError.entityGuid]?.isLoading
 				: false,
 			currentCodeErrorData,
 			hideCodeErrorInstructions: state.preferences.hideCodeErrorInstructions,
@@ -1221,9 +1222,12 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	}, shallowEqual);
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
 	const { codeError, errorGroup, currentCodeErrorData } = derivedState;
-	const isPostThreadsLoading: boolean | undefined = useAppSelector(
-		state => state.posts.postThreadsLoading[codeError.postId]
-	);
+	const isPostThreadsLoading: boolean | undefined = useAppSelector(state => {
+		if (!codeError.postId) {
+			return undefined;
+		}
+		return state.posts.postThreadsLoading[codeError.postId];
+	});
 
 	const [currentSelectedLine, setCurrentSelectedLineIndex] = useState<number>(
 		derivedState.currentCodeErrorData?.lineIndex || 0
@@ -1258,7 +1262,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 					: undefined;
 				const actualCodeError = await dispatch(
 					upgradePendingCodeError(
-						props.codeError.id,
+						props.codeError.entityGuid,
 						"Comment",
 						codeBlock,
 						functionToEdit?.language,
@@ -1270,7 +1274,9 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 					return;
 				}
 
-				dispatch(markItemRead(props.codeError.id, actualCodeError.codeError.numReplies + 1));
+				dispatch(
+					markItemRead(props.codeError.entityGuid, actualCodeError.codeError.numReplies + 1)
+				);
 			};
 			// Case 1 - pending post, will never try to fetch replies
 			if (
@@ -1853,12 +1859,14 @@ const ReplyInput = (props: ReplyInputProps) => {
 			dispatch(startGrokLoading(props.codeError));
 		}
 
-		const actualCodeError = await dispatch(upgradePendingCodeError(props.codeError.id, "Comment"));
-		if (!actualCodeError) {
+		const actualCodeError = await dispatch(
+			upgradePendingCodeError(props.codeError.entityGuid, "Comment")
+		);
+		if (!actualCodeError || !actualCodeError.codeError.streamId) {
 			setIsLoading(false);
 			return;
 		}
-		dispatch(markItemRead(props.codeError.id, actualCodeError.codeError.numReplies + 1));
+		dispatch(markItemRead(props.codeError.entityGuid, actualCodeError.codeError.numReplies + 1));
 
 		await dispatch(
 			createPost(
@@ -1962,15 +1970,15 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 	const { codeError, ...baseProps } = props;
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const post =
-			codeError && codeError.postId
-				? getPost(state.posts, codeError!.streamId, codeError.postId)
+			codeError && codeError.postId && codeError.streamId
+				? getPost(state.posts, codeError.streamId, codeError.postId)
 				: undefined;
 
 		return {
 			post,
 			currentTeamId: state.context.currentTeamId,
 			currentUser: state.users[state.session.userId!],
-			author: state.users[props.codeError.creatorId],
+			// author: state.users[props.codeError.creatorId],
 			repos: state.repos,
 			userIsFollowing: (props.codeError.followerIds || []).includes(state.session.userId!),
 			replies: props.collapsed
@@ -2069,16 +2077,16 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 					className={isGrokLoading ? "grok-loading" : "grok-not-loading" + " replies-to-review"}
 					style={{ borderTop: "none", marginTop: 0 }}
 				>
-					{props.codeError.postId && (
+					{props.codeError.postId && props.codeError.streamId && (
 						<>
 							{<MetaLabel>Activity</MetaLabel>}
 							<RepliesToPost
 								streamId={props.codeError.streamId}
 								parentPostId={props.codeError.postId}
-								itemId={props.codeError.id}
+								itemId={props.codeError.entityGuid}
 								numReplies={props.codeError.numReplies}
 								scrollNewTargetCallback={scrollNewTargetCallback}
-								codeErrorId={props.codeError.id}
+								codeErrorId={props.codeError.entityGuid}
 								errorGroup={props.errorGroup}
 								noReply={true}
 								file={currentNrAiFile}
@@ -2165,14 +2173,14 @@ const CodeErrorForId = (props: PropsWithId) => {
 	useDidMount(() => {
 		let isValid = true;
 
-		if (codeError == null) {
-			dispatch(fetchCodeError(id))
-				.then(result => {
-					if (!isValid) return;
-					if (result == null) setNotFound(true);
-				})
-				.catch(() => setNotFound(true));
-		}
+		// if (codeError == null) {
+		// 	dispatch(fetchCodeError(id))
+		// 		.then(result => {
+		// 			if (!isValid) return;
+		// 			if (result == null) setNotFound(true);
+		// 		})
+		// 		.catch(() => setNotFound(true));
+		// }
 
 		return () => {
 			isValid = false;

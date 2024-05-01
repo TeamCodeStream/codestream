@@ -528,7 +528,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		});
 
 		const unreads = await SessionContainer.instance().users.getUnreads({});
-		const { posts: postsManager, codeErrors: codeErrorsManager } = SessionContainer.instance();
+		const { posts: postsManager } = SessionContainer.instance();
 
 		const posts: PostPlus[] = [];
 		// filter out deleted posts and cache valid ones
@@ -539,17 +539,13 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			}
 		}
 
-		const codeErrors: CSCodeError[] = [];
-
 		let records = await Arrays.filterMapAsync(
-			[...(response.codemarks ?? []), ...(response.reviews ?? []), ...(response.codeErrors ?? [])],
+			[...(response.codemarks ?? []), ...(response.reviews ?? [])],
 			async object => {
 				if (object.deactivated) return;
 
-				if (isCSCodeError(object)) {
-					codeErrorsManager.cacheSet(object);
-					codeErrors.push(object);
-				} else if (isCSReview(object)) {
+				if (isCSReview(object)) {
+          // no-op
 				} else {
 					if (object.reviewId != null || object.codeErrorId != null) return;
 				}
@@ -585,18 +581,18 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		return {
 			codemarks: [],
 			reviews: [],
-			codeErrors,
 			posts: await this.enrichPosts(posts),
 			records: this.createRecords(records),
 			more: response.more,
 		};
 	}
 
-	private createRecords(records: (CSCodeError | CSReview | CodemarkPlus)[]): string[] {
+	private createRecords(records: (CSReview | CodemarkPlus)[]): string[] {
 		return records.map(r => {
-			if (isCSCodeError(r)) {
-				return `codeError|${r.id}`;
-			} else if (isCSReview(r)) {
+			// if (isCSCodeError(r)) {
+			// 	return `codeError|${r.id}`;
+			// } else
+			if (isCSReview(r)) {
 				return `review|${r.id}`;
 			}
 
@@ -606,12 +602,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 	private async enrichPost(post: CSPost): Promise<PostPlus> {
 		let codeError;
-
-		if (post.codeErrorId) {
-			try {
-				codeError = await SessionContainer.instance().codeErrors.getById(post.codeErrorId);
-			} catch (error) {}
-		}
 
 		return { ...post, codemark: undefined, hasMarkers: false, review: undefined, codeError };
 	}

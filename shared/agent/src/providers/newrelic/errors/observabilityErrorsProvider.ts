@@ -328,7 +328,7 @@ export class ObservabilityErrorsProvider {
 	 * 		  }
 	 * 		| undefined
 	 * 	>)}
-	 * @memberof NewRelicProvider
+	 * @memberof ObservabilityErrorsProvider
 	 */
 	private async getMetricData(errorGroupGuid: string): Promise<
 		| {
@@ -997,7 +997,7 @@ export class ObservabilityErrorsProvider {
 	 *
 	 * @param {GetObservabilityErrorAssignmentsRequest} request
 	 * @return {Promise<GetObservabilityErrorAssignmentsResponse>}
-	 * @memberof NewRelicProvider
+	 * @memberof ObservabilityErrorsProvider
 	 */
 	@lspHandler(GetObservabilityErrorAssignmentsRequestType)
 	@log()
@@ -1048,6 +1048,14 @@ export class ObservabilityErrorsProvider {
 		return response;
 	}
 
+	// @lspHandler(AssociateErrorToPostRequestType)
+	// @log()
+	// async getErrorDetails(
+	// 	request: AssociateErrorToPostRequest
+	// ): Promise<AssociateErrorToPostResponse> {
+	// 	// Create or grab parentPostId
+	// }
+
 	@lspHandler(GetNewRelicErrorGroupRequestType)
 	@log()
 	async getNewRelicErrorGroupData(
@@ -1061,7 +1069,7 @@ export class ObservabilityErrorsProvider {
 			const parsedId = parseId(errorGroupGuid)!;
 			accountId = parsedId?.accountId;
 
-			let errorGroupFullResponse;
+			let errorGroupFullResponse: ErrorGroupResponse | undefined;
 
 			if (request.entityGuid) {
 				entityGuid = request.entityGuid;

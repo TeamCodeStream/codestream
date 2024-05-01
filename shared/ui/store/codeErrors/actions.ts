@@ -1,7 +1,6 @@
 import {
 	CSAsyncGrokError,
 	DeleteCodeErrorRequestType,
-	GetCodeErrorRequestType,
 	NewRelicErrorGroup,
 } from "@codestream/protocols/agent";
 import { CSCodeError } from "@codestream/protocols/api";
@@ -73,11 +72,11 @@ export type EditableAttributes = Partial<
 	Pick<CSCodeError, "title" | "assignees"> & AdvancedEditableCodeErrorAttributes
 >;
 
-export const fetchCodeError = (codeErrorId: string) => async dispatch => {
-	const response = await HostApi.instance.send(GetCodeErrorRequestType, { codeErrorId });
-
-	if (response.codeError) return dispatch(saveCodeErrors([response.codeError]));
-};
+// export const fetchCodeError = (codeErrorId: string) => async dispatch => {
+// 	const response = await HostApi.instance.send(GetCodeErrorRequestType, { codeErrorId });
+//
+// 	if (response.codeError) return dispatch(saveCodeErrors([response.codeError]));
+// };
 
 export const handleDirectives = (id: string, data: any) =>
 	action(CodeErrorsActionsTypes.HandleDirectives, {

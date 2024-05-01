@@ -145,7 +145,6 @@ export abstract class ManagerBase<T> {
 
 	cacheResponse(response: any) {
 		const container = SessionContainer.instance();
-		this.cacheResponseEntities(container.codeErrors, response.codeErrors);
 		this.cacheResponseEntities(container.companies, response.companies);
 		this.cacheResponseEntities(container.posts, response.posts);
 		this.cacheResponseEntities(container.streams, response.streams);

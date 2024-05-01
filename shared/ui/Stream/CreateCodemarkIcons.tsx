@@ -115,7 +115,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 			textEditorVisibleRanges,
 			currentReviewId: context.currentReviewId,
 			currentPullRequestId: context.currentPullRequest ? context.currentPullRequest.id : undefined,
-			currentCodeErrorId: context.currentCodeErrorId,
+			currentCodeErrorGuid: context.currentCodeErrorGuid,
 			textEditorSelection: getCurrentSelection(editorContext),
 			metrics: editorContext.metrics || {},
 			openIconsOnLine,
@@ -259,8 +259,8 @@ export const CreateCodemarkIcons = (props: Props) => {
 		// we only add the title properties (which add tooltips)
 		// when you mouse over them for performance reasons. adding
 		// tool tips on each one slowed things down a lot. -Pez
-		const { currentReviewId, currentCodeErrorId, sidebarLocation, parsedDiffUri } = derivedState;
-		const showNonComments = !currentReviewId && !parsedDiffUri && !currentCodeErrorId;
+		const { currentReviewId, currentCodeErrorGuid, sidebarLocation, parsedDiffUri } = derivedState;
+		const showNonComments = !currentReviewId && !parsedDiffUri && !currentCodeErrorGuid;
 
 		let icons = [
 			{

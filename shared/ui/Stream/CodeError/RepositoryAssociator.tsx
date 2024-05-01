@@ -19,7 +19,7 @@ import Dismissable from "../Dismissable";
 import { DropdownButton } from "../DropdownButton";
 import { DelayedRender } from "../../Container/DelayedRender";
 import { LoadingMessage } from "../../src/components/LoadingMessage";
-import { isEmpty as _isEmpty } from "lodash-es";
+import { isArray, isEmpty as _isEmpty } from "lodash-es";
 
 const Ellipsize = styled.div`
 	button {
@@ -61,14 +61,15 @@ export function RepositoryAssociator(props: {
 	relatedRepos?: RelatedRepository[];
 }) {
 	const derivedState = useSelector((state: CodeStreamState) => {
-		const codeError = state.context.currentCodeErrorId
-			? (getCodeError(state.codeErrors, state.context.currentCodeErrorId) as CSCodeError)
+		const codeError = state.context.currentCodeErrorGuid
+			? (getCodeError(state.codeErrors, state.context.currentCodeErrorGuid) as CSCodeError)
 			: undefined;
 
 		return {
 			codeError: codeError,
 			repos: state.repos,
-			relatedRepos: props.relatedRepos || state.context.currentCodeErrorData?.relatedRepos,
+			// TODO no any - actual relatedRepos types are wrong
+			relatedRepos: (props.relatedRepos || state.context.currentCodeErrorData?.relatedRepos) as any,
 		};
 	});
 	const { error: repositoryError } = props;
@@ -120,6 +121,7 @@ export function RepositoryAssociator(props: {
 				if (!_isEmpty(derivedState.relatedRepos)) {
 					filteredResults = results.filter(_ => {
 						return derivedState.relatedRepos?.some(repo => {
+							// TODO what are the actual types? there is no repo.remotes used inside the filter in the types
 							const lowercaseRepoRemotes = repo.remotes.map(remote => remote.toLowerCase());
 							const lowercaseCurrentRemote = _.remote.toLowerCase();
 							return lowercaseRepoRemotes.includes(lowercaseCurrentRemote);
