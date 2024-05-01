@@ -173,10 +173,6 @@ export class SidebarController implements Disposable {
 	) {
 		this._disposable = Disposable.from(
 			this.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
-			Container.agent.onDidDetectObservabilityAnomalies(
-				(...args) => this.onDidDetectObservabilityAnomalies(webview, ...args),
-				this
-			),
 			window.onDidChangeActiveTextEditor(this.onActiveEditorChanged, this),
 			window.onDidChangeVisibleTextEditors(this.onVisibleEditorsChanged, this),
 			workspace.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this),
@@ -595,14 +591,16 @@ export class SidebarController implements Disposable {
 				(...args) => this.onSessionTokenStatusChanged(webview, ...args),
 				this
 			),
-
 			Container.agent.onDidChangeData((...args) => this.onDataChanged(webview, ...args), this),
 			Container.agent.onDidChangeDocumentMarkers(
 				(...args) => this.onDocumentMarkersChanged(webview, ...args),
 				this
 			),
 			configuration.onDidChange((...args) => this.onConfigurationChanged(webview, ...args), this),
-
+			Container.agent.onDidDetectObservabilityAnomalies(
+				(...args) => this.onDidDetectObservabilityAnomalies(webview, ...args),
+				this
+			),
 			// Keep this at the end otherwise the above subscriptions can fire while disposing
 			this._sidebar!
 		);
@@ -735,10 +733,13 @@ export class SidebarController implements Disposable {
 		webview.notify(DidChangeDataNotificationType, e);
 	}
 
-	private onDidDetectObservabilityAnomalies(webview: WebviewLike, e: DidDetectObservabilityAnomaliesNotification) {
+	private onDidDetectObservabilityAnomalies(
+		webview: WebviewLike,
+		e: DidDetectObservabilityAnomaliesNotification
+	) {
 		webview.notify(DidDetectObservabilityAnomaliesNotificationType, e);
 	}
-		
+
 	private onDocumentMarkersChanged(webview: WebviewLike, e: DidChangeDocumentMarkersNotification) {
 		webview.notify(DidChangeDocumentMarkersNotificationType, e);
 	}
