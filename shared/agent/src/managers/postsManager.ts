@@ -15,9 +15,13 @@ import {
 import {
 	CodeDelimiterStyles,
 	CodemarkPlus,
+	CreateCodeErrorRequest,
 	CreatePostRequest,
 	CreatePostRequestType,
 	CreatePostResponse,
+	CreateShareableCodeErrorRequest,
+	CreateShareableCodeErrorRequestType,
+	CreateShareableCodeErrorResponse,
 	CrossPostIssueValues,
 	DeletePostRequest,
 	DeletePostRequestType,
@@ -649,6 +653,56 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		}
 
 		return { posts, codemarks: [] };
+	}
+
+	// this is what the webview will call to create codeErrors in the sharing model
+	@lspHandler(CreateShareableCodeErrorRequestType)
+	@log()
+	async createSharingCodeErrorPost(
+		request: CreateShareableCodeErrorRequest
+	): Promise<CreateShareableCodeErrorResponse> {
+		const codeErrorRequest: CreateCodeErrorRequest = {
+			...request.attributes,
+			markers: [],
+		};
+
+		let codeError: CSCodeError | undefined;
+		const stream = await SessionContainer.instance().streams.getTeamStream();
+
+		const response = await this.session.api.createPost({
+			codeError: codeErrorRequest,
+			text: "",
+			streamId: stream.id,
+			dontSendEmail: false,
+			mentionedUserIds: request.mentionedUserIds,
+			addedUsers: request.addedUsers,
+			codeBlock: request.codeBlock?.code,
+			language: request.language,
+			analyze: request.analyze,
+			reinitialize: request.reinitialize,
+			parentPostId: request.parentPostId, // For grok reinitialization
+		});
+
+		codeError = response.codeError!;
+
+		// trackCodeErrorPostCreation(codeError, request.entryPoint, request.addedUsers);
+		this.cacheResponse(response!);
+
+		let replyPostResponse: CreatePostResponse | undefined = undefined;
+		if (request.replyPost) {
+			replyPostResponse = await this.session.api.createPost({
+				streamId: stream.id,
+				text: request.replyPost.text,
+				parentPostId: response.post.id,
+			});
+		}
+
+		return {
+			stream,
+			post: await this.enrichPost(response!.post),
+			codeError,
+			replyPost: replyPostResponse?.post,
+		};
 	}
 
 	@lspHandler(CreatePostRequestType)
