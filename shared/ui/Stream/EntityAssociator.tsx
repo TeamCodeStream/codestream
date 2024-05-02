@@ -21,11 +21,12 @@ import { useResizeDetector } from "react-resize-detector";
 interface EntityAssociatorProps {
 	title?: string;
 	label?: string | React.ReactNode;
-	remote: string;
-	remoteName: string;
+	remote?: string;
+	remoteName?: string;
 	onSuccess?: (entityGuid: { entityGuid: string }) => void;
 	servicesToExcludeFromSearch?: EntityAccount[];
 	isSidebarView?: boolean;
+	isServiceSearch?: boolean;
 }
 
 type SelectOptionType = { label: string; value: string };
@@ -107,55 +108,65 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 		if (!selected) {
 			return;
 		}
-		setIsLoading(true);
-		setWarningOrErrors(undefined);
 
-		const payload = {
-			url: props.remote,
-			name: props.remoteName,
-			applicationEntityGuid: selected.value,
-			entityId: selected.value,
-			parseableAccountId: selected.value,
-		};
-		dispatch(api("assignRepository", payload))
-			.then(response => {
-				setTimeout(() => {
-					if (response?.directives) {
-						console.log("assignRepository", {
-							directives: response?.directives,
-						});
-						// a little fragile, but we're trying to get the entity guid back
-						if (props.onSuccess) {
-							props.onSuccess({
-								entityGuid: response?.directives.find(d => d.type === "assignRepository")?.data
-									?.entityGuid,
+		// If we have a remote and remoteName, assign repository
+		if (props.remote && props.remoteName) {
+			setIsLoading(true);
+			setWarningOrErrors(undefined);
+
+			const payload = {
+				url: props.remote,
+				name: props.remoteName,
+				applicationEntityGuid: selected.value,
+				entityId: selected.value,
+				parseableAccountId: selected.value,
+			};
+			dispatch(api("assignRepository", payload))
+				.then(response => {
+					setTimeout(() => {
+						if (response?.directives) {
+							console.log("assignRepository", {
+								directives: response?.directives,
+							});
+							// a little fragile, but we're trying to get the entity guid back
+							if (props.onSuccess) {
+								props.onSuccess({
+									entityGuid: response?.directives.find(d => d.type === "assignRepository")?.data
+										?.entityGuid,
+								});
+							}
+						} else if (response?.error) {
+							setWarningOrErrors([{ message: response.error }]);
+						} else {
+							setWarningOrErrors([
+								{ message: "Failed to direct to entity dropdown, please refresh" },
+							]);
+							console.warn("Could not find directive", {
+								_: response,
+								payload: payload,
 							});
 						}
-					} else if (response?.error) {
-						setWarningOrErrors([{ message: response.error }]);
-					} else {
-						setWarningOrErrors([
-							{ message: "Failed to direct to entity dropdown, please refresh" },
-						]);
-						console.warn("Could not find directive", {
-							_: response,
-							payload: payload,
-						});
-					}
-				}, 5000);
-			})
-			.catch(err => {
-				setWarningOrErrors([{ message: "Failed to direct to entity dropdown, please refresh" }]);
-				logError(`Unexpected error during assignRepository: ${err}`, {});
-			})
-			.finally(() => {
-				setTimeout(() => {
-					{
-						/* @TODO clean up this code, put in place so spinner doesn't stop before onSuccess */
-					}
-					setIsLoading(false);
-				}, 6000);
-			});
+					}, 5000);
+				})
+				.catch(err => {
+					setWarningOrErrors([{ message: "Failed to direct to entity dropdown, please refresh" }]);
+					logError(`Unexpected error during assignRepository: ${err}`, {});
+				})
+				.finally(() => {
+					setTimeout(() => {
+						{
+							/* @TODO clean up this code, put in place so spinner doesn't stop before onSuccess */
+						}
+						setIsLoading(false);
+					}, 6000);
+				});
+		}
+
+		if (props.isServiceSearch) {
+			if (props.onSuccess) {
+				props.onSuccess({ entityGuid: selected.value });
+			}
+		}
 	};
 	return (
 		<NoContent style={{ marginLeft: "20px" }}>

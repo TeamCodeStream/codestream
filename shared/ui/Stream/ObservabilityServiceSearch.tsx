@@ -3,6 +3,8 @@ import Icon from "./Icon";
 import { useAppDispatch } from "../utilities/hooks";
 import { PaneNode, PaneNodeName } from "../src/components/Pane";
 import { RepoHeader } from "./Observability";
+import { EntityAssociator } from "./EntityAssociator";
+import { setCurrentServiceSearchEntity } from "../store/context/actions";
 
 interface Props {
 	// alertSeverityColor: string;
@@ -29,37 +31,45 @@ interface Props {
 	// serviceLevelObjectives: ServiceLevelObjectiveResult[];
 	// setIsVulnPresent: Function;
 	// showErrors: boolean;
+	setExpandedEntityCallback: Function;
 }
 
 export const ObservabilityServiceSearch = React.memo((props: Props) => {
 	const dispatch = useAppDispatch();
 
-	// const {
-	// 	alertSeverityColor,
-	// 	anomalyDetectionSupported,
-	// 	calculatingAnomalies,
-	// 	collapsed,
-	// 	currentRepoId,
-	// 	ea,
-	// 	entityGoldenMetrics,
-	// 	entityGoldenMetricsErrors,
-	// 	errorInboxError,
-	// 	handleClickTopLevelService,
-	// 	hasServiceLevelObjectives,
-	// 	loadingGoldenMetrics,
-	// 	loadingPane,
-	// 	noErrorsAccess,
-	// 	observabilityAnomalies,
-	// 	observabilityAssignments,
-	// 	observabilityErrors,
-	// 	observabilityErrorsError,
-	// 	observabilityRepo,
-	// 	recentIssues,
-	// 	serviceLevelObjectiveError,
-	// 	serviceLevelObjectives,
-	// 	setIsVulnPresent,
-	// 	showErrors,
-	// } = props;
+	const {
+		// alertSeverityColor,
+		// anomalyDetectionSupported,
+		// calculatingAnomalies,
+		// collapsed,
+		// currentRepoId,
+		// ea,
+		// entityGoldenMetrics,
+		// entityGoldenMetricsErrors,
+		// errorInboxError,
+		// handleClickTopLevelService,
+		// hasServiceLevelObjectives,
+		// loadingGoldenMetrics,
+		// loadingPane,
+		// noErrorsAccess,
+		// observabilityAnomalies,
+		// observabilityAssignments,
+		// observabilityErrors,
+		// observabilityErrorsError,
+		// observabilityRepo,
+		// recentIssues,
+		// serviceLevelObjectiveError,
+		// serviceLevelObjectives,
+		// setIsVulnPresent,
+		// showErrors,
+		setExpandedEntityCallback,
+	} = props;
+
+	// @TODO - Eric: need a setExpandedEntity callback passed here, that will kick off everything
+	// It looks like currentRepoId is required for that, but I think its not and can be bypassed.
+	// maybe setExpandedEntity('service-search') and modify the useEffect conditional.  Will probably
+	// also need to add something to redux, like currentServiceSearchEntity or something. That way
+	// on collapse we continue to show it.
 
 	return (
 		<>
@@ -99,6 +109,16 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 					customPadding="2px 10px 2px 19px"
 					noChevron={true}
 				></PaneNodeName>
+
+				<EntityAssociator
+					isSidebarView={true}
+					onSuccess={async e => {
+						console.warn(e);
+						setExpandedEntityCallback(e.entityGuid);
+						setCurrentServiceSearchEntity(e.entityGuid);
+					}}
+					isServiceSearch={true}
+				/>
 
 				{/* {false && (
 					<ObservabilityServiceEntity

@@ -208,6 +208,12 @@ export function reduceContext(
 				currentInstrumentation: action.payload.options,
 			};
 		}
+		case ContextActionsType.SetCurrentServiceSearchEntity: {
+			return {
+				...state,
+				currentInstrumentation: action.payload.options,
+			};
+		}
 		case ContextActionsType.SetCurrentPixieDynamicLoggingOptions: {
 			return {
 				...state,

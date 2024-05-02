@@ -50,6 +50,7 @@ export enum ContextActionsType {
 	SetCurrentPullRequestNeedsRefresh = "@context/SetCurrentPullRequestNeedsRefresh",
 	SetCurrentErrorsInboxOptions = "@context/SetCurrentErrorsInboxOptions",
 	SetCurrentInstrumentationOptions = "@context/SetCurrentInstrumentationOptions",
+	SetCurrentServiceSearchEntity = "@context/SetCurrentServiceSearchEntity",
 	SetCurrentPixieDynamicLoggingOptions = "@context/SetCurrentPixieDynamicLoggingOptions",
 	SetCurrentPullRequestAndBranch = "@context/SetCurrentPullRequestAndBranch",
 	SetNewPullRequestOptions = "@context/SetNewPullRequestOptions",

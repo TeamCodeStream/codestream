@@ -1155,12 +1155,9 @@ export const Observability = React.memo((props: Props) => {
 					)}
 			</div>
 
-			<ObservabilityServiceSearch />
+			<ObservabilityServiceSearch setExpandedEntityCallback={setExpandedEntity} />
 
 			{observabilityRepos.map(repo => {
-				// @TODO: Eric note, we need to take all this below logic, and put it in its own component
-				// It will have a bunch of props, but its better than this because it needs to be reused for
-				// <ObservabilityServiceSearch />
 				const repoIsCollapsed = currentRepoId !== repo.repoId;
 				const isLoadingCurrentRepo =
 					loadingEntities === repo.repoId || (isRefreshing && !repoIsCollapsed);

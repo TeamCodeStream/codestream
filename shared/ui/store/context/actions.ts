@@ -241,6 +241,12 @@ export const setCurrentPullRequestNeedsRefresh = (
 		pullRequestId,
 	});
 
+export const setCurrentServiceSearchEntity = (options?: any) =>
+	action(ContextActionsType.SetCurrentServiceSearchEntity, { options });
+
+export const clearCurrentServiceSearchEntity = () =>
+	action(ContextActionsType.SetCurrentServiceSearchEntity, { options: {} });
+
 export const setCurrentInstrumentationOptions = (options?: any) =>
 	action(ContextActionsType.SetCurrentInstrumentationOptions, { options });
 
