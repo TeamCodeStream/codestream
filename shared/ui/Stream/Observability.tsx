@@ -47,7 +47,6 @@ import {
 	OpenUrlRequestType,
 	RefreshEditorsCodeLensRequestType,
 } from "@codestream/protocols/webview";
-import { SecurityIssuesWrapper } from "@codestream/webview/Stream/SecurityIssuesWrapper";
 import { WebviewPanels } from "@codestream/protocols/api";
 import { Button } from "../src/components/Button";
 import { NoContent, PaneNode, PaneNodeName, PaneState } from "../src/components/Pane";
@@ -85,11 +84,9 @@ import {
 import { setDemoMode } from "@codestream/webview/store/codeErrors/actions";
 import { ObservabilityAnomaliesWrapper } from "@codestream/webview/Stream/ObservabilityAnomaliesWrapper";
 import { ObservabilityPreview } from "@codestream/webview/Stream/ObservabilityPreview";
-import {
-	ObservabilityLoadingServiceEntities,
-	ObservabilityLoadingServiceEntity,
-} from "@codestream/webview/Stream/ObservabilityLoading";
-import { ObservabilitySummary } from "./ObservabilitySummary";
+import { ObservabilityLoadingServiceEntities } from "@codestream/webview/Stream/ObservabilityLoading";
+import { ObservabilityServiceSearch } from "./ObservabilityServiceSearch";
+import { ObservabilityServiceEntity } from "./ObservabilityServiceEntity";
 
 interface Props {
 	paneState: PaneState;
@@ -169,7 +166,16 @@ const GenericCopy = styled.div`
 	margin: 5px 0 10px 0;
 `;
 
-const RepoHeader = styled.span`
+const SubtleRight = styled.time`
+	color: var(--text-color-subtle);
+	font-weight: normal;
+	padding-left: 5px;
+
+	&.no-padding {
+		padding-left: 0;
+	}
+`;
+export const RepoHeader = styled.span`
 	color: var(--text-color-highlight);
 	display: flex;
 	margin-left: -4px;
@@ -272,16 +278,11 @@ export const Observability = React.memo((props: Props) => {
 		useState<boolean>(false);
 	const [currentRepoId, setCurrentRepoId] = useMemoizedState<string | undefined>(undefined);
 	const [loadingGoldenMetrics, setLoadingGoldenMetrics] = useState<boolean>(false);
-	const [loadingServiceLevelObjectives, setLoadingServiceLevelObjectives] =
-		useState<boolean>(false);
-	const [showCodeLevelMetricsBroadcastIcon, setShowCodeLevelMetricsBroadcastIcon] =
-		useState<boolean>(false);
 	const [currentEntityAccounts, setCurrentEntityAccounts] = useState<EntityAccount[] | undefined>(
 		[]
 	);
 	const [currentObsRepo, setCurrentObsRepo] = useState<ObservabilityRepo | undefined>();
 	const [recentIssues, setRecentIssues] = useState<GetIssuesResponse | undefined>();
-	const [recentIssuesError, setRecentIssuesError] = useState<string>();
 	const previousNewRelicIsConnected = usePrevious(derivedState.newRelicIsConnected);
 	const [anomalyDetectionSupported, setAnomalyDetectionSupported] = useState<boolean>(true);
 	const [isVulnPresent, setIsVulnPresent] = useState(false);
@@ -829,7 +830,6 @@ export const Observability = React.memo((props: Props) => {
 					errors.push(response.recentIssues.error.message ?? response.recentIssues.error.type);
 				} else {
 					setRecentIssues(response.recentIssues);
-					setRecentIssuesError(undefined);
 				}
 				setEntityGoldenMetricsErrors(errors);
 			} else {
@@ -842,7 +842,6 @@ export const Observability = React.memo((props: Props) => {
 	};
 
 	const fetchServiceLevelObjectives = async (entityGuid?: string | null) => {
-		setLoadingServiceLevelObjectives(true);
 		try {
 			if (entityGuid) {
 				const response = await HostApi.instance.send(GetServiceLevelObjectivesRequestType, {
@@ -871,7 +870,6 @@ export const Observability = React.memo((props: Props) => {
 				setHasServiceLevelObjectives(false);
 			}
 		} finally {
-			setLoadingServiceLevelObjectives(false);
 		}
 	};
 
@@ -1157,7 +1155,12 @@ export const Observability = React.memo((props: Props) => {
 					)}
 			</div>
 
+			<ObservabilityServiceSearch />
+
 			{observabilityRepos.map(repo => {
+				// @TODO: Eric note, we need to take all this below logic, and put it in its own component
+				// It will have a bunch of props, but its better than this because it needs to be reused for
+				// <ObservabilityServiceSearch />
 				const repoIsCollapsed = currentRepoId !== repo.repoId;
 				const isLoadingCurrentRepo =
 					loadingEntities === repo.repoId || (isRefreshing && !repoIsCollapsed);
@@ -1330,7 +1333,34 @@ export const Observability = React.memo((props: Props) => {
 															: false;
 														return (
 															<>
-																<PaneNodeName
+																<ObservabilityServiceEntity
+																	alertSeverityColor={alertSeverityColor}
+																	anomalyDetectionSupported={anomalyDetectionSupported}
+																	calculatingAnomalies={calculatingAnomalies}
+																	collapsed={collapsed}
+																	currentRepoId={currentRepoId}
+																	ea={ea}
+																	entityGoldenMetrics={entityGoldenMetrics}
+																	entityGoldenMetricsErrors={entityGoldenMetricsErrors}
+																	errorInboxError={errorInboxError}
+																	handleClickTopLevelService={handleClickTopLevelService}
+																	hasServiceLevelObjectives={hasServiceLevelObjectives}
+																	loadingGoldenMetrics={loadingGoldenMetrics}
+																	loadingPane={loadingPane}
+																	noErrorsAccess={noErrorsAccess}
+																	observabilityAnomalies={observabilityAnomalies}
+																	observabilityAssignments={observabilityAssignments}
+																	observabilityErrors={observabilityErrors}
+																	observabilityErrorsError={observabilityErrorsError}
+																	observabilityRepo={_observabilityRepo}
+																	recentIssues={recentIssues}
+																	serviceLevelObjectiveError={serviceLevelObjectiveError}
+																	serviceLevelObjectives={serviceLevelObjectives}
+																	setIsVulnPresent={setIsVulnPresent}
+																	showErrors={showErrors}
+																/>
+
+																{/* <PaneNodeName
 																	data-testid={`entity-name-${ea.entityGuid}`}
 																	title={
 																		<div
@@ -1460,7 +1490,6 @@ export const Observability = React.memo((props: Props) => {
 																					)}
 																					{currentRepoId && ea?.domain === "APM" && (
 																						<SecurityIssuesWrapper
-																							currentRepoId={currentRepoId}
 																							entityGuid={ea.entityGuid}
 																							accountId={ea.accountId}
 																							setHasVulnerabilities={setIsVulnPresent}
@@ -1509,7 +1538,7 @@ export const Observability = React.memo((props: Props) => {
 																			</>
 																		)}
 																	</>
-																)}
+																)} */}
 															</>
 														);
 													})}

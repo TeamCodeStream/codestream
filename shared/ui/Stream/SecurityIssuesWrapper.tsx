@@ -34,10 +34,9 @@ import { DataLabel, DataRow, DataValue } from "./CodeError";
 import { CardBody } from "../src/components/Card";
 
 interface Props {
-	currentRepoId: string;
 	entityGuid: string;
 	accountId: number;
-	setHasVulnerabilities: (value: boolean) => void;
+	setHasVulnerabilities: Function;
 }
 
 function isResponseUrlError<T>(obj: unknown): obj is ResponseError<{ url: string }> {
