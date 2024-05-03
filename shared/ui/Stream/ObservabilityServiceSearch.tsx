@@ -1,10 +1,11 @@
 import React from "react";
 import Icon from "./Icon";
-import { useAppDispatch } from "../utilities/hooks";
+import { useAppDispatch, useAppSelector } from "../utilities/hooks";
 import { PaneNode, PaneNodeName } from "../src/components/Pane";
 import { RepoHeader } from "./Observability";
 import { EntityAssociator } from "./EntityAssociator";
 import { setCurrentServiceSearchEntity } from "../store/context/actions";
+import { CodeStreamState } from "../store";
 
 interface Props {
 	// alertSeverityColor: string;
@@ -32,10 +33,19 @@ interface Props {
 	// setIsVulnPresent: Function;
 	// showErrors: boolean;
 	setExpandedEntityCallback: Function;
+	expandedEntity?: string;
 }
 
 export const ObservabilityServiceSearch = React.memo((props: Props) => {
 	const dispatch = useAppDispatch();
+
+	const derivedState = useAppSelector((state: CodeStreamState) => {
+		return {
+			currentServiceSearchEntity: state.context.currentServiceSearchEntity,
+		};
+	});
+
+	const { currentServiceSearchEntity } = derivedState;
 
 	const {
 		// alertSeverityColor,
@@ -70,6 +80,8 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 	// maybe setExpandedEntity('service-search') and modify the useEffect conditional.  Will probably
 	// also need to add something to redux, like currentServiceSearchEntity or something. That way
 	// on collapse we continue to show it.
+
+	console.warn("eric", currentServiceSearchEntity);
 
 	return (
 		<>
@@ -115,7 +127,7 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 					onSuccess={async e => {
 						console.warn(e);
 						setExpandedEntityCallback(e.entityGuid);
-						setCurrentServiceSearchEntity(e.entityGuid);
+						dispatch(setCurrentServiceSearchEntity(e.entityGuid));
 					}}
 					isServiceSearch={true}
 				/>

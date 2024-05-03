@@ -523,7 +523,6 @@ export const Observability = React.memo((props: Props) => {
 	useInterval(
 		() => {
 			fetchGoldenMetrics(expandedEntity, true);
-			// fetchAnomalies(expandedEntity || "", currentRepoId);
 		},
 		300000,
 		true
@@ -754,6 +753,7 @@ export const Observability = React.memo((props: Props) => {
 
 	const fetchAnomalies = async (entityGuid: string) => {
 		//dispatch(setRefreshAnomalies(false));
+
 		setCalculatingAnomalies(true);
 		// The code below will return only hard-coded mock anomalies used for demo purposes
 		const response = await HostApi.instance.send(GetObservabilityAnomaliesRequestType, {
@@ -930,6 +930,7 @@ export const Observability = React.memo((props: Props) => {
 	};
 
 	// Separate useEffect to prevent duplicate requests
+	// Eric here, modify to remove currentRepoId possibly
 	useEffect(() => {
 		if (expandedEntity && currentRepoId) {
 			HostApi.instance.send(ServiceEntitiesViewedRequestType, {
@@ -1155,7 +1156,10 @@ export const Observability = React.memo((props: Props) => {
 					)}
 			</div>
 
-			<ObservabilityServiceSearch setExpandedEntityCallback={setExpandedEntity} />
+			<ObservabilityServiceSearch
+				expandedEntity={expandedEntity}
+				setExpandedEntityCallback={setExpandedEntity}
+			/>
 
 			{observabilityRepos.map(repo => {
 				const repoIsCollapsed = currentRepoId !== repo.repoId;

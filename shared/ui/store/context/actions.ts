@@ -241,11 +241,11 @@ export const setCurrentPullRequestNeedsRefresh = (
 		pullRequestId,
 	});
 
-export const setCurrentServiceSearchEntity = (options?: any) =>
-	action(ContextActionsType.SetCurrentServiceSearchEntity, { options });
+export const setCurrentServiceSearchEntity = (entityGuid?: string) =>
+	action(ContextActionsType.SetCurrentServiceSearchEntity, { entityGuid });
 
-export const clearCurrentServiceSearchEntity = () =>
-	action(ContextActionsType.SetCurrentServiceSearchEntity, { options: {} });
+// export const clearCurrentServiceSearchEntity = () =>
+// 	action(ContextActionsType.SetCurrentServiceSearchEntity, { entityGuid: {} });
 
 export const setCurrentInstrumentationOptions = (options?: any) =>
 	action(ContextActionsType.SetCurrentInstrumentationOptions, { options });

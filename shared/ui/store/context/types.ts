@@ -87,7 +87,7 @@ export interface ContextState extends WebviewContext {
 	codemarkTagFilter: string;
 	codemarkBranchFilter: string;
 	codemarkAuthorFilter: string;
-
+	currentServiceSearchEntity?: string;
 	codemarksFileViewStyle: "list" | "inline";
 	codemarksShowArchived: boolean;
 	codemarksShowResolved: boolean;
@@ -136,7 +136,6 @@ export interface ContextState extends WebviewContext {
 	entityAccounts?: EntityAccount[];
 
 	selectedRegion?: string;
-
 	currentEntityGuid?: string;
 }
 
