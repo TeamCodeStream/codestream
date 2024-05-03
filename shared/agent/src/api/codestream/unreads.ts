@@ -231,7 +231,6 @@ export class CodeStreamUnreads {
 						]);
 					} catch (ex) {
 						// likely an access error because user is no longer in this channel
-						debugger;
 						Logger.error(ex);
 						return;
 					}

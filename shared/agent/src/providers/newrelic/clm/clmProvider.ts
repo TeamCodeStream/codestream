@@ -194,6 +194,7 @@ export class ClmProvider implements Disposable {
 				deployments,
 				criticalPath,
 				errors,
+				slowestQueries,
 				newRelicEntityAccounts: entityAccounts,
 				newRelicAlertSeverity: entity?.alertSeverity,
 				newRelicEntityName: entity?.entityName || "",
@@ -218,7 +219,7 @@ export class ClmProvider implements Disposable {
 
 		const parsedId = parseId(entityGuid)!;
 		const slowestQueriesQuery =
-			`FROM Span SELECT db.statement as query, duration * 1000 as duration ` +
+			`FROM Span SELECT \`db.statement\` as statement, duration * 1000 as duration ` +
 			`WHERE ` +
 			`  entity.guid = '${entityGuid}' ` +
 			`  AND name = '${metricName}' ` +
@@ -231,14 +232,23 @@ export class ClmProvider implements Disposable {
 			`      AND entity.guid = '${entityGuid}' ` +
 			`    SINCE 30 minutes AGO LIMIT MAX ` +
 			`  ) ` +
-			`ORDER BY duration DESC SINCE 30 minutes ago LIMIT MAX `;
+			`ORDER BY duration DESC SINCE 30 minutes ago LIMIT 10 `;
 
 		const slowestQueries = await this.graphqlClient.runNrql<{
-			query: string;
+			statement: string;
 			duration: number;
 		}>(parsedId.accountId, slowestQueriesQuery);
 
-		return slowestQueries;
+		const formattedSlowestQueries = slowestQueries.map(query => {
+			const statementParts = query.statement.split("*/");
+			const statement = statementParts[statementParts.length - 1].trim();
+			return {
+				statement,
+				duration: query.duration,
+			};
+		});
+
+		return formattedSlowestQueries;
 	}
 
 	/**

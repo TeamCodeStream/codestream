@@ -1895,6 +1895,7 @@ export interface GetMethodLevelTelemetryResponse {
 	deployments?: Deployment[];
 	criticalPath?: CriticalPathSpan[];
 	errors?: ObservabilityError[];
+	slowestQueries?: DbQuery[];
 	newRelicAlertSeverity?: string;
 	newRelicEntityAccounts: EntityAccount[];
 	newRelicEntityName: string;
@@ -1979,6 +1980,11 @@ export const GetSpanChartDataRequestType = new RequestType<
 
 export interface CriticalPathSpan {
 	name: string;
+	duration: number;
+}
+
+export interface DbQuery {
+	statement: string;
 	duration: number;
 }
 

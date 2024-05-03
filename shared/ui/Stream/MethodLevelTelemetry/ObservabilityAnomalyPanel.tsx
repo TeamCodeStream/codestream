@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import copy from "copy-to-clipboard";
 import {
 	CartesianGrid,
 	Line,
@@ -11,6 +12,7 @@ import {
 } from "recharts";
 import {
 	CriticalPathSpan,
+	DbQuery,
 	GetMethodLevelTelemetryRequestType,
 	GetMethodLevelTelemetryResponse,
 	MethodGoldenMetricsResult,
@@ -38,6 +40,7 @@ import { ErrorRowStandalone } from "../ErrorRow";
 import { CLMSettings } from "@codestream/protocols/api";
 import { Link } from "../Link";
 import { isEmpty as _isEmpty } from "lodash-es";
+import Tooltip from "@codestream/webview/Stream/Tooltip";
 
 const Root = styled.div``;
 
@@ -60,6 +63,18 @@ const ApmServiceTitle = styled.span`
 
 const EntityDropdownContainer = styled.div`
 	margin: 0 0 4px 0;
+`;
+
+const ChartGroup = styled.div`
+	display: flex;
+	flex-wrap: wrap;
+	width: 100%;
+`;
+
+const ChartWrapper = styled.div`
+	width: 32%;
+	margin-right: 10px;
+	padding: 0px;
 `;
 
 const DataRow = styled.div`
@@ -356,6 +371,7 @@ export const ObservabilityAnomalyPanel = (props: {
 									{isAvgDurationAnomaly ? (
 										<>
 											<AvgDuration
+												slowestQueries={telemetryResponse?.slowestQueries}
 												criticalPath={telemetryResponse?.criticalPath}
 												sessionStart={props.sessionStart}
 												goldenMetricAvgDuration={goldenMetricAvgDuration}
@@ -381,6 +397,7 @@ export const ObservabilityAnomalyPanel = (props: {
 												index={0}
 											/>
 											<AvgDuration
+												slowestQueries={telemetryResponse?.slowestQueries}
 												criticalPath={telemetryResponse?.criticalPath}
 												sessionStart={props.sessionStart}
 												goldenMetricAvgDuration={goldenMetricAvgDuration}
@@ -390,14 +407,49 @@ export const ObservabilityAnomalyPanel = (props: {
 										</>
 									)}
 
-									{goldenMetricSampleRate != null && (
-										<AnomalyChart
-											title={goldenMetricSampleRate.title}
-											result={goldenMetricSampleRate.result}
-											index={2}
-											remappedDeployments={remappedDeployments}
-										/>
-									)}
+									{/*{goldenMetricSampleRate != null && (*/}
+									{/*	<AnomalyChart*/}
+									{/*		title={goldenMetricSampleRate.title}*/}
+									{/*		result={goldenMetricSampleRate.result}*/}
+									{/*		index={2}*/}
+									{/*		remappedDeployments={remappedDeployments}*/}
+									{/*	/>*/}
+									{/*)}*/}
+
+									<ChartGroup>
+										{goldenMetricAvgDuration != null &&
+											goldenMetricAvgDuration.result?.length > 0 && (
+												<ChartWrapper>
+													<AnomalyChart
+														title={goldenMetricAvgDuration.title}
+														result={goldenMetricAvgDuration.result}
+														index={0}
+														remappedDeployments={remappedDeployments}
+													/>
+												</ChartWrapper>
+											)}
+										{goldenMetricErrorRate != null && goldenMetricErrorRate.result?.length > 0 && (
+											<ChartWrapper>
+												<AnomalyChart
+													title={goldenMetricErrorRate.title}
+													result={goldenMetricErrorRate.result}
+													index={1}
+													remappedDeployments={remappedDeployments}
+												/>
+											</ChartWrapper>
+										)}
+										{goldenMetricSampleRate != null &&
+											goldenMetricSampleRate.result?.length > 0 && (
+												<ChartWrapper>
+													<AnomalyChart
+														title={goldenMetricSampleRate.title}
+														result={goldenMetricSampleRate.result}
+														index={2}
+														remappedDeployments={remappedDeployments}
+													/>
+												</ChartWrapper>
+											)}
+									</ChartGroup>
 								</div>
 							)}
 						</>
@@ -536,7 +588,7 @@ interface CriticalPathProps {
 	criticalPath: CriticalPathSpan[];
 }
 
-const CriticalPath = props => {
+const CriticalPath = (props: CriticalPathProps) => {
 	const CriticalPathRoot = styled.div`
 		margin-bottom: 20px;
 	`;
@@ -587,6 +639,108 @@ const CriticalPath = props => {
 		</CriticalPathRoot>
 	);
 };
+
+interface SlowestQueriesProps {
+	slowestQueries: DbQuery[];
+}
+
+const SlowestQueries = (props: SlowestQueriesProps) => {
+	const SlowestQueriesRoot = styled.div`
+		margin-bottom: 20px;
+	`;
+
+	const FlexContainer = styled.div`
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		position: relative;
+	`;
+
+	const Statement = styled.div`
+		color: var(--text-color-subtle);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		width: 90%;
+	`;
+
+	// const CopyButton = styled.div`
+	//white-space: nowrap;
+	//position: absolute;
+	//top: 0;
+	//right: 50px;
+	//transform: translate(0%, 0);
+	//z-index: 1;
+	//background: var(--app-background-color);
+	// padding-left: 2px;
+	//cursor: pointer;
+	// `;
+
+	const Duration = styled.div`
+		white-space: nowrap;
+		position: absolute;
+		top: 0;
+		right: 0;
+		transform: translate(0%, 0);
+		z-index: 1;
+		background: var(--app-background-color);
+		padding-left: 2px;
+	`;
+
+	const Container = styled.div`
+		position: relative;
+	`;
+
+	return (
+		<SlowestQueriesRoot>
+			<MetaLabel>Slowest queries</MetaLabel>
+			{props.slowestQueries.map((query, index) => {
+				// const copyStatement = () => {
+				// 	navigator.clipboard.writeText(query.statement)
+				// };
+				return (
+					<Container key={index}>
+						<FlexContainer>
+							<Tooltip content={query.statement} delay={2}>
+								<Statement>
+									{query.statement}
+									<Icon
+										title="Copy"
+										placement="bottom"
+										name="copy"
+										className="clickable icon"
+										style={{
+											position: "",
+											right: "0",
+											top: "3px",
+											background: "var(--app-background-color)",
+										}}
+										onClick={e => copy(query.statement)}
+									/>
+								</Statement>
+							</Tooltip>
+							{/*<CopyButton>*/}
+							{/*	<label onClick={copyStatement}>*/}
+							{/*		<span>*/}
+							{/*			<Icon*/}
+							{/*				name="copy"*/}
+							{/*				title="Copy to clipboard"*/}
+							{/*				placement="bottom"*/}
+							{/*				delay={1}*/}
+							{/*				trigger={["hover"]}*/}
+							{/*			/>*/}
+							{/*		</span>*/}
+							{/*	</label>*/}
+							{/*</CopyButton>*/}
+							<Duration>{query.duration.toFixed(2)} ms</Duration>
+						</FlexContainer>
+					</Container>
+				);
+			})}
+		</SlowestQueriesRoot>
+	);
+};
+
 interface ErrorsProps {
 	errors: ObservabilityError[];
 	sessionStart: number | undefined;
@@ -678,20 +832,21 @@ const ErrorRate = (props: ErrorRateProps) => {
 					demoMode={props.demoMode}
 				/>
 			)}
-			{hasResult && (
-				<AnomalyChart
-					title={props.goldenMetricErrorRate.title}
-					result={props.goldenMetricErrorRate.result}
-					index={props.index}
-					remappedDeployments={props.remappedDeployments}
-				/>
-			)}
+			{/*{hasResult && (*/}
+			{/*	<AnomalyChart*/}
+			{/*		title={props.goldenMetricErrorRate.title}*/}
+			{/*		result={props.goldenMetricErrorRate.result}*/}
+			{/*		index={props.index}*/}
+			{/*		remappedDeployments={props.remappedDeployments}*/}
+			{/*	/>*/}
+			{/*)}*/}
 		</>
 	);
 };
 
 interface AvgDurationProps {
 	criticalPath?: CriticalPathSpan[];
+	slowestQueries?: DbQuery[];
 	sessionStart?: number;
 	goldenMetricAvgDuration?: any;
 	remappedDeployments: Object;
@@ -704,14 +859,17 @@ const AvgDuration = (props: AvgDurationProps) => {
 			{props.criticalPath != null && props.criticalPath.length > 0 && (
 				<CriticalPath criticalPath={props.criticalPath!} />
 			)}
-			{props.goldenMetricAvgDuration != null && (
-				<AnomalyChart
-					title={props.goldenMetricAvgDuration.title}
-					result={props.goldenMetricAvgDuration.result}
-					index={props.index}
-					remappedDeployments={props.remappedDeployments}
-				/>
+			{props.slowestQueries != null && props.slowestQueries.length > 0 && (
+				<SlowestQueries slowestQueries={props.slowestQueries!} />
 			)}
+			{/*{props.goldenMetricAvgDuration != null && (*/}
+			{/*	<AnomalyChart*/}
+			{/*		title={props.goldenMetricAvgDuration.title}*/}
+			{/*		result={props.goldenMetricAvgDuration.result}*/}
+			{/*		index={props.index}*/}
+			{/*		remappedDeployments={props.remappedDeployments}*/}
+			{/*	/>*/}
+			{/*)}*/}
 		</>
 	);
 };
