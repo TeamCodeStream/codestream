@@ -1211,7 +1211,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					{currentReviewId ? (
 						<ReviewNav reviewId={currentReviewId} composeOpen={composeOpen} />
 					) : currentCodeErrorGuid ? (
-						<CodeErrorNav codeErrorId={currentCodeErrorGuid} composeOpen={composeOpen} />
+						<CodeErrorNav composeOpen={composeOpen} />
 					) : currentPullRequestId ? (
 						currentPullRequestProviderId === "github*com" ||
 						currentPullRequestProviderId === "github/enterprise" ? (

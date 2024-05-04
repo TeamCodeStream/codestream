@@ -699,8 +699,8 @@ export interface ObjectInfo {
 }
 
 export interface CSCreateCodeErrorRequest {
-	accountId?: number;
-	entityGuid: string;
+	accountId: number;
+	errorGuid: string;
 	parentPostId?: string;
 	objectType?: "errorGroup";
 	objectInfo?: ObjectInfo;

@@ -1260,7 +1260,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 							uri: functionToEdit.uri,
 					  }
 					: undefined;
-				const actualCodeError = await dispatch(
+				await dispatch(
 					upgradePendingCodeError(
 						props.codeError.entityGuid,
 						"Comment",
@@ -1270,12 +1270,9 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 					)
 				);
 
-				if (!actualCodeError || !actualCodeError.codeError) {
-					return;
-				}
-
 				dispatch(
-					markItemRead(props.codeError.entityGuid, actualCodeError.codeError.numReplies + 1)
+					//  TODO does this numReplies work at all? Should come from a post
+					markItemRead(props.codeError.entityGuid, codeError.numReplies + 1)
 				);
 			};
 			// Case 1 - pending post, will never try to fetch replies
@@ -1859,19 +1856,18 @@ const ReplyInput = (props: ReplyInputProps) => {
 			dispatch(startGrokLoading(props.codeError));
 		}
 
-		const actualCodeError = await dispatch(
-			upgradePendingCodeError(props.codeError.entityGuid, "Comment")
-		);
-		if (!actualCodeError || !actualCodeError.codeError.streamId) {
-			setIsLoading(false);
+		await dispatch(upgradePendingCodeError(props.codeError.entityGuid, "Comment"));
+		if (!props.codeError.streamId) {
+			console.warn("**** ohno");
 			return;
 		}
-		dispatch(markItemRead(props.codeError.entityGuid, actualCodeError.codeError.numReplies + 1));
+		// TODO is this numReplies ok? should be from post?
+		dispatch(markItemRead(props.codeError.entityGuid, props.codeError.numReplies + 1));
 
 		await dispatch(
 			createPost(
-				actualCodeError.codeError.streamId,
-				actualCodeError.codeError.postId,
+				props.codeError.streamId,
+				props.codeError.postId,
 				replaceHtml(text)!,
 				null,
 				findMentionedUserIds(teamMates, text),

@@ -86,6 +86,7 @@ export interface CreatePostRequest {
 	codemark?: CreateCodemarkRequest;
 	review?: CreateReviewRequest;
 	codeError?: CreateCodeErrorRequest;
+	errorGuid?: string;
 	entryPoint?: string;
 	crossPostIssueValues?: CrossPostIssueValues;
 	dontSendEmail?: boolean;

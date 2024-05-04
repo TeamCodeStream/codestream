@@ -10,6 +10,7 @@ import {
 	CreatePostRequestType,
 	CreatePostResponse,
 	CreatePostWithMarkerRequestType,
+	CreateShareableCodeErrorResponse,
 	CreateTeamTagRequestType,
 	CreateThirdPartyPostRequestType,
 	CrossPostIssueValues,
@@ -294,7 +295,7 @@ export const createPostAndReview =
 
 export const createPostAndCodeError =
 	(request: CreateCodeErrorRequest, entryPoint?: PostEntryPoint) =>
-	async (dispatch, getState: () => CodeStreamState) => {
+	async (dispatch, getState: () => CodeStreamState): Promise<CreateShareableCodeErrorResponse> => {
 		return dispatch(
 			createCodeError({
 				...request,

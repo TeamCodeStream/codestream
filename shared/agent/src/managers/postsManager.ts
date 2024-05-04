@@ -654,7 +654,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		let codeError: CSCodeError | undefined;
 		const stream = await SessionContainer.instance().streams.getTeamStream();
 
-		const response = await this.session.api.createPost({
+		const postRequest = {
+			errorGuid: request.errorGuid,
 			codeError: request,
 			text: "",
 			streamId: stream.id,
@@ -666,7 +667,9 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			analyze: request.analyze,
 			reinitialize: request.reinitialize,
 			parentPostId: request.parentPostId, // For grok reinitialization
-		});
+		};
+		Logger.log(`postRequest: ${JSON.stringify(postRequest, null, 2)}`);
+		const response = await this.session.api.createPost(postRequest);
 
 		codeError = response.codeError!;
 

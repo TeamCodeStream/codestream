@@ -7,11 +7,10 @@ import {
 	TelemetryData,
 	WarningOrError,
 } from "@codestream/protocols/agent";
-import { CSCodeError, CSStackTraceInfo } from "@codestream/protocols/api";
+import { CSStackTraceInfo } from "@codestream/protocols/api";
 
 import {
 	addCodeErrors,
-	PENDING_CODE_ERROR_ID_PREFIX,
 	removeCodeError,
 	resetNrAi,
 } from "@codestream/webview/store/codeErrors/actions";
@@ -43,9 +42,9 @@ import { BaseCodeErrorHeader, CodeError, Description, ExpandedAuthor } from "./C
 import { RepositoryAssociator } from "./CodeError/RepositoryAssociator";
 import { BigTitle, Header, Meta } from "./Codemark/BaseCodemark";
 import Dismissable from "./Dismissable";
-import Icon from "./Icon";
+import { Icon } from "./Icon";
 import { ClearModal, Step, Subtext, Tip } from "./ReviewNav";
-import ScrollBox from "./ScrollBox";
+import { ScrollBox } from "./ScrollBox";
 import { WarningBox } from "./WarningBox";
 import { isEmpty as _isEmpty } from "lodash";
 import { codeErrorsApi } from "@codestream/webview/store/codeErrors/api/apiResolver";
@@ -135,7 +134,7 @@ const ShowInstructionsContainer = styled.div`
 	opacity: 0.5;
 `;
 
-export type Props = React.PropsWithChildren<{ codeErrorId: string; composeOpen: boolean }>;
+export type Props = React.PropsWithChildren<{ composeOpen: boolean }>;
 
 /**
  * Called from InlineCodemarks it is what allows the commenting on lines of code
@@ -242,10 +241,10 @@ export function CodeErrorNav(props: Props) {
 		// 	onConnected(undefined);
 		// } else {
 		const onDidMount = () => {
-			if (derivedState.codeError) {
-				onConnected(derivedState.codeError);
-				markRead();
-			}
+			// if (derivedState.codeError) {
+			onConnected();
+			markRead();
+			// }
 			// else {
 			// 	dispatch(fetchCodeError(derivedState.currentCodeErrorId!))
 			// 		.then(_ => {
@@ -300,16 +299,17 @@ export function CodeErrorNav(props: Props) {
 		dispatch(fetchErrorGroup({ codeError: derivedState.codeError }));
 	}, [derivedState.codeError, errorGroup]);
 
-	const onConnected = async (codeErrorArg: CSCodeError | undefined, newRemote?: string) => {
+	const onConnected = async (newRemote?: string) => {
 		console.log("onConnected starting...");
 
 		// don't always have the codeError from the state
 		// sometimes we have to load it here (happens when you load the IDE with an existing codeError open)
-		const codeError = codeErrorArg || derivedState.codeError;
+		// const codeError = codeErrorArg ?? derivedState.codeError;
 		let isExistingCodeError;
 
-		let errorGroupGuidToUse: string | undefined;
-		let occurrenceIdToUse: string | undefined;
+		const errorGroupGuidToUse = derivedState.currentCodeErrorGuid;
+		const codeErrorData = derivedState.currentCodeErrorData;
+		const occurrenceIdToUse = codeErrorData?.occurrenceId;
 		let refToUse: string | undefined;
 		let entityIdToUse: string | undefined;
 
@@ -331,20 +331,20 @@ export function CodeErrorNav(props: Props) {
 		// 	entityIdToUse = pendingEntityId;
 		// } else
 
-		if (codeError) {
-			isExistingCodeError = true;
-			errorGroupGuidToUse = codeError?.entityGuid;
-
-			const existingStackTrace =
-				codeError.stackTraces && codeError.stackTraces[0] ? codeError.stackTraces[0] : undefined;
-			if (existingStackTrace) {
-				occurrenceIdToUse = existingStackTrace.occurrenceId;
-				refToUse = existingStackTrace.sha;
-			}
-			if (typeof codeError?.objectInfo?.entityId === "string") {
-				entityIdToUse = codeError?.objectInfo?.entityId;
-			}
-		}
+		// if (codeError) {
+		// 	isExistingCodeError = true;
+		// 	errorGroupGuidToUse = codeError?.entityGuid;
+		//
+		// 	const existingStackTrace =
+		// 		codeError.stackTraces && codeError.stackTraces[0] ? codeError.stackTraces[0] : undefined;
+		// 	if (existingStackTrace) {
+		// 		occurrenceIdToUse = existingStackTrace.occurrenceId;
+		// 		refToUse = existingStackTrace.sha;
+		// 	}
+		// 	if (typeof codeError?.objectInfo?.entityId === "string") {
+		// 		entityIdToUse = codeError?.objectInfo?.entityId;
+		// 	}
+		// }
 		if (!errorGroupGuidToUse) {
 			console.error("missing error group guid");
 			return;
@@ -368,7 +368,7 @@ export function CodeErrorNav(props: Props) {
 				errorGroupGuid: errorGroupGuidToUse,
 				occurrenceId: occurrenceIdToUse,
 				entityGuid: entityIdToUse,
-				timestamp: derivedState.currentCodeErrorData?.timestamp,
+				timestamp: codeErrorData?.timestamp,
 			});
 
 			if (!errorGroupResult || errorGroupResult?.error?.message) {
@@ -384,7 +384,7 @@ export function CodeErrorNav(props: Props) {
 					errorGroupGuid: errorGroupGuidToUse,
 					occurrenceId: occurrenceIdToUse,
 					entityGuid: entityIdToUse,
-					timestamp: derivedState.currentCodeErrorData?.timestamp,
+					timestamp: codeErrorData?.timestamp,
 				});
 				return;
 			}
@@ -392,8 +392,7 @@ export function CodeErrorNav(props: Props) {
 			let repoId: string | undefined = undefined;
 			let stackInfo: ResolveStackTraceResponse | undefined = undefined;
 			let targetRemote;
-			const hasStackTrace =
-				errorGroupResult?.errorGroup?.hasStackTrace || !!codeError?.stackTraces?.length;
+			const hasStackTrace = errorGroupResult?.errorGroup?.hasStackTrace;
 			if (!hasStackTrace) {
 				setIsResolved(true);
 				setRepoWarning({ message: "There is no stack trace associated with this error." });
@@ -409,14 +408,13 @@ export function CodeErrorNav(props: Props) {
 						errorGroupGuid: errorGroupGuidToUse,
 						occurrenceId: occurrenceIdToUse,
 						entityGuid: entityIdToUse,
-						timestamp: derivedState.currentCodeErrorData?.timestamp,
+						timestamp: codeErrorData?.timestamp,
 					});
 					return;
 				}
 
 				targetRemote = newRemote ?? remote;
-				const entityName =
-					codeError?.objectInfo?.entityName || errorGroup?.entityName || "selected";
+				const entityName = errorGroup?.entityName || "selected";
 
 				if (multipleRepos && !targetRemote) {
 					setMultiRepoDetectedError({
@@ -431,11 +429,10 @@ export function CodeErrorNav(props: Props) {
 					targetRemote = errorGroupResult?.errorGroup?.entity?.relatedRepos[0]?.url!;
 				} else if (
 					// Attempt to set remote from codeError object as long as we know there is a repo associated
-					codeError?.objectInfo?.remote &&
-					(!_isEmpty(derivedState.currentCodeErrorData?.relatedRepos) ||
-						codeError?.objectInfo?.hasRelatedRepos)
+					codeErrorData?.remote &&
+					!_isEmpty(codeErrorData?.relatedRepos)
 				) {
-					targetRemote = codeError?.objectInfo?.remote;
+					targetRemote = codeErrorData?.remote;
 				}
 
 				// Kick off repo association screen
@@ -465,7 +462,7 @@ export function CodeErrorNav(props: Props) {
 							occurrenceId: occurrenceIdToUse,
 							entityGuid: entityIdToUse,
 							targetRemote,
-							timestamp: derivedState.currentCodeErrorData?.timestamp,
+							timestamp: codeErrorData?.timestamp,
 						});
 						return;
 					}
@@ -491,27 +488,24 @@ export function CodeErrorNav(props: Props) {
 							occurrenceId: occurrenceIdToUse,
 							entityGuid: entityIdToUse,
 							targetRemote,
-							timestamp: derivedState.currentCodeErrorData?.timestamp,
+							timestamp: codeErrorData?.timestamp,
 						});
 
 						return;
 					}
 					repoId = reposResponse.repos[0].id;
 				}
-				if (!repoId) {
-					// no targetRemote, try to get a repo from existing stackTrace
-					repoId =
-						codeError?.stackTraces && codeError?.stackTraces.length > 0
-							? codeError.stackTraces[0].repoId
-							: "";
-				}
+				// if (!repoId) {
+				// 	// no targetRemote, try to get a repo from existing stackTrace
+				// 	repoId =
+				// 		codeError?.stackTraces && codeError?.stackTraces.length > 0
+				// 			? codeError.stackTraces[0].repoId
+				// 			: "";
+				// }
 
 				// YUCK
 				const stack =
-					errorGroupResult?.errorGroup?.errorTrace?.stackTrace?.map(_ => _.formatted) ||
-					(codeError?.stackTraces && codeError.stackTraces.length > 0
-						? codeError.stackTraces[0].text?.split("\n")
-						: []);
+					errorGroupResult?.errorGroup?.errorTrace?.stackTrace?.map(_ => _.formatted) ?? [];
 
 				if (!refToUse && errorGroupResult?.errorGroup) {
 					refToUse = errorGroupResult.errorGroup.commit || errorGroupResult.errorGroup.releaseTag;
@@ -526,8 +520,8 @@ export function CodeErrorNav(props: Props) {
 						occurrenceId: occurrenceIdToUse!,
 						stackTrace: stack!,
 						codeErrorId: derivedState.currentCodeErrorGuid!,
-						stackSourceMap: derivedState.currentCodeErrorData?.stackSourceMap,
-						domain: derivedState.currentCodeErrorData?.domain!, // TODO no !
+						stackSourceMap: codeErrorData?.stackSourceMap,
+						domain: codeErrorData?.domain!, // TODO no !
 					};
 					stackInfo = await dispatch(resolveStackTrace(request)).unwrap();
 				}
@@ -544,10 +538,7 @@ export function CodeErrorNav(props: Props) {
 				: [];
 
 			if (errorGroupResult && repoId) {
-				if (
-					derivedState.currentCodeErrorGuid &&
-					derivedState.currentCodeErrorGuid?.indexOf(PENDING_CODE_ERROR_ID_PREFIX) === 0
-				) {
+				if (derivedState.currentCodeErrorGuid) {
 					dispatch(
 						addCodeErrors([
 							{
@@ -577,7 +568,7 @@ export function CodeErrorNav(props: Props) {
 									accountId: errorGroupResult.accountId.toString(),
 									entityId: errorGroupResult?.errorGroup?.entityGuid,
 									entityName: errorGroupResult?.errorGroup?.entityName,
-									hasRelatedRepos: !_isEmpty(derivedState.currentCodeErrorData?.relatedRepos),
+									hasRelatedRepos: !_isEmpty(codeErrorData?.relatedRepos),
 								},
 							},
 						])
@@ -594,15 +585,13 @@ export function CodeErrorNav(props: Props) {
 
 			let trackingData = {
 				entity_guid: entityIdToUse,
-				account_id: errorGroupResult?.accountId || codeError?.objectInfo?.accountId,
-				meta_data: `error_group_id: ${
-					errorGroupResult?.errorGroup?.guid || codeError?.objectInfo?.entityId
-				}`,
+				account_id: errorGroupResult?.accountId,
+				meta_data: `error_group_id: ${errorGroupResult?.errorGroup?.guid}`,
 
 				meta_data_2: `entry_point: ${
-					derivedState.currentCodeErrorData?.openType === "Observability Section"
+					codeErrorData?.openType === "Observability Section"
 						? "observability_section"
-						: derivedState.currentCodeErrorData?.openType === "Activity Feed"
+						: codeErrorData?.openType === "Activity Feed"
 						? "activity_feed"
 						: "open_in_ide"
 				}`,
@@ -791,7 +780,7 @@ export function CodeErrorNav(props: Props) {
 							// 	"Error Group ID": payload.errorGroupGuid,
 							// });
 						}
-						onConnected(undefined, r.remote);
+						onConnected(r.remote);
 					});
 				}}
 			/>
@@ -840,7 +829,7 @@ export function CodeErrorNav(props: Props) {
 									remoteForOnConnected = repoFromAssignDirective?.repo?.urls[0];
 								}
 
-								onConnected(undefined, remoteForOnConnected);
+								onConnected(remoteForOnConnected);
 							} else {
 								console.log("Could not find directive", {
 									payload: payload,
