@@ -18,6 +18,7 @@ import {
 	MetricTimesliceNameMapping,
 	NRErrorResponse,
 	ObservabilityRepo,
+	GetEntityFromGuid,
 } from "@codestream/protocols/agent";
 import { CSMe } from "@codestream/protocols/api";
 import { uniqBy as _uniqBy } from "lodash";
@@ -51,15 +52,22 @@ export class GoldenSignalsProvider {
 		const observabilityRepo = await this.reposProvider.getObservabilityEntityRepos(
 			request.repoId,
 			request.skipRepoFetch === true,
-			force
+			force,
+			request?.isServiceSearch || false
 		);
 		if (!request.skipRepoFetch && (!observabilityRepo || !observabilityRepo.entityAccounts)) {
 			throw new ResponseError(ERROR_SLT_MISSING_OBSERVABILITY_REPOS, "No observabilityRepos");
 		}
 
-		const entity = observabilityRepo?.entityAccounts.find(
-			_ => _.entityGuid === request.newRelicEntityGuid
-		);
+		let entity;
+		if (request.isServiceSearch) {
+			entity = await this.getEntitiyFromGuid(request.newRelicEntityGuid);
+		} else {
+			entity = observabilityRepo?.entityAccounts.find(
+				_ => _.entityGuid === request.newRelicEntityGuid
+			);
+		}
+
 		if (!request.skipRepoFetch && !entity) {
 			ContextLogger.warn("Missing entity", {
 				entityId: request.newRelicEntityGuid,
@@ -94,6 +102,34 @@ export class GoldenSignalsProvider {
 			return response;
 		}
 		return undefined;
+	}
+
+	async getEntitiyFromGuid(entityGuid: string): Promise<GetEntityFromGuid> {
+		const data = await this.graphqlClient.query(
+			`query errorGroupById($guid: EntityGuid!) {
+				actor {
+				  entity(guid: $guid) {
+					domain
+					alertSeverity
+					name
+				  }
+				}
+			  }
+		  `,
+			{
+				guid: entityGuid,
+			}
+		);
+
+		if (data && data.actor && data.actor.entity) {
+			return {
+				alertSeverity: data.actor.entity.alertSeverity,
+				entityName: data.actor.entity.name,
+				entityGuid: entityGuid,
+			};
+		} else {
+			throw new Error("Invalid data returned from GraphQL query");
+		}
 	}
 
 	async getIssues(

@@ -636,7 +636,8 @@ export class ReposProvider implements Disposable {
 	async getObservabilityEntityRepos(
 		repoId: string,
 		skipRepoFetch = false,
-		force = false
+		force = false,
+		isServiceSearch = false
 	): Promise<ObservabilityRepo | undefined> {
 		let observabilityRepos: GetObservabilityReposResponse | undefined;
 		try {

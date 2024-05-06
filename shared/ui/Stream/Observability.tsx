@@ -230,6 +230,7 @@ export const Observability = React.memo((props: Props) => {
 			demoMode: state.codeErrors.demoMode,
 			teamId: team?.id,
 			anomalyData,
+			currentServiceSearchEntity: state.context.currentServiceSearchEntity,
 		};
 	}, shallowEqual);
 
@@ -813,6 +814,7 @@ export const Observability = React.memo((props: Props) => {
 				repoId: currentRepoId,
 				fetchRecentIssues: true,
 				force,
+				isServiceSearch: expandedEntity === derivedState.currentServiceSearchEntity,
 			});
 
 			if (response) {

@@ -1810,6 +1810,7 @@ export interface GetServiceLevelTelemetryRequest {
 	skipRepoFetch?: boolean;
 	fetchRecentIssues?: boolean;
 	force?: boolean;
+	isServiceSearch?: boolean;
 }
 
 export interface UpdateAzureFullNameRequest {
@@ -2374,6 +2375,12 @@ export interface GetAlertViolationsQueryResult {
 			recentAlertViolations: RecentAlertViolation[];
 		};
 	};
+}
+
+export interface GetEntityFromGuid {
+	alertSeverity: string;
+	entityName: string;
+	entityGuid: string;
 }
 
 export interface GetIssuesQueryResult {
