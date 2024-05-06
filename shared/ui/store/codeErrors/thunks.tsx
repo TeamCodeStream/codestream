@@ -35,7 +35,7 @@ import { addPosts, appendGrokStreamingResponse } from "@codestream/webview/store
 import { getNrAiPostLength } from "@codestream/webview/store/posts/reducer";
 import { GrokStreamEvent } from "@codestream/webview/store/posts/types";
 import { addStreams } from "@codestream/webview/store/streams/actions";
-import { createPostAndCodeError, deletePost } from "@codestream/webview/Stream/actions";
+import { createPostAndCodeError } from "@codestream/webview/Stream/actions";
 import { highlightRange } from "@codestream/webview/Stream/api-functions";
 import { Position, Range } from "vscode-languageserver-types";
 import { URI } from "vscode-uri";
@@ -45,6 +45,7 @@ import {
 } from "@codestream/webview/store/codeErrors/api/apiResolver";
 import { CodeErrorData } from "@codestream/protocols/webview";
 import { parseId } from "@codestream/webview/utilities/newRelic";
+import { deletePostApi } from "@codestream/webview/store/posts/thunks";
 
 export const updateCodeErrors =
 	(codeErrors: CSCodeError[]) => async (dispatch, getState: () => CodeStreamState) => {
@@ -815,7 +816,7 @@ export const handleGrokError = (grokError: CSAsyncGrokError) => dispatch => {
 	dispatch(setGrokLoading(false));
 	dispatch(setGrokError(grokError));
 	if (grokError.extra.streamId && grokError.extra.postId) {
-		dispatch(deletePost(grokError.extra.streamId, grokError.extra.postId));
+		dispatch(deletePostApi({ streamId: grokError.extra.streamId, postId: grokError.extra.postId }));
 	}
 };
 

@@ -56,7 +56,7 @@ import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview
 import { isSha } from "@codestream/webview/utilities/strings";
 import { emptyArray, replaceHtml } from "@codestream/webview/utils";
 import { HostApi } from "@codestream/webview/webview-api";
-import { createPost, deletePost, invite, markItemRead } from "../actions";
+import { createPost, invite, markItemRead } from "../actions";
 import { Attachments } from "../Attachments";
 import {
 	BigTitle,
@@ -91,6 +91,8 @@ import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
 import { isEmpty } from "lodash-es";
 import { getNrCapability } from "@codestream/webview/store/nrCapabilities/thunks";
 import { setPostReplyCallback } from "@codestream/webview/store/codeErrors/api/apiResolver";
+import { deletePostApi } from "@codestream/webview/store/posts/thunks";
+import { setCurrentCodeErrorData } from "@codestream/webview/store/context/actions";
 
 interface SimpleError {
 	/**
@@ -1008,7 +1010,7 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 				? (props.codeError.followerIds || []).includes(state.session.userId!)
 				: [],
 		};
-	});
+	}, shallowEqual);
 	const currentUserIsAdmin = useAppSelector(currentUserIsAdminSelector);
 	const [isLoading, setIsLoading] = useState(false);
 	const [menuState, setMenuState] = useState<{ open: boolean; target?: any }>({
@@ -1068,12 +1070,21 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 									label: "Delete Post",
 									className: "delete",
 									wait: true,
-									action: () => {
+									action: async () => {
 										const post = derivedState.post;
-										if (!post) return;
+										if (!post) {
+											return;
+										}
 										// Deleting the parent post will (soft) delete the codeError
 										// and all the child posts
-										dispatch(deletePost(post.streamId, post.id, post.sharedTo));
+										await dispatch(
+											deletePostApi({
+												streamId: post.streamId,
+												postId: post.id,
+												sharedTo: post.sharedTo,
+											})
+										);
+										dispatch(setCurrentCodeErrorData()); // Close the code error discussion
 									},
 								},
 							],
@@ -1132,7 +1143,7 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 		// }
 
 		return items;
-	}, [codeError, collapsed, props.errorGroup]);
+	}, [codeError, collapsed, props.errorGroup, derivedState.post]);
 
 	if (shareModalOpen) {
 		return (

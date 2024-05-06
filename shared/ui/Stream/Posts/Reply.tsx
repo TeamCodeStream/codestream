@@ -18,7 +18,7 @@ import cx from "classnames";
 import React, { forwardRef, Ref } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
-import { deletePost, editPost } from "../actions";
+import { editPost } from "../actions";
 import { Attachments } from "../Attachments";
 import Button from "../Button";
 import { KebabIcon, MetaDescriptionForTags } from "../Codemark/BaseCodemark";
@@ -34,6 +34,7 @@ import Timestamp from "../Timestamp";
 import { RepliesToPostContext } from "./RepliesToPost";
 import { NrAiComponent } from "@codestream/webview/Stream/Posts/NrAiComponent";
 import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
+import { deletePostApi } from "@codestream/webview/store/posts/thunks";
 
 const AuthorInfo = styled.div`
 	display: flex;
@@ -531,11 +532,11 @@ const NestedReply = (props: {
 								wait: true,
 								action: () => {
 									dispatch(
-										deletePost(
-											props.post.streamId,
-											props.post.id,
-											isPending(props.post) ? undefined : props.post.sharedTo
-										)
+										deletePostApi({
+											streamId: props.post.streamId,
+											postId: props.post.id,
+											sharedTo: isPending(props.post) ? undefined : props.post.sharedTo,
+										})
 									);
 								},
 							},

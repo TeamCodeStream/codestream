@@ -22,7 +22,7 @@ import {
 } from "../store/users/reducer";
 import { escapeHtml, replaceHtml, safe } from "../utils";
 import { HostApi } from "../webview-api";
-import { cancelPost, deletePost, editPost, retryPost, setCodemarkStatus } from "./actions";
+import { cancelPost, editPost, retryPost, setCodemarkStatus } from "./actions";
 import { Attachments } from "./Attachments";
 import Button from "./Button";
 import CodemarkActions from "./CodemarkActions";
@@ -48,6 +48,7 @@ import { CSUser } from "@codestream/protocols/api";
 import { isPending } from "@codestream/webview/store/posts/types";
 import { MenuItem } from "@codestream/webview/src/components/controls/InlineMenu";
 import { AutoHeightTextArea } from "@codestream/webview/src/components/AutoHeightTextArea";
+import { deletePostApi } from "@codestream/webview/store/posts/thunks";
 
 export type PostProps = {
 	id: string;
@@ -726,7 +727,7 @@ export function Post(props: PostProps) {
 							if (!post) {
 								return;
 							}
-							dispatch(deletePost(post.streamId, post.id));
+							dispatch(deletePostApi({ streamId: post.streamId, postId: post.id }));
 						},
 					},
 					{ label: "Cancel" },
