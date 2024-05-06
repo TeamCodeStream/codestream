@@ -89,15 +89,13 @@ export function RepositoryAssociator(props: {
 	const [skipRender, setSkipRender] = React.useState(false);
 
 	useEffect(() => {
-		if (props.telemetryOnDisplay) {
-			if (props.telemetryOnDisplay.modalType === "repoAssociation") {
-				HostApi.instance.track("codestream/repo_association_modal displayed", {
-					event_type: "modal_display",
-					entity_guid: props.telemetryOnDisplay.entityGuid,
-					account_id: props.telemetryOnDisplay.accountId,
-					meta_data: `item_type: ${props.telemetryOnDisplay.itemType}`,
-				});
-			}
+		if (props.telemetryOnDisplay && props.telemetryOnDisplay.modalType === "repoAssociation") {
+			HostApi.instance.track("codestream/repo_association_modal displayed", {
+				event_type: "modal_display",
+				entity_guid: props.telemetryOnDisplay.entityGuid,
+				account_id: props.telemetryOnDisplay.accountId,
+				meta_data: `item_type: ${props.telemetryOnDisplay.itemType}`,
+			});
 		}
 	}, [props.telemetryOnDisplay]);
 
