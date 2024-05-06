@@ -1159,6 +1159,26 @@ export const Observability = React.memo((props: Props) => {
 			</div>
 
 			<ObservabilityServiceSearch
+				anomalyDetectionSupported={anomalyDetectionSupported}
+				calculatingAnomalies={calculatingAnomalies}
+				currentRepoId={currentRepoId || ""}
+				entityGoldenMetrics={entityGoldenMetrics}
+				entityGoldenMetricsErrors={entityGoldenMetricsErrors}
+				errorInboxError={errorInboxError}
+				handleClickTopLevelService={handleClickTopLevelService}
+				hasServiceLevelObjectives={hasServiceLevelObjectives}
+				loadingGoldenMetrics={loadingGoldenMetrics}
+				loadingPane={loadingPane}
+				noErrorsAccess={noErrorsAccess}
+				observabilityAnomalies={observabilityAnomalies}
+				observabilityAssignments={observabilityAssignments}
+				observabilityErrors={observabilityErrors}
+				observabilityErrorsError={observabilityErrorsError}
+				recentIssues={recentIssues}
+				serviceLevelObjectiveError={serviceLevelObjectiveError}
+				serviceLevelObjectives={serviceLevelObjectives}
+				setIsVulnPresent={setIsVulnPresent}
+				showErrors={false}
 				expandedEntity={expandedEntity}
 				setExpandedEntityCallback={setExpandedEntity}
 			/>

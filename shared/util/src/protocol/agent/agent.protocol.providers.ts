@@ -1572,6 +1572,17 @@ export const GetObservabilityReposRequestType = new RequestType<
 	void
 >("codestream/newrelic/repos");
 
+// export const GetEntityAccountFromGuidRequestType = new RequestType<
+// 	GetEntityAccountFromGuidRequest,
+// 	GetEntityAccountFromGuidResponse,
+// 	void,
+// 	void
+// >("codestream/newrelic/entityAccount");
+
+export interface GetEntityAccountFromGuidRequest {
+	id: string;
+}
+
 export interface GetObservabilityEntityByGuidRequest {
 	id: string;
 }
@@ -2199,7 +2210,7 @@ export interface Entity {
 	goldenMetrics?: { metrics?: MethodGoldenMetrics[] };
 	guid: string;
 	name: string;
-	type?: Type;
+	type?: Type | string;
 	entityType?: EntityType;
 	tags?: {
 		key: string;

@@ -39,6 +39,7 @@ import {
 	GraphqlNrqlTimeoutError,
 } from "../newrelic.types";
 import { NrApiConfig } from "../nrApiConfig";
+import { ReposProvider } from "../repos/reposProvider";
 
 const ENTITY_CACHE_KEY = "entityCache";
 
@@ -64,8 +65,11 @@ export class EntityProvider implements Disposable {
 
 	constructor(
 		private nrApiConfig: NrApiConfig,
-		private graphqlClient: NewRelicGraphqlClient
-	) {}
+		private graphqlClient: NewRelicGraphqlClient,
+		private reposProvider: ReposProvider
+	) {
+		console.warn("hello world");
+	}
 
 	get coreUrl() {
 		return this.nrApiConfig.productUrl;
@@ -148,17 +152,26 @@ export class EntityProvider implements Disposable {
 				};
 			};
 		}>(query);
-		const entity = response.actor.entity;
+		const entity: Entity = response.actor.entity;
+
+		const distributedTracingEnabled = this.reposProvider.hasStandardOrInfiniteTracing(entity);
+
+		const languageAndVersionValidation = await this.reposProvider.languageAndVersionValidation(
+			entity
+		);
+
 		return {
 			entity: {
-				accountId: entity.account.id,
-				accountName: entity.account.name,
+				accountId: entity?.account?.id || 1,
+				accountName: entity?.account?.name || "",
 				entityGuid: entity.guid,
 				entityName: entity.name,
 				type: entity.type,
 				entityType: entity.entityType,
-				entityTypeDescription: EntityTypeMap[entity.entityType],
-				tags: entity.tags,
+				entityTypeDescription: entity?.entityType && EntityTypeMap[entity?.entityType],
+				tags: entity.tags || [],
+				distributedTracingEnabled,
+				languageAndVersionValidation,
 			},
 		};
 	}

@@ -132,7 +132,7 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 		sourceMapProvider
 	);
 
-	const entityProvider = new EntityProvider(nrApiConfig, newRelicGraphqlClient);
+	const entityProvider = new EntityProvider(nrApiConfig, newRelicGraphqlClient, reposProvider);
 
 	disposables.push(entityProvider);
 

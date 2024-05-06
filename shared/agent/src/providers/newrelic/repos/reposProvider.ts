@@ -303,6 +303,37 @@ export class ReposProvider implements Disposable {
 		return response;
 	}
 
+	// @lspHandler(GetEntityAccountFromGuidRequestType)
+	// @log()
+	// @gate() // Give the cache a chance to work - otherwise calls come at the same time and cache is never hit
+	// async getEntityAccountFromGuid(entityGuid: string): Promise<GetEntityAccountFromGuid> {
+	// 	const data = await this.graphqlClient.query(
+	// 		`query errorGroupById($guid: EntityGuid!) {
+	// 			actor {
+	// 			  entity(guid: $guid) {
+	// 				domain
+	// 				alertSeverity
+	// 				name
+	// 			  }
+	// 			}
+	// 		  }
+	// 	  `,
+	// 		{
+	// 			guid: entityGuid,
+	// 		}
+	// 	);
+
+	// 	if (data && data.actor && data.actor.entity) {
+	// 		return {
+	// 			alertSeverity: data.actor.entity.alertSeverity,
+	// 			entityName: data.actor.entity.name,
+	// 			entityGuid: entityGuid,
+	// 		};
+	// 	} else {
+	// 		throw new Error("Invalid data returned from GraphQL query");
+	// 	}
+	// }
+
 	async findRelatedEntityByRepositoryGuids(
 		repositoryGuids: string[]
 	): Promise<RelatedEntityByRepositoryGuidsResult> {
@@ -482,7 +513,7 @@ export class ReposProvider implements Disposable {
 		}
 	}
 
-	private async languageAndVersionValidation(
+	async languageAndVersionValidation(
 		entity?: Entity,
 		isVsCode?: boolean
 	): Promise<LanguageAndVersionValidation> {
@@ -539,7 +570,7 @@ export class ReposProvider implements Disposable {
 		};
 	}
 
-	private hasStandardOrInfiniteTracing(entity?: Entity): boolean {
+	hasStandardOrInfiniteTracing(entity?: Entity): boolean {
 		const tags = entity?.tags || [];
 		const tracingTag = tags.find(tag => tag.key === "nr.tracing");
 

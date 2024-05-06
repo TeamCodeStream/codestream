@@ -61,7 +61,7 @@ export class GoldenSignalsProvider {
 
 		let entity;
 		if (request.isServiceSearch) {
-			entity = await this.getEntitiyFromGuid(request.newRelicEntityGuid);
+			entity = await this.getEntityFromGuid(request.newRelicEntityGuid);
 		} else {
 			entity = observabilityRepo?.entityAccounts.find(
 				_ => _.entityGuid === request.newRelicEntityGuid
@@ -104,7 +104,7 @@ export class GoldenSignalsProvider {
 		return undefined;
 	}
 
-	async getEntitiyFromGuid(entityGuid: string): Promise<GetEntityFromGuid> {
+	async getEntityFromGuid(entityGuid: string): Promise<GetEntityFromGuid> {
 		const data = await this.graphqlClient.query(
 			`query errorGroupById($guid: EntityGuid!) {
 				actor {

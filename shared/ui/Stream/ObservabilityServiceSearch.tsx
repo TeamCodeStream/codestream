@@ -6,38 +6,50 @@ import { RepoHeader } from "./Observability";
 import { EntityAssociator } from "./EntityAssociator";
 import { setCurrentServiceSearchEntity } from "../store/context/actions";
 import { CodeStreamState } from "../store";
+import { ObservabilityServiceEntity } from "./ObservabilityServiceEntity";
+import {
+	EntityAccount,
+	GetObservabilityEntityByGuidRequestType,
+	EntityGoldenMetrics,
+	GetObservabilityAnomaliesResponse,
+	ObservabilityErrorCore,
+	ObservabilityRepoError,
+	ObservabilityRepo,
+	GetIssuesResponse,
+	ServiceLevelObjectiveResult,
+} from "@codestream/protocols/agent";
+import { HostApi } from "../webview-api";
 
 interface Props {
-	// alertSeverityColor: string;
-	// anomalyDetectionSupported: boolean;
-	// calculatingAnomalies: boolean;
-	// collapsed: boolean;
-	// currentRepoId: string;
-	// ea: EntityAccount;
-	// entityGoldenMetrics?: EntityGoldenMetrics;
-	// entityGoldenMetricsErrors: string[];
-	// errorInboxError?: string;
-	// handleClickTopLevelService: Function;
-	// hasServiceLevelObjectives: boolean;
-	// loadingGoldenMetrics: boolean;
-	// loadingPane?: string;
-	// noErrorsAccess?: string;
-	// observabilityAnomalies: GetObservabilityAnomaliesResponse;
-	// observabilityAssignments: ObservabilityErrorCore[];
-	// observabilityErrors: ObservabilityRepoError[];
-	// observabilityErrorsError?: string;
-	// observabilityRepo?: ObservabilityRepo;
-	// recentIssues?: GetIssuesResponse;
-	// serviceLevelObjectiveError?: string;
-	// serviceLevelObjectives: ServiceLevelObjectiveResult[];
-	// setIsVulnPresent: Function;
-	// showErrors: boolean;
+	anomalyDetectionSupported: boolean;
+	calculatingAnomalies: boolean;
+	currentRepoId: string;
+	entityGoldenMetrics?: EntityGoldenMetrics;
+	entityGoldenMetricsErrors: string[];
+	errorInboxError?: string;
+	handleClickTopLevelService: Function;
+	hasServiceLevelObjectives: boolean;
+	loadingGoldenMetrics: boolean;
+	loadingPane?: string;
+	noErrorsAccess?: string;
+	observabilityAnomalies: GetObservabilityAnomaliesResponse;
+	observabilityAssignments: ObservabilityErrorCore[];
+	observabilityErrors: ObservabilityRepoError[];
+	observabilityErrorsError?: string;
+	observabilityRepo?: ObservabilityRepo;
+	recentIssues?: GetIssuesResponse;
+	serviceLevelObjectiveError?: string;
+	serviceLevelObjectives: ServiceLevelObjectiveResult[];
+	setIsVulnPresent: Function;
+	showErrors: boolean;
 	setExpandedEntityCallback: Function;
 	expandedEntity?: string;
 }
 
 export const ObservabilityServiceSearch = React.memo((props: Props) => {
 	const dispatch = useAppDispatch();
+	const [entityAccount, setEntityAccount] = React.useState<EntityAccount | undefined>(undefined);
+	const [loadingEntityAccount, setLoadingEntityAccount] = React.useState<boolean>(false);
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
@@ -48,40 +60,38 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 	const { currentServiceSearchEntity } = derivedState;
 
 	const {
-		// alertSeverityColor,
-		// anomalyDetectionSupported,
-		// calculatingAnomalies,
-		// collapsed,
-		// currentRepoId,
-		// ea,
-		// entityGoldenMetrics,
-		// entityGoldenMetricsErrors,
-		// errorInboxError,
-		// handleClickTopLevelService,
-		// hasServiceLevelObjectives,
-		// loadingGoldenMetrics,
-		// loadingPane,
-		// noErrorsAccess,
-		// observabilityAnomalies,
-		// observabilityAssignments,
-		// observabilityErrors,
-		// observabilityErrorsError,
-		// observabilityRepo,
-		// recentIssues,
-		// serviceLevelObjectiveError,
-		// serviceLevelObjectives,
-		// setIsVulnPresent,
-		// showErrors,
+		anomalyDetectionSupported,
+		calculatingAnomalies,
+		currentRepoId,
+		entityGoldenMetrics,
+		entityGoldenMetricsErrors,
+		errorInboxError,
+		handleClickTopLevelService,
+		hasServiceLevelObjectives,
+		loadingGoldenMetrics,
+		loadingPane,
+		noErrorsAccess,
+		observabilityAnomalies,
+		observabilityAssignments,
+		observabilityErrors,
+		observabilityErrorsError,
+		observabilityRepo,
+		recentIssues,
+		serviceLevelObjectiveError,
+		serviceLevelObjectives,
+		setIsVulnPresent,
+		showErrors,
 		setExpandedEntityCallback,
 	} = props;
 
-	// @TODO - Eric: need a setExpandedEntity callback passed here, that will kick off everything
-	// It looks like currentRepoId is required for that, but I think its not and can be bypassed.
-	// maybe setExpandedEntity('service-search') and modify the useEffect conditional.  Will probably
-	// also need to add something to redux, like currentServiceSearchEntity or something. That way
-	// on collapse we continue to show it.
-
-	console.warn("eric", currentServiceSearchEntity);
+	const fetchEntityAccount = async entityGuid => {
+		setLoadingEntityAccount(true);
+		const response = await HostApi.instance.send(GetObservabilityEntityByGuidRequestType, {
+			id: entityGuid,
+		});
+		setLoadingEntityAccount(false);
+		setEntityAccount(response.entity);
+	};
 
 	return (
 		<>
@@ -128,10 +138,40 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 						console.warn(e);
 						setExpandedEntityCallback(e.entityGuid);
 						dispatch(setCurrentServiceSearchEntity(e.entityGuid));
+						fetchEntityAccount(e.entityGuid);
 					}}
 					isServiceSearch={true}
 				/>
 
+				{!loadingEntityAccount && entityAccount && (
+					<>
+						<ObservabilityServiceEntity
+							alertSeverityColor={"red"}
+							anomalyDetectionSupported={anomalyDetectionSupported}
+							calculatingAnomalies={calculatingAnomalies}
+							collapsed={false}
+							currentRepoId={currentRepoId}
+							ea={entityAccount}
+							entityGoldenMetrics={entityGoldenMetrics}
+							entityGoldenMetricsErrors={entityGoldenMetricsErrors}
+							errorInboxError={errorInboxError}
+							handleClickTopLevelService={handleClickTopLevelService}
+							hasServiceLevelObjectives={hasServiceLevelObjectives}
+							loadingGoldenMetrics={loadingGoldenMetrics}
+							loadingPane={loadingPane}
+							noErrorsAccess={noErrorsAccess}
+							observabilityAnomalies={observabilityAnomalies}
+							observabilityAssignments={observabilityAssignments}
+							observabilityErrors={observabilityErrors}
+							observabilityErrorsError={observabilityErrorsError}
+							recentIssues={recentIssues}
+							serviceLevelObjectiveError={serviceLevelObjectiveError}
+							serviceLevelObjectives={serviceLevelObjectives}
+							setIsVulnPresent={setIsVulnPresent}
+							showErrors={showErrors}
+						/>
+					</>
+				)}
 				{/* {false && (
 					<ObservabilityServiceEntity
 						alertSeverityColor={alertSeverityColor}
@@ -139,7 +179,7 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 						calculatingAnomalies={calculatingAnomalies}
 						collapsed={collapsed}
 						currentRepoId={currentRepoId}
-						ea={ea}
+						ea={entityAccount}
 						entityGoldenMetrics={entityGoldenMetrics}
 						entityGoldenMetricsErrors={entityGoldenMetricsErrors}
 						errorInboxError={errorInboxError}

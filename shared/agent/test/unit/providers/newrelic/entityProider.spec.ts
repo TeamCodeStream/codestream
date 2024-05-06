@@ -10,7 +10,7 @@ const mockNewRelicGraphqlClient = mockDeep<NewRelicGraphqlClient>();
 
 describe("EntityProvider", () => {
 	it("generateEntityQueryStatements", async () => {
-		const entityProvider = new EntityProvider({} as any, {} as any);
+		const entityProvider = new EntityProvider({} as any, {} as any, {} as any);
 		expect(entityProvider.generateEntityQueryStatement("foo-bar_baz")).toEqual(
 			"name LIKE '%foo-bar_baz%'"
 		);
@@ -19,14 +19,14 @@ describe("EntityProvider", () => {
 
 describe("EntityProvider.getEntitiesById", () => {
 	it("getEntitiesById has none (bad input)", async () => {
-		const entityProvider = new EntityProvider({} as any, mockNewRelicGraphqlClient);
+		const entityProvider = new EntityProvider({} as any, mockNewRelicGraphqlClient, {} as any);
 		const response = await entityProvider.getEntitiesById({ guids: [] });
 		expect(mockNewRelicGraphqlClient.query).not.toHaveBeenCalled();
 		expect(response).toEqual({ entities: [] });
 	});
 
 	it("getEntitiesById", async () => {
-		const entityProvider = new EntityProvider({} as any, mockNewRelicGraphqlClient);
+		const entityProvider = new EntityProvider({} as any, mockNewRelicGraphqlClient, {} as any);
 
 		let response = await entityProvider.getEntitiesById({ guids: ["1", "2", "3"] });
 		const results = { entities: [{ guid: "1" }, { guid: "2" }, { guid: "3" }] };
