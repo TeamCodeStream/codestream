@@ -522,6 +522,12 @@ export const TransactionSpanPanel = () => {
 					isLoadingParent={chartLoading}
 					noSingleItemDropdownSkip={true}
 					onSubmit={associateRepo}
+					telemetryOnDisplay={{
+						accountId: derivedState.currentTransactionSpan.newRelicAccountId,
+						entityGuid: derivedState.currentTransactionSpan.newRelicEntityGuid,
+						itemType: "span",
+						modalType: "repoAssociation",
+					}}
 				/>
 			</Modal>
 		);

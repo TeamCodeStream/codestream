@@ -810,12 +810,24 @@ export function CodeErrorNav(props: Props) {
 							errorGroupGuid: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
 						};
 						if (!skipTracking) {
-							// HostApi.instance.track("NR Multi Repo Selected", {
-							// 	"Error Group ID": payload.errorGroupGuid,
-							// });
+							HostApi.instance.track("codestream/repo_disambiguation succeeded", {
+								event_type: "response",
+								entity_guid: pendingEntityId,
+								account_id: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
+								meta_data: "item_type: error",
+								meta_data_2: `item_id: ${
+									derivedState.codeError?.objectId || pendingErrorGroupGuid!
+								}`,
+							});
 						}
 						onConnected(undefined, r.remote);
 					});
+				}}
+				telemetryOnDisplay={{
+					accountId: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
+					entityGuid: pendingEntityId,
+					itemType: "error",
+					modalType: "repoAssociation",
 				}}
 			/>
 		);
@@ -849,9 +861,15 @@ export function CodeErrorNav(props: Props) {
 								setRepoAssociationError(undefined);
 								resolve(true);
 
-								// HostApi.instance.track("NR Repo Association", {
-								// 	"Error Group ID": payload.errorGroupGuid,
-								// });
+								HostApi.instance.track("codestream/repo_association succeeded", {
+									event_type: "response",
+									entity_guid: pendingEntityId,
+									account_id: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
+									meta_data: "item_type: error",
+									meta_data_2: `item_id: ${
+										derivedState.codeError?.objectId || pendingErrorGroupGuid!
+									}`,
+								});
 
 								let remoteForOnConnected;
 								let repoFromAssignDirective = _.directives.find(

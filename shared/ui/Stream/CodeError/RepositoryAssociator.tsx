@@ -9,7 +9,7 @@ import {
 import { CSCodeError } from "@codestream/protocols/api";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";
-import React from "react";
+import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import { logWarning } from "../../logger";
@@ -59,6 +59,12 @@ export function RepositoryAssociator(props: {
 	isLoadingParent?: boolean;
 	noSingleItemDropdownSkip?: boolean;
 	relatedRepos?: RelatedRepository[];
+	telemetryOnDisplay?: {
+		itemType: "span" | "error";
+		modalType: "repoAssociation";
+		entityGuid?: string;
+		accountId?: number;
+	};
 }) {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const codeError = state.context.currentCodeErrorId
@@ -81,6 +87,19 @@ export function RepositoryAssociator(props: {
 	const [isLoading, setIsLoading] = React.useState(false);
 	const [hasFetchedRepos, setHasFetchedRepos] = React.useState(false);
 	const [skipRender, setSkipRender] = React.useState(false);
+
+	useEffect(() => {
+		if (props.telemetryOnDisplay) {
+			if (props.telemetryOnDisplay.modalType === "repoAssociation") {
+				HostApi.instance.track("codestream/repo_association_modal displayed", {
+					event_type: "modal_display",
+					entity_guid: props.telemetryOnDisplay.entityGuid,
+					account_id: props.telemetryOnDisplay.accountId,
+					meta_data: `item_type: ${props.telemetryOnDisplay.itemType}`,
+				});
+			}
+		}
+	}, [props.telemetryOnDisplay]);
 
 	const fetchRepos = () => {
 		HostApi.instance
