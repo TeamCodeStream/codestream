@@ -24,6 +24,7 @@ interface Props {
 	observabilityRepo?: ObservabilityRepo;
 	entityGuid?: string;
 	domain?: string;
+	isServiceSearch?: boolean;
 }
 
 const SubtleDropdown = styled.span`

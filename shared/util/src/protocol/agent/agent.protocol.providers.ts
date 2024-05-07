@@ -1359,6 +1359,17 @@ export interface GetObservabilityErrorsRequest {
 	timeWindow?: string;
 }
 
+export interface GetObservabilityErrorsWithoutReposRequest {
+	entityGuid: string;
+	accountId: number;
+	entityType?: EntityTypeKey | string;
+	timeWindow?: string;
+}
+
+export interface GetObservabilityErrorsWithoutReposResponse {
+	error?: NRErrorResponse;
+}
+
 export interface ObservabilityErrorCore {
 	entityId: string;
 	errorClass: string;
@@ -1404,6 +1415,13 @@ export const GetObservabilityErrorsRequestType = new RequestType<
 	void,
 	void
 >("codestream/newrelic/errors");
+
+export const GetObservabilityErrorsWithoutReposRequestType = new RequestType<
+	GetObservabilityErrorsWithoutReposRequest,
+	GetObservabilityErrorsWithoutReposResponse,
+	void,
+	void
+>("codestream/newrelic/errorsWithoutRepos");
 
 export interface GetObservabilityAnomaliesRequest {
 	entityGuid: string;

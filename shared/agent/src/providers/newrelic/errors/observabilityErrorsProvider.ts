@@ -19,6 +19,9 @@ import {
 	GetObservabilityErrorsRequest,
 	GetObservabilityErrorsRequestType,
 	GetObservabilityErrorsResponse,
+	GetObservabilityErrorsWithoutReposRequestType,
+	GetObservabilityErrorsWithoutReposRequest,
+	GetObservabilityErrorsWithoutReposResponse,
 	isNRErrorResponse,
 	NewRelicErrorGroup,
 	ObservabilityError,
@@ -220,6 +223,74 @@ export class ObservabilityErrorsProvider {
 					repoName: getRepoName(repo),
 					errors: observabilityErrors!,
 				});
+			}
+		} catch (ex) {
+			ContextLogger.error(ex, "getObservabilityErrors");
+			if (ex instanceof ResponseError) {
+				throw ex;
+			}
+			return { error: mapNRErrorResponse(ex) };
+		}
+		return response;
+	}
+
+	/**
+	 * Returns a list of errors for a given entity without a repo required
+	 *
+	 * Can throw errors
+	 *
+	 * @param {GetObservabilityErrorsWithoutReposRequest} request
+	 * @return {Promise<GetObservabilityErrorsWithoutReposResponse>}
+	 * @memberof ObservabilityErrorsProvider
+	 */
+	@lspHandler(GetObservabilityErrorsWithoutReposRequestType)
+	@log()
+	async getObservabilityErrorsWithoutRepos(
+		request: GetObservabilityErrorsWithoutReposRequest
+	): Promise<GetObservabilityErrorsWithoutReposResponse> {
+		const response: GetObservabilityErrorsWithoutReposResponse = {};
+		const observabilityErrors: ObservabilityError[] = [];
+		let gotoEnd = false;
+
+		try {
+			const errorTraces = await this.findFingerprintedErrorTraces(
+				request.accountId,
+				request.entityGuid,
+				request.entityType,
+				request.timeWindow
+			);
+			for (const errorTrace of errorTraces) {
+				try {
+					const response = await this.getErrorGroupFromNameMessageEntity(
+						errorTrace.errorClass,
+						errorTrace.message,
+						errorTrace.entityGuid
+					);
+
+					if (response && response.actor.errorsInbox.errorGroup) {
+						observabilityErrors.push({
+							entityId: errorTrace.entityGuid,
+							appName: errorTrace.appName,
+							errorClass: errorTrace.errorClass,
+							message: errorTrace.message,
+							remote: "test", //application.urlValue!,  not sure what to do with this
+							errorGroupGuid: response.actor.errorsInbox.errorGroup.id,
+							occurrenceId: errorTrace.occurrenceId,
+							traceId: errorTrace.traceId,
+							count: errorTrace.count,
+							lastOccurrence: errorTrace.lastOccurrence,
+							errorGroupUrl: response.actor.errorsInbox.errorGroup.url,
+						});
+						if (observabilityErrors.length > 4) {
+							gotoEnd = true;
+							break;
+						}
+					}
+				} catch (ex) {
+					ContextLogger.warn("internal error getErrorGroupGuid", {
+						ex: ex,
+					});
+				}
 			}
 		} catch (ex) {
 			ContextLogger.error(ex, "getObservabilityErrors");

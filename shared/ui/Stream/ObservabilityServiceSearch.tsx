@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Icon from "./Icon";
 import { useAppDispatch, useAppSelector } from "../utilities/hooks";
 import { PaneNode, PaneNodeName } from "../src/components/Pane";
@@ -19,7 +19,10 @@ import {
 	ObservabilityRepo,
 	GetIssuesResponse,
 	ServiceLevelObjectiveResult,
+	GetObservabilityErrorsWithoutReposRequestType,
+	GetObservabilityErrorsWithoutReposResponse,
 } from "@codestream/protocols/agent";
+import { useDidMount } from "../utilities/hooks";
 
 interface Props {
 	anomalyDetectionSupported: boolean;
@@ -49,12 +52,17 @@ interface Props {
 
 export const ObservabilityServiceSearch = React.memo((props: Props) => {
 	const dispatch = useAppDispatch();
-	const [entityAccount, setEntityAccount] = React.useState<EntityAccount | undefined>(undefined);
-	const [loadingEntityAccount, setLoadingEntityAccount] = React.useState<boolean>(false);
+	const [errors, setErrors] = useState<GetObservabilityErrorsWithoutReposResponse | undefined>(
+		undefined
+	);
+	const [loadingErrors, setLoadingErrors] = useState<boolean>(false);
+	const [entityAccount, setEntityAccount] = useState<EntityAccount | undefined>(undefined);
+	const [loadingEntityAccount, setLoadingEntityAccount] = useState<boolean>(false);
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
 			currentServiceSearchEntity: state.context.currentServiceSearchEntity,
+			recentErrorsTimeWindow: state.preferences.codeErrorTimeWindow,
 		};
 	});
 
@@ -85,6 +93,18 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 		setExpandedEntityCallback,
 	} = props;
 
+	useDidMount(() => {
+		if (derivedState.currentServiceSearchEntity) {
+			fetchEntityAccount(derivedState.currentServiceSearchEntity);
+		}
+	});
+
+	useEffect(() => {
+		if (entityAccount) {
+			fetchErrors();
+		}
+	}, [entityAccount]);
+
 	const fetchEntityAccount = async entityGuid => {
 		setLoadingEntityAccount(true);
 		const response = await HostApi.instance.send(GetObservabilityEntityByGuidRequestType, {
@@ -92,6 +112,20 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 		});
 		setLoadingEntityAccount(false);
 		setEntityAccount(response.entity);
+	};
+
+	const fetchErrors = async () => {
+		if (entityAccount) {
+			setLoadingErrors(true);
+			const response = await HostApi.instance.send(GetObservabilityErrorsWithoutReposRequestType, {
+				accountId: 1,
+				entityGuid: entityAccount.entityGuid,
+				entityType: entityAccount.type,
+				timeWindow: derivedState.recentErrorsTimeWindow,
+			});
+			setLoadingErrors(false);
+			setErrors(response);
+		}
 	};
 
 	const _alertSeverity = entityAccount?.alertSeverity || "";

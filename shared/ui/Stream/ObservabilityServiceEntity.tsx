@@ -211,7 +211,6 @@ export const ObservabilityServiceEntity = React.memo((props: Props) => {
 										)}
 									</>
 								)}
-								{/* remove currentRepoId requirement here, have or statement for coming from service search */}
 								{(currentRepoId || isServiceSearch) && ea?.domain === "APM" && (
 									<SecurityIssuesWrapper
 										entityGuid={ea.entityGuid}
