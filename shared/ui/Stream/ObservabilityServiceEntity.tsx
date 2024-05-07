@@ -51,6 +51,7 @@ interface Props {
 	serviceLevelObjectives: ServiceLevelObjectiveResult[];
 	setIsVulnPresent: Function;
 	showErrors: boolean;
+	isServiceSearch?: boolean;
 }
 
 export const ObservabilityServiceEntity = React.memo((props: Props) => {
@@ -79,6 +80,7 @@ export const ObservabilityServiceEntity = React.memo((props: Props) => {
 		serviceLevelObjectives,
 		setIsVulnPresent,
 		showErrors,
+		isServiceSearch,
 	} = props;
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
@@ -209,7 +211,8 @@ export const ObservabilityServiceEntity = React.memo((props: Props) => {
 										)}
 									</>
 								)}
-								{currentRepoId && ea?.domain === "APM" && (
+								{/* remove currentRepoId requirement here, have or statement for coming from service search */}
+								{(currentRepoId || isServiceSearch) && ea?.domain === "APM" && (
 									<SecurityIssuesWrapper
 										entityGuid={ea.entityGuid}
 										accountId={ea.accountId}

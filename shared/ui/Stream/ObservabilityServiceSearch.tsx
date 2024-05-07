@@ -7,6 +7,8 @@ import { EntityAssociator } from "./EntityAssociator";
 import { setCurrentServiceSearchEntity } from "../store/context/actions";
 import { CodeStreamState } from "../store";
 import { ObservabilityServiceEntity } from "./ObservabilityServiceEntity";
+import { HostApi } from "../webview-api";
+import { ALERT_SEVERITY_COLORS } from "./CodeError/index";
 import {
 	EntityAccount,
 	GetObservabilityEntityByGuidRequestType,
@@ -18,7 +20,6 @@ import {
 	GetIssuesResponse,
 	ServiceLevelObjectiveResult,
 } from "@codestream/protocols/agent";
-import { HostApi } from "../webview-api";
 
 interface Props {
 	anomalyDetectionSupported: boolean;
@@ -93,6 +94,9 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 		setEntityAccount(response.entity);
 	};
 
+	const _alertSeverity = entityAccount?.alertSeverity || "";
+	const alertSeverityColor = ALERT_SEVERITY_COLORS[_alertSeverity];
+
 	return (
 		<>
 			<PaneNode>
@@ -146,7 +150,7 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 				{!loadingEntityAccount && entityAccount && (
 					<>
 						<ObservabilityServiceEntity
-							alertSeverityColor={"red"}
+							alertSeverityColor={alertSeverityColor}
 							anomalyDetectionSupported={anomalyDetectionSupported}
 							calculatingAnomalies={calculatingAnomalies}
 							collapsed={false}
@@ -169,37 +173,10 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 							serviceLevelObjectives={serviceLevelObjectives}
 							setIsVulnPresent={setIsVulnPresent}
 							showErrors={showErrors}
+							isServiceSearch={true}
 						/>
 					</>
 				)}
-				{/* {false && (
-					<ObservabilityServiceEntity
-						alertSeverityColor={alertSeverityColor}
-						anomalyDetectionSupported={anomalyDetectionSupported}
-						calculatingAnomalies={calculatingAnomalies}
-						collapsed={collapsed}
-						currentRepoId={currentRepoId}
-						ea={entityAccount}
-						entityGoldenMetrics={entityGoldenMetrics}
-						entityGoldenMetricsErrors={entityGoldenMetricsErrors}
-						errorInboxError={errorInboxError}
-						handleClickTopLevelService={handleClickTopLevelService}
-						hasServiceLevelObjectives={hasServiceLevelObjectives}
-						loadingGoldenMetrics={loadingGoldenMetrics}
-						loadingPane={loadingPane}
-						noErrorsAccess={noErrorsAccess}
-						observabilityAnomalies={observabilityAnomalies}
-						observabilityAssignments={observabilityAssignments}
-						observabilityErrors={observabilityErrors}
-						observabilityErrorsError={observabilityErrorsError}
-						observabilityRepo={_observabilityRepo}
-						recentIssues={recentIssues}
-						serviceLevelObjectiveError={serviceLevelObjectiveError}
-						serviceLevelObjectives={serviceLevelObjectives}
-						setIsVulnPresent={setIsVulnPresent}
-						showErrors={showErrors}
-					/>
-				)} */}
 			</PaneNode>
 		</>
 	);

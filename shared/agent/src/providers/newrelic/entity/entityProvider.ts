@@ -132,6 +132,7 @@ export class EntityProvider implements Disposable {
 					name
 					entityType
 					type
+					domain
 					tags {
 						key
 						values
@@ -144,6 +145,7 @@ export class EntityProvider implements Disposable {
 			actor: {
 				entity: {
 					account: { name: string; id: number };
+					domain: string;
 					guid: string;
 					name: string;
 					entityType: EntityType;
@@ -164,6 +166,7 @@ export class EntityProvider implements Disposable {
 			entity: {
 				accountId: entity?.account?.id || 1,
 				accountName: entity?.account?.name || "",
+				domain: entity.domain,
 				entityGuid: entity.guid,
 				entityName: entity.name,
 				type: entity.type,
