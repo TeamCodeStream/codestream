@@ -6,20 +6,24 @@ namespace CodeStream.VisualStudio.Core.Models
 {
 	public class ObservabilityAnomaly
 	{
-		[JsonProperty("codeFilepath", NullValueHandling = NullValueHandling.Ignore)]
-		public string CodeFilepath { get; set; }
-
-		[JsonProperty("codeNamespace", NullValueHandling = NullValueHandling.Ignore)]
-		public string CodeNamespace { get; set; }
-
-		[JsonProperty("codeFunction", NullValueHandling = NullValueHandling.Ignore)]
-		public string CodeFunction { get; set; }
-
 		[JsonProperty("language", NullValueHandling = NullValueHandling.Ignore)]
 		public string Language { get; set; }
 
 		[JsonProperty("name", NullValueHandling = NullValueHandling.Ignore)]
 		public string Name { get; set; }
+
+		[JsonProperty("scope", NullValueHandling = NullValueHandling.Ignore)]
+		public string Scope { get; set; }
+
+		[JsonProperty("children", NullValueHandling = NullValueHandling.Ignore)]
+		public IList<ObservabilityAnomaly> Children { get; set; } =
+			new List<ObservabilityAnomaly>();
+
+		[JsonProperty("type", NullValueHandling = NullValueHandling.Ignore)]
+		public string Type { get; set; }
+
+		[JsonProperty("codeAttrs", NullValueHandling = NullValueHandling.Ignore)]
+		public IList<CodeAttributes> CodeAttributes { get; set; } = new List<CodeAttributes>();
 
 		[JsonProperty("oldValue", NullValueHandling = NullValueHandling.Ignore)]
 		public decimal OldValue { get; set; }

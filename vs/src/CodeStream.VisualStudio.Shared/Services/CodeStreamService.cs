@@ -12,6 +12,8 @@ using System.IO;
 using System.Threading;
 using CodeStream.VisualStudio.Shared.Managers;
 using CodeStream.VisualStudio.Shared.Models;
+using CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics;
+
 using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Shared.Services
@@ -407,10 +409,7 @@ namespace CodeStream.VisualStudio.Shared.Services
 		}
 
 		public async Task ViewMethodLevelTelemetryNotificationAsync(
-			RepoInfo repo,
-			string functionName,
-			string newRelicEntityGuid,
-			MetricTimesliceNameMapping metricTimeSliceNameMapping
+			CodeLevelMetricsGlyph clickedGlyph
 		)
 		{
 			if (IsReady)
@@ -422,10 +421,18 @@ namespace CodeStream.VisualStudio.Shared.Services
 						{
 							Params = new ViewMethodLevelTelemetryNotification()
 							{
-								Repo = repo,
-								FunctionName = functionName,
-								NewRelicEntityGuid = newRelicEntityGuid,
-								MetricTimesliceNameMapping = metricTimeSliceNameMapping
+								Repo = clickedGlyph.Repo,
+								CodeNamespace = clickedGlyph.CodeNamespace,
+								MetricTimesliceNameMapping =
+									clickedGlyph.MetricTimesliceNameMapping,
+								LanguageId = clickedGlyph.LanguageId,
+								Range = clickedGlyph.Range,
+								FunctionName = clickedGlyph.FunctionName,
+								NewRelicAccountId = clickedGlyph.NewRelicAccountId,
+								NewRelicEntityGuid = clickedGlyph.NewRelicEntityGuid,
+								Anomaly = clickedGlyph.Anomaly,
+								MethodLevelTelemetryRequestOptions =
+									clickedGlyph.MethodLevelTelemetryRequestOptions
 							}
 						}
 					);

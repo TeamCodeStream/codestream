@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Shared.Models;
+using CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics;
 
 namespace CodeStream.VisualStudio.Shared.Services
 {
@@ -51,11 +52,6 @@ namespace CodeStream.VisualStudio.Shared.Services
 		IBrowserService BrowserService { get; }
 		bool IsReady { get; }
 		Task ConfigChangeReloadNotificationAsync();
-		Task ViewMethodLevelTelemetryNotificationAsync(
-			RepoInfo repo,
-			string functionName,
-			string newRelicEntityGuid,
-			MetricTimesliceNameMapping metricTimeSliceNameMapping
-		);
+		Task ViewMethodLevelTelemetryNotificationAsync(CodeLevelMetricsGlyph clickedGlyph);
 	}
 }

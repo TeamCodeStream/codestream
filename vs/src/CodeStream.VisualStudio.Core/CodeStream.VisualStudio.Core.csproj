@@ -89,6 +89,7 @@
     <Compile Include="Logging\Sanitizer\TextProcessor.cs" />
     <Compile Include="Logging\TraceLevel.cs" />
     <Compile Include="Models\AverageDurationResponse.cs" />
+    <Compile Include="Models\CodeAttributes.cs" />
     <Compile Include="Models\CodeLevelMetricsProperties.cs" />
     <Compile Include="Models\CodeLevelMetricsTelemetry.cs" />
     <Compile Include="Models\FeedbackRequestDiffUri.cs" />

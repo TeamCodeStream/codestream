@@ -11,6 +11,7 @@ using CodeStream.VisualStudio.Shared.Packages;
 using CodeStream.VisualStudio.Shared.Services;
 
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Package;
 using Microsoft.VisualStudio.Shell;
 
 using Serilog;
@@ -73,10 +74,7 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 						if (_sessionService.WebViewDidInitialize == true)
 						{
 							_ = _codeStreamService.ViewMethodLevelTelemetryNotificationAsync(
-								dataContext.Repo,
-								dataContext.FunctionName,
-								dataContext.NewRelicEntityGuid,
-								dataContext.MetricTimesliceNameMapping
+								dataContext
 							);
 						}
 						else
@@ -93,10 +91,7 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 									{
 										_ =
 											_codeStreamService.ViewMethodLevelTelemetryNotificationAsync(
-												dataContext.Repo,
-												dataContext.FunctionName,
-												dataContext.NewRelicEntityGuid,
-												dataContext.MetricTimesliceNameMapping
+												dataContext
 											);
 										d?.Dispose();
 									}

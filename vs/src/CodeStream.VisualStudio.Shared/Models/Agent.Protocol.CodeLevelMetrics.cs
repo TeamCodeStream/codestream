@@ -80,6 +80,9 @@ namespace CodeStream.VisualStudio.Shared.Models
 		[JsonProperty("relativeFilePath", NullValueHandling = NullValueHandling.Ignore)]
 		public string RelativeFilePath { get; set; }
 
+		[JsonProperty("deploymentCommit", NullValueHandling = NullValueHandling.Ignore)]
+		public string DeploymentCommit { get; set; }
+
 		[JsonProperty("error", NullValueHandling = NullValueHandling.Ignore)]
 		public Error Error { get; set; }
 	}

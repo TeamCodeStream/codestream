@@ -16,9 +16,9 @@
 	<StackPanel>
 		<Popup IsOpen="{Binding ElementName=Glyph, Path=IsMouseOver, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Margin="10,10,10,10">
 			<StackPanel Background="Gray">
-				<TextBlock Foreground="White" Text="{Binding Tooltip}" TextAlignment="Center" Padding="10,10,10,0" />
-				<TextBlock Foreground="White" Text="{Binding Anomaly}" FontWeight="ExtraBold" FontStyle="Italic" TextAlignment="Center" Padding="10,10,10,0" Visibility="{Binding Converter={StaticResource StringNullToVisibilityConverter}, 
-                              Path=Anomaly}"/>
+				<TextBlock Foreground="White" Text="{Binding TooltipText}" TextAlignment="Center" Padding="10,10,10,0" />
+				<TextBlock Foreground="White" Text="{Binding AnomalyText}" FontWeight="ExtraBold" FontStyle="Italic" TextAlignment="Center" Padding="10,10,10,0" Visibility="{Binding Converter={StaticResource StringNullToVisibilityConverter}, 
+                              Path=AnomalyText}"/>
 				<TextBlock Foreground="White" Text="(click icon to view more)" TextAlignment="Center" Padding="10,10,10,10"></TextBlock>
 			</StackPanel>
 		</Popup>

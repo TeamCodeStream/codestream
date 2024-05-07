@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 using Microsoft.VisualStudio.Text.Editor;
@@ -6,9 +7,11 @@ using Microsoft.VisualStudio.Text.Editor;
 using System.Windows.Media.Imaging;
 using System.Reflection;
 
-using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Shared.Models;
+
+using Constants = CodeStream.VisualStudio.Core.Constants;
 
 namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 {
@@ -17,83 +20,107 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 		private const string BadIcon = "new-relic-logo-small-red.png";
 		private const string GoodIcon = "new-relic-logo-small.png";
 
-		public string Tooltip { get; }
-		public string Anomaly { get; }
+		public string TooltipText { get; }
+		public string AnomalyText { get; }
 		public BitmapSource Icon { get; }
-		public string FullyQualifiedFunctionName { get; }
+
+		public FileLevelTelemetryRequestOptions MethodLevelTelemetryRequestOptions { get; }
+		public ObservabilityAnomaly Anomaly { get; }
+		public string CodeNamespace { get; }
 		public string FunctionName { get; }
+		public string LanguageId { get; }
 		public string SinceDateFormatted { get; }
 		public string NewRelicEntityGuid { get; }
 		public RepoInfo Repo { get; }
 		public MetricTimesliceNameMapping MetricTimesliceNameMapping { get; }
-		public AverageDurationResponse AvgDurationResponse { get; }
-		public ErrorRateResponse ErrorRateResponse { get; }
-		public SampleSizeResponse SampleSizeResponse { get; }
+		public long NewRelicAccountId { get; }
+		public Range Range { get; }
 
 		public CodeLevelMetricsGlyph(
-			string fullyQualifiedFunctionName,
 			string functionName,
-			string sinceDateFormatted,
-			string newRelicEntityGuid,
-			RepoInfo repo,
-			AverageDurationResponse avgDurationResponse,
+			GetFileLevelTelemetryResponse fileLevelTelemetryResponse,
+			AverageDurationResponse averageDurationResponse,
 			ErrorRateResponse errorRateResponse,
-			SampleSizeResponse sampleSizeResponse
+			SampleSizeResponse sampleSizeResponse,
+			Range methodRange
 		)
 		{
-			FullyQualifiedFunctionName = fullyQualifiedFunctionName;
-			FunctionName = functionName;
-			SinceDateFormatted = sinceDateFormatted;
-			NewRelicEntityGuid = newRelicEntityGuid;
-			Repo = repo;
-			AvgDurationResponse = avgDurationResponse;
-			ErrorRateResponse = errorRateResponse;
-			SampleSizeResponse = sampleSizeResponse;
+			Repo = fileLevelTelemetryResponse.Repo;
+			CodeNamespace = fileLevelTelemetryResponse.CodeNamespace;
+
 			MetricTimesliceNameMapping = new MetricTimesliceNameMapping
 			{
-				Duration = AvgDurationResponse?.MetricTimesliceName ?? "",
-				ErrorRate = ErrorRateResponse?.MetricTimesliceName ?? "",
-				SampleSize = SampleSizeResponse?.MetricTimesliceName ?? "",
-				Source = SampleSizeResponse?.Source ?? ""
+				Duration = averageDurationResponse?.Facet[0] ?? "",
+				ErrorRate = errorRateResponse?.Facet[0] ?? "",
+				SampleSize = sampleSizeResponse?.Facet[0] ?? "",
+				Source = sampleSizeResponse?.Source ?? ""
+			};
+			LanguageId = "csharp";
+			Range = methodRange;
+			FunctionName = functionName;
+			NewRelicAccountId = fileLevelTelemetryResponse.NewRelicAccountId;
+			NewRelicEntityGuid = fileLevelTelemetryResponse.NewRelicEntityGuid;
+
+			MethodLevelTelemetryRequestOptions = new FileLevelTelemetryRequestOptions
+			{
+				IncludeAverageDuration = true,
+				IncludeErrorRate = true,
+				IncludeThroughput = true
 			};
 
-			var avgDuration = AvgDurationResponse?.AverageDuration;
-			var errors = ErrorRateResponse?.ErrorRate;
-			var sampleSize = SampleSizeResponse?.SampleSize;
+			SinceDateFormatted = fileLevelTelemetryResponse.SinceDateFormatted;
+
+			var avgDuration = averageDurationResponse?.AverageDuration;
+			var errors = errorRateResponse?.ErrorRate;
+			var sampleSize = sampleSizeResponse?.SampleSize;
 
 			var formatString = Constants.CodeLevelMetrics.GoldenSignalsFormat;
 
-			Tooltip = formatString.Replace(
+			TooltipText = formatString.Replace(
 				Constants.CodeLevelMetrics.Tokens.AverageDuration,
 				avgDuration is null ? "n/a" : $"{avgDuration.ToFixed(3)}ms"
 			);
 
-			Tooltip = Tooltip.Replace(
+			TooltipText = TooltipText.Replace(
 				Constants.CodeLevelMetrics.Tokens.ErrorRate,
 				errors is null ? "n/a" : $"{errors.ToFixed(3)}%"
 			);
 
-			Tooltip = Tooltip.Replace(Constants.CodeLevelMetrics.Tokens.Since, SinceDateFormatted);
+			TooltipText = TooltipText.Replace(
+				Constants.CodeLevelMetrics.Tokens.Since,
+				SinceDateFormatted
+			);
 
-			Tooltip = Tooltip.Replace(
+			TooltipText = TooltipText.Replace(
 				Constants.CodeLevelMetrics.Tokens.SampleSize,
 				$"{sampleSize}"
 			);
 
-			var hasAnomaly = false;
-			if (AvgDurationResponse?.Anomaly != null)
+			if (errorRateResponse?.Anomaly != null || averageDurationResponse?.Anomaly != null)
 			{
-				Anomaly += AvgDurationResponse.Anomaly.NotificationText;
-				hasAnomaly = true;
+				var anomalyText = new List<string>();
+
+				if (errorRateResponse?.Anomaly != null)
+				{
+					anomalyText.Add($"error rate +{(errorRateResponse.Anomaly.Ratio - 1) * 100}%");
+				}
+
+				if (averageDurationResponse?.Anomaly != null)
+				{
+					anomalyText.Add(
+						$"avg duration +{(averageDurationResponse.Anomaly.Ratio - 1) * 100}%"
+					);
+				}
+
+				var since =
+					errorRateResponse?.Anomaly?.SinceText
+					?? averageDurationResponse?.Anomaly?.SinceText;
+
+				AnomalyText = string.Join(", ", anomalyText) + $" since {since}";
+				Anomaly = averageDurationResponse?.Anomaly ?? errorRateResponse?.Anomaly;
 			}
 
-			if (ErrorRateResponse?.Anomaly != null)
-			{
-				Anomaly += ErrorRateResponse.Anomaly.NotificationText;
-				hasAnomaly = true;
-			}
-
-			Icon = LoadImageFromFile(hasAnomaly);
+			Icon = LoadImageFromFile(Anomaly != null);
 		}
 
 		private static BitmapSource LoadImageFromFile(bool hasAnomaly)
