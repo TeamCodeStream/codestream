@@ -16,11 +16,10 @@ import {
 	GetObservabilityAnomaliesResponse,
 	ObservabilityErrorCore,
 	ObservabilityRepoError,
-	ObservabilityRepo,
 	GetIssuesResponse,
 	ServiceLevelObjectiveResult,
 	GetObservabilityErrorsWithoutReposRequestType,
-	GetObservabilityErrorsWithoutReposResponse,
+	isNRErrorResponse,
 } from "@codestream/protocols/agent";
 import { useDidMount } from "../utilities/hooks";
 
@@ -40,7 +39,6 @@ interface Props {
 	observabilityAssignments: ObservabilityErrorCore[];
 	observabilityErrors: ObservabilityRepoError[];
 	observabilityErrorsError?: string;
-	observabilityRepo?: ObservabilityRepo;
 	recentIssues?: GetIssuesResponse;
 	serviceLevelObjectiveError?: string;
 	serviceLevelObjectives: ServiceLevelObjectiveResult[];
@@ -52,10 +50,9 @@ interface Props {
 
 export const ObservabilityServiceSearch = React.memo((props: Props) => {
 	const dispatch = useAppDispatch();
-	const [errors, setErrors] = useState<GetObservabilityErrorsWithoutReposResponse | undefined>(
-		undefined
-	);
+	const [errors, setErrors] = useState<ObservabilityRepoError[]>([]);
 	const [loadingErrors, setLoadingErrors] = useState<boolean>(false);
+	const [errorsError, setErrorsError] = useState<string | undefined>(undefined);
 	const [entityAccount, setEntityAccount] = useState<EntityAccount | undefined>(undefined);
 	const [loadingEntityAccount, setLoadingEntityAccount] = useState<boolean>(false);
 
@@ -84,7 +81,6 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 		observabilityAssignments,
 		observabilityErrors,
 		observabilityErrorsError,
-		observabilityRepo,
 		recentIssues,
 		serviceLevelObjectiveError,
 		serviceLevelObjectives,
@@ -118,13 +114,22 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 		if (entityAccount) {
 			setLoadingErrors(true);
 			const response = await HostApi.instance.send(GetObservabilityErrorsWithoutReposRequestType, {
-				accountId: 1,
+				accountId: entityAccount.accountId,
 				entityGuid: entityAccount.entityGuid,
 				entityType: entityAccount.type,
 				timeWindow: derivedState.recentErrorsTimeWindow,
 			});
 			setLoadingErrors(false);
-			setErrors(response);
+
+			if (isNRErrorResponse(response.error)) {
+				setErrorsError(response.error.error.message ?? response.error.error.type);
+			} else {
+				setErrorsError(undefined);
+			}
+
+			if (response?.repos) {
+				setErrors(response.repos);
+			}
 		}
 	};
 
@@ -200,13 +205,13 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 							noErrorsAccess={noErrorsAccess}
 							observabilityAnomalies={observabilityAnomalies}
 							observabilityAssignments={observabilityAssignments}
-							observabilityErrors={observabilityErrors}
-							observabilityErrorsError={observabilityErrorsError}
+							observabilityErrors={errors}
+							observabilityErrorsError={errorsError}
 							recentIssues={recentIssues}
 							serviceLevelObjectiveError={serviceLevelObjectiveError}
 							serviceLevelObjectives={serviceLevelObjectives}
 							setIsVulnPresent={setIsVulnPresent}
-							showErrors={showErrors}
+							showErrors={errors && !errorsError ? true : false}
 							isServiceSearch={true}
 						/>
 					</>

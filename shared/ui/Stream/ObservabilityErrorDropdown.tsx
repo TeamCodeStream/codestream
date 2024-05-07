@@ -52,16 +52,22 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 	const [isLoadingErrorGroupGuid, setIsLoadingErrorGroupGuid] = useState<string>("");
 
 	useEffect(() => {
-		let _filteredErrorsByRepo = props.observabilityErrors.filter(
-			oe => oe?.repoId === observabilityRepo?.repoId
-		);
+		if (!props.isServiceSearch) {
+			let _filteredErrorsByRepo = props.observabilityErrors.filter(
+				oe => oe?.repoId === observabilityRepo?.repoId
+			);
 
-		const _filteredErrors = _filteredErrorsByRepo.map(fe => {
-			return fe.errors.filter(error => {
-				return error.entityId === props.entityGuid;
+			const _filteredErrors = _filteredErrorsByRepo.map(fe => {
+				return fe.errors.filter(error => {
+					return error.entityId === props.entityGuid;
+				});
 			});
-		});
-		setFilteredErrors(_filteredErrors || []);
+			setFilteredErrors(_filteredErrors || []);
+		} else {
+			if (props.observabilityErrors.length > 0) {
+				setFilteredErrors([props.observabilityErrors[0]?.errors] || []);
+			}
+		}
 	}, [props.observabilityErrors]);
 
 	const { observabilityRepo } = props;

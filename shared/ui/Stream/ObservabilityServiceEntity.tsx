@@ -195,7 +195,7 @@ export const ObservabilityServiceEntity = React.memo((props: Props) => {
 								)}
 								{showErrors && (
 									<>
-										{observabilityErrors?.find(oe => oe?.repoId === observabilityRepo?.repoId) && (
+										{isServiceSearch && (
 											<>
 												<ObservabilityErrorWrapper
 													errorInboxError={errorInboxError}
@@ -206,7 +206,28 @@ export const ObservabilityServiceEntity = React.memo((props: Props) => {
 													noAccess={noErrorsAccess}
 													errorMsg={observabilityErrorsError}
 													domain={ea?.domain}
+													isServiceSearch={true}
 												/>
+											</>
+										)}
+										{!isServiceSearch && (
+											<>
+												{observabilityErrors?.find(
+													oe => oe?.repoId === observabilityRepo?.repoId
+												) && (
+													<>
+														<ObservabilityErrorWrapper
+															errorInboxError={errorInboxError}
+															observabilityErrors={observabilityErrors}
+															observabilityRepo={observabilityRepo}
+															observabilityAssignments={observabilityAssignments}
+															entityGuid={ea.entityGuid}
+															noAccess={noErrorsAccess}
+															errorMsg={observabilityErrorsError}
+															domain={ea?.domain}
+														/>
+													</>
+												)}
 											</>
 										)}
 									</>

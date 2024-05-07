@@ -1367,6 +1367,7 @@ export interface GetObservabilityErrorsWithoutReposRequest {
 }
 
 export interface GetObservabilityErrorsWithoutReposResponse {
+	repos?: ObservabilityRepoError[];
 	error?: NRErrorResponse;
 }
 

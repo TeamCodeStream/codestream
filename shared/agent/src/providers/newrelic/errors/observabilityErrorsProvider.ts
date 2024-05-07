@@ -248,7 +248,7 @@ export class ObservabilityErrorsProvider {
 	async getObservabilityErrorsWithoutRepos(
 		request: GetObservabilityErrorsWithoutReposRequest
 	): Promise<GetObservabilityErrorsWithoutReposResponse> {
-		const response: GetObservabilityErrorsWithoutReposResponse = {};
+		const response: GetObservabilityErrorsWithoutReposResponse = { repos: [] };
 		const observabilityErrors: ObservabilityError[] = [];
 		let gotoEnd = false;
 
@@ -299,6 +299,11 @@ export class ObservabilityErrorsProvider {
 			}
 			return { error: mapNRErrorResponse(ex) };
 		}
+		response.repos?.push({
+			repoId: "serviceSearch",
+			repoName: "serviceSearch",
+			errors: observabilityErrors!,
+		});
 		return response;
 	}
 

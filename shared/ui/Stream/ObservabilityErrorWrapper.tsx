@@ -23,6 +23,7 @@ interface Props {
 	errorMsg?: string;
 	errorInboxError?: string;
 	domain?: string;
+	isServiceSearch?: boolean;
 }
 
 export const ObservabilityErrorWrapper = React.memo((props: Props) => {
@@ -115,6 +116,7 @@ export const ObservabilityErrorWrapper = React.memo((props: Props) => {
 							observabilityRepo={props.observabilityRepo}
 							entityGuid={props.errorEntityGuid}
 							domain={props?.domain}
+							isServiceSearch={props?.isServiceSearch}
 						/>
 					</>
 				))}
