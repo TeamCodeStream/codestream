@@ -25,6 +25,7 @@ import { ObservabilityAnomaliesWrapper } from "@codestream/webview/Stream/Observ
 import { SecurityIssuesWrapper } from "@codestream/webview/Stream/SecurityIssuesWrapper";
 import { ObservabilityErrorWrapper } from "./ObservabilityErrorWrapper";
 import { OpenUrlRequestType, OpenEditorViewNotificationType } from "@codestream/protocols/webview";
+import { RepositoryAssociatorServiceSearch } from "./RepositoryAssociatorServiceSearch";
 
 interface Props {
 	alertSeverityColor: string;
@@ -167,6 +168,7 @@ export const ObservabilityServiceEntity = React.memo((props: Props) => {
 					) : (
 						<>
 							<>
+								<RepositoryAssociatorServiceSearch />
 								<ObservabilitySummary
 									entityGoldenMetrics={entityGoldenMetrics}
 									loadingGoldenMetrics={loadingGoldenMetrics}

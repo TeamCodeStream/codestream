@@ -6,7 +6,6 @@ import {
 	RelatedRepository,
 	ReposScm,
 } from "@codestream/protocols/agent";
-import { CSCodeError } from "@codestream/protocols/api";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";
 import React, { useEffect } from "react";
@@ -14,12 +13,13 @@ import { useSelector } from "react-redux";
 import styled from "styled-components";
 import { logWarning } from "../../logger";
 import { CodeStreamState } from "../../store";
-import { getCodeError } from "../../store/codeErrors/reducer";
 import Dismissable from "../Dismissable";
 import { DropdownButton } from "../DropdownButton";
 import { DelayedRender } from "../../Container/DelayedRender";
 import { LoadingMessage } from "../../src/components/LoadingMessage";
 import { isEmpty as _isEmpty } from "lodash-es";
+import { getCodeError } from "../../store/codeErrors/reducer";
+import { CSCodeError } from "@codestream/protocols/api";
 
 const Ellipsize = styled.div`
 	button {
@@ -72,7 +72,6 @@ export function RepositoryAssociator(props: {
 			: undefined;
 
 		return {
-			codeError: codeError,
 			repos: state.repos,
 			// TODO no any - actual relatedRepos types are wrong
 			relatedRepos: (props.relatedRepos || state.context.currentCodeErrorData?.relatedRepos) as any,
