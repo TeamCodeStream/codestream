@@ -169,7 +169,7 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 		}
 	};
 	return (
-		<NoContent style={{ marginLeft: "20px" }}>
+		<NoContent style={{ marginLeft: props.isServiceSearch ? "30px" : "20px" }}>
 			{props.title && <h3>{props.title}</h3>}
 			{props.label && <p style={{ marginTop: 0 }}>{props.label}</p>}
 			{warningOrErrors && <WarningBox items={warningOrErrors} />}

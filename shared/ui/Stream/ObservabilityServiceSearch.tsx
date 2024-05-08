@@ -87,6 +87,7 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 		setIsVulnPresent,
 		showErrors,
 		setExpandedEntityCallback,
+		expandedEntity,
 	} = props;
 
 	useDidMount(() => {
@@ -192,7 +193,7 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 							alertSeverityColor={alertSeverityColor}
 							anomalyDetectionSupported={anomalyDetectionSupported}
 							calculatingAnomalies={calculatingAnomalies}
-							collapsed={false}
+							collapsed={expandedEntity !== derivedState.currentServiceSearchEntity}
 							currentRepoId={currentRepoId}
 							ea={entityAccount}
 							entityGoldenMetrics={entityGoldenMetrics}
