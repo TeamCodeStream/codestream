@@ -1,6 +1,5 @@
 import {
 	EntityAccount,
-	GetObservabilityEntitiesRequestType,
 	WarningOrError,
 	GetReposScmRequestType,
 	ReposScm,
@@ -17,11 +16,9 @@ import { logError } from "../logger";
 import { Button } from "../src/components/Button";
 import { NoContent } from "../src/components/Pane";
 import { useAppDispatch } from "../utilities/hooks";
-import { isEmpty as _isEmpty } from "lodash";
 import { DropdownWithSearch } from "./DropdownWithSearch";
 import { useResizeDetector } from "react-resize-detector";
 import { CodeStreamState } from "../store";
-import { logWarning } from "../logger";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 
 interface RepositoryAssociatorServiceSearchProps {
@@ -52,23 +49,10 @@ const OptionName = styled.div`
 	overflow: hidden;
 `;
 
-const OptionType = styled.span`
-	color: var(--text-color-subtle);
-	font-size: smaller;
-`;
-
-const OptionAccount = styled.div`
-	color: var(--text-color-subtle);
-	font-size: smaller;
-`;
-
 const Option = (props: OptionProps) => {
 	const children = (
 		<>
-			<OptionName>
-				{props.data?.label} <OptionType>{props.data?.labelAppend}</OptionType>
-			</OptionName>
-			<OptionAccount>{props.data?.sublabel}</OptionAccount>
+			<OptionName>{props.data?.label}</OptionName>
 		</>
 	);
 	return <components.Option {...props} children={children} />;
@@ -84,131 +68,69 @@ export const RepositoryAssociatorServiceSearch = React.memo(
 			undefined
 		);
 		const [hasFetchedRepos, setHasFetchedRepos] = React.useState(false);
-		const { width: entitySearchWidth, ref: entitySearchRef } = useResizeDetector();
+		const { width: repoSearchWidth, ref: repoSearchRef } = useResizeDetector();
 
 		const derivedState = useSelector((state: CodeStreamState) => {
 			return {
 				repos: state.repos,
-				// relatedRepos: props.relatedRepos || state.context.currentCodeErrorData?.relatedRepos,
 			};
 		});
 
-		const fetchRepos = () => {
-			HostApi.instance
-				.send(GetReposScmRequestType, {
-					inEditorOnly: true,
-					includeRemotes: true,
-				})
-				.then(_ => {
-					if (!_.repositories) return;
-
-					const results: EnhancedRepoScm[] = [];
-					for (const repo of _.repositories) {
-						if (repo.remotes) {
-							for (const e of repo.remotes) {
-								const id = repo.id || "";
-								const remoteUrl = e.rawUrl;
-								if (!remoteUrl || !id) continue;
-
-								const name = derivedState.repos[id] ? derivedState.repos[id].name : "repo";
-								const label = `${name} (${remoteUrl})`;
-								results.push({
-									...repo,
-									key: btoa(remoteUrl!),
-									remote: remoteUrl!,
-									label: label,
-									name: name,
-								});
-							}
-						}
-					}
-					// //take repos in users IDE, and filter them with a list of
-					// //related repos to service entity the error originates from
-					let filteredResults: EnhancedRepoScm[];
-					// if (!_isEmpty(derivedState.relatedRepos)) {
-					// 	filteredResults = results.filter(_ => {
-					// 		return derivedState.relatedRepos?.some(repo => {
-					// 			const lowercaseRepoRemotes = repo.remotes.map(remote => remote.toLowerCase());
-					// 			const lowercaseCurrentRemote = _.remote.toLowerCase();
-					// 			return lowercaseRepoRemotes.includes(lowercaseCurrentRemote);
-					// 		});
-					// 	});
-					// } else {
-					// no related repo data for whatever reason, just show repos
-					// instead of "repo not found" error
-					filteredResults = results;
-					// }
-					setOpenRepositories(filteredResults);
-					// if (props.isLoadingCallback) {
-					// 	props.isLoadingCallback(false);
-					// }
-					setTimeout(() => {
-						setHasFetchedRepos(true);
-					}, 200);
-				})
-				.catch(e => {
-					// if (props.isLoadingCallback) {
-					// 	props.isLoadingCallback(false);
-					// }
-					logWarning(`could not get repos: ${e.message}`);
-					setTimeout(() => {
-						setHasFetchedRepos(true);
-					}, 200);
-				});
-		};
-
 		useDidMount(() => {
-			// if (props.isLoadingCallback) {
-			// 	props.isLoadingCallback(true);
-			// }
-			// if (!repositoryError) return;
-
 			const disposable = HostApi.instance.on(DidChangeDataNotificationType, (e: any) => {
 				if (e.type === ChangeDataType.Workspace) {
 					fetchRepos();
 				}
 			});
 
-			fetchRepos();
-
 			return () => {
 				disposable && disposable.dispose();
 			};
 		});
 
-		async function loadEntities(search: string, _loadedOptions, additional?: AdditionalType) {
-			const { servicesToExcludeFromSearch } = props;
+		async function fetchRepos() {
+			try {
+				const response = await HostApi.instance.send(GetReposScmRequestType, {
+					inEditorOnly: true,
+					includeRemotes: true,
+				});
 
-			const result = await HostApi.instance.send(GetObservabilityEntitiesRequestType, {
-				searchCharacters: search,
-				nextCursor: additional?.nextCursor,
-			});
+				if (!response.repositories) {
+					console.warn("No repositories found");
+					return [];
+				}
 
-			let options = result.entities.map(e => {
-				return {
-					label: e.name,
-					value: e.guid,
-					sublabel: e.account,
-					labelAppend: e.displayName,
-				};
-			});
+				const results = [];
+				for (const repo of response.repositories) {
+					if (repo.remotes) {
+						for (const remote of repo.remotes) {
+							const id = repo.id || "";
+							const remoteUrl = remote.rawUrl;
+							if (remoteUrl && id) {
+								const name = derivedState.repos[id] ? derivedState.repos[id].name : "repo";
+								const label = `${name} (${remoteUrl})`;
+								//@ts-ignore
+								results.push({
+									...repo,
+									key: btoa(remoteUrl),
+									remote: remoteUrl,
+									label: label,
+									name: name,
+									value: name,
+								});
+							}
+						}
+					}
+				}
 
-			if (servicesToExcludeFromSearch && !_isEmpty(servicesToExcludeFromSearch)) {
-				options = options.filter(
-					option =>
-						!servicesToExcludeFromSearch.some(exclude => {
-							return exclude.entityGuid === option.value;
-						})
-				);
+				setOpenRepositories(results);
+				setHasFetchedRepos(true);
+
+				return results;
+			} catch (error) {
+				console.error("Error fetching repositories:", error);
+				return [];
 			}
-
-			return {
-				options,
-				hasMore: !!result.nextCursor,
-				additional: {
-					nextCursor: result.nextCursor,
-				},
-			};
 		}
 
 		const handleClick = (e: React.MouseEvent<Element, MouseEvent>): void => {
@@ -287,15 +209,32 @@ export const RepositoryAssociatorServiceSearch = React.memo(
 				</div>
 				<div style={{ display: "flex", justifyContent: "space-between" }}>
 					<div style={{ width: "100%", marginRight: "10px" }}>
-						<div ref={entitySearchRef} style={{ marginBottom: "10px" }}>
+						<div ref={repoSearchRef} style={{ marginBottom: "10px" }}>
 							<DropdownWithSearch
-								id="input-entity-autocomplete"
-								name="entity-autocomplete"
-								loadOptions={loadEntities}
+								id="input-repo-associator-service-search"
+								name="input-repo-associator-service-search"
+								loadOptions={async (search: string) => {
+									try {
+										const options = await fetchRepos();
+										return {
+											options: options.filter(_ =>
+												//@ts-ignore
+												search ? _?.name.toLowerCase().indexOf(search.toLowerCase()) > -1 : true
+											),
+											hasMore: false, // You may need to change this based on your pagination logic
+										};
+									} catch (error) {
+										console.error("Error fetching options:", error);
+										return {
+											options: [],
+											hasMore: false,
+										};
+									}
+								}}
 								selectedOption={selected || undefined}
 								handleChangeCallback={setSelected}
 								customOption={Option}
-								customWidth={entitySearchWidth?.toString()}
+								customWidth={repoSearchWidth?.toString()}
 								valuePlaceholder={`Select an repository...`}
 							/>
 						</div>
