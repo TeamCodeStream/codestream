@@ -17,9 +17,9 @@ class WebViewEditorService(project: Project): BaseWebViewService(project) {
         }
 
         webView.loadUrl(htmlFile.url)
-        ApplicationManager.getApplication().invokeLater {
-            webView.openDevTools()
-        }
+//        ApplicationManager.getApplication().invokeLater {
+//            webView.openDevTools()
+//        }
         return WebViewEditor(file, webView)
     }
 

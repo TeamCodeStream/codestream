@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import copy from "copy-to-clipboard";
 import {
 	CartesianGrid,
@@ -24,6 +24,7 @@ import styled from "styled-components";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import {
 	IdeNames,
+	OpenEditorViewNotificationType,
 	OpenErrorGroupRequestType,
 	OpenErrorGroupResponse,
 	OpenUrlRequestType,
@@ -41,6 +42,7 @@ import { CLMSettings } from "@codestream/protocols/api";
 import { Link } from "../Link";
 import { isEmpty as _isEmpty } from "lodash-es";
 import Tooltip from "@codestream/webview/Stream/Tooltip";
+import { Disposable } from "@codestream/webview/utils";
 
 const Root = styled.div``;
 
@@ -157,14 +159,16 @@ export const ObservabilityAnomalyPanel = (props: {
 	const [remappedDeployments, setRemappedDeployments] = useState({});
 	const [loading, setLoading] = useState<boolean>(true);
 	const [warningOrErrors, setWarningOrErrors] = useState<WarningOrError[] | undefined>(undefined);
-	// const previousCurrentObservabilityAnomaly = usePrevious(props.anomaly);
-	// const [showGoldenSignalsInEditor, setshowGoldenSignalsInEditor] = useState<boolean>(
-	// 	derivedState.showGoldenSignalsInEditor || false
-	// );
 	const [titleHovered, setTitleHovered] = useState<boolean>(false);
 
-	const loadData = async (newRelicEntityGuid: string) => {
-		if (!props.anomaly) return;
+	const [currentEntityGuid, setEntityGuid] = useState(props.entityGuid);
+	const [currentAnomalyName, setAnomalyName] = useState(props.anomaly?.name);
+	const [currentAnomalyScope, setAnomalyScope] = useState(props.anomaly?.scope);
+
+	const disposables: Disposable[] = [];
+
+	const loadData = async () => {
+		if (!props.anomaly || !props.entityGuid) return;
 
 		setLoading(true);
 		try {
@@ -172,7 +176,7 @@ export const ObservabilityAnomalyPanel = (props: {
 			const isPlural = anomaly.totalDays > 1 ? "s" : "";
 			const since = `${anomaly.totalDays} day${isPlural} ago`;
 			const response = await HostApi.instance.send(GetMethodLevelTelemetryRequestType, {
-				newRelicEntityGuid: newRelicEntityGuid,
+				newRelicEntityGuid: props.entityGuid,
 				metricTimesliceNameMapping: {
 					source: "metric",
 					duration: anomaly.metricTimesliceName,
@@ -234,8 +238,34 @@ export const ObservabilityAnomalyPanel = (props: {
 
 	useDidMount(() => {
 		if (!props.entityGuid) return;
-		loadData(props.entityGuid);
+
+		disposables.push(
+			HostApi.instance.on(OpenEditorViewNotificationType, e => {
+				if (e.entityGuid && e.entityGuid !== currentEntityGuid) {
+					setEntityGuid(e.entityGuid);
+				}
+				if (e.anomaly && e.anomaly.name !== currentAnomalyName) {
+					setAnomalyName(e.anomaly.name);
+				}
+				if (e.anomaly && e.anomaly.scope !== currentAnomalyScope) {
+					setAnomalyScope(e.anomaly.scope);
+				}
+			})
+		);
+
+		loadData();
+
+		return () => {
+			disposables && disposables.forEach(_ => _.dispose());
+		};
 	});
+
+	useEffect(() => {
+		if (loading) {
+			return;
+		}
+		loadData();
+	}, [currentEntityGuid, currentAnomalyName, currentAnomalyScope]);
 
 	// useEffect(() => {
 	// 	if (
@@ -407,49 +437,49 @@ export const ObservabilityAnomalyPanel = (props: {
 										</>
 									)}
 
-									{/*{goldenMetricSampleRate != null && (*/}
-									{/*	<AnomalyChart*/}
-									{/*		title={goldenMetricSampleRate.title}*/}
-									{/*		result={goldenMetricSampleRate.result}*/}
-									{/*		index={2}*/}
-									{/*		remappedDeployments={remappedDeployments}*/}
-									{/*	/>*/}
-									{/*)}*/}
+									{goldenMetricSampleRate != null && (
+										<AnomalyChart
+											title={goldenMetricSampleRate.title}
+											result={goldenMetricSampleRate.result}
+											index={2}
+											remappedDeployments={remappedDeployments}
+										/>
+									)}
 
-									<ChartGroup>
-										{goldenMetricAvgDuration != null &&
-											goldenMetricAvgDuration.result?.length > 0 && (
-												<ChartWrapper>
-													<AnomalyChart
-														title={goldenMetricAvgDuration.title}
-														result={goldenMetricAvgDuration.result}
-														index={0}
-														remappedDeployments={remappedDeployments}
-													/>
-												</ChartWrapper>
-											)}
-										{goldenMetricErrorRate != null && goldenMetricErrorRate.result?.length > 0 && (
-											<ChartWrapper>
-												<AnomalyChart
-													title={goldenMetricErrorRate.title}
-													result={goldenMetricErrorRate.result}
-													index={1}
-													remappedDeployments={remappedDeployments}
-												/>
-											</ChartWrapper>
-										)}
-										{goldenMetricSampleRate != null &&
-											goldenMetricSampleRate.result?.length > 0 && (
-												<ChartWrapper>
-													<AnomalyChart
-														title={goldenMetricSampleRate.title}
-														result={goldenMetricSampleRate.result}
-														index={2}
-														remappedDeployments={remappedDeployments}
-													/>
-												</ChartWrapper>
-											)}
-									</ChartGroup>
+									{/*<ChartGroup>*/}
+									{/*	{goldenMetricAvgDuration != null &&*/}
+									{/*		goldenMetricAvgDuration.result?.length > 0 && (*/}
+									{/*			<ChartWrapper>*/}
+									{/*				<AnomalyChart*/}
+									{/*					title={goldenMetricAvgDuration.title}*/}
+									{/*					result={goldenMetricAvgDuration.result}*/}
+									{/*					index={0}*/}
+									{/*					remappedDeployments={remappedDeployments}*/}
+									{/*				/>*/}
+									{/*			</ChartWrapper>*/}
+									{/*		)}*/}
+									{/*	{goldenMetricErrorRate != null && goldenMetricErrorRate.result?.length > 0 && (*/}
+									{/*		<ChartWrapper>*/}
+									{/*			<AnomalyChart*/}
+									{/*				title={goldenMetricErrorRate.title}*/}
+									{/*				result={goldenMetricErrorRate.result}*/}
+									{/*				index={1}*/}
+									{/*				remappedDeployments={remappedDeployments}*/}
+									{/*			/>*/}
+									{/*		</ChartWrapper>*/}
+									{/*	)}*/}
+									{/*	{goldenMetricSampleRate != null &&*/}
+									{/*		goldenMetricSampleRate.result?.length > 0 && (*/}
+									{/*			<ChartWrapper>*/}
+									{/*				<AnomalyChart*/}
+									{/*					title={goldenMetricSampleRate.title}*/}
+									{/*					result={goldenMetricSampleRate.result}*/}
+									{/*					index={2}*/}
+									{/*					remappedDeployments={remappedDeployments}*/}
+									{/*				/>*/}
+									{/*			</ChartWrapper>*/}
+									{/*		)}*/}
+									{/*</ChartGroup>*/}
 								</div>
 							)}
 						</>
@@ -624,7 +654,7 @@ const CriticalPath = (props: CriticalPathProps) => {
 		<CriticalPathRoot>
 			<MetaLabel>Slowest operations</MetaLabel>
 			<DataValue style={{ marginBottom: "10px" }}>
-				Based on a sample of the slowest transactions for the last 30 minutes.
+				Based on a sample of the slowest executions of this transaction for the last 30 minutes.
 			</DataValue>
 			{props.criticalPath.map((span, index) => {
 				return (
@@ -832,14 +862,14 @@ const ErrorRate = (props: ErrorRateProps) => {
 					demoMode={props.demoMode}
 				/>
 			)}
-			{/*{hasResult && (*/}
-			{/*	<AnomalyChart*/}
-			{/*		title={props.goldenMetricErrorRate.title}*/}
-			{/*		result={props.goldenMetricErrorRate.result}*/}
-			{/*		index={props.index}*/}
-			{/*		remappedDeployments={props.remappedDeployments}*/}
-			{/*	/>*/}
-			{/*)}*/}
+			{hasResult && (
+				<AnomalyChart
+					title={props.goldenMetricErrorRate.title}
+					result={props.goldenMetricErrorRate.result}
+					index={props.index}
+					remappedDeployments={props.remappedDeployments}
+				/>
+			)}
 		</>
 	);
 };
@@ -862,14 +892,14 @@ const AvgDuration = (props: AvgDurationProps) => {
 			{props.slowestQueries != null && props.slowestQueries.length > 0 && (
 				<SlowestQueries slowestQueries={props.slowestQueries!} />
 			)}
-			{/*{props.goldenMetricAvgDuration != null && (*/}
-			{/*	<AnomalyChart*/}
-			{/*		title={props.goldenMetricAvgDuration.title}*/}
-			{/*		result={props.goldenMetricAvgDuration.result}*/}
-			{/*		index={props.index}*/}
-			{/*		remappedDeployments={props.remappedDeployments}*/}
-			{/*	/>*/}
-			{/*)}*/}
+			{props.goldenMetricAvgDuration != null && (
+				<AnomalyChart
+					title={props.goldenMetricAvgDuration.title}
+					result={props.goldenMetricAvgDuration.result}
+					index={props.index}
+					remappedDeployments={props.remappedDeployments}
+				/>
+			)}
 		</>
 	);
 };
