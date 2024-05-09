@@ -186,7 +186,7 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 				/>
 			</div>
 			<Button
-				style={{ width: "100%" }}
+				style={{ width: "100%", height: "27px", paddingTop: "2px" }}
 				isLoading={isLoading}
 				disabled={isLoading || !selected}
 				onClick={handleClick}

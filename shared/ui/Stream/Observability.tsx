@@ -1181,6 +1181,9 @@ export const Observability = React.memo((props: Props) => {
 				showErrors={false}
 				expandedEntity={expandedEntity}
 				setExpandedEntityCallback={setExpandedEntity}
+				setExpandedEntityUserPrefCallback={setExpandedEntityUserPref}
+				setCurrentRepoIdCallback={setCurrentRepoId}
+				doRefreshCallback={doRefresh}
 			/>
 
 			{observabilityRepos.map(repo => {

@@ -1,6 +1,5 @@
 import {
 	EntityAccount,
-	WarningOrError,
 	GetReposScmRequestType,
 	ReposScm,
 	DidChangeDataNotificationType,
@@ -26,16 +25,14 @@ interface RepositoryAssociatorServiceSearchProps {
 	label?: string | React.ReactNode;
 	remote?: string;
 	remoteName?: string;
-	onSuccess?: (entityGuid: { entityGuid: string }) => void;
+	onSuccess?: (entityGuid: { entityGuid: string; repoId: string }) => void;
 	servicesToExcludeFromSearch?: EntityAccount[];
 	isSidebarView?: boolean;
 	isServiceSearch?: boolean;
 	entityGuid: string;
 }
 
-type SelectOptionType = { label: string; value: string; remote: string; name: string };
-
-type AdditionalType = { nextCursor?: string };
+type SelectOptionType = { label: string; value: string; remote: string; name: string; id: string };
 
 export type EnhancedRepoScm = ReposScm & {
 	name: string;
@@ -64,11 +61,6 @@ export const RepositoryAssociatorServiceSearch = React.memo(
 		const dispatch = useAppDispatch();
 		const [selected, setSelected] = useState<SelectOptionType | null>(null);
 		const [isLoading, setIsLoading] = useState(false);
-		const [warningOrErrors, setWarningOrErrors] = useState<WarningOrError[] | undefined>(undefined);
-		const [openRepositories, setOpenRepositories] = React.useState<EnhancedRepoScm[] | undefined>(
-			undefined
-		);
-		const [hasFetchedRepos, setHasFetchedRepos] = React.useState(false);
 		const { width: repoSearchWidth, ref: repoSearchRef } = useResizeDetector();
 
 		const derivedState = useSelector((state: CodeStreamState) => {
@@ -101,7 +93,13 @@ export const RepositoryAssociatorServiceSearch = React.memo(
 					return [];
 				}
 
-				const results = [];
+				const results: {
+					key: string;
+					remote: string;
+					label: string;
+					name: string;
+					value: string;
+				}[] = [];
 				for (const repo of response.repositories) {
 					if (repo.remotes) {
 						for (const remote of repo.remotes) {
@@ -110,7 +108,6 @@ export const RepositoryAssociatorServiceSearch = React.memo(
 							if (remoteUrl && id) {
 								const name = derivedState.repos[id] ? derivedState.repos[id].name : "repo";
 								const label = `${name} (${remoteUrl})`;
-								//@ts-ignore
 								results.push({
 									...repo,
 									key: btoa(remoteUrl),
@@ -123,9 +120,6 @@ export const RepositoryAssociatorServiceSearch = React.memo(
 						}
 					}
 				}
-
-				setOpenRepositories(results);
-				setHasFetchedRepos(true);
 
 				return results;
 			} catch (error) {
@@ -141,7 +135,6 @@ export const RepositoryAssociatorServiceSearch = React.memo(
 			}
 
 			setIsLoading(true);
-			setWarningOrErrors(undefined);
 
 			const payload = {
 				url: selected.remote,
@@ -157,19 +150,14 @@ export const RepositoryAssociatorServiceSearch = React.memo(
 							console.log("assignRepository", {
 								directives: response?.directives,
 							});
-							// a little fragile, but we're trying to get the entity guid back
 							if (props.onSuccess) {
 								props.onSuccess({
 									entityGuid: response?.directives.find(d => d.type === "assignRepository")?.data
 										?.entityGuid,
+									repoId: selected.id,
 								});
 							}
-						} else if (response?.error) {
-							setWarningOrErrors([{ message: response.error }]);
 						} else {
-							setWarningOrErrors([
-								{ message: "Failed to direct to entity dropdown, please refresh" },
-							]);
 							console.warn("Could not find directive", {
 								_: response,
 								payload: payload,
@@ -178,18 +166,15 @@ export const RepositoryAssociatorServiceSearch = React.memo(
 					}, 5000);
 				})
 				.catch(err => {
-					setWarningOrErrors([{ message: "Failed to direct to entity dropdown, please refresh" }]);
 					logError(`Unexpected error during assignRepository: ${err}`, {});
 				})
 				.finally(() => {
 					setTimeout(() => {
-						{
-							/* @TODO clean up this code, put in place so spinner doesn't stop before onSuccess */
-						}
 						setIsLoading(false);
 					}, 6000);
 				});
 		};
+
 		return (
 			<NoContent style={{ margin: "0px 20px -6px 32px" }}>
 				<div style={{ margin: "2px 0px 8px 0px", color: "var(--text-color)" }}>
@@ -206,9 +191,14 @@ export const RepositoryAssociatorServiceSearch = React.memo(
 								loadOptions={async (search: string) => {
 									try {
 										const options = await fetchRepos();
+
+										interface Option {
+											name: string;
+											// other properties if applicable
+										}
+
 										return {
 											options: options.filter(_ =>
-												//@ts-ignore
 												search ? _?.name.toLowerCase().indexOf(search.toLowerCase()) > -1 : true
 											),
 											hasMore: false, // You may need to change this based on your pagination logic

@@ -1591,13 +1591,6 @@ export const GetObservabilityReposRequestType = new RequestType<
 	void
 >("codestream/newrelic/repos");
 
-// export const GetEntityAccountFromGuidRequestType = new RequestType<
-// 	GetEntityAccountFromGuidRequest,
-// 	GetEntityAccountFromGuidResponse,
-// 	void,
-// 	void
-// >("codestream/newrelic/entityAccount");
-
 export interface GetEntityAccountFromGuidRequest {
 	id: string;
 }

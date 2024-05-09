@@ -27,6 +27,8 @@ import { ObservabilityErrorWrapper } from "./ObservabilityErrorWrapper";
 import { OpenUrlRequestType, OpenEditorViewNotificationType } from "@codestream/protocols/webview";
 import { RepositoryAssociatorServiceSearch } from "./RepositoryAssociatorServiceSearch";
 import { parseId } from "../utilities/newRelic";
+import { useAppDispatch } from "../utilities/hooks";
+import { setCurrentServiceSearchEntity } from "../store/context/actions";
 
 interface Props {
 	alertSeverityColor: string;
@@ -54,6 +56,10 @@ interface Props {
 	setIsVulnPresent: Function;
 	showErrors: boolean;
 	isServiceSearch?: boolean;
+	setExpandedEntityCallback?: Function;
+	setExpandedEntityUserPrefCallback?: Function;
+	setCurrentRepoIdCallback?: Function;
+	doRefreshCallback?: Function;
 }
 
 export const ObservabilityServiceEntity = React.memo((props: Props) => {
@@ -83,7 +89,13 @@ export const ObservabilityServiceEntity = React.memo((props: Props) => {
 		setIsVulnPresent,
 		showErrors,
 		isServiceSearch,
+		setExpandedEntityCallback,
+		setExpandedEntityUserPrefCallback,
+		setCurrentRepoIdCallback,
+		doRefreshCallback,
 	} = props;
+
+	const dispatch = useAppDispatch();
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
@@ -159,6 +171,22 @@ export const ObservabilityServiceEntity = React.memo((props: Props) => {
 						}}
 					/>
 				)}
+				{isServiceSearch && (
+					<Icon
+						name="x"
+						className={cx("clickable", {
+							"icon-override-actions-visible": true,
+						})}
+						title="Clear"
+						placement="bottomLeft"
+						delay={1}
+						onClick={e => {
+							e.preventDefault();
+							e.stopPropagation();
+							dispatch(setCurrentServiceSearchEntity(undefined));
+						}}
+					/>
+				)}
 			</PaneNodeName>
 			{!collapsed && (
 				<>
@@ -181,6 +209,25 @@ export const ObservabilityServiceEntity = React.memo((props: Props) => {
 												meta_data_2: "",
 												meta_data_3: "entry_point: service_search",
 											});
+											dispatch(setCurrentServiceSearchEntity(undefined));
+											if (
+												setExpandedEntityCallback &&
+												setExpandedEntityUserPrefCallback &&
+												setCurrentRepoIdCallback &&
+												e.repoId &&
+												doRefreshCallback
+											) {
+												setExpandedEntityCallback(undefined);
+												setCurrentRepoIdCallback(e.repoId);
+												//@TODO: timeout here is clunky, consider changing
+												setTimeout(() => {
+													doRefreshCallback();
+												}, 3000);
+												setTimeout(() => {
+													setExpandedEntityCallback(ea.entityGuid);
+													setExpandedEntityUserPrefCallback(ea.entityGuid);
+												}, 6000);
+											}
 										}}
 									/>
 								)}

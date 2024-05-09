@@ -45,7 +45,10 @@ interface Props {
 	setIsVulnPresent: Function;
 	showErrors: boolean;
 	setExpandedEntityCallback: Function;
+	setExpandedEntityUserPrefCallback: Function;
+	setCurrentRepoIdCallback: Function;
 	expandedEntity?: string;
+	doRefreshCallback: Function;
 }
 
 export const ObservabilityServiceSearch = React.memo((props: Props) => {
@@ -88,6 +91,9 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 		showErrors,
 		setExpandedEntityCallback,
 		expandedEntity,
+		setExpandedEntityUserPrefCallback,
+		setCurrentRepoIdCallback,
+		doRefreshCallback,
 	} = props;
 
 	useDidMount(() => {
@@ -187,7 +193,7 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 					isServiceSearch={true}
 				/>
 
-				{!loadingEntityAccount && entityAccount && (
+				{!loadingEntityAccount && entityAccount && currentServiceSearchEntity && (
 					<>
 						<ObservabilityServiceEntity
 							alertSeverityColor={alertSeverityColor}
@@ -214,6 +220,10 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 							setIsVulnPresent={setIsVulnPresent}
 							showErrors={errors && !errorsError ? true : false}
 							isServiceSearch={true}
+							setExpandedEntityCallback={setExpandedEntityCallback}
+							setExpandedEntityUserPrefCallback={setExpandedEntityUserPrefCallback}
+							setCurrentRepoIdCallback={setCurrentRepoIdCallback}
+							doRefreshCallback={doRefreshCallback}
 						/>
 					</>
 				)}
