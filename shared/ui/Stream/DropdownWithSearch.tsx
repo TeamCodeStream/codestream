@@ -146,7 +146,7 @@ export const DropdownWithSearch: React.FC<DropdownWithSearchProps> = ({
 					onBlur={handleOnBlur}
 					style={{
 						position: "absolute",
-						width: `${customWidth}px` || "400px",
+						width: customWidth ? `${customWidth}px` : "90%",
 						paddingTop: "8px",
 					}}
 				>
