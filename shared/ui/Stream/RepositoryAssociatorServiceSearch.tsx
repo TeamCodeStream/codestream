@@ -192,16 +192,11 @@ export const RepositoryAssociatorServiceSearch = React.memo(
 									try {
 										const options = await fetchRepos();
 
-										interface Option {
-											name: string;
-											// other properties if applicable
-										}
-
 										return {
 											options: options.filter(_ =>
 												search ? _?.name.toLowerCase().indexOf(search.toLowerCase()) > -1 : true
 											),
-											hasMore: false, // You may need to change this based on your pagination logic
+											hasMore: false,
 										};
 									} catch (error) {
 										console.error("Error fetching options:", error);
