@@ -26,6 +26,7 @@ import { SecurityIssuesWrapper } from "@codestream/webview/Stream/SecurityIssues
 import { ObservabilityErrorWrapper } from "./ObservabilityErrorWrapper";
 import { OpenUrlRequestType, OpenEditorViewNotificationType } from "@codestream/protocols/webview";
 import { RepositoryAssociatorServiceSearch } from "./RepositoryAssociatorServiceSearch";
+import { parseId } from "../utilities/newRelic";
 
 interface Props {
 	alertSeverityColor: string;
@@ -168,7 +169,21 @@ export const ObservabilityServiceEntity = React.memo((props: Props) => {
 					) : (
 						<>
 							<>
-								<RepositoryAssociatorServiceSearch />
+								{isServiceSearch && (
+									<RepositoryAssociatorServiceSearch
+										entityGuid={ea.entityGuid}
+										onSuccess={async e => {
+											HostApi.instance.track("codestream/entity_association succeeded", {
+												event_type: "response",
+												entity_guid: e?.entityGuid,
+												account_id: parseId(e?.entityGuid)?.accountId,
+												meta_data: "",
+												meta_data_2: "",
+												meta_data_3: "entry_point: service_search",
+											});
+										}}
+									/>
+								)}
 								<ObservabilitySummary
 									entityGoldenMetrics={entityGoldenMetrics}
 									loadingGoldenMetrics={loadingGoldenMetrics}

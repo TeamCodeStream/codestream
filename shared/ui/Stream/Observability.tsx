@@ -932,19 +932,19 @@ export const Observability = React.memo((props: Props) => {
 	};
 
 	// Separate useEffect to prevent duplicate requests
-	// Eric here, modify to remove currentRepoId possibly
 	useEffect(() => {
-		if (expandedEntity && currentRepoId) {
+		if (expandedEntity) {
 			HostApi.instance.send(ServiceEntitiesViewedRequestType, {
 				teamId: derivedState.teamId,
 				entityId: expandedEntity,
 			});
-			setExpandedEntityUserPref(currentRepoId, expandedEntity);
 			fetchGoldenMetrics(expandedEntity, true);
 			fetchServiceLevelObjectives(expandedEntity);
-			fetchObservabilityErrors(expandedEntity, currentRepoId);
 			fetchAnomalies(expandedEntity);
 			handleClickCLMBroadcast(expandedEntity);
+		}
+		if (expandedEntity && currentRepoId) {
+			fetchObservabilityErrors(expandedEntity, currentRepoId);
 		}
 	}, [expandedEntity]);
 
@@ -1234,6 +1234,10 @@ export const Observability = React.memo((props: Props) => {
 												value: repo.repoId,
 											})
 										);
+										if (repo?.entityAccounts && repo.entityAccounts.length > 0) {
+											setExpandedEntity(repo.entityAccounts[0].entityGuid);
+											setExpandedEntityUserPref(repo.repoId, repo.entityAccounts[0].entityGuid);
+										}
 										setLoadingEntities(repo.repoId);
 									}
 								}}

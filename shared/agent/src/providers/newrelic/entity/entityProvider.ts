@@ -67,9 +67,7 @@ export class EntityProvider implements Disposable {
 		private nrApiConfig: NrApiConfig,
 		private graphqlClient: NewRelicGraphqlClient,
 		private reposProvider: ReposProvider
-	) {
-		console.warn("hello world");
-	}
+	) {}
 
 	get coreUrl() {
 		return this.nrApiConfig.productUrl;
@@ -175,6 +173,7 @@ export class EntityProvider implements Disposable {
 				tags: entity.tags || [],
 				distributedTracingEnabled,
 				languageAndVersionValidation,
+				url: `${this.nrApiConfig.productUrl}/redirect/entity/${entity.guid}`,
 			},
 		};
 	}
