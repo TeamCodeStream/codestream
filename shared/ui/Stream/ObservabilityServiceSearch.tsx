@@ -20,8 +20,10 @@ import {
 	ServiceLevelObjectiveResult,
 	GetObservabilityErrorsWithoutReposRequestType,
 	isNRErrorResponse,
+	TelemetryData,
 } from "@codestream/protocols/agent";
 import { useDidMount } from "../utilities/hooks";
+import { isEmpty as _isEmpty } from "lodash-es";
 
 interface Props {
 	anomalyDetectionSupported: boolean;
@@ -49,6 +51,7 @@ interface Props {
 	setCurrentRepoIdCallback: Function;
 	expandedEntity?: string;
 	doRefreshCallback: Function;
+	isVulnPresent: boolean;
 }
 
 export const ObservabilityServiceSearch = React.memo((props: Props) => {
@@ -82,18 +85,16 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 		noErrorsAccess,
 		observabilityAnomalies,
 		observabilityAssignments,
-		observabilityErrors,
-		observabilityErrorsError,
 		recentIssues,
 		serviceLevelObjectiveError,
 		serviceLevelObjectives,
 		setIsVulnPresent,
-		showErrors,
 		setExpandedEntityCallback,
 		expandedEntity,
 		setExpandedEntityUserPrefCallback,
 		setCurrentRepoIdCallback,
 		doRefreshCallback,
+		isVulnPresent,
 	} = props;
 
 	useDidMount(() => {
@@ -137,6 +138,21 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 			if (response?.repos) {
 				setErrors(response.repos);
 			}
+
+			const telemetryData: TelemetryData = {
+				entity_guid: entityAccount?.entityGuid,
+				account_id: entityAccount?.accountId,
+				meta_data: `errors_listed: ${
+					response?.repos && response.repos.length > 0 && response.repos[0].errors.length > 0
+				}`,
+				meta_data_2: `slos_listed: ${hasServiceLevelObjectives}`,
+				meta_data_3: `vulnerabilities_listed: ${isVulnPresent}`,
+				meta_data_4: `anomalies_listed: ${!_isEmpty(observabilityAnomalies)}`,
+				meta_data_5: "entry_point: service_search",
+				event_type: "modal_display",
+			};
+
+			HostApi.instance.track("codestream/service displayed", telemetryData);
 		}
 	};
 
@@ -174,7 +190,6 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 						</RepoHeader>
 					}
 					labelIsFlex={true}
-					onClick={e => {}}
 					collapsed={false}
 					showChildIconOnCollapse={true}
 					actionsVisibleIfOpen={true}

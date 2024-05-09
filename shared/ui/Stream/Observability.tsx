@@ -603,37 +603,39 @@ export const Observability = React.memo((props: Props) => {
 
 	const callServiceClickedTelemetry = () => {
 		console.debug("o11y: callServiceClickedTelemetry");
-		try {
-			const currentRepoErrors = observabilityErrors?.find(_ => _ && _.repoId === currentRepoId)
-				?.errors;
-			const filteredCurrentRepoErrors = currentRepoErrors?.filter(
-				_ => _.entityId === expandedEntity
-			);
-			const filteredAssignments = observabilityAssignments?.filter(
-				_ => _.entityId === expandedEntity
-			);
+		if (expandedEntity !== derivedState.currentServiceSearchEntity) {
+			try {
+				const currentRepoErrors = observabilityErrors?.find(_ => _ && _.repoId === currentRepoId)
+					?.errors;
+				const filteredCurrentRepoErrors = currentRepoErrors?.filter(
+					_ => _.entityId === expandedEntity
+				);
+				const filteredAssignments = observabilityAssignments?.filter(
+					_ => _.entityId === expandedEntity
+				);
 
-			const entity = derivedState.observabilityRepoEntities.find(_ => _.repoId === currentRepoId);
+				const entity = derivedState.observabilityRepoEntities.find(_ => _.repoId === currentRepoId);
 
-			const account = currentEntityAccounts?.find(_ => _.entityGuid === entity?.entityGuid);
+				const account = currentEntityAccounts?.find(_ => _.entityGuid === entity?.entityGuid);
 
-			const telemetryData: TelemetryData = {
-				entity_guid: entity?.entityGuid,
-				account_id: account?.accountId,
-				meta_data: `errors_listed: ${
-					!_isEmpty(filteredCurrentRepoErrors) || !_isEmpty(filteredAssignments)
-				}`,
-				meta_data_2: `slos_listed: ${hasServiceLevelObjectives}`,
-				meta_data_3: `vulnerabilities_listed: ${isVulnPresent}`,
-				event_type: "modal_display",
-			};
+				const telemetryData: TelemetryData = {
+					entity_guid: entity?.entityGuid,
+					account_id: account?.accountId,
+					meta_data: `errors_listed: ${
+						!_isEmpty(filteredCurrentRepoErrors) || !_isEmpty(filteredAssignments)
+					}`,
+					meta_data_2: `slos_listed: ${hasServiceLevelObjectives}`,
+					meta_data_3: `vulnerabilities_listed: ${isVulnPresent}`,
+					event_type: "modal_display",
+				};
 
-			console.debug(`o11y: NR Service Clicked`, telemetryData);
+				console.debug(`o11y: NR Service Clicked`, telemetryData);
 
-			HostApi.instance.track("codestream/service displayed", telemetryData);
-			setPendingServiceClickedTelemetryCall(false);
-		} catch (ex) {
-			console.error(ex);
+				HostApi.instance.track("codestream/service displayed", telemetryData);
+				setPendingServiceClickedTelemetryCall(false);
+			} catch (ex) {
+				console.error(ex);
+			}
 		}
 	};
 
@@ -945,6 +947,7 @@ export const Observability = React.memo((props: Props) => {
 		}
 		if (expandedEntity && currentRepoId) {
 			fetchObservabilityErrors(expandedEntity, currentRepoId);
+			setExpandedEntityUserPref(currentRepoId, expandedEntity);
 		}
 	}, [expandedEntity]);
 
@@ -1178,6 +1181,7 @@ export const Observability = React.memo((props: Props) => {
 				serviceLevelObjectiveError={serviceLevelObjectiveError}
 				serviceLevelObjectives={serviceLevelObjectives}
 				setIsVulnPresent={setIsVulnPresent}
+				isVulnPresent={isVulnPresent}
 				showErrors={false}
 				expandedEntity={expandedEntity}
 				setExpandedEntityCallback={setExpandedEntity}

@@ -201,7 +201,7 @@ export const ObservabilityServiceEntity = React.memo((props: Props) => {
 									<RepositoryAssociatorServiceSearch
 										entityGuid={ea.entityGuid}
 										onSuccess={async e => {
-											HostApi.instance.track("codestream/entity_association succeeded", {
+											HostApi.instance.track("codestream/repo_association succeeded", {
 												event_type: "response",
 												entity_guid: e?.entityGuid,
 												account_id: parseId(e?.entityGuid)?.accountId,
