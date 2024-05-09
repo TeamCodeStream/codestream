@@ -43,6 +43,11 @@ import { Link } from "../Link";
 import { isEmpty as _isEmpty } from "lodash-es";
 import Tooltip from "@codestream/webview/Stream/Tooltip";
 import { Disposable } from "@codestream/webview/utils";
+import {
+	closePanel,
+	setCurrentObservabilityAnomaly,
+} from "@codestream/webview/store/context/actions";
+import { useDispatch } from "react-redux";
 
 const Root = styled.div``;
 
@@ -130,28 +135,19 @@ export const ObservabilityAnomalyPanel = (props: {
 	ide?: { name?: IdeNames };
 }) => {
 	if (!props.entryPoint || !props.anomaly) {
-		return <div>Missing Properties</div>;
+		const dispatch = useDispatch<any>();
+		return (
+			<Root className="full-height-codemark-form">
+				<div>Missing properties</div>
+				<CancelButton
+					onClick={() => {
+						dispatch(setCurrentObservabilityAnomaly());
+						dispatch(closePanel());
+					}}
+				/>
+			</Root>
+		);
 	}
-
-	// const dispatch = useDispatch<any>();
-
-	// const derivedState = useSelector((state: CodeStreamState) => {
-	// 	return {
-	// 		showGoldenSignalsInEditor: state?.configs.showGoldenSignalsInEditor,
-	// 		currentObservabilityAnomaly: (state.context.currentObservabilityAnomaly ||
-	// 			{}) as ObservabilityAnomaly,
-	// 		currentObservabilityAnomalyEntityGuid:
-	// 			state.context.currentObservabilityAnomalyEntityGuid || "",
-	// 		currentObservabilityAnomalyEntityName:
-	// 			state.context.currentObservabilityAnomalyEntityName || "",
-	// 		observabilityRepoEntities:
-	// 			(state.users[state.session.userId!].preferences || {}).observabilityRepoEntities ||
-	// 			EMPTY_ARRAY,
-	// 		clmSettings: (state.preferences.clmSettings || {}) as CLMSettings,
-	// 		sessionStart: state.context.sessionStart,
-	// 		isProductionCloud: state.configs.isProductionCloud,
-	// 	};
-	// });
 
 	const [telemetryResponse, setTelemetryResponse] = useState<
 		GetMethodLevelTelemetryResponse | undefined
@@ -162,21 +158,19 @@ export const ObservabilityAnomalyPanel = (props: {
 	const [titleHovered, setTitleHovered] = useState<boolean>(false);
 
 	const [currentEntityGuid, setEntityGuid] = useState(props.entityGuid);
-	const [currentAnomalyName, setAnomalyName] = useState(props.anomaly?.name);
-	const [currentAnomalyScope, setAnomalyScope] = useState(props.anomaly?.scope);
+	const [currentAnomaly, setAnomaly] = useState(props.anomaly);
 
 	const disposables: Disposable[] = [];
 
 	const loadData = async () => {
-		if (!props.anomaly || !props.entityGuid) return;
-
+		if (!currentAnomaly || !currentEntityGuid) return;
 		setLoading(true);
 		try {
-			const anomaly = props.anomaly;
+			const anomaly = currentAnomaly;
 			const isPlural = anomaly.totalDays > 1 ? "s" : "";
 			const since = `${anomaly.totalDays} day${isPlural} ago`;
 			const response = await HostApi.instance.send(GetMethodLevelTelemetryRequestType, {
-				newRelicEntityGuid: props.entityGuid,
+				newRelicEntityGuid: currentEntityGuid,
 				metricTimesliceNameMapping: {
 					source: "metric",
 					duration: anomaly.metricTimesliceName,
@@ -237,18 +231,18 @@ export const ObservabilityAnomalyPanel = (props: {
 	};
 
 	useDidMount(() => {
-		if (!props.entityGuid) return;
+		if (!currentEntityGuid) return;
 
 		disposables.push(
 			HostApi.instance.on(OpenEditorViewNotificationType, e => {
 				if (e.entityGuid && e.entityGuid !== currentEntityGuid) {
 					setEntityGuid(e.entityGuid);
 				}
-				if (e.anomaly && e.anomaly.name !== currentAnomalyName) {
-					setAnomalyName(e.anomaly.name);
-				}
-				if (e.anomaly && e.anomaly.scope !== currentAnomalyScope) {
-					setAnomalyScope(e.anomaly.scope);
+				if (
+					e.anomaly &&
+					(e.anomaly.name !== currentAnomaly.name || e.anomaly.scope !== currentAnomaly.scope)
+				) {
+					setAnomaly(e.anomaly);
 				}
 			})
 		);
@@ -265,29 +259,17 @@ export const ObservabilityAnomalyPanel = (props: {
 			return;
 		}
 		loadData();
-	}, [currentEntityGuid, currentAnomalyName, currentAnomalyScope]);
-
-	// useEffect(() => {
-	// 	if (
-	// 		!previousCurrentObservabilityAnomaly ||
-	// 		JSON.stringify(previousCurrentObservabilityAnomaly) ===
-	// 			JSON.stringify(props.anomaly)
-	// 	) {
-	// 		return;
-	// 	}
-	//
-	// 	loadData(props.anomalyEntityGuid);
-	// }, [props.anomaly]);
+	}, [currentEntityGuid, currentAnomaly]);
 
 	const renderTitle = () => {
-		if (!props.anomaly) return;
-		if (!props.anomaly.scope) {
+		if (!currentAnomaly) return;
+		if (!currentAnomaly.scope) {
 			//@TODO - put this href construction logic in the agent
 			const baseUrl = props.isProductionCloud
 				? "https://one.newrelic.com/nr1-core/apm-features/transactions/"
 				: "https://staging-one.newrelic.com/nr1-core/apm-features/transactions/";
 
-			const href = `${baseUrl}${props.entityGuid}`;
+			const href = `${baseUrl}${currentEntityGuid}`;
 
 			return (
 				<Link
@@ -295,7 +277,7 @@ export const ObservabilityAnomalyPanel = (props: {
 					onClick={e => {
 						e.preventDefault();
 						HostApi.instance.track("codestream/newrelic_link clicked", {
-							entity_guid: props.entityGuid,
+							entity_guid: currentEntityGuid,
 							meta_data: "destination: transactions",
 							meta_data_2: `codestream_section: transactions`,
 							event_type: "click",
@@ -305,13 +287,13 @@ export const ObservabilityAnomalyPanel = (props: {
 						});
 					}}
 				>
-					<span style={{ marginRight: "6px" }}>{props.anomaly.name}</span>
+					<span style={{ marginRight: "6px" }}>{currentAnomaly.name}</span>
 					{titleHovered && <Icon title="Open on New Relic" delay={1} name="link-external" />}
 				</Link>
 			);
 		}
 
-		return <span data-testid={`anomaly-title`}>{props.anomaly.name}</span>;
+		return <span data-testid={`anomaly-title`}>{currentAnomaly.name}</span>;
 	};
 
 	const goldenMetricAvgDuration = telemetryResponse?.goldenMetrics?.find(
@@ -323,7 +305,7 @@ export const ObservabilityAnomalyPanel = (props: {
 	const goldenMetricSampleRate = telemetryResponse?.goldenMetrics?.find(
 		_ => _.name === "samplesPerMinute"
 	);
-	const { chartHeaderTexts } = props.anomaly;
+	const { chartHeaderTexts } = currentAnomaly;
 	const avgDurationTitle = goldenMetricAvgDuration?.title || "";
 	const errorRateTitle = goldenMetricErrorRate?.title || "";
 	const avgDurationHeaderText =
@@ -384,10 +366,10 @@ export const ObservabilityAnomalyPanel = (props: {
 										{avgDurationHeaderText || errorRateHeaderText}
 									</div>
 									<br />
-									{props.anomaly.scope && (
+									{currentAnomaly.scope && (
 										<DataRow>
 											<DataLabel>Transaction:</DataLabel>
-											<DataValue>{props.anomaly.scope}</DataValue>
+											<DataValue>{currentAnomaly.scope}</DataValue>
 										</DataRow>
 									)}
 									{props.entityName && (
