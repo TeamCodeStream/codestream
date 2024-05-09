@@ -221,7 +221,7 @@ export const ObservabilityServiceEntity = React.memo((props: Props) => {
 												setCurrentRepoIdCallback(e.repoId);
 												//@TODO: timeout here is clunky, consider changing
 												setTimeout(() => {
-													doRefreshCallback();
+													doRefreshCallback(true);
 												}, 3000);
 												setTimeout(() => {
 													setExpandedEntityCallback(ea.entityGuid);
