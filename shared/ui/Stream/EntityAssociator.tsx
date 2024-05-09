@@ -3,7 +3,7 @@ import {
 	GetObservabilityEntitiesRequestType,
 	WarningOrError,
 } from "@codestream/protocols/agent";
-import React, { PropsWithChildren, useState } from "react";
+import React, { useRef, PropsWithChildren, useEffect, useState } from "react";
 import { components, OptionProps } from "react-select";
 import styled from "styled-components";
 
@@ -16,7 +16,6 @@ import { useAppDispatch } from "../utilities/hooks";
 import { WarningBox } from "./WarningBox";
 import { isEmpty as _isEmpty } from "lodash";
 import { DropdownWithSearch } from "./DropdownWithSearch";
-import { useResizeDetector } from "react-resize-detector";
 
 interface EntityAssociatorProps {
 	title?: string;
@@ -66,7 +65,8 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 	const [selected, setSelected] = useState<SelectOptionType | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const [warningOrErrors, setWarningOrErrors] = useState<WarningOrError[] | undefined>(undefined);
-	const { width: entitySearchWidth, ref: entitySearchRef } = useResizeDetector();
+	const elementRef = useRef(null);
+	const [width, setWidth] = useState(0);
 
 	async function loadEntities(search: string, _loadedOptions, additional?: AdditionalType) {
 		const { servicesToExcludeFromSearch } = props;
@@ -168,12 +168,28 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 			}
 		}
 	};
+
+	useEffect(() => {
+		const handleResize = () => {
+			if (elementRef.current) {
+				//@ts-ignore
+				const elementWidth = elementRef.current?.offsetWidth;
+				setWidth(elementWidth);
+			}
+		};
+		handleResize();
+		window.addEventListener("resize", handleResize);
+		return () => {
+			window.removeEventListener("resize", handleResize);
+		};
+	}, [elementRef]);
+
 	return (
 		<NoContent style={{ marginLeft: props.isServiceSearch ? "30px" : "20px" }}>
 			{props.title && <h3>{props.title}</h3>}
 			{props.label && <p style={{ marginTop: 0 }}>{props.label}</p>}
 			{warningOrErrors && <WarningBox items={warningOrErrors} />}
-			<div ref={entitySearchRef} style={{ marginBottom: "10px" }}>
+			<div ref={elementRef} style={{ marginBottom: "10px" }}>
 				<DropdownWithSearch
 					id="input-entity-autocomplete"
 					name="entity-autocomplete"
@@ -181,7 +197,7 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 					selectedOption={selected || undefined}
 					handleChangeCallback={setSelected}
 					customOption={Option}
-					customWidth={entitySearchWidth?.toString()}
+					customWidth={width?.toString()}
 					valuePlaceholder={`Select an entity...`}
 				/>
 			</div>

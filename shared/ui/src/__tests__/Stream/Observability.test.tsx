@@ -33,6 +33,9 @@ import {
 	RemoteType,
 } from "@codestream/protocols/agent";
 import { CSRepository, CSTeam, CSUser } from "@codestream/protocols/api";
+import { Observability } from "@codestream/webview/Stream/Observability";
+import { PaneState } from "@codestream/webview/src/components/Pane";
+import { lightTheme } from "@codestream/webview/src/themes";
 import { CodeStreamState } from "@codestream/webview/store";
 import { isFeatureEnabled } from "@codestream/webview/store/apiVersioning/reducer";
 import { CodeErrorsState } from "@codestream/webview/store/codeErrors/types";
@@ -42,10 +45,15 @@ import * as providerSelectors from "@codestream/webview/store/providers/reducer"
 import { TeamsState } from "@codestream/webview/store/teams/types";
 import translations from "@codestream/webview/translations/en";
 import { HostApi } from "@codestream/webview/webview-api";
-import { afterEach, beforeEach, describe, jest } from "@jest/globals";
+import { afterEach, beforeEach, describe, it, jest } from "@jest/globals";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import * as React from "react";
+import { act } from "react-dom/test-utils";
 import { IntlProvider } from "react-intl";
+import { Provider } from "react-redux";
+import configureStore from "redux-mock-store";
 import thunk from "redux-thunk";
+import { ThemeProvider } from "styled-components";
 
 jest.mock("@codestream/webview/store/apiVersioning/reducer");
 jest.mock("@codestream/webview/webview-api");
@@ -439,63 +447,60 @@ describe("Observability", () => {
 		jest.resetAllMocks();
 	});
 
-	////////////////
+	it("should trigger O11y rendered with Services when all calls happy", async () => {
+		mockProviderSelectors.isConnected.mockReturnValue(true);
+		const mockStore = configureStore(middlewares);
+
+		await act(async () => {
+			render(
+				wrapIntl(
+					<Provider store={mockStore(createState())}>
+						<ThemeProvider theme={lightTheme}>
+							<Observability paneState={PaneState.Open} />
+						</ThemeProvider>
+					</Provider>
+				),
+				{ container }
+			);
+		});
+
+		await waitFor(() => {
+			expect(mockTrack).toHaveBeenCalledTimes(1);
+			expect(mockTrack).toHaveBeenCalledWith("codestream/o11y displayed", {
+				meta_data: `state: services`,
+				event_type: "modal_display",
+			});
+		});
+	});
+
+	it("should trigger O11y rendered with No Entities getEntities returns 0", async () => {
+		mockProviderSelectors.isConnected.mockReturnValue(true);
+		const mockStore = configureStore(middlewares);
+
+		mockGetEntityCount.mockImplementation(_params => {
+			return { entityCount: 0 };
+		});
+
+		await act(async () => {
+			render(
+				<Provider store={mockStore(createState())}>
+					<ThemeProvider theme={lightTheme}>
+						<Observability paneState={PaneState.Open} />
+					</ThemeProvider>
+				</Provider>,
+				{ container }
+			);
+		});
+
+		await waitFor(() => {
+			expect(mockTrack).toHaveBeenCalledWith("codestream/o11y displayed", {
+				meta_data: `state: no_entities`,
+				event_type: "modal_display",
+			});
+		});
+	});
+
 	// @TODO - Get resize-observer polyfill working so we can test this use case.
-	////////////////
-
-	// it("should trigger O11y rendered with Services when all calls happy", async () => {
-	// 	mockProviderSelectors.isConnected.mockReturnValue(true);
-	// 	const mockStore = configureStore(middlewares);
-
-	// 	await act(async () => {
-	// 		render(
-	// 			wrapIntl(
-	// 				<Provider store={mockStore(createState())}>
-	// 					<ThemeProvider theme={lightTheme}>
-	// 						<Observability paneState={PaneState.Open} />
-	// 					</ThemeProvider>
-	// 				</Provider>
-	// 			),
-	// 			{ container }
-	// 		);
-	// 	});
-
-	// 	await waitFor(() => {
-	// 		expect(mockTrack).toHaveBeenCalledTimes(1);
-	// 		expect(mockTrack).toHaveBeenCalledWith("codestream/o11y displayed", {
-	// 			meta_data: `state: services`,
-	// 			event_type: "modal_display",
-	// 		});
-	// 	});
-	// });
-
-	// it("should trigger O11y rendered with No Entities getEntities returns 0", async () => {
-	// 	mockProviderSelectors.isConnected.mockReturnValue(true);
-	// 	const mockStore = configureStore(middlewares);
-
-	// 	mockGetEntityCount.mockImplementation(_params => {
-	// 		return { entityCount: 0 };
-	// 	});
-
-	// 	await act(async () => {
-	// 		render(
-	// 			<Provider store={mockStore(createState())}>
-	// 				<ThemeProvider theme={lightTheme}>
-	// 					<Observability paneState={PaneState.Open} />
-	// 				</ThemeProvider>
-	// 			</Provider>,
-	// 			{ container }
-	// 		);
-	// 	});
-
-	// 	await waitFor(() => {
-	// 		expect(mockTrack).toHaveBeenCalledWith("codestream/o11y displayed", {
-	// 			meta_data: `state: no_entities`,
-	// 			event_type: "modal_display",
-	// 		});
-	// 	});
-	// });
-
 	// it("should trigger O11y rendered with No Services when no associated repos", async () => {
 	// 	mockProviderSelectors.isConnected.mockReturnValue(true);
 	// 	const mockStore = configureStore(middlewares);
@@ -542,225 +547,225 @@ describe("Observability", () => {
 	// 	});
 	// });
 
-	// it("should trigger O11y rendered with Not Connected when NR not setup", async () => {
-	// 	mockProviderSelectors.isConnected.mockReturnValue(false);
-	// 	const mockStore = configureStore(middlewares);
+	it("should trigger O11y rendered with Not Connected when NR not setup", async () => {
+		mockProviderSelectors.isConnected.mockReturnValue(false);
+		const mockStore = configureStore(middlewares);
 
-	// 	await act(async () => {
-	// 		render(
-	// 			<Provider store={mockStore(createState())}>
-	// 				<ThemeProvider theme={lightTheme}>
-	// 					<Observability paneState={PaneState.Open} />
-	// 				</ThemeProvider>
-	// 			</Provider>,
-	// 			{ container }
-	// 		);
-	// 	});
+		await act(async () => {
+			render(
+				<Provider store={mockStore(createState())}>
+					<ThemeProvider theme={lightTheme}>
+						<Observability paneState={PaneState.Open} />
+					</ThemeProvider>
+				</Provider>,
+				{ container }
+			);
+		});
 
-	// 	await waitFor(() => {
-	// 		expect(mockTrack).toHaveBeenCalledTimes(1);
-	// 		expect(mockTrack).toHaveBeenCalledWith("codestream/o11y displayed", {
-	// 			meta_data: "state: Not Connected",
-	// 			event_type: "modal_display",
-	// 		});
-	// 	});
-	// });
+		await waitFor(() => {
+			expect(mockTrack).toHaveBeenCalledTimes(1);
+			expect(mockTrack).toHaveBeenCalledWith("codestream/o11y displayed", {
+				meta_data: "state: Not Connected",
+				event_type: "modal_display",
+			});
+		});
+	});
 
-	// it("should trigger service clicked with all services when all calls happy", async () => {
-	// 	mockProviderSelectors.isConnected.mockReturnValue(true);
-	// 	mockServiceClickedMethods();
-	// 	const mockStore = configureStore(middlewares);
+	it("should trigger service clicked with all services when all calls happy", async () => {
+		mockProviderSelectors.isConnected.mockReturnValue(true);
+		mockServiceClickedMethods();
+		const mockStore = configureStore(middlewares);
 
-	// 	await act(async () => {
-	// 		render(
-	// 			wrapIntl(
-	// 				<Provider store={mockStore(createState())}>
-	// 					<ThemeProvider theme={lightTheme}>
-	// 						<Observability paneState={PaneState.Open} />
-	// 					</ThemeProvider>
-	// 				</Provider>
-	// 			),
-	// 			{ container }
-	// 		);
-	// 	});
+		await act(async () => {
+			render(
+				wrapIntl(
+					<Provider store={mockStore(createState())}>
+						<ThemeProvider theme={lightTheme}>
+							<Observability paneState={PaneState.Open} />
+						</ThemeProvider>
+					</Provider>
+				),
+				{ container }
+			);
+		});
 
-	// 	expect(mockTrack).toHaveBeenCalledTimes(1);
+		expect(mockTrack).toHaveBeenCalledTimes(1);
 
-	// 	// Close
-	// 	fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
-	// 	await waitFor(() => {
-	// 		expect(screen.queryByTestId("entity-name-abcd1234-collapsed")).toBeInTheDocument();
-	// 	});
+		// Close
+		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		await waitFor(() => {
+			expect(screen.queryByTestId("entity-name-abcd1234-collapsed")).toBeInTheDocument();
+		});
 
-	// 	// And expand to trigger service clicked
-	// 	fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
-	// 	await waitFor(() => {
-	// 		expect(screen.getByTestId("entity-name-abcd1234-expanded")).toBeInTheDocument();
-	// 	});
+		// And expand to trigger service clicked
+		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		await waitFor(() => {
+			expect(screen.getByTestId("entity-name-abcd1234-expanded")).toBeInTheDocument();
+		});
 
-	// 	await waitFor(() => {
-	// 		expect(mockTrack).toHaveBeenCalledTimes(2);
-	// 		expect(mockTrack).toHaveBeenNthCalledWith(2, "codestream/service displayed", {
-	// 			entity_guid: undefined,
-	// 			account_id: undefined,
-	// 			meta_data: `errors_listed: true`,
-	// 			meta_data_2: `slos_listed: true`,
-	// 			meta_data_3: `vulnerabilities_listed: false`,
-	// 			event_type: "modal_display",
-	// 		});
-	// 	});
-	// });
+		await waitFor(() => {
+			expect(mockTrack).toHaveBeenCalledTimes(2);
+			expect(mockTrack).toHaveBeenNthCalledWith(2, "codestream/service displayed", {
+				entity_guid: undefined,
+				account_id: undefined,
+				meta_data: `errors_listed: true`,
+				meta_data_2: `slos_listed: true`,
+				meta_data_3: `vulnerabilities_listed: false`,
+				event_type: "modal_display",
+			});
+		});
+	});
 
-	// it("should trigger service clicked without errors listed", async () => {
-	// 	mockProviderSelectors.isConnected.mockReturnValue(true);
-	// 	mockServiceClickedMethods();
+	it("should trigger service clicked without errors listed", async () => {
+		mockProviderSelectors.isConnected.mockReturnValue(true);
+		mockServiceClickedMethods();
 
-	// 	mockGetObservabilityErrors.mockImplementation(_params => {
-	// 		return {
-	// 			repos: [],
-	// 		};
-	// 	});
+		mockGetObservabilityErrors.mockImplementation(_params => {
+			return {
+				repos: [],
+			};
+		});
 
-	// 	const mockStore = configureStore(middlewares);
+		const mockStore = configureStore(middlewares);
 
-	// 	await act(async () => {
-	// 		render(
-	// 			wrapIntl(
-	// 				<Provider store={mockStore(createState())}>
-	// 					<ThemeProvider theme={lightTheme}>
-	// 						<Observability paneState={PaneState.Open} />
-	// 					</ThemeProvider>
-	// 				</Provider>
-	// 			),
-	// 			{ container }
-	// 		);
-	// 	});
+		await act(async () => {
+			render(
+				wrapIntl(
+					<Provider store={mockStore(createState())}>
+						<ThemeProvider theme={lightTheme}>
+							<Observability paneState={PaneState.Open} />
+						</ThemeProvider>
+					</Provider>
+				),
+				{ container }
+			);
+		});
 
-	// 	expect(mockTrack).toHaveBeenCalledTimes(1);
+		expect(mockTrack).toHaveBeenCalledTimes(1);
 
-	// 	// Close
-	// 	fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
-	// 	await waitFor(() => {
-	// 		expect(screen.queryByTestId("entity-name-abcd1234-collapsed")).toBeInTheDocument();
-	// 	});
+		// Close
+		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		await waitFor(() => {
+			expect(screen.queryByTestId("entity-name-abcd1234-collapsed")).toBeInTheDocument();
+		});
 
-	// 	// And expand to trigger service clicked
-	// 	fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
-	// 	await waitFor(() => {
-	// 		expect(screen.getByTestId("entity-name-abcd1234-expanded")).toBeInTheDocument();
-	// 	});
+		// And expand to trigger service clicked
+		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		await waitFor(() => {
+			expect(screen.getByTestId("entity-name-abcd1234-expanded")).toBeInTheDocument();
+		});
 
-	// 	// await waitFor(() => {
-	// 	// 	expect(mockTrack).toHaveBeenCalledTimes(2);
-	// 	// 	expect(mockTrack).toHaveBeenNthCalledWith(2, "NR Service Clicked", {
-	// 	// 		"Errors Listed": false,
-	// 	// 		"SLOs Listed": true,
-	// 	// 		"CLM Anomalies Listed": true,
-	// 	// 		"Vulnerabilities Listed": false,
-	// 	// 	});
-	// 	// });
-	// });
+		// await waitFor(() => {
+		// 	expect(mockTrack).toHaveBeenCalledTimes(2);
+		// 	expect(mockTrack).toHaveBeenNthCalledWith(2, "NR Service Clicked", {
+		// 		"Errors Listed": false,
+		// 		"SLOs Listed": true,
+		// 		"CLM Anomalies Listed": true,
+		// 		"Vulnerabilities Listed": false,
+		// 	});
+		// });
+	});
 
-	// it("should trigger service clicked without SLOs listed", async () => {
-	// 	mockProviderSelectors.isConnected.mockReturnValue(true);
-	// 	mockServiceClickedMethods();
+	it("should trigger service clicked without SLOs listed", async () => {
+		mockProviderSelectors.isConnected.mockReturnValue(true);
+		mockServiceClickedMethods();
 
-	// 	mockGetServiceLevelObjectives.mockImplementation(_params => {
-	// 		return {
-	// 			serviceLevelObjectives: [],
-	// 		};
-	// 	});
+		mockGetServiceLevelObjectives.mockImplementation(_params => {
+			return {
+				serviceLevelObjectives: [],
+			};
+		});
 
-	// 	const mockStore = configureStore(middlewares);
+		const mockStore = configureStore(middlewares);
 
-	// 	await act(async () => {
-	// 		render(
-	// 			wrapIntl(
-	// 				<Provider store={mockStore(createState())}>
-	// 					<ThemeProvider theme={lightTheme}>
-	// 						<Observability paneState={PaneState.Open} />
-	// 					</ThemeProvider>
-	// 				</Provider>
-	// 			),
-	// 			{ container }
-	// 		);
-	// 	});
+		await act(async () => {
+			render(
+				wrapIntl(
+					<Provider store={mockStore(createState())}>
+						<ThemeProvider theme={lightTheme}>
+							<Observability paneState={PaneState.Open} />
+						</ThemeProvider>
+					</Provider>
+				),
+				{ container }
+			);
+		});
 
-	// 	expect(mockTrack).toHaveBeenCalledTimes(1);
+		expect(mockTrack).toHaveBeenCalledTimes(1);
 
-	// 	// Close
-	// 	fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
-	// 	await waitFor(() => {
-	// 		expect(screen.queryByTestId("entity-name-abcd1234-collapsed")).toBeInTheDocument();
-	// 	});
+		// Close
+		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		await waitFor(() => {
+			expect(screen.queryByTestId("entity-name-abcd1234-collapsed")).toBeInTheDocument();
+		});
 
-	// 	// And expand to trigger service clicked
-	// 	fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
-	// 	await waitFor(() => {
-	// 		expect(screen.getByTestId("entity-name-abcd1234-expanded")).toBeInTheDocument();
-	// 	});
+		// And expand to trigger service clicked
+		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		await waitFor(() => {
+			expect(screen.getByTestId("entity-name-abcd1234-expanded")).toBeInTheDocument();
+		});
 
-	// 	// await waitFor(() => {
-	// 	// 	expect(mockTrack).toHaveBeenCalledTimes(3);
-	// 	// 	expect(mockTrack).toHaveBeenNthCalledWith(2, "NR Service Clicked", {
-	// 	// 		"Errors Listed": true,
-	// 	// 		"CLM Anomalies Listed": true,
-	// 	// 		"SLOs Listed": false,
-	// 	// 		"Vulnerabilities Listed": false,
-	// 	// 	});
-	// 	// });
-	// });
+		// await waitFor(() => {
+		// 	expect(mockTrack).toHaveBeenCalledTimes(3);
+		// 	expect(mockTrack).toHaveBeenNthCalledWith(2, "NR Service Clicked", {
+		// 		"Errors Listed": true,
+		// 		"CLM Anomalies Listed": true,
+		// 		"SLOs Listed": false,
+		// 		"Vulnerabilities Listed": false,
+		// 	});
+		// });
+	});
 
-	// it("should trigger service clicked without anomalies listed", async () => {
-	// 	mockProviderSelectors.isConnected.mockReturnValue(true);
-	// 	mockServiceClickedMethods();
+	it("should trigger service clicked without anomalies listed", async () => {
+		mockProviderSelectors.isConnected.mockReturnValue(true);
+		mockServiceClickedMethods();
 
-	// 	mockGetObservabilityAnomalies.mockImplementation(_params => {
-	// 		return {
-	// 			errorRate: [],
-	// 			responseTime: [],
-	// 			isSupported: true,
-	// 			didNotifyNewAnomalies: false,
-	// 		};
-	// 	});
+		mockGetObservabilityAnomalies.mockImplementation(_params => {
+			return {
+				errorRate: [],
+				responseTime: [],
+				isSupported: true,
+				didNotifyNewAnomalies: false,
+			};
+		});
 
-	// 	const mockStore = configureStore(middlewares);
+		const mockStore = configureStore(middlewares);
 
-	// 	await act(async () => {
-	// 		render(
-	// 			wrapIntl(
-	// 				<Provider store={mockStore(createState())}>
-	// 					<ThemeProvider theme={lightTheme}>
-	// 						<Observability paneState={PaneState.Open} />
-	// 					</ThemeProvider>
-	// 				</Provider>
-	// 			),
-	// 			{ container }
-	// 		);
-	// 	});
+		await act(async () => {
+			render(
+				wrapIntl(
+					<Provider store={mockStore(createState())}>
+						<ThemeProvider theme={lightTheme}>
+							<Observability paneState={PaneState.Open} />
+						</ThemeProvider>
+					</Provider>
+				),
+				{ container }
+			);
+		});
 
-	// 	expect(mockTrack).toHaveBeenCalledTimes(1);
+		expect(mockTrack).toHaveBeenCalledTimes(1);
 
-	// 	// Close
-	// 	fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
-	// 	await waitFor(() => {
-	// 		expect(screen.queryByTestId("entity-name-abcd1234-collapsed")).toBeInTheDocument();
-	// 	});
+		// Close
+		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		await waitFor(() => {
+			expect(screen.queryByTestId("entity-name-abcd1234-collapsed")).toBeInTheDocument();
+		});
 
-	// 	// And expand to trigger service clicked
-	// 	fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
-	// 	await waitFor(() => {
-	// 		expect(screen.getByTestId("entity-name-abcd1234-expanded")).toBeInTheDocument();
-	// 	});
+		// And expand to trigger service clicked
+		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		await waitFor(() => {
+			expect(screen.getByTestId("entity-name-abcd1234-expanded")).toBeInTheDocument();
+		});
 
-	// 	// await waitFor(() => {
-	// 	// 	expect(mockTrack).toHaveBeenCalledTimes(2);
-	// 	// 	expect(mockTrack).toHaveBeenNthCalledWith(2, "NR Service Clicked", {
-	// 	// 		"Errors Listed": true,
-	// 	// 		"CLM Anomalies Listed": false,
-	// 	// 		"SLOs Listed": true,
-	// 	// 		"Vulnerabilities Listed": false,
-	// 	// 	});
-	// 	// });
-	// });
+		// await waitFor(() => {
+		// 	expect(mockTrack).toHaveBeenCalledTimes(2);
+		// 	expect(mockTrack).toHaveBeenNthCalledWith(2, "NR Service Clicked", {
+		// 		"Errors Listed": true,
+		// 		"CLM Anomalies Listed": false,
+		// 		"SLOs Listed": true,
+		// 		"Vulnerabilities Listed": false,
+		// 	});
+		// });
+	});
 });

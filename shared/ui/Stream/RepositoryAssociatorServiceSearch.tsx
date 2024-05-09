@@ -5,7 +5,7 @@ import {
 	DidChangeDataNotificationType,
 	ChangeDataType,
 } from "@codestream/protocols/agent";
-import React, { PropsWithChildren, useState } from "react";
+import React, { useEffect, useRef, PropsWithChildren, useState } from "react";
 import { components, OptionProps } from "react-select";
 import styled from "styled-components";
 import { useSelector } from "react-redux";
@@ -16,7 +16,6 @@ import { Button } from "../src/components/Button";
 import { NoContent } from "../src/components/Pane";
 import { useAppDispatch } from "../utilities/hooks";
 import { DropdownWithSearch } from "./DropdownWithSearch";
-import { useResizeDetector } from "react-resize-detector";
 import { CodeStreamState } from "../store";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 
@@ -61,7 +60,8 @@ export const RepositoryAssociatorServiceSearch = React.memo(
 		const dispatch = useAppDispatch();
 		const [selected, setSelected] = useState<SelectOptionType | null>(null);
 		const [isLoading, setIsLoading] = useState(false);
-		const { width: repoSearchWidth, ref: repoSearchRef } = useResizeDetector();
+		const elementRef = useRef(null);
+		const [width, setWidth] = useState(0);
 
 		const derivedState = useSelector((state: CodeStreamState) => {
 			return {
@@ -175,6 +175,21 @@ export const RepositoryAssociatorServiceSearch = React.memo(
 				});
 		};
 
+		useEffect(() => {
+			const handleResize = () => {
+				if (elementRef.current) {
+					//@ts-ignore
+					const elementWidth = elementRef.current?.offsetWidth;
+					setWidth(elementWidth);
+				}
+			};
+			handleResize();
+			window.addEventListener("resize", handleResize);
+			return () => {
+				window.removeEventListener("resize", handleResize);
+			};
+		}, [elementRef]);
+
 		return (
 			<NoContent style={{ margin: "0px 20px -6px 32px" }}>
 				<div style={{ margin: "2px 0px 8px 0px", color: "var(--text-color)" }}>
@@ -184,7 +199,7 @@ export const RepositoryAssociatorServiceSearch = React.memo(
 				</div>
 				<div style={{ display: "flex", justifyContent: "space-between" }}>
 					<div style={{ width: "100%", marginRight: "10px" }}>
-						<div ref={repoSearchRef} style={{ marginBottom: "10px" }}>
+						<div ref={elementRef} style={{ marginBottom: "10px" }}>
 							<DropdownWithSearch
 								id="input-repo-associator-service-search"
 								name="input-repo-associator-service-search"
@@ -209,7 +224,7 @@ export const RepositoryAssociatorServiceSearch = React.memo(
 								selectedOption={selected || undefined}
 								handleChangeCallback={setSelected}
 								customOption={Option}
-								customWidth={repoSearchWidth?.toString()}
+								customWidth={width?.toString()}
 								valuePlaceholder={`Select an repository...`}
 							/>
 						</div>
