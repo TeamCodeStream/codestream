@@ -37,7 +37,7 @@ import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { canCreateCodemark } from "../store/codemarks/actions";
 import { getCodemark } from "../store/codemarks/reducer";
 import {
-	setCurrentCodeError,
+	setCurrentCodeErrorData,
 	setCurrentCodemark,
 	setCurrentInstrumentationOptions,
 	setCurrentOrganizationInvite,
@@ -135,7 +135,7 @@ interface ConnectedProps {
 	addBlameMapEnabled: boolean;
 	blameMap: { [setting: string]: any };
 	composeCodemarkActive?: CodemarkType;
-	currentCodeErrorId?: string;
+	currentCodeErrorGuid?: string;
 	currentCodemarkId?: string;
 	currentPullRequestId?: string;
 	currentPullRequestView?: string;
@@ -375,7 +375,7 @@ export class SimpleStream extends PureComponent<Props> {
 			activePanel && activePanel.match(/^(oauthpat|configure)\-(provider|enterprise)-/);
 
 		// if we're conducting a review, we need the compose functionality of spatial view
-		if (this.props.currentReviewId || this.props.currentCodeErrorId) {
+		if (this.props.currentReviewId || this.props.currentCodeErrorGuid) {
 			activePanel = WebviewPanels.CodemarksForFile;
 		}
 		if (this.props.currentPullRequestId && this.props.currentPullRequestView !== "sidebar-diffs")
@@ -804,7 +804,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		addBlameMapEnabled: isFeatureEnabled(state, "addBlameMap"),
 		blameMap: team.settings ? team.settings.blameMap : {},
 		composeCodemarkActive: context.composeCodemarkActive,
-		currentCodeErrorId: context.currentCodeErrorId,
+		currentCodeErrorGuid: context.currentCodeErrorGuid,
 		currentCodemarkId: context.currentCodemarkId,
 		currentPullRequestId: context.currentPullRequest ? context.currentPullRequest.id : undefined,
 		currentPullRequestView: context.currentPullRequest
@@ -838,7 +838,7 @@ export default connect(mapStateToProps, {
 	openPanel,
 	setCurrentCodemark,
 	editCodemark,
-	setCurrentCodeError,
+	setCurrentCodeErrorData,
 	setCurrentInstrumentationOptions,
 	setCurrentPixieDynamicLoggingOptions,
 	setCurrentPullRequest,

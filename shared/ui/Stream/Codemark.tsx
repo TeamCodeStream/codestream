@@ -35,7 +35,7 @@ import { getCodeError } from "../store/codeErrors/reducer";
 import { addCodemarks, NewCodemarkAttributes } from "../store/codemarks/actions";
 import {
 	repositionCodemark,
-	setCurrentCodeError,
+	setCurrentCodeErrorData,
 	setCurrentCodemark,
 	setCurrentPullRequest,
 	setCurrentReview,
@@ -112,7 +112,7 @@ interface DispatchProps {
 	addCodemarks: typeof addCodemarks;
 	setCurrentReview: typeof setCurrentReview;
 	setCurrentPullRequest: typeof setCurrentPullRequest;
-	setCurrentCodeError: typeof setCurrentCodeError;
+	setCurrentCodeErrorData: typeof setCurrentCodeErrorData;
 }
 
 interface ConnectedProps {
@@ -1650,7 +1650,7 @@ export class Codemark extends React.Component<Props, State> {
 												className="external-link"
 												onClick={() => {
 													this.props.setCurrentCodemark();
-													this.props.setCurrentCodeError(this.props.codeError!.id);
+													this.props.setCurrentCodeErrorData(this.props.codeError?.entityGuid);
 												}}
 											>
 												<Icon name="review" />
@@ -2213,7 +2213,7 @@ export default connect(
 		createPost,
 		setCurrentReview,
 		setCurrentPullRequest,
-		setCurrentCodeError,
+		setCurrentCodeErrorData,
 		currentUserIsAdminSelector,
 	}
 	// @ts-ignore

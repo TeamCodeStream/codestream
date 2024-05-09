@@ -2,7 +2,6 @@ import { mapFilter } from "@codestream/webview/utils";
 import { uniq } from "lodash-es";
 import { createSelector } from "reselect";
 import { CodeStreamState } from "..";
-import { getCodeError } from "../codeErrors/reducer";
 import { CodeErrorsState } from "../codeErrors/types";
 import { CodemarksState } from "../codemarks/types";
 import { ActionType } from "../common";
@@ -11,7 +10,7 @@ import { ReviewsState } from "../reviews/types";
 import * as actions from "./actions";
 import { ActivityFeedActionType, ActivityFeedActivity, ActivityFeedState } from "./types";
 import { CodemarkPlus } from "@codestream/protocols/agent";
-import { CSCodeError, CSReview } from "@codestream/protocols/api";
+import { CSReview } from "@codestream/protocols/api";
 
 type ActivityFeedAction = ActionType<typeof actions>;
 
@@ -54,13 +53,7 @@ export interface ReviewActivityItem extends ActivityItem<CSReview> {
 	type: "review";
 }
 
-export interface CodeErrorActivityItem extends ActivityItem<CSCodeError> {
-	type: "codeError";
-}
-
-export type ActivityFeedResponse = Array<
-	CodemarkActivityItem | ReviewActivityItem | CodeErrorActivityItem
->;
+export type ActivityFeedResponse = Array<CodemarkActivityItem | ReviewActivityItem>;
 
 export const getActivity = createSelector(
 	(state: CodeStreamState) => state.codemarks,
@@ -92,14 +85,6 @@ export const getActivity = createSelector(
 					return {
 						type: model,
 						record: review,
-					};
-				}
-				case "codeError": {
-					const codeError = getCodeError(codeErrorsState, id);
-					if (codeError == null || codeError.deactivated) return;
-					return {
-						type: model,
-						record: codeError,
 					};
 				}
 				default:

@@ -1575,7 +1575,7 @@ export const Observability = React.memo((props: Props) => {
 																										observabilityAssignments={
 																											observabilityAssignments
 																										}
-																										entityGuid={ea.entityGuid}
+																										errorEntityGuid={ea.entityGuid}
 																										noAccess={noErrorsAccess}
 																										errorMsg={observabilityErrorsError}
 																										domain={ea?.domain}

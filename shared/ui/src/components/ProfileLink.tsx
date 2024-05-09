@@ -5,7 +5,7 @@ import styled from "styled-components";
 import { WebviewModals } from "@codestream/webview/ipc/webview.protocol.common";
 import {
 	openModal,
-	setCurrentCodeError,
+	setCurrentCodeErrorData,
 	setCurrentCodemark,
 	setCurrentReview,
 	setProfileUser,
@@ -42,7 +42,7 @@ const Component = connect(mapStateToProps, {
 	setProfileUser,
 	setCurrentCodemark,
 	setCurrentReview,
-	setCurrentCodeError,
+	setCurrentCodeErrorData,
 })(ProfileLink);
 
 export { Component as ProfileLink };

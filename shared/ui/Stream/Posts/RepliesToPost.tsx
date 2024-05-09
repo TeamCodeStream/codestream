@@ -12,7 +12,7 @@ import cx from "classnames";
 import { groupBy } from "lodash-es";
 import React, { RefObject, useCallback, useEffect } from "react";
 import styled from "styled-components";
-import { createPost, deletePost, fetchThread, markItemRead } from "../actions";
+import { createPost, fetchThread, markItemRead } from "../actions";
 import Button from "../Button";
 import { confirmPopup } from "../Confirm";
 import Menu from "../Menu";
@@ -20,6 +20,7 @@ import { MessageInput, AttachmentField } from "../MessageInput";
 import { Reply } from "./Reply";
 import { MenuItem } from "@codestream/webview/src/components/controls/InlineMenu";
 import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
+import { deletePostApi } from "@codestream/webview/store/posts/thunks";
 
 const ComposeWrapper = styled.div.attrs(() => ({
 	className: "compose codemark-compose",
@@ -141,7 +142,13 @@ export const RepliesToPost = (props: {
 									className: "delete",
 									wait: true,
 									action: () => {
-										dispatch(deletePost(reply.streamId, reply.id, reply.sharedTo));
+										dispatch(
+											deletePostApi({
+												streamId: reply.streamId,
+												postId: reply.id,
+												sharedTo: reply.sharedTo,
+											})
+										);
 									},
 								},
 							],

@@ -8,7 +8,7 @@ import {
 	RiskSeverity,
 	ThirdPartyProviders,
 } from "./agent.protocol";
-import { CSEligibleJoinCompany, CSPossibleAuthDomain, CSReviewCheckpoint } from "./api.protocol";
+import { CSEligibleJoinCompany, CSPossibleAuthDomain, CSReviewCheckpoint, ObjectInfo } from "./api.protocol";
 
 /* NOTE: there can be dynamic panel names that begin with configure-provider- or configure-enterprise- */
 export enum WebviewPanels {
@@ -326,15 +326,6 @@ export interface CSReview extends CSEntity {
 	pullRequestProviderId?: string;
 }
 
-export function isCSCodeError(object: any): object is CSCodeError {
-	const maybeCodeError: Partial<CSCodeError> = object;
-	return (
-		maybeCodeError.objectId != null &&
-		maybeCodeError.objectType != null &&
-		maybeCodeError.objectType.toLowerCase() === "errorgroup"
-	);
-}
-
 export interface CSCodeErrorResolutions {
 	[userId: string]: { resolvedAt: number };
 }
@@ -367,23 +358,18 @@ export interface CSStackTraceInfo {
 	error?: string;
 }
 
-export interface CSStackTraceError {
-	error: string;
-}
-
-export interface CSCodeError extends CSEntity {
+export interface CSCodeError {
+	entityGuid: string;
 	title: string;
 	text?: string;
 	stackTraces: CSStackTraceInfo[]; // (CSStackTraceInfo | CSStackTraceError)[];
 	providerUrl?: string;
 	assignees?: string[];
-
 	// an array of people who have resolved the code error
 	resolvedBy?: CSCodeErrorResolutions;
-
-	teamId: string;
-	streamId: string;
-	postId: string;
+	teamId?: string;
+	streamId?: string;
+	postId?: string;
 	fileStreamIds?: string[];
 	status?: CSCodeErrorStatus;
 	numReplies: number;
@@ -392,9 +378,8 @@ export interface CSCodeError extends CSEntity {
 	codeAuthorIds?: string[];
 	permalink?: string;
 	resolvedAt?: number;
-	objectId?: string;
 	objectType?: "errorGroup";
-	objectInfo?: { [key: string]: string | boolean };
+	objectInfo: ObjectInfo
 	accountId?: number;
 	traceId?: string;
 }

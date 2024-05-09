@@ -1,7 +1,7 @@
 "use strict";
 import { Range, RequestType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
 import { BlameAuthor, CodeDelimiterStyles } from "./agent.protocol";
-import { CodeErrorPlus, CreateCodeErrorRequest } from "./agent.protocol.codeErrors";
+import { CodeErrorPlus, CreateShareableCodeErrorRequest } from "./agent.protocol.codeErrors";
 import {
 	CodemarkPlus,
 	CreateCodemarkRequest,
@@ -85,7 +85,8 @@ export interface CreatePostRequest {
 	parentPostId?: string;
 	codemark?: CreateCodemarkRequest;
 	review?: CreateReviewRequest;
-	codeError?: CreateCodeErrorRequest;
+	codeError?: CreateShareableCodeErrorRequest;
+	errorGuid?: string;
 	entryPoint?: string;
 	crossPostIssueValues?: CrossPostIssueValues;
 	dontSendEmail?: boolean;
@@ -226,7 +227,6 @@ export interface FetchActivityResponse {
 	posts: PostPlus[];
 	codemarks: CodemarkPlus[];
 	reviews: CSReview[];
-	codeErrors: CSCodeError[];
 	records: string[];
 	more?: boolean;
 }

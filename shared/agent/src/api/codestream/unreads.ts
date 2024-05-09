@@ -154,34 +154,12 @@ export class CodeStreamUnreads {
 		if (!repoSettings || !repoSettings.length) return posts;
 
 		try {
-			const codeErrors = (
-				await SessionContainer.instance().codeErrors.get({
-					streamIds: streamIds,
-				})
-			).codeErrors;
-
 			posts = posts
 				.filter(_ => {
 					if (_.mentionedUserIds && _.mentionedUserIds.includes(this._api.userId)) {
 						return _;
 					}
 
-					if (_.codeErrorId) {
-						const codeError = codeErrors.find(c => c.id === _.codeErrorId);
-						if (codeError) {
-							let found: any = undefined;
-							for (const repoSetting of repoSettings) {
-								const match = codeError.stackTraces?.find(m => {
-									return repoSetting.id === m.repoId;
-								});
-								found = match ? _ : undefined;
-								if (found) {
-									return found;
-								}
-							}
-							return found;
-						}
-					}
 					return undefined;
 				})
 				.filter(Boolean);

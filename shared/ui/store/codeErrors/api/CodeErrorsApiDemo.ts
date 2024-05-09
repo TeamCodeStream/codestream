@@ -1,11 +1,7 @@
 import {
-	ClaimCodeErrorRequest,
-	ClaimCodeErrorResponse,
 	CreateShareableCodeErrorRequest,
 	CreateShareableCodeErrorResponse,
 	ExecuteThirdPartyTypedType,
-	FetchCodeErrorsRequest,
-	FetchCodeErrorsResponse,
 	FetchPostRepliesRequest,
 	FetchPostRepliesResponse,
 	GetNewRelicErrorGroupRequest,
@@ -27,7 +23,6 @@ import {
 
 import { CodeErrorsApi } from "@codestream/webview/store/codeErrors/api/CodeErrorsApi";
 import { HostApi } from "@codestream/webview/webview-api";
-import { getCodeErrorsResponse } from "@codestream/webview/store/codeErrors/api/data/fetchCodeErrorsResponse";
 import { getObservabilityErrorsResponse } from "@codestream/webview/store/codeErrors/api/data/getObservabilityErrorsResponse";
 import {
 	codeErrorId,
@@ -38,7 +33,6 @@ import {
 } from "@codestream/webview/store/codeErrors/api/data/createSharableCodeErrorResponse";
 import { getFetchPostRepliesResponse } from "@codestream/webview/store/codeErrors/api/data/fetchPostReplies";
 import { getNewRelicErrorGroupResponse } from "@codestream/webview/store/codeErrors/api/data/getNewRelicErrorGroupResponse";
-import { getClaimCodeErrorResponse } from "@codestream/webview/store/codeErrors/api/data/claimCodeErrorResponse";
 
 class CodeErrorsApiDemo implements CodeErrorsApi {
 	private _currentRepoId: string | undefined;
@@ -62,11 +56,6 @@ class CodeErrorsApiDemo implements CodeErrorsApi {
 		return result;
 	}
 
-	async fetchCodeErrors(request: FetchCodeErrorsRequest): Promise<FetchCodeErrorsResponse> {
-		const response = getCodeErrorsResponse(postId, streamId, codeErrorId, this._currentRepoId!);
-		return response;
-	}
-
 	async getNewRelicErrorGroup(
 		request: GetNewRelicErrorGroupRequest
 	): Promise<GetNewRelicErrorGroupResponse> {
@@ -78,11 +67,6 @@ class CodeErrorsApiDemo implements CodeErrorsApi {
 		request: GetObservabilityErrorsRequest
 	): Promise<GetObservabilityErrorsResponse> {
 		return getObservabilityErrorsResponse(this._currentRepoId!, this._entityId!);
-	}
-
-	async claimCodeError(request: ClaimCodeErrorRequest): Promise<ClaimCodeErrorResponse> {
-		const response = getClaimCodeErrorResponse(this._currentRepoId!);
-		return response;
 	}
 
 	async resolveStackTrace(request: ResolveStackTraceRequest): Promise<ResolveStackTraceResponse> {

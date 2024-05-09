@@ -5,7 +5,6 @@ import { Range } from "vscode-languageserver-protocol";
 
 export enum CodeErrorsActionsTypes {
 	AddCodeErrors = "ADD_CODEERRORS",
-	SaveCodeErrors = "@codeErrors/SaveCodeErrors",
 	SetFunctionToEdit = "@codeErrors/SetFunctionToEdit",
 	SetFunctionToEditFailed = "@codeErrors/SetFunctionToEditFailed",
 	SetGrokError = "@codeErrors/SetGrokError",
@@ -13,7 +12,6 @@ export enum CodeErrorsActionsTypes {
 	SetGrokRepliesLength = "@codeErrors/SetGrokRepliesLength",
 	UpdateCodeErrors = "@codeErrors/UpdateCodeErrors",
 	Delete = "@codeErrors/Delete",
-	Bootstrap = "@codeErrors/Bootstrap",
 	HandleDirectives = "@codeErrors/HandleDirectives",
 	AddProviderError = "@codeErrors/AddError",
 	ClearProviderError = "@codeErrors/ClearError",

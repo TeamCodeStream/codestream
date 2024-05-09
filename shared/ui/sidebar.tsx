@@ -41,7 +41,6 @@ import {
 	handleGrokChonk,
 	handleGrokError,
 	openErrorGroup,
-	processCodeErrorsMessage,
 	resolveStackTraceLine,
 } from "@codestream/webview/store/codeErrors/thunks";
 import { updateConfigs } from "@codestream/webview/store/configs/slice";
@@ -66,7 +65,6 @@ import {
 	HostDidReceiveRequestNotificationType,
 	RouteControllerType,
 	RouteWithQuery,
-	ShowCodeErrorNotificationType,
 	ShowCodemarkNotificationType,
 	ShowProgressIndicatorType,
 	ShowPullRequestNotificationType,
@@ -89,7 +87,6 @@ import {
 	apiUpgradeRequired,
 } from "./store/apiVersioning/actions";
 import apiCapabilities from "./store/capabilities/slice";
-import { fetchCodeError } from "./store/codeErrors/actions";
 import { getCodeError } from "./store/codeErrors/reducer";
 import { getCodemark } from "./store/codemarks/reducer";
 import { CodemarksState } from "./store/codemarks/types";
@@ -99,7 +96,7 @@ import {
 	clearCurrentPullRequest,
 	focus,
 	goToSignup,
-	setCurrentCodeError,
+	setCurrentCodeErrorData,
 	setCurrentCodemark,
 	setCurrentMethodLevelTelemetry,
 	setCurrentObservabilityAnomaly,
@@ -274,9 +271,6 @@ function listenForEvents(store: StoreType) {
 				break;
 			case ChangeDataType.ApiCapabilities:
 				store.dispatch(apiCapabilitiesUpdated(data));
-				break;
-			case ChangeDataType.CodeErrors:
-				store.dispatch(processCodeErrorsMessage(data));
 				break;
 			case ChangeDataType.AsyncError:
 				// Only 1 error type right now
@@ -458,16 +452,6 @@ function listenForEvents(store: StoreType) {
 		store.dispatch(setCurrentReview(e.reviewId, { openFirstDiff: e.openFirstDiff }));
 	});
 
-	api.on(ShowCodeErrorNotificationType, async e => {
-		const { codeErrors } = store.getState();
-		const codeError = getCodeError(codeErrors, e.codeErrorId);
-		if (!codeError) {
-			await store.dispatch(fetchCodeError(e.codeErrorId));
-		}
-		store.dispatch(clearCurrentPullRequest());
-		store.dispatch(setCurrentCodeError(e.codeErrorId));
-	});
-
 	api.on(ShowPullRequestNotificationType, async e => {
 		store.dispatch(setCurrentReview());
 		if (e.url) {
@@ -568,7 +552,8 @@ function listenForEvents(store: StoreType) {
 								let { codeErrors } = store.getState();
 								let codeError = getCodeError(codeErrors, route.id);
 								if (!codeError) {
-									await store.dispatch(fetchCodeError(route.id));
+									// TODO lookup in NR instead of CS
+									// await store.dispatch(fetchCodeError(route.id));
 									let { codeErrors } = store.getState(); // i luv redux
 									codeError = getCodeError(codeErrors, route.id);
 								}
@@ -579,7 +564,7 @@ function listenForEvents(store: StoreType) {
 								}
 
 								store.dispatch(closeAllPanels());
-								store.dispatch(setCurrentCodeError(route.id));
+								store.dispatch(setCurrentCodeErrorData(route.id));
 							}
 							break;
 						}
@@ -684,8 +669,6 @@ function listenForEvents(store: StoreType) {
 									// cache the sessionStart here in case the IDE is restarted
 									sessionStart: state.context.sessionStart,
 									relatedRepos: response?.relatedRepos,
-									pendingEntityId: definedQuery.query.entityId,
-									pendingErrorGroupGuid: definedQuery.query.errorGroupGuid,
 									openType: "Open in IDE Flow",
 									environment: definedQuery.query.env,
 									stackSourceMap: response?.stackSourceMap,

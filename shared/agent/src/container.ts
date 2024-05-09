@@ -1,4 +1,3 @@
-"use strict";
 import { CodeStreamAgent } from "agent";
 import { DocumentManager } from "./documentManager";
 import { ErrorReporter } from "./errorReporter";
@@ -6,7 +5,6 @@ import { GitService } from "./git/gitService";
 import { GitServiceLite } from "./git/gitServiceLite";
 import { RepositoryLocator } from "./git/repositoryLocator";
 import { Logger } from "./logger";
-import { CodeErrorsManager } from "./managers/codeErrorsManager";
 import { CompaniesManager } from "./managers/companiesManager";
 import { FilesManager } from "./managers/filesManager";
 import { IgnoreFilesManager } from "./managers/ignoreFilesManager";
@@ -96,11 +94,6 @@ export class SessionServiceContainer {
 		return this._textFiles;
 	}
 
-	private readonly _codeErrors: CodeErrorsManager;
-	get codeErrors() {
-		return this._codeErrors;
-	}
-
 	private readonly _nr: NRManager;
 	get nr() {
 		return this._nr;
@@ -126,7 +119,6 @@ export class SessionServiceContainer {
 		this._companies = new CompaniesManager(session);
 		this._ignoreFiles = new IgnoreFilesManager(session);
 		this._textFiles = new TextFilesManager(session);
-		this._codeErrors = new CodeErrorsManager(session);
 		this._nr = new NRManager(session);
 		this._repoIdentifier = new RepoIdentificationManager(session);
 	}

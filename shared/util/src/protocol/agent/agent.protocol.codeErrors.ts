@@ -1,8 +1,6 @@
 "use strict";
 import { RequestType, Range } from "vscode-languageserver-protocol";
 import {
-	CodeBlockSource,
-	CreateMarkerRequest,
 	NewRelicErrorGroup,
 	PostPlus,
 } from "./agent.protocol";
@@ -12,10 +10,7 @@ import {
 	CSCreateCodeErrorRequest,
 	CSDirectStream,
 	CSGetCodeErrorsResponse,
-	CSMarker,
 	CSMarkerLocations,
-	CSRepository,
-	CSStream,
 	CSUpdateCodeErrorRequest,
 	CSUpdateCodeErrorResponse,
 } from "./api.protocol";
@@ -25,27 +20,6 @@ export interface CodeErrorPlus extends CSCodeError {
 	errorGroup?: NewRelicErrorGroup;
 }
 
-export interface CreateCodeErrorRequest extends Omit<CSCreateCodeErrorRequest, "teamId"> {
-	markers?: CreateMarkerRequest[];
-	entryPoint?: string;
-}
-
-export interface CreateCodeErrorResponse {
-	codeError: CSCodeError;
-	markers?: CSMarker[];
-	markerLocations?: CSMarkerLocations[];
-	streams?: CSStream[];
-	repos?: CSRepository[];
-}
-export const CreateCodeErrorRequestType = new RequestType<
-	CreateCodeErrorRequest,
-	CreateCodeErrorResponse,
-	void,
-	void
->("codestream/codeErrors/create");
-
-export type ShareableCodeErrorAttributes = CreateCodeErrorRequest;
-
 export type CodeBlock = {
 	uri: string;
 	code: string;
@@ -53,18 +27,7 @@ export type CodeBlock = {
 	// scm?: CodeBlockSource;
 };
 
-export interface CreateShareableCodeErrorRequest {
-	attributes: ShareableCodeErrorAttributes;
-	entryPoint?: string;
-	mentionedUserIds?: string[];
-	addedUsers?: string[];
-	replyPost?: { text: string; mentionedUserIds?: string[] };
-	codeBlock?: CodeBlock;
-	language?: string;
-	analyze: boolean;
-	reinitialize: boolean;
-	parentPostId?: string;
-}
+export type CreateShareableCodeErrorRequest = CSCreateCodeErrorRequest;
 
 export interface CreateShareableCodeErrorResponse {
 	codeError: CodeErrorPlus;
@@ -142,13 +105,6 @@ export interface GetCodeErrorRequest {
 export interface GetCodeErrorResponse {
 	codeError: CSCodeError;
 }
-
-export const GetCodeErrorRequestType = new RequestType<
-	GetCodeErrorRequest,
-	GetCodeErrorResponse,
-	void,
-	void
->("codestream/codeError");
 
 export interface SetCodeErrorStatusRequest {
 	id: string;

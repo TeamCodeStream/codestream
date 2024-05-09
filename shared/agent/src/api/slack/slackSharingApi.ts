@@ -51,7 +51,6 @@ import {
 	fromSlackPost,
 	fromSlackPostId,
 	fromSlackUser,
-	toSlackCodeErrorPostBlocks,
 	toSlackPostBlocks,
 	toSlackPostText,
 	toSlackReviewPostBlocks,
@@ -428,11 +427,6 @@ export class SlackSharingApiProvider {
 				text = `${review.title || ""}${review.title && review.text ? `\n\n` : ""}${
 					review.text || ""
 				}`;
-			} else if (request.codeError != null) {
-				const codeError = request.codeError;
-				blocks = toSlackCodeErrorPostBlocks(codeError, userMaps, repoHash, this._slackUserId);
-				// Set the fallback (notification) content for the message
-				text = `${codeError.title}`;
 			} else if (text) {
 				blocks = toSlackTextPostBlocks(text, request.parentText, request.files);
 			}

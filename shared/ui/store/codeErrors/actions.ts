@@ -1,11 +1,9 @@
 import {
-	CodeBlock,
 	CSAsyncGrokError,
 	DeleteCodeErrorRequestType,
-	GetCodeErrorRequestType,
 	NewRelicErrorGroup,
 } from "@codestream/protocols/agent";
-import { CSCodeError, CSStackTraceInfo } from "@codestream/protocols/api";
+import { CSCodeError } from "@codestream/protocols/api";
 import { logError } from "@codestream/webview/logger";
 import { HostApi } from "@codestream/webview/webview-api";
 import { action } from "../common";
@@ -13,16 +11,10 @@ import { CodeErrorsActionsTypes, FunctionToEdit } from "./types";
 
 export const reset = () => action("RESET");
 
-export const _bootstrapCodeErrors = (codeErrors: CSCodeError[]) =>
-	action(CodeErrorsActionsTypes.Bootstrap, codeErrors);
-
 export const addCodeErrors = (codeErrors: CSCodeError[]) =>
 	action(CodeErrorsActionsTypes.AddCodeErrors, codeErrors);
 
 export const removeCodeError = (id: string) => action(CodeErrorsActionsTypes.Delete, id);
-
-export const saveCodeErrors = (codeErrors: CSCodeError[]) =>
-	action(CodeErrorsActionsTypes.SaveCodeErrors, codeErrors);
 
 export const _updateCodeErrors = (codeErrors: CSCodeError[]) =>
 	action(CodeErrorsActionsTypes.UpdateCodeErrors, codeErrors);
@@ -46,29 +38,6 @@ export const setDemoMode = (enabled: boolean) =>
 	action(CodeErrorsActionsTypes.SetDemoMode, enabled);
 
 export const resetNrAi = () => action(CodeErrorsActionsTypes.ResetNrAi);
-
-export interface NewCodeErrorAttributes {
-	accountId?: number;
-	objectId?: string;
-	objectType?: "errorGroup";
-	objectInfo?: any;
-	title: string;
-	text?: string;
-	stackTraces: CSStackTraceInfo[];
-	assignees?: string[];
-	addedUsers?: string[];
-	entryPoint?: string;
-	replyPost?: {
-		text: string;
-		mentionedUserIds?: string[];
-	};
-	providerUrl?: string;
-	codeBlock?: CodeBlock;
-	language?: string;
-	analyze: boolean;
-	reinitialize: boolean;
-	parentPostId?: string;
-}
 
 export const _deleteCodeError = (id: string) => action(CodeErrorsActionsTypes.Delete, id);
 
@@ -96,12 +65,6 @@ interface AdvancedEditableCodeErrorAttributes {
 export type EditableAttributes = Partial<
 	Pick<CSCodeError, "title" | "assignees"> & AdvancedEditableCodeErrorAttributes
 >;
-
-export const fetchCodeError = (codeErrorId: string) => async dispatch => {
-	const response = await HostApi.instance.send(GetCodeErrorRequestType, { codeErrorId });
-
-	if (response.codeError) return dispatch(saveCodeErrors([response.codeError]));
-};
 
 export const handleDirectives = (id: string, data: any) =>
 	action(CodeErrorsActionsTypes.HandleDirectives, {
@@ -140,6 +103,3 @@ export const _isLoadingErrorGroup = (errorGroupGuid: string, data: any) =>
 		id: errorGroupGuid,
 		data,
 	});
-
-export const PENDING_CODE_ERROR_ID_PREFIX = "PENDING";
-export const PENDING_CODE_ERROR_ID_FORMAT = id => `${PENDING_CODE_ERROR_ID_PREFIX}-${id}`;

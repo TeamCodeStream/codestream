@@ -107,9 +107,7 @@ export function SharingModal(props: SharingModalProps) {
 		text?: string;
 		title: string;
 		createdAt: number;
-	} = props.codemark ||
-		props.review ||
-		props.codeError || { creatorId: "", text: "", title: "", createdAt: 0 };
+	} = props.codemark || props.review || { creatorId: "", text: "", title: "", createdAt: 0 }; // props.codeError || // TODO fix??
 	const shareTargetType = props.codemark
 		? "Codemark"
 		: props.review
@@ -203,10 +201,10 @@ export function SharingModal(props: SharingModalProps) {
 			};
 			if (
 				props.codeError &&
-				props.codeError.objectId &&
+				props.codeError.entityGuid &&
 				props.codeError.objectType === "errorGroup"
 			) {
-				trackingData["Error Group ID"] = props.codeError.objectId!;
+				trackingData["Error Group ID"] = props.codeError.entityGuid;
 			}
 			// HostApi.instance.track(`Shared ${shareTargetType}`, trackingData);
 

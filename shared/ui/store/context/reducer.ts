@@ -130,11 +130,11 @@ export function reduceContext(
 			return { ...state, currentReviewId: action.payload.reviewId };
 		case ContextActionsType.SetCurrentReviewOptions:
 			return { ...state, currentReviewOptions: action.payload.options };
-		case ContextActionsType.SetCurrentCodeError:
+		case ContextActionsType.SetCurrentCodeErrorData:
 			return {
 				...state,
-				currentCodeErrorId: action.payload.codeErrorId,
 				currentCodeErrorData: action.payload.data,
+				currentCodeErrorGuid: action.payload.errorGuid,
 			};
 		case ContextActionsType.SetCurrentRepo:
 			return {

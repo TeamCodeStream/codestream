@@ -6,9 +6,6 @@ import {
 	CreateShareableCodeErrorRequestType,
 	CreateShareableCodeErrorResponse,
 	ExecuteThirdPartyTypedType,
-	FetchCodeErrorsRequest,
-	FetchCodeErrorsRequestType,
-	FetchCodeErrorsResponse,
 	FetchPostRepliesRequest,
 	FetchPostRepliesRequestType,
 	FetchPostRepliesResponse,
@@ -50,11 +47,6 @@ class CodeErrorsApiImpl implements CodeErrorsApi {
 			streamId,
 			postId: postId,
 		});
-		return result;
-	}
-
-	async fetchCodeErrors(request: FetchCodeErrorsRequest): Promise<FetchCodeErrorsResponse> {
-		const result = await HostApi.instance.send(FetchCodeErrorsRequestType, request);
 		return result;
 	}
 

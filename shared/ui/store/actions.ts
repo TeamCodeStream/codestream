@@ -57,6 +57,7 @@ export const bootstrap = (data?: SignedInBootstrapData) => async (dispatch, getS
 		delete bootstrapCore.context["panelStack"];
 		delete bootstrapCore.context["onboardStep"];
 		delete bootstrapCore.context["wantNewRelicOptions"];
+		delete bootstrapCore.context["currentCodeErrorGuid"];
 		if (bootstrapCore.session.userId === undefined) {
 			dispatch(
 				bootstrapEssentials({

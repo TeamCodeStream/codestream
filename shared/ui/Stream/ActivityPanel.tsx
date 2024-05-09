@@ -14,14 +14,9 @@ import * as userSelectors from "../store/users/reducer";
 import styled from "styled-components";
 import { last as _last } from "lodash-es";
 import { CodeStreamState } from "../store";
-import {
-	setCurrentCodemark,
-	setCurrentReview,
-	setCurrentCodeError,
-} from "../store/context/actions";
+import { setCurrentCodemark, setCurrentReview } from "../store/context/actions";
 import {
 	ActivityFeedResponse,
-	CodeErrorActivityItem,
 	CodemarkActivityItem,
 	getActivity,
 	ReviewActivityItem,
@@ -51,9 +46,7 @@ import Menu from "./Menu";
 import { FormattedPlural } from "react-intl";
 import { Codemark } from "./Codemark/index";
 import { Review } from "./Review";
-import { CodeError } from "./CodeError";
 import { saveReviews } from "../store/reviews/actions";
-import { saveCodeErrors } from "../store/codeErrors/actions";
 import { Reply } from "./Posts/Reply";
 import { LoadingMessage } from "../src/components/LoadingMessage";
 import { Headshot } from "../src/components/Headshot";
@@ -211,18 +204,6 @@ export const ActivityPanel = () => {
 					}
 				}
 				return found;
-			} else if (_.type === "codeError") {
-				let found: CodeErrorActivityItem | undefined = undefined;
-				for (const repoSetting of repoSettings) {
-					const match = _.record.stackTraces?.find(m => {
-						return repoSetting.id === m.repoId;
-					});
-					found = match ? _ : undefined;
-					if (found) {
-						return found;
-					}
-				}
-				return found;
 			}
 			return [];
 		});
@@ -276,7 +257,6 @@ export const ActivityPanel = () => {
 		dispatch(savePosts(response.posts));
 		dispatch(saveCodemarks(response.codemarks));
 		dispatch(saveReviews(response.reviews));
-		dispatch(saveCodeErrors(response.codeErrors));
 		dispatch(
 			addOlderActivity({
 				activities: response.records,
@@ -613,65 +593,6 @@ export const ActivityPanel = () => {
 											return;
 
 										dispatch(setCurrentReview(record.id));
-									}}
-									renderFooter={Footer => (
-										<Footer
-											style={{ borderTop: "none", paddingLeft: 0, paddingRight: 0, marginTop: 0 }}
-										>
-											<RepliesForActivity parentPost={post} />
-										</Footer>
-									)}
-								/>
-							)}
-						</ActivityItem>
-					</ActivityWrapper>
-				);
-			}
-
-			if (type === "codeError") {
-				if (
-					derivedState.codemarkTypeFilter != "all" &&
-					"codeError" !== derivedState.codemarkTypeFilter
-				)
-					return null;
-
-				const repo = null;
-
-				return (
-					<ActivityWrapper key={record.id}>
-						<ActivityVerb>
-							<ProfileLink id={person.id}>
-								<Headshot size={24} person={person} />
-							</ProfileLink>
-							<div>
-								<b>{person.username}</b>{" "}
-								<span className="verb">
-									started a conversation about a code error {repo && <>in {repo}</>}
-								</span>{" "}
-								<Timestamp relative time={record.createdAt} className="no-padding" />
-							</div>
-						</ActivityVerb>
-						<ActivityItem streamId={record.streamId} postId={record.postId}>
-							{({ className, post }) => (
-								<CodeError
-									className={className}
-									codeError={record}
-									readOnly={true}
-									collapsed
-									hoverEffect
-									onClick={e => {
-										const target = e.target;
-										if (
-											target &&
-											// @ts-ignore
-											(target.closest(".emoji-mart") || target.closest(".reactions"))
-										)
-											return;
-										dispatch(
-											setCurrentCodeError(record.id, {
-												openType: "Activity Feed",
-											})
-										);
 									}}
 									renderFooter={Footer => (
 										<Footer

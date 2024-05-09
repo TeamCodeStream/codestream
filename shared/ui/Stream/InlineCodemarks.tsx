@@ -121,7 +121,7 @@ interface Props {
 	isInVscode: boolean;
 	webviewFocused: boolean;
 	currentReviewId?: string;
-	currentCodeErrorId?: string;
+	currentCodeErrorGuid?: string;
 	currentPullRequestCommentId?: string;
 	currentPullRequestId?: string;
 	currentPullRequestProviderId?: string;
@@ -520,12 +520,12 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const {
 			textEditorUri,
 			currentReviewId,
-			currentCodeErrorId,
+			currentCodeErrorGuid,
 			currentPullRequestId,
 			composeCodemarkActive,
 		} = this.props;
 
-		if (composeCodemarkActive || currentReviewId || currentCodeErrorId || currentPullRequestId)
+		if (composeCodemarkActive || currentReviewId || currentCodeErrorGuid || currentPullRequestId)
 			return null;
 
 		if (textEditorUri === undefined) {
@@ -644,11 +644,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			metrics,
 			currentReviewId,
 			currentPullRequestId,
-			currentCodeErrorId,
+			currentCodeErrorGuid,
 		} = this.props;
 		const { numLinesVisible } = this.state;
 
-		if (currentReviewId || currentPullRequestId || currentCodeErrorId) return null;
+		if (currentReviewId || currentPullRequestId || currentCodeErrorGuid) return null;
 
 		const numVisibleRanges = textEditorVisibleRanges.length;
 
@@ -1155,7 +1155,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const {
 			currentReviewId,
 			currentPullRequestId,
-			currentCodeErrorId,
+			currentCodeErrorGuid,
 			composeCodemarkActive,
 			expandedPullRequestGroupIndex,
 			currentPullRequestProviderId,
@@ -1171,7 +1171,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				currentPullRequestId,
 				expandedPullRequestGroupIndex
 			);
-		} else if (currentCodeErrorId) {
+		} else if (currentCodeErrorGuid) {
 			this.props.closeAllModals();
 			this.props.closeAllPanels();
 		} else if (composeCodemarkActive) {
@@ -1185,7 +1185,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const {
 			currentReviewId,
 			currentPullRequestId,
-			currentCodeErrorId,
+			currentCodeErrorGuid,
 			currentPullRequestProviderId,
 			composeCodemarkActive,
 			currentPullRequestCommentId,
@@ -1203,15 +1203,15 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			<Modal
 				noScroll={!currentPullRequestCommentId ? true : undefined}
 				noPadding={!currentPullRequestCommentId ? true : undefined}
-				onClose={isGitLabPR || currentCodeErrorId ? undefined : () => this.close()}
-				sidebarBackground={!!currentReviewId || !!currentCodeErrorId}
+				onClose={isGitLabPR || currentCodeErrorGuid ? undefined : () => this.close()}
+				sidebarBackground={!!currentReviewId || !!currentCodeErrorGuid}
 				translucent={currentPullRequestCommentId ? true : undefined}
 			>
 				<div style={{ overflow: isGitLabPR ? "visible" : "hidden" }}>
 					{currentReviewId ? (
 						<ReviewNav reviewId={currentReviewId} composeOpen={composeOpen} />
-					) : currentCodeErrorId ? (
-						<CodeErrorNav codeErrorId={currentCodeErrorId} composeOpen={composeOpen} />
+					) : currentCodeErrorGuid ? (
+						<CodeErrorNav composeOpen={composeOpen} />
 					) : currentPullRequestId ? (
 						currentPullRequestProviderId === "github*com" ||
 						currentPullRequestProviderId === "github/enterprise" ? (
@@ -1239,14 +1239,14 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					) : (
 						this.renderHeader()
 					)}
-					{(!currentPullRequestId || currentCodeErrorId) && <CreateCodemarkIcons />}
+					{(!currentPullRequestId || currentCodeErrorGuid) && <CreateCodemarkIcons />}
 					{this.renderCodemarkForm()}
 					{this.state.showPRInfoModal && (
 						<PRInfoModal onClose={() => this.setState({ showPRInfoModal: false })} />
 					)}
 					{this.state.isLoading ? null : this.renderCodemarks()}
 					{!currentReviewId &&
-						!currentCodeErrorId &&
+						!currentCodeErrorGuid &&
 						!currentPullRequestId &&
 						this.renderViewSelectors()}
 				</div>
@@ -1413,7 +1413,7 @@ const mapStateToProps = (state: CodeStreamState) => {
 		hasPRProvider,
 		currentStreamId: context.currentStreamId,
 		currentReviewId: context.currentReviewId,
-		currentCodeErrorId: context.currentCodeErrorId,
+		currentCodeErrorGuid: context.currentCodeErrorGuid,
 		currentPullRequestId: context.currentPullRequest ? context.currentPullRequest.id : undefined,
 		currentPullRequestProviderId: context.currentPullRequest
 			? context.currentPullRequest.providerId

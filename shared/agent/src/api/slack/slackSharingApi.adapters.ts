@@ -1,5 +1,5 @@
 "use strict";
-import { CodeErrorPlus, CodemarkPlus, ReviewPlus } from "@codestream/protocols/agent";
+import { CodemarkPlus, ReviewPlus } from "@codestream/protocols/agent";
 import {
 	CodemarkType,
 	CSChannelStream,
@@ -15,13 +15,7 @@ import { ActionsBlock, KnownBlock, MessageAttachment } from "@slack/web-api";
 
 import { Logger } from "../../logger";
 import { providerDisplayNamesByNameKey } from "../../providers/provider";
-import {
-	Marker,
-	toActionId,
-	toCodeErrorActionId,
-	toExternalActionId,
-	toReviewActionId,
-} from "../extensions";
+import { Marker, toActionId, toExternalActionId, toReviewActionId } from "../extensions";
 
 import getProviderDisplayName = Marker.getProviderDisplayName;
 
@@ -1036,98 +1030,6 @@ export function toSlackReviewPostBlocks(
 		type: "context",
 		// MUST keep this data in sync with codemarkAttachmentRegex above
 		block_id: `codestream://review/${review.id}?teamId=${review.teamId}`,
-		elements: [
-			{
-				type: "plain_text",
-				text: "Replies in thread will be shared to CodeStream",
-			},
-		],
-	});
-
-	return blocks;
-}
-
-export function toSlackCodeErrorPostBlocks(
-	codeError: CodeErrorPlus,
-	userMaps: UserMaps,
-	repos?: { [key: string]: CSRepository } | undefined,
-	slackUserId?: string
-): Blocks {
-	const blocks: Blocks = [];
-	const creator = userMaps.codeStreamUsersByUserId.get(codeError.creatorId);
-	let creatorName = "Someone ";
-	if (creator && creator.username) {
-		creatorName = `${creator.username} `;
-	}
-	blocks.push({
-		type: "context",
-		elements: [
-			{
-				type: "mrkdwn",
-				text: `${creatorName}is diagnosing an issue`,
-			},
-		],
-	});
-
-	if (codeError.title) {
-		blocks.push({
-			type: "section",
-			text: {
-				type: "mrkdwn",
-				text: toSlackText(codeError.title, userMaps),
-			},
-		});
-	}
-
-	if (codeError.stackTraces && codeError.stackTraces[0]) {
-		// 9 = ```*2 + ...
-		const stackTrace = codeError.stackTraces[0].text || (codeError as any).stackTrace || "";
-		const contentLength = stackTrace.length + 9;
-		const isTruncated = contentLength > slackBlockTextCodeMax;
-		blocks.push({
-			type: "section",
-			text: {
-				type: "mrkdwn",
-				text: `\`\`\`${stackTrace.substring(0, slackBlockTextCodeMax - 9)}${
-					isTruncated ? "..." : ""
-				}\`\`\``,
-			},
-		});
-
-		if (isTruncated) {
-			blocks.push(blockTruncated());
-		}
-	}
-
-	const permalink = codeError.permalink;
-	if (permalink) {
-		const counter = 0;
-		const actionId = toCodeErrorActionId(counter, "ide", codeError);
-		const actions: ActionsBlock = {
-			type: "actions",
-			block_id: "codeerror_actions",
-			elements: [
-				{
-					type: "button",
-					action_id: actionId,
-					text: {
-						type: "plain_text",
-						text: "Open in IDE",
-					},
-					url: `${permalink}?ide=default&src=${encodeURIComponent(
-						providerDisplayNamesByNameKey.get("slack") || ""
-					)}`,
-				},
-			],
-		};
-
-		blocks.push(actions);
-	}
-
-	blocks.push({
-		type: "context",
-		// MUST keep this data in sync with codemarkAttachmentRegex above
-		block_id: `codestream://review/${codeError.id}?teamId=${codeError.teamId}`,
 		elements: [
 			{
 				type: "plain_text",

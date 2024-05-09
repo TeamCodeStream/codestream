@@ -87,8 +87,3 @@ export type EditableAttributes = Partial<
 	Pick<CSReview, "tags" | "text" | "title" | "reviewers" | "allReviewersMustApprove"> &
 		AdvancedEditableReviewAttributes
 >;
-
-export interface NewCodeErrorAttributes {
-	title: string;
-	stackTrace: string;
-}

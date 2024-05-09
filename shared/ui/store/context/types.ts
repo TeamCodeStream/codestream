@@ -42,7 +42,7 @@ export enum ContextActionsType {
 	RepositionCodemark = "@context/RepositionCodemark",
 	SetCurrentReview = "@context/SetCurrentReview",
 	SetCurrentReviewOptions = "@context/SetCurrentReviewOptions",
-	SetCurrentCodeError = "@context/SetCurrentCodeError",
+	SetCurrentCodeErrorData = "@context/SetCurrentCodeErrorData",
 	SetCurrentRepo = "@context/SetCurrentRepo",
 	SetCreatePullRequest = "@context/SetCreatePullRequest",
 	SetCurrentPullRequest = "@context/SetCurrentPullRequest",

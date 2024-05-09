@@ -8,14 +8,12 @@ import {
 	CSMarker,
 	CSPost,
 	CSReview,
-	isCSCodeError,
 	isCSReview,
 	ProviderType,
 } from "@codestream/protocols/api";
 import {
 	CodeDelimiterStyles,
 	CodemarkPlus,
-	CreateCodeErrorRequest,
 	CreatePostRequest,
 	CreatePostRequestType,
 	CreatePostResponse,
@@ -528,7 +526,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		});
 
 		const unreads = await SessionContainer.instance().users.getUnreads({});
-		const { posts: postsManager, codeErrors: codeErrorsManager } = SessionContainer.instance();
+		const { posts: postsManager } = SessionContainer.instance();
 
 		const posts: PostPlus[] = [];
 		// filter out deleted posts and cache valid ones
@@ -539,17 +537,13 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			}
 		}
 
-		const codeErrors: CSCodeError[] = [];
-
 		let records = await Arrays.filterMapAsync(
-			[...(response.codemarks ?? []), ...(response.reviews ?? []), ...(response.codeErrors ?? [])],
+			[...(response.codemarks ?? []), ...(response.reviews ?? [])],
 			async object => {
 				if (object.deactivated) return;
 
-				if (isCSCodeError(object)) {
-					codeErrorsManager.cacheSet(object);
-					codeErrors.push(object);
-				} else if (isCSReview(object)) {
+				if (isCSReview(object)) {
+					// no-op
 				} else {
 					if (object.reviewId != null || object.codeErrorId != null) return;
 				}
@@ -585,18 +579,15 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		return {
 			codemarks: [],
 			reviews: [],
-			codeErrors,
 			posts: await this.enrichPosts(posts),
 			records: this.createRecords(records),
 			more: response.more,
 		};
 	}
 
-	private createRecords(records: (CSCodeError | CSReview | CodemarkPlus)[]): string[] {
+	private createRecords(records: (CSReview | CodemarkPlus)[]): string[] {
 		return records.map(r => {
-			if (isCSCodeError(r)) {
-				return `codeError|${r.id}`;
-			} else if (isCSReview(r)) {
+			if (isCSReview(r)) {
 				return `review|${r.id}`;
 			}
 
@@ -606,12 +597,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 	private async enrichPost(post: CSPost): Promise<PostPlus> {
 		let codeError;
-
-		if (post.codeErrorId) {
-			try {
-				codeError = await SessionContainer.instance().codeErrors.getById(post.codeErrorId);
-			} catch (error) {}
-		}
 
 		return { ...post, codemark: undefined, hasMarkers: false, review: undefined, codeError };
 	}
@@ -661,16 +646,12 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	async createSharingCodeErrorPost(
 		request: CreateShareableCodeErrorRequest
 	): Promise<CreateShareableCodeErrorResponse> {
-		const codeErrorRequest: CreateCodeErrorRequest = {
-			...request.attributes,
-			markers: [],
-		};
-
 		let codeError: CSCodeError | undefined;
 		const stream = await SessionContainer.instance().streams.getTeamStream();
 
-		const response = await this.session.api.createPost({
-			codeError: codeErrorRequest,
+		const postRequest = {
+			errorGuid: request.errorGuid,
+			codeError: request,
 			text: "",
 			streamId: stream.id,
 			dontSendEmail: false,
@@ -681,7 +662,9 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			analyze: request.analyze,
 			reinitialize: request.reinitialize,
 			parentPostId: request.parentPostId, // For grok reinitialization
-		});
+		};
+		// Logger.log(`postRequest: ${JSON.stringify(postRequest, null, 2)}`);
+		const response = await this.session.api.createPost(postRequest);
 
 		codeError = response.codeError!;
 

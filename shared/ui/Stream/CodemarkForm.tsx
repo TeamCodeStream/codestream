@@ -43,7 +43,6 @@ import { CSText } from "../src/components/CSText";
 import { PanelHeader } from "../src/components/PanelHeader";
 import { CodeStreamState } from "../store";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
-import { fetchCodeError } from "../store/codeErrors/actions";
 import { CodeErrorsState } from "../store/codeErrors/types";
 import { NewCodemarkAttributes, parseCodeStreamDiffUri } from "../store/codemarks/actions";
 import { getCodemark } from "../store/codemarks/reducer";
@@ -180,7 +179,7 @@ interface ConnectedProps {
 	shouldShare: boolean;
 	currentTeamId: string;
 	currentReviewId?: string;
-	currentCodeErrorId?: string;
+	currentCodeErrorGuid?: string;
 	isCurrentUserAdmin?: boolean;
 	blameMap?: { [email: string]: string };
 	activePanel?: WebviewPanels;
@@ -899,20 +898,16 @@ class CodemarkForm extends React.Component<Props, State> {
 			}
 		}
 
-		if (this.props.currentCodeErrorId) {
+		if (this.props.currentCodeErrorGuid) {
 			try {
 				const codeErrorResponse = await this.props.upgradePendingCodeError(
-					this.props.currentCodeErrorId,
+					this.props.currentCodeErrorGuid,
 					"Comment"
 				);
 				if (codeErrorResponse.wasPending) {
 					// if this codeError was pending, we know that we just created one, use the codeError
 					// that was created
 					parentPostId = codeErrorResponse.codeError.postId;
-				} else {
-					fetchCodeError(this.props.currentCodeErrorId);
-					const codeError = this.props.codeErrors.codeErrors[this.props.currentCodeErrorId];
-					parentPostId = codeError.postId;
 				}
 
 				//this.props.markItemRead(review.id, review.numReplies + 1);
@@ -1071,7 +1066,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			}
 		}
 
-		if (this.props.currentCodeErrorId) {
+		if (this.props.currentCodeErrorGuid) {
 			// do something cool?
 		} else if (this.props.textEditorUriHasPullRequestContext) {
 			// do something cool?
@@ -1342,7 +1337,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (this.state.isPreviewing) return null;
 		if (this.props.isEditing) return null;
 		if (this.props.currentReviewId) return null;
-		if (this.props.currentCodeErrorId) return null;
+		if (this.props.currentCodeErrorGuid) return null;
 
 		// don't show the sharing controls for these types of diffs
 		if (this.props.textEditorUri && this.props.textEditorUri.match("codestream-diff://-[0-9]+-"))
@@ -2080,7 +2075,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	render() {
 		const { codeBlocks, scmError } = this.state;
-		const { editingCodemark, currentReviewId, currentCodeErrorId } = this.props;
+		const { editingCodemark, currentReviewId, currentCodeErrorGuid } = this.props;
 
 		const commentType = this.getCommentType();
 
@@ -2088,7 +2083,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		// if you are conducting a review, and somehow are able to try to
 		// create an issue or a permalink, stop the user from doing that
-		if (commentType !== "comment" && (currentReviewId || currentCodeErrorId)) {
+		if (commentType !== "comment" && (currentReviewId || currentCodeErrorGuid)) {
 			const activity = currentReviewId ? "doing a review" : "investigating an error";
 			const additionalInfo = currentReviewId
 				? ' Mark your comment as a "change request" instead.'
@@ -2132,7 +2127,7 @@ class CodemarkForm extends React.Component<Props, State> {
 					<CancelButton onClick={this.cancelCompose} incrementKeystrokeLevel={true} />
 					<PanelHeader
 						title={
-							this.props.currentCodeErrorId
+							this.props.currentCodeErrorGuid
 								? this.props.isPDIdev
 									? "Codemarks in errors have been disabled."
 									: "Add Comment to Error"
@@ -2547,7 +2542,7 @@ class CodemarkForm extends React.Component<Props, State> {
 										width:
 											this.props.currentReviewId ||
 											this.props.textEditorUriHasPullRequestContext ||
-											this.props.currentCodeErrorId
+											this.props.currentCodeErrorGuid
 												? "auto"
 												: "80px",
 										marginRight: 0,
@@ -2580,7 +2575,7 @@ class CodemarkForm extends React.Component<Props, State> {
 										? this.props.prLabel.AddSingleComment
 										: this.props.editingCodemark
 										? "Save"
-										: this.props.currentCodeErrorId
+										: this.props.currentCodeErrorGuid
 										? "Add Comment to Error"
 										: "Submit"}
 								</Button>
@@ -2727,7 +2722,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		codemarkState: codemarks,
 		multipleMarkersEnabled: isFeatureEnabled(state, "multipleMarkers"),
 		currentReviewId: context.currentReviewId,
-		currentCodeErrorId: context.currentCodeErrorId,
+		currentCodeErrorGuid: context.currentCodeErrorGuid,
 		inviteUsersOnTheFly,
 		prLabel: getPRLabel(state),
 		codeErrors: codeErrors,
@@ -2740,7 +2735,6 @@ const ConnectedCodemarkForm = connect(mapStateToProps, {
 	openModal,
 	markItemRead,
 	setUserPreference,
-	fetchCodeError,
 	upgradePendingCodeError,
 	getPullRequestConversationsFromProvider,
 	setCurrentPullRequestNeedsRefresh,

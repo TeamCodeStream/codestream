@@ -7,33 +7,24 @@ import {
 	TelemetryData,
 	WarningOrError,
 } from "@codestream/protocols/agent";
-import { CSCodeError, CSStackTraceInfo } from "@codestream/protocols/api";
+import { CSStackTraceInfo } from "@codestream/protocols/api";
 
 import {
 	addCodeErrors,
-	fetchCodeError,
-	PENDING_CODE_ERROR_ID_PREFIX,
 	removeCodeError,
 	resetNrAi,
 } from "@codestream/webview/store/codeErrors/actions";
 import {
 	api,
-	bootstrapCodeErrors,
 	fetchErrorGroup,
-	openErrorGroup,
 	resolveStackTrace,
 	setErrorGroup,
 } from "@codestream/webview/store/codeErrors/thunks";
-import { setCurrentCodeError } from "@codestream/webview/store/context/actions";
+import { setCurrentCodeErrorData } from "@codestream/webview/store/context/actions";
 import { closeAllPanels } from "@codestream/webview/store/context/thunks";
-import {
-	useAppDispatch,
-	useAppSelector,
-	useDidMount,
-	usePrevious,
-} from "@codestream/webview/utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { shallowEqual, useSelector } from "react-redux";
 import styled from "styled-components";
 import { DelayedRender } from "../Container/DelayedRender";
@@ -45,16 +36,15 @@ import { CodeStreamState } from "../store";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { getCodeError, getErrorGroup } from "../store/codeErrors/reducer";
 import { getSidebarLocation } from "../store/editorContext/reducer";
-import { isConnected } from "../store/providers/reducer";
 import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
 import { markItemRead, setUserPreference } from "./actions";
 import { BaseCodeErrorHeader, CodeError, Description, ExpandedAuthor } from "./CodeError";
 import { RepositoryAssociator } from "./CodeError/RepositoryAssociator";
 import { BigTitle, Header, Meta } from "./Codemark/BaseCodemark";
 import Dismissable from "./Dismissable";
-import Icon from "./Icon";
+import { Icon } from "./Icon";
 import { ClearModal, Step, Subtext, Tip } from "./ReviewNav";
-import ScrollBox from "./ScrollBox";
+import { ScrollBox } from "./ScrollBox";
 import { WarningBox } from "./WarningBox";
 import { isEmpty as _isEmpty } from "lodash";
 import { codeErrorsApi } from "@codestream/webview/store/codeErrors/api/apiResolver";
@@ -144,7 +134,7 @@ const ShowInstructionsContainer = styled.div`
 	opacity: 0.5;
 `;
 
-export type Props = React.PropsWithChildren<{ codeErrorId: string; composeOpen: boolean }>;
+export type Props = React.PropsWithChildren<{ composeOpen: boolean }>;
 
 /**
  * Called from InlineCodemarks it is what allows the commenting on lines of code
@@ -156,8 +146,8 @@ export type Props = React.PropsWithChildren<{ codeErrorId: string; composeOpen: 
 export function CodeErrorNav(props: Props) {
 	const dispatch = useAppDispatch();
 	const derivedState = useAppSelector((state: CodeStreamState) => {
-		const codeError = state.context.currentCodeErrorId
-			? getCodeError(state.codeErrors, state.context.currentCodeErrorId)
+		const codeError = state.context.currentCodeErrorGuid
+			? getCodeError(state.codeErrors, state.context.currentCodeErrorGuid)
 			: undefined;
 		const errorGroup = getErrorGroup(state.codeErrors, codeError);
 
@@ -165,7 +155,7 @@ export function CodeErrorNav(props: Props) {
 			demoMode: state.preferences.demoMode,
 			errorsDemoMode: state.codeErrors.demoMode,
 			codeErrorStateBootstrapped: state.codeErrors.bootstrapped,
-			currentCodeErrorId: state.context.currentCodeErrorId,
+			currentCodeErrorGuid: state.context.currentCodeErrorGuid,
 			currentCodeErrorData: state.context.currentCodeErrorData,
 			currentMethodLevelTelemetry: state.context.currentMethodLevelTelemetry,
 			currentObservabilityAnomaly: state.context.currentObservabilityAnomaly,
@@ -173,58 +163,50 @@ export function CodeErrorNav(props: Props) {
 			hideCodeErrorInstructions: state.preferences.hideCodeErrorInstructions,
 			codeError: codeError,
 			currentCodemarkId: state.context.currentCodemarkId,
-			isConnectedToNewRelic: isConnected(state, { id: "newrelic*com" }),
 			errorGroup: errorGroup,
+			currentEntityGuid: state.context.currentEntityGuid,
 			repos: state.repos,
 			sidebarLocation: getSidebarLocation(state),
 		};
 		return result;
 	}, shallowEqual);
 
-	const [isEditing, setIsEditing] = React.useState(false);
-	const [isLoading, setIsLoading] = React.useState(true);
-	const [error, setError] = React.useState<
+	const [isEditing, setIsEditing] = useState(false);
+	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<
 		{ title?: string; description: string; details?: any } | undefined
 	>(undefined);
 
-	const [repoAssociationError, setRepoAssociationError] = React.useState<
+	const [repoAssociationError, setRepoAssociationError] = useState<
 		{ title: string; description: string } | undefined
 	>(undefined);
-	const [multiRepoDetectedError, setMultiRepoDetectedError] = React.useState<
+	const [multiRepoDetectedError, setMultiRepoDetectedError] = useState<
 		{ title: string; description: string } | undefined
 	>(undefined);
-	const [repoWarning, setRepoWarning] = React.useState<WarningOrError | undefined>(undefined);
-	const [repoError, setRepoError] = React.useState<string | undefined>(undefined);
+	const [repoWarning, setRepoWarning] = useState<WarningOrError | undefined>(undefined);
+	const [repoError, setRepoError] = useState<string | undefined>(undefined);
 	const { errorGroup } = derivedState;
-	const [isResolved, setIsResolved] = React.useState(false);
-	const [parsedStack, setParsedStack] = React.useState<ResolveStackTraceResponse | undefined>(
-		undefined
-	);
-	const [hoverButton, setHoverButton] = React.useState(
+	const [isResolved, setIsResolved] = useState(false);
+	const [parsedStack, setParsedStack] = useState<ResolveStackTraceResponse | undefined>(undefined);
+	const [hoverButton, setHoverButton] = useState(
 		derivedState.hideCodeErrorInstructions ? "" : "stacktrace"
 	);
 
-	// TODO rename these "pending" properties -- they might _always_ be pending creation
-	const pendingErrorGroupGuid = derivedState.currentCodeErrorData?.pendingErrorGroupGuid;
-	const pendingEntityId = derivedState.currentCodeErrorData?.pendingEntityId;
 	const occurrenceId = derivedState.currentCodeErrorData?.occurrenceId;
 	const remote = derivedState.currentCodeErrorData?.remote;
 	const ref = derivedState.currentCodeErrorData?.commit || derivedState.currentCodeErrorData?.tag;
 	const multipleRepos = derivedState.currentCodeErrorData?.multipleRepos;
 	const sidebarLocation = derivedState.sidebarLocation;
-	const claimWhenConnected = derivedState.currentCodeErrorData?.claimWhenConnected;
-
-	const previousIsConnectedToNewRelic = usePrevious(derivedState.isConnectedToNewRelic);
 
 	const exit = async () => {
 		// clear out the current code error (set to blank) in the webview
 		if (derivedState.errorsDemoMode.enabled) {
-			if (derivedState.currentCodeErrorId) {
+			if (derivedState.currentCodeErrorGuid) {
 				// dispatch(deletePost(derivedState.currentCodeErrorData.postId!));
-				dispatch(removeCodeError(derivedState.currentCodeErrorId));
+				dispatch(removeCodeError(derivedState.currentCodeErrorGuid));
 			}
 		}
-		await dispatch(setCurrentCodeError(undefined, undefined));
+		await dispatch(setCurrentCodeErrorData());
 	};
 
 	const unreadEnabled = useSelector((state: CodeStreamState) =>
@@ -233,7 +215,9 @@ export function CodeErrorNav(props: Props) {
 
 	const markRead = () => {
 		if (derivedState.codeError && unreadEnabled)
-			dispatch(markItemRead(derivedState.codeError.id, derivedState.codeError.numReplies || 0));
+			dispatch(
+				markItemRead(derivedState.codeError.entityGuid, derivedState.codeError.numReplies || 0)
+			);
 	};
 
 	useEffect(() => {
@@ -246,174 +230,78 @@ export function CodeErrorNav(props: Props) {
 				currentCodeErrorDataSessionStart: derivedState.currentCodeErrorData?.sessionStart,
 				sessionStart: derivedState.sessionStart,
 			});
-			dispatch(setCurrentCodeError(undefined, undefined));
+			dispatch(setCurrentCodeErrorData());
 			dispatch(closeAllPanels());
 			return;
 		}
 
-		if (pendingErrorGroupGuid) {
-			onConnected(undefined);
-		} else {
-			const onDidMount = () => {
-				if (derivedState.codeError) {
-					onConnected(derivedState.codeError);
-					markRead();
-				} else {
-					dispatch(fetchCodeError(derivedState.currentCodeErrorId!))
-						.then(_ => {
-							if (!_ || !_.payload.length) {
-								const title = "Cannot open Code Error";
-								const description =
-									"This code error was not found. Perhaps it was deleted by the author, or you don't have permission to view it.";
-								setError({
-									title,
-									description,
-								});
-								logError(`${title}, description: ${description}`, {
-									currentCodeErrorId: derivedState.currentCodeErrorId!,
-								});
-							} else {
-								onConnected(_.payload[0]);
-								markRead();
-							}
-						})
-						.catch(ex => {
-							const title = "Error";
-							const description = ex.message ? ex.message : ex.toString();
-							setError({
-								title,
-								description,
-							});
-							logError(`${title}, description: ${description}`, {
-								currentCodeErrorId: derivedState.currentCodeErrorId!,
-							});
-						})
-						.finally(() => {
-							setIsLoading(false);
-						});
-				}
-			};
-			if (!derivedState.codeErrorStateBootstrapped) {
-				dispatch(bootstrapCodeErrors()).then(() => {
-					onDidMount();
-				});
-			} else {
-				onDidMount();
-			}
-		}
-	}, [derivedState.currentCodeErrorId]);
+		const onDidMount = () => {
+			onConnected();
+			markRead();
+		};
+		onDidMount();
+	}, [derivedState.currentCodeErrorGuid]);
 
 	useEffect(() => {
-		if (
-			!derivedState.codeError ||
-			!derivedState.codeError.objectId ||
-			!derivedState.isConnectedToNewRelic ||
-			errorGroup
-		) {
+		if (!derivedState.codeError || !derivedState.codeError.entityGuid || errorGroup) {
 			return;
 		}
 
 		setIsLoading(true);
 		dispatch(fetchErrorGroup({ codeError: derivedState.codeError }));
-	}, [derivedState.codeError, derivedState.isConnectedToNewRelic, errorGroup]);
+	}, [derivedState.codeError, errorGroup]);
 
-	const onConnected = async (
-		codeErrorArg: CSCodeError | undefined,
-		newRemote?: string,
-		isConnected?: boolean
-	) => {
+	const onConnected = async (newRemote?: string) => {
 		console.log("onConnected starting...");
 
-		// don't always have the codeError from the state
-		// sometimes we have to load it here (happens when you load the IDE with an existing codeError open)
-		const codeError = codeErrorArg || derivedState.codeError;
-		let isExistingCodeError;
-
-		let errorGroupGuidToUse: string | undefined;
-		let occurrenceIdToUse: string | undefined;
+		const errorGroupGuidToUse = derivedState.currentCodeErrorGuid;
+		const codeErrorData = derivedState.currentCodeErrorData;
+		const occurrenceIdToUse = codeErrorData?.occurrenceId;
 		let refToUse: string | undefined;
-		let entityIdToUse: string | undefined;
+		const entityIdToUse =
+			derivedState.codeError?.objectInfo?.entityId ?? derivedState.currentEntityGuid;
 
-		if (claimWhenConnected) {
-			// we get here if the code error is not yet claimed by the current team,
-			// in which case we need to circle back and "reopen" it again
-			dispatch(closeAllPanels());
-			return dispatch(
-				openErrorGroup({
-					errorGroupGuid: pendingErrorGroupGuid!,
-					occurrenceId: occurrenceId,
-					data: derivedState.currentCodeErrorData,
-				})
-			);
-		} else if (pendingErrorGroupGuid) {
-			errorGroupGuidToUse = pendingErrorGroupGuid;
-			occurrenceIdToUse = occurrenceId;
-			refToUse = ref;
-			entityIdToUse = pendingEntityId;
-		} else if (codeError) {
-			isExistingCodeError = true;
-			errorGroupGuidToUse = codeError?.objectId;
-
-			const existingStackTrace =
-				codeError.stackTraces && codeError.stackTraces[0] ? codeError.stackTraces[0] : undefined;
-			if (existingStackTrace) {
-				occurrenceIdToUse = existingStackTrace.occurrenceId;
-				refToUse = existingStackTrace.sha;
-			}
-			if (typeof codeError?.objectInfo?.entityId === "string") {
-				entityIdToUse = codeError?.objectInfo?.entityId;
-			}
-		}
 		if (!errorGroupGuidToUse) {
 			console.error("missing error group guid");
 			return;
 		}
 
-		console.log(`onConnected started isExistingCodeError=${isExistingCodeError}`);
-		if (
-			previousIsConnectedToNewRelic === false &&
-			(derivedState.isConnectedToNewRelic || isConnected)
-		) {
-			setIsLoading(true);
-		}
+		setIsLoading(true);
 		setRepoAssociationError(undefined);
 		setMultiRepoDetectedError(undefined);
 		setError(undefined);
 
 		try {
 			let errorGroupResult: GetNewRelicErrorGroupResponse | undefined = undefined;
-			if (isConnected || derivedState.isConnectedToNewRelic) {
-				errorGroupResult = await codeErrorsApi.getNewRelicErrorGroup({
+			errorGroupResult = await codeErrorsApi.getNewRelicErrorGroup({
+				errorGroupGuid: errorGroupGuidToUse,
+				occurrenceId: occurrenceIdToUse,
+				entityGuid: entityIdToUse,
+				timestamp: codeErrorData?.timestamp,
+			});
+
+			if (!errorGroupResult || errorGroupResult?.error?.message) {
+				const title = "Unexpected Error";
+				const description = errorGroupResult?.error?.message || "unknown error";
+				setError({
+					title,
+					description,
+					details: errorGroupResult?.error?.details,
+				});
+				logError(`${title}, description: ${description}`, {
+					currentCodeErrorGuid: derivedState.currentCodeErrorGuid!,
 					errorGroupGuid: errorGroupGuidToUse,
 					occurrenceId: occurrenceIdToUse,
 					entityGuid: entityIdToUse,
-					timestamp: derivedState.currentCodeErrorData?.timestamp,
+					timestamp: codeErrorData?.timestamp,
 				});
-
-				if (!errorGroupResult || errorGroupResult?.error?.message) {
-					const title = "Unexpected Error";
-					const description = errorGroupResult?.error?.message || "unknown error";
-					setError({
-						title,
-						description,
-						details: errorGroupResult?.error?.details,
-					});
-					logError(`${title}, description: ${description}`, {
-						currentCodeErrorId: derivedState.currentCodeErrorId!,
-						errorGroupGuid: errorGroupGuidToUse,
-						occurrenceId: occurrenceIdToUse,
-						entityGuid: entityIdToUse,
-						timestamp: derivedState.currentCodeErrorData?.timestamp,
-					});
-					return;
-				}
+				return;
 			}
 
 			let repoId: string | undefined = undefined;
 			let stackInfo: ResolveStackTraceResponse | undefined = undefined;
 			let targetRemote;
-			const hasStackTrace =
-				errorGroupResult?.errorGroup?.hasStackTrace || !!codeError?.stackTraces?.length;
+			const hasStackTrace = errorGroupResult?.errorGroup?.hasStackTrace;
 			if (!hasStackTrace) {
 				setIsResolved(true);
 				setRepoWarning({ message: "There is no stack trace associated with this error." });
@@ -429,16 +317,15 @@ export function CodeErrorNav(props: Props) {
 						errorGroupGuid: errorGroupGuidToUse,
 						occurrenceId: occurrenceIdToUse,
 						entityGuid: entityIdToUse,
-						timestamp: derivedState.currentCodeErrorData?.timestamp,
+						timestamp: codeErrorData?.timestamp,
 					});
 					return;
 				}
 
 				targetRemote = newRemote ?? remote;
-				const entityName =
-					codeError?.objectInfo?.entityName || errorGroup?.entityName || "selected";
+				const entityName = errorGroup?.entityName || "selected";
 
-				if (multipleRepos && !targetRemote && derivedState.isConnectedToNewRelic) {
+				if (multipleRepos && !targetRemote) {
 					setMultiRepoDetectedError({
 						title: "Select a Repository",
 						description: `The ${entityName} service is associated with multiple repositories. Please select one to continue.`,
@@ -451,23 +338,20 @@ export function CodeErrorNav(props: Props) {
 					targetRemote = errorGroupResult?.errorGroup?.entity?.relatedRepos[0]?.url!;
 				} else if (
 					// Attempt to set remote from codeError object as long as we know there is a repo associated
-					codeError?.objectInfo?.remote &&
-					(!_isEmpty(derivedState.currentCodeErrorData.relatedRepos) ||
-						codeError?.objectInfo?.hasRelatedRepos)
+					codeErrorData?.remote &&
+					!_isEmpty(codeErrorData?.relatedRepos)
 				) {
-					targetRemote = codeError?.objectInfo?.remote;
+					targetRemote = codeErrorData?.remote;
 				}
 
 				// Kick off repo association screen
 				if (!targetRemote) {
-					if (derivedState.isConnectedToNewRelic) {
-						setRepoAssociationError({
-							title: "Which Repository?",
-							description: `Select the repository that the ${entityName} service is associated with so that we can take you to the code. If the repository doesn't appear in the list, open it in your IDE.`,
-						});
+					setRepoAssociationError({
+						title: "Which Repository?",
+						description: `Select the repository that the ${entityName} service is associated with so that we can take you to the code. If the repository doesn't appear in the list, open it in your IDE.`,
+					});
 
-						return;
-					}
+					return;
 				}
 
 				if (targetRemote) {
@@ -487,7 +371,7 @@ export function CodeErrorNav(props: Props) {
 							occurrenceId: occurrenceIdToUse,
 							entityGuid: entityIdToUse,
 							targetRemote,
-							timestamp: derivedState.currentCodeErrorData?.timestamp,
+							timestamp: codeErrorData?.timestamp,
 						});
 						return;
 					}
@@ -513,27 +397,17 @@ export function CodeErrorNav(props: Props) {
 							occurrenceId: occurrenceIdToUse,
 							entityGuid: entityIdToUse,
 							targetRemote,
-							timestamp: derivedState.currentCodeErrorData?.timestamp,
+							timestamp: codeErrorData?.timestamp,
 						});
 
 						return;
 					}
-					repoId = reposResponse.repos[0].id!;
-				}
-				if (!repoId) {
-					// no targetRemote, try to get a repo from existing stackTrace
-					repoId =
-						codeError?.stackTraces && codeError?.stackTraces.length > 0
-							? codeError.stackTraces[0].repoId
-							: "";
+					repoId = reposResponse.repos[0].id;
 				}
 
 				// YUCK
 				const stack =
-					errorGroupResult?.errorGroup?.errorTrace?.stackTrace?.map(_ => _.formatted) ||
-					(codeError?.stackTraces && codeError.stackTraces.length > 0
-						? codeError.stackTraces[0].text?.split("\n")
-						: []);
+					errorGroupResult?.errorGroup?.errorTrace?.stackTrace?.map(_ => _.formatted) ?? [];
 
 				if (!refToUse && errorGroupResult?.errorGroup) {
 					refToUse = errorGroupResult.errorGroup.commit || errorGroupResult.errorGroup.releaseTag;
@@ -547,9 +421,9 @@ export function CodeErrorNav(props: Props) {
 						ref: refToUse!,
 						occurrenceId: occurrenceIdToUse!,
 						stackTrace: stack!,
-						codeErrorId: derivedState.currentCodeErrorId!,
-						stackSourceMap: derivedState.currentCodeErrorData.stackSourceMap,
-						domain: derivedState.currentCodeErrorData?.domain,
+						codeErrorId: derivedState.currentCodeErrorGuid!,
+						stackSourceMap: codeErrorData?.stackSourceMap,
+						domain: codeErrorData?.domain!,
 					};
 					stackInfo = await dispatch(resolveStackTrace(request)).unwrap();
 				}
@@ -565,42 +439,34 @@ export function CodeErrorNav(props: Props) {
 					: [stackInfo.parsedStackInfo!]
 				: [];
 
-			if (errorGroupResult) {
-				if (
-					derivedState.currentCodeErrorId &&
-					derivedState.currentCodeErrorId?.indexOf(PENDING_CODE_ERROR_ID_PREFIX) === 0
-				) {
+			if (errorGroupResult && repoId) {
+				if (derivedState.currentCodeErrorGuid) {
 					dispatch(
 						addCodeErrors([
 							{
 								accountId: errorGroupResult.accountId,
-								id: derivedState.currentCodeErrorId!,
-								createdAt: new Date().getTime(),
-								modifiedAt: new Date().getTime(),
-								// @ts-ignore
 								postId: undefined,
 								// these don't matter
 								assignees: [],
-								teamId: "",
-								streamId: "",
+								teamId: undefined,
+								streamId: undefined,
 								fileStreamIds: [],
 								status: "open",
 								numReplies: 0,
 								lastActivityAt: 0,
-								creatorId: "",
-								objectId: errorGroupGuidToUse,
+								entityGuid: errorGroupGuidToUse,
 								objectType: "errorGroup",
 								title: errorGroupResult.errorGroup?.title || "",
 								text: errorGroupResult.errorGroup?.message || undefined,
 								// storing the permanently parsed stack info
 								stackTraces: actualStackInfo,
 								objectInfo: {
-									repoId: repoId!,
+									repoId: repoId,
 									remote: targetRemote,
 									accountId: errorGroupResult.accountId.toString(),
-									entityId: errorGroupResult?.errorGroup?.entityGuid || "",
-									entityName: errorGroupResult?.errorGroup?.entityName || "",
-									hasRelatedRepos: !_isEmpty(derivedState.currentCodeErrorData.relatedRepos),
+									entityId: errorGroupResult?.errorGroup?.entityGuid,
+									entityName: errorGroupResult?.errorGroup?.entityName,
+									hasRelatedRepos: !_isEmpty(codeErrorData?.relatedRepos),
 								},
 							},
 						])
@@ -617,15 +483,13 @@ export function CodeErrorNav(props: Props) {
 
 			let trackingData = {
 				entity_guid: entityIdToUse,
-				account_id: errorGroupResult?.accountId || codeError?.objectInfo?.accountId,
-				meta_data: `error_group_id: ${
-					errorGroupResult?.errorGroup?.guid || codeError?.objectInfo?.entityId
-				}`,
+				account_id: errorGroupResult?.accountId,
+				meta_data: `error_group_id: ${errorGroupResult?.errorGroup?.guid}`,
 
 				meta_data_2: `entry_point: ${
-					derivedState.currentCodeErrorData?.openType === "Observability Section"
+					codeErrorData?.openType === "Observability Section"
 						? "observability_section"
-						: derivedState.currentCodeErrorData?.openType === "Activity Feed"
+						: codeErrorData?.openType === "Activity Feed"
 						? "activity_feed"
 						: "open_in_ide"
 				}`,
@@ -752,9 +616,9 @@ export function CodeErrorNav(props: Props) {
 	if (error) {
 		// essentially a roadblock
 		logError(`${error?.title || "Error"}, Description: Internal Debugging Variables`, {
-			currentCodeErrorId: derivedState.currentCodeErrorId!,
-			errorGroupGuid: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
-			parseableAccountId: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
+			currentCodeErrorGuid: derivedState.currentCodeErrorGuid!,
+			errorGroupGuid: derivedState.codeError?.entityGuid,
+			parseableAccountId: derivedState.codeError?.entityGuid,
 			occurrenceId: occurrenceId,
 			entityGuid: derivedState.codeError?.objectInfo?.entityId,
 			timestamp: derivedState.currentCodeErrorData?.timestamp,
@@ -807,7 +671,7 @@ export function CodeErrorNav(props: Props) {
 					return new Promise((resolve, reject) => {
 						const payload = {
 							url: r.remote,
-							errorGroupGuid: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
+							errorGroupGuid: derivedState.codeError?.entityGuid,
 						};
 						if (!skipTracking) {
 							HostApi.instance.track("codestream/repo_disambiguation succeeded", {
@@ -820,7 +684,7 @@ export function CodeErrorNav(props: Props) {
 								}`,
 							});
 						}
-						onConnected(undefined, r.remote);
+						onConnected(r.remote);
 					});
 				}}
 				telemetryOnDisplay={{
@@ -848,9 +712,9 @@ export function CodeErrorNav(props: Props) {
 						const payload = {
 							url: r.remote,
 							name: r.name,
-							entityId: pendingEntityId,
-							errorGroupGuid: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
-							parseableAccountId: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
+							entityId: derivedState.codeError?.objectInfo?.entityId,
+							errorGroupGuid: derivedState.codeError?.entityGuid,
+							parseableAccountId: derivedState.codeError?.entityGuid,
 						};
 						dispatch(api("assignRepository", payload)).then(_ => {
 							setIsLoading(true);
@@ -881,7 +745,7 @@ export function CodeErrorNav(props: Props) {
 									remoteForOnConnected = repoFromAssignDirective?.repo?.urls[0];
 								}
 
-								onConnected(undefined, remoteForOnConnected);
+								onConnected(remoteForOnConnected);
 							} else {
 								console.log("Could not find directive", {
 									payload: payload,
@@ -896,9 +760,7 @@ export function CodeErrorNav(props: Props) {
 								logError(`${title}, description: ${description}`, {
 									url: r.remote,
 									name: r.name,
-									entityId: pendingEntityId,
-									errorGroupGuid: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
-									parseableAccountId: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
+									errorGroupGuid: derivedState.codeError?.entityGuid,
 								});
 							}
 						});

@@ -1,10 +1,6 @@
 import {
-	ClaimCodeErrorRequest,
-	ClaimCodeErrorResponse,
 	CreateShareableCodeErrorRequest,
 	CreateShareableCodeErrorResponse,
-	FetchCodeErrorsRequest,
-	FetchCodeErrorsResponse,
 	FetchPostRepliesRequest,
 	FetchPostRepliesResponse,
 	GetNewRelicErrorGroupRequest,
@@ -28,8 +24,6 @@ export interface CodeErrorsApi {
 
 	fetchPostReplies(request: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse>;
 
-	fetchCodeErrors(request: FetchCodeErrorsRequest): Promise<FetchCodeErrorsResponse>;
-
 	updateCodeErrors(request: UpdateCodeErrorRequest): Promise<UpdateCodeErrorResponse>;
 
 	resolveStackTrace(request: ResolveStackTraceRequest): Promise<ResolveStackTraceResponse>;
@@ -45,8 +39,6 @@ export interface CodeErrorsApi {
 	getObservabilityErrors(
 		request: GetObservabilityErrorsRequest
 	): Promise<GetObservabilityErrorsResponse>;
-
-	claimCodeError(request: ClaimCodeErrorRequest): Promise<ClaimCodeErrorResponse>;
 
 	executeThirdPartyTyped<T, R>(method: string, providerId: string, params: any): Promise<any>;
 

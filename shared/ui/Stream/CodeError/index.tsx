@@ -28,12 +28,8 @@ import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { HealthIcon } from "@codestream/webview/src/components/HealthIcon";
 import { TourTip } from "@codestream/webview/src/components/TourTip";
 import { CodeStreamState } from "@codestream/webview/store";
-import {
-	fetchCodeError,
-	PENDING_CODE_ERROR_ID_PREFIX,
-	setFunctionToEditFailed,
-} from "@codestream/webview/store/codeErrors/actions";
-import { getCodeError, getCodeErrorCreator } from "@codestream/webview/store/codeErrors/reducer";
+import { setFunctionToEditFailed } from "@codestream/webview/store/codeErrors/actions";
+import { getCodeError } from "@codestream/webview/store/codeErrors/reducer";
 import {
 	api,
 	copySymbolFromIde,
@@ -60,7 +56,7 @@ import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview
 import { isSha } from "@codestream/webview/utilities/strings";
 import { emptyArray, replaceHtml } from "@codestream/webview/utils";
 import { HostApi } from "@codestream/webview/webview-api";
-import { createPost, deletePost, invite, markItemRead } from "../actions";
+import { createPost, invite, markItemRead } from "../actions";
 import { Attachments } from "../Attachments";
 import {
 	BigTitle,
@@ -74,7 +70,6 @@ import {
 	MetaSectionCollapsed,
 	MinimumWidthCard,
 } from "../Codemark/BaseCodemark";
-import ConfigureNewRelic from "../ConfigureNewRelic";
 import { confirmPopup } from "../Confirm";
 import { PROVIDER_MAPPINGS } from "../CrossPostIssueControls/types";
 import { DropdownButton, DropdownButtonItems } from "../DropdownButton";
@@ -89,12 +84,13 @@ import { RepoMetadata } from "../Review";
 import { SharingModal } from "../SharingModal";
 import Timestamp from "../Timestamp";
 import Tooltip from "../Tooltip";
-import { ConditionalNewRelic } from "./ConditionalComponent";
 import { isFeatureEnabled } from "../../store/apiVersioning/reducer";
 import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
 import { isEmpty } from "lodash-es";
 import { getNrCapability } from "@codestream/webview/store/nrCapabilities/thunks";
 import { setPostReplyCallback } from "@codestream/webview/store/codeErrors/api/apiResolver";
+import { deletePostApi } from "@codestream/webview/store/posts/thunks";
+import { setCurrentCodeErrorData } from "@codestream/webview/store/context/actions";
 
 interface SimpleError {
 	/**
@@ -304,7 +300,6 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 
 		return {
 			isConnectedToNewRelic: isConnected(state, { id: "newrelic*com" }),
-			codeErrorCreator: getCodeErrorCreator(state),
 			isCurrentUserInternal: isCurrentUserInternal(state),
 			ideName: encodeURIComponent(state.ide.name || ""),
 			teamMembers: teamMembers,
@@ -317,7 +312,6 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 
 	const [items, setItems] = useState<DropdownButtonItems[]>([]);
 	const [states, setStates] = useState<DropdownButtonItems[] | undefined>(undefined);
-	const [openConnectionModal, setOpenConnectionModal] = useState(false);
 	const [isStateChanging, setIsStateChanging] = useState(false);
 	const [isAssigneeChanging, setIsAssigneeChanging] = useState(false);
 
@@ -344,7 +338,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 			});
 
 			setIsAssigneeChanging(true);
-			await dispatch(upgradePendingCodeError(props.codeError.id, "Assignee Change"));
+			await dispatch(upgradePendingCodeError(props.codeError.entityGuid, "Assignee Change"));
 			await dispatch(
 				api("setAssignee", {
 					errorGroupGuid: props.errorGroup?.guid!,
@@ -414,10 +408,10 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 		e.stopPropagation();
 		setIsAssigneeChanging(true);
 
-		await dispatch(upgradePendingCodeError(props.codeError.id, "Assignee Change"));
+		await dispatch(upgradePendingCodeError(props.codeError.entityGuid, "Assignee Change"));
 		await dispatch(
 			api("removeAssignee", {
-				errorGroupGuid: props.errorGroup?.guid!,
+				errorGroupGuid: props.errorGroup?.guid,
 				emailAddress: emailAddress,
 				userId: userId,
 			})
@@ -443,7 +437,9 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 							label: STATES_TO_ACTION_STRINGS[_],
 							action: async e => {
 								setIsStateChanging(true);
-								await dispatch(upgradePendingCodeError(props.codeError.id, "Status Change"));
+								await dispatch(
+									upgradePendingCodeError(props.codeError.entityGuid, "Status Change")
+								);
 								await dispatch(
 									api("setState", {
 										errorGroupGuid: props.errorGroup?.guid!,
@@ -464,16 +460,6 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 						};
 					}) as DropdownButtonItems[]
 			);
-		} else {
-			setStates([
-				{
-					key: "UNKNOWN",
-					label: STATES_TO_DISPLAY_STRINGS["UNKNOWN"],
-					action: e => {
-						setOpenConnectionModal(true);
-					},
-				} as DropdownButtonItems,
-			]);
 		}
 	};
 
@@ -651,49 +637,6 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 
 	return (
 		<>
-			{openConnectionModal && (
-				<Modal
-					translucent
-					onClose={() => {
-						setOpenConnectionModal(false);
-					}}
-				>
-					<Dialog narrow title="">
-						<div className="embedded-panel">
-							<ConfigureNewRelic
-								headerChildren={
-									<>
-										<div className="panel-header" style={{ background: "none" }}>
-											<span className="panel-title">Connect to New Relic</span>
-										</div>
-										<div style={{ textAlign: "center" }}>
-											Working with errors requires a connection to your New Relic account. If you
-											don't have one, get a teammate{" "}
-											{derivedState.codeErrorCreator
-												? `like ${
-														derivedState.codeErrorCreator.fullName ||
-														derivedState.codeErrorCreator.username
-												  } `
-												: ""}
-											to invite you.
-										</div>
-									</>
-								}
-								disablePostConnectOnboarding={true}
-								showSignupUrl={false}
-								providerId={"newrelic*com"}
-								onClose={e => {
-									setOpenConnectionModal(false);
-								}}
-								onSubmited={async e => {
-									setOpenConnectionModal(false);
-								}}
-								originLocation={"Open in IDE Flow"}
-							/>
-						</div>
-					</Dialog>
-				</Modal>
-			)}
 			{!collapsed && (
 				<div
 					style={{
@@ -718,44 +661,20 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 						<ApmServiceTitle>
 							<Tooltip title="Open Entity on New Relic" placement="bottom" delay={1}>
 								<span style={{ opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25" }}>
-									<ConditionalNewRelic
-										connected={
+									<>
+										{props.errorGroup && (
 											<>
-												{props.errorGroup && (
-													<>
-														<Link
-															onClick={e => {
-																handleEntityLinkClick(e, props.errorGroup?.entityUrl);
-															}}
-														>
-															<span className="subtle">{props.errorGroup.entityName}</span>{" "}
-															<Icon name="link-external" className="open-external"></Icon>
-														</Link>
-													</>
-												)}
+												<Link
+													onClick={e => {
+														handleEntityLinkClick(e, props.errorGroup?.entityUrl);
+													}}
+												>
+													<span className="subtle">{props.errorGroup.entityName}</span>{" "}
+													<Icon name="link-external" className="open-external"></Icon>
+												</Link>
 											</>
-										}
-										disconnected={
-											<>
-												{!props.errorGroup && props.codeError && (
-													<>
-														<Link
-															href="#"
-															onClick={e => {
-																e.preventDefault();
-																setOpenConnectionModal(true);
-															}}
-														>
-															<span className="subtle">
-																{props.codeError?.objectInfo?.entityName || "Service"}
-															</span>{" "}
-															<Icon name="link-external" className="open-external"></Icon>
-														</Link>
-													</>
-												)}
-											</>
-										}
-									/>
+										)}
+									</>
 								</span>
 							</Tooltip>
 						</ApmServiceTitle>
@@ -803,44 +722,31 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 											opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25",
 										}}
 									>
-										<ConditionalNewRelic
-											connected={
+										<>
+											{props.errorGroup && (
 												<>
-													{props.errorGroup && (
+													{isAssigneeChanging ? (
+														<Icon name="sync" className="spin" />
+													) : (
 														<>
-															{isAssigneeChanging ? (
-																<Icon name="sync" className="spin" />
+															{errorGroupHasNoAssignee() ? (
+																<Icon name="person" />
 															) : (
-																<>
-																	{errorGroupHasNoAssignee() ? (
-																		<Icon name="person" />
-																	) : (
-																		<Headshot
-																			size={16}
-																			display="inline-block"
-																			className="no-right-margin"
-																			person={{
-																				fullName: props.errorGroup.assignee?.name,
-																				email: props.errorGroup.assignee?.email,
-																			}}
-																		/>
-																	)}
-																</>
+																<Headshot
+																	size={16}
+																	display="inline-block"
+																	className="no-right-margin"
+																	person={{
+																		fullName: props.errorGroup.assignee?.name,
+																		email: props.errorGroup.assignee?.email,
+																	}}
+																/>
 															)}
 														</>
 													)}
 												</>
-											}
-											disconnected={
-												<Icon
-													style={{ cursor: "pointer" }}
-													name="person"
-													onClick={e => {
-														setOpenConnectionModal(true);
-													}}
-												/>
-											}
-										/>
+											)}
+										</>
 									</div>
 								</DropdownButton>
 							)}
@@ -868,15 +774,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 										variant="secondary"
 										size="compact"
 										preventStopPropagation={!derivedState.isConnectedToNewRelic}
-										onButtonClicked={
-											derivedState.isConnectedToNewRelic
-												? undefined
-												: e => {
-														e.preventDefault();
-														e.stopPropagation();
-														setOpenConnectionModal(true);
-												  }
-										}
+										onButtonClicked={_e => {}}
 										wrap
 									>
 										<div
@@ -925,65 +823,44 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 						{props.post && <AddReactionIcon post={props.post} className="in-review" />}
 					</HeaderActions>
 					<ApmServiceTitle>
-						<ConditionalNewRelic
-							connected={
-								<Tooltip
-									title={
-										derivedState.isCurrentUserInternal
-											? props.codeError?.id
-											: props.errorGroup?.errorGroupUrl && props.codeError?.title
-											? "Open Error on New Relic"
-											: ""
-									}
-									placement="bottom"
-									delay={1}
-								>
-									{props.errorGroup?.errorGroupUrl && props.codeError.title ? (
-										<span data-testid="code-error-title">
-											<Link
-												onClick={e => {
-													e.preventDefault();
-													HostApi.instance.track("codestream/newrelic_link clicked", {
-														entity_guid: props.errorGroup?.entityGuid,
-														account_id: props.errorGroup?.accountId,
-														meta_data: "destination: error_group",
-														meta_data_2: `codestream_section: error`,
-														event_type: "click",
-													});
-													HostApi.instance.send(OpenUrlRequestType, {
-														url: `${props.errorGroup
-															?.errorGroupUrl!}&utm_source=codestream&utm_medium=ide-${
-															derivedState.ideName
-														}&utm_campaign=error_group_link`,
-													});
-												}}
-											>
-												{title} <Icon name="link-external" className="open-external"></Icon>
-											</Link>
-										</span>
-									) : (
-										<span data-testid="code-error-title">{title}</span>
-									)}
-								</Tooltip>
+						<Tooltip
+							title={
+								derivedState.isCurrentUserInternal
+									? props.codeError?.entityGuid
+									: props.errorGroup?.errorGroupUrl && props.codeError?.title
+									? "Open Error on New Relic"
+									: ""
 							}
-							disconnected={
-								<>
-									{props.codeError && !props.errorGroup?.errorGroupUrl && (
-										<span>
-											<Link
-												href="#"
-												onClick={e => {
-													e.preventDefault();
-													setOpenConnectionModal(true);
-												}}
-											>
-												{title} <Icon name="link-external" className="open-external"></Icon>
-											</Link>
-										</span>
-									)}
-								</>
-							}
-						/>
+							placement="bottom"
+							delay={1}
+						>
+							{props.errorGroup?.errorGroupUrl && props.codeError.title ? (
+								<span data-testid="code-error-title">
+									<Link
+										onClick={e => {
+											e.preventDefault();
+											HostApi.instance.track("codestream/newrelic_link clicked", {
+												entity_guid: props.errorGroup?.entityGuid,
+												account_id: props.errorGroup?.accountId,
+												meta_data: "destination: error_group",
+												meta_data_2: `codestream_section: error`,
+												event_type: "click",
+											});
+											HostApi.instance.send(OpenUrlRequestType, {
+												url: `${props.errorGroup
+													?.errorGroupUrl!}&utm_source=codestream&utm_medium=ide-${
+													derivedState.ideName
+												}&utm_campaign=error_group_link`,
+											});
+										}}
+									>
+										{title} <Icon name="link-external" className="open-external"></Icon>
+									</Link>
+								</span>
+							) : (
+								<span data-testid="code-error-title">{title}</span>
+							)}
+						</Tooltip>
 					</ApmServiceTitle>
 				</BigTitle>
 			</Header>
@@ -996,20 +873,20 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 	const dispatch = useAppDispatch();
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const post =
-			codeError && codeError.postId
-				? getPost(state.posts, codeError!.streamId, codeError.postId)
+			codeError && codeError.postId && codeError.streamId
+				? getPost(state.posts, codeError.streamId, codeError.postId)
 				: undefined;
 
 		return {
 			post,
 			currentUserId: state.session.userId!,
 			currentUser: state.users[state.session.userId!],
-			author: props.codeError ? state.users[props.codeError.creatorId] : undefined,
+			// author: props.codeError ? state.users[props.codeError.creatorId] : undefined, // codeError author not used
 			userIsFollowing: props.codeError
 				? (props.codeError.followerIds || []).includes(state.session.userId!)
 				: [],
 		};
-	});
+	}, shallowEqual);
 	const currentUserIsAdmin = useAppSelector(currentUserIsAdminSelector);
 	const [isLoading, setIsLoading] = useState(false);
 	const [menuState, setMenuState] = useState<{ open: boolean; target?: any }>({
@@ -1036,7 +913,8 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 				},
 			});
 		}
-		if (props.codeError?.id?.indexOf(PENDING_CODE_ERROR_ID_PREFIX) === -1) {
+		// no postId means pending
+		if (!props.codeError?.postId) {
 			items.push({
 				label: "Copy Link",
 				icon: <Icon name="copy" />,
@@ -1068,12 +946,21 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 									label: "Delete Post",
 									className: "delete",
 									wait: true,
-									action: () => {
+									action: async () => {
 										const post = derivedState.post;
-										if (!post) return;
+										if (!post) {
+											return;
+										}
 										// Deleting the parent post will (soft) delete the codeError
 										// and all the child posts
-										dispatch(deletePost(post.streamId, post.id, post.sharedTo));
+										await dispatch(
+											deletePostApi({
+												streamId: post.streamId,
+												postId: post.id,
+												sharedTo: post.sharedTo,
+											})
+										);
+										dispatch(setCurrentCodeErrorData()); // Close the code error discussion
 									},
 								},
 							],
@@ -1132,7 +1019,7 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 		// }
 
 		return items;
-	}, [codeError, collapsed, props.errorGroup]);
+	}, [codeError, collapsed, props.errorGroup, derivedState.post]);
 
 	if (shareModalOpen) {
 		return (
@@ -1196,19 +1083,19 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	const dispatch = useAppDispatch();
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
-		const codeError: CSCodeError = state.codeErrors[props.codeError.id] || props.codeError;
+		const codeError: CSCodeError = state.codeErrors[props.codeError.entityGuid] || props.codeError;
 		const codeAuthorId = (props.codeError.codeAuthorIds || [])[0];
 		const currentCodeErrorData = state.context.currentCodeErrorData;
 
 		return {
 			providers: state.providers,
 			isInVscode: state.ide.name === "VSC",
-			author: props.codeError ? state.users[props.codeError.creatorId] : undefined,
-			codeAuthor: state.users[codeAuthorId || props.codeError?.creatorId],
+			// author: props.codeError ? state.users[props.codeError.creatorId] : undefined, // codeError author not used
+			// codeAuthor: state.users[codeAuthorId || props.codeError?.creatorId], // codeError author not used
 			codeError,
 			errorGroup: props.errorGroup,
-			errorGroupIsLoading: codeError.objectId
-				? state.codeErrors.errorGroups[codeError.objectId]?.isLoading
+			errorGroupIsLoading: codeError.entityGuid
+				? state.codeErrors.errorGroups[codeError.entityGuid]?.isLoading
 				: false,
 			currentCodeErrorData,
 			hideCodeErrorInstructions: state.preferences.hideCodeErrorInstructions,
@@ -1221,9 +1108,12 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	}, shallowEqual);
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
 	const { codeError, errorGroup, currentCodeErrorData } = derivedState;
-	const isPostThreadsLoading: boolean | undefined = useAppSelector(
-		state => state.posts.postThreadsLoading[codeError.postId]
-	);
+	const isPostThreadsLoading: boolean | undefined = useAppSelector(state => {
+		if (!codeError.postId) {
+			return undefined;
+		}
+		return state.posts.postThreadsLoading[codeError.postId];
+	});
 
 	const [currentSelectedLine, setCurrentSelectedLineIndex] = useState<number>(
 		derivedState.currentCodeErrorData?.lineIndex || 0
@@ -1256,9 +1146,9 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 							uri: functionToEdit.uri,
 					  }
 					: undefined;
-				const actualCodeError = await dispatch(
+				await dispatch(
 					upgradePendingCodeError(
-						props.codeError.id,
+						props.codeError.entityGuid,
 						"Comment",
 						codeBlock,
 						functionToEdit?.language,
@@ -1266,11 +1156,10 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 					)
 				);
 
-				if (!actualCodeError || !actualCodeError.codeError) {
-					return;
-				}
-
-				dispatch(markItemRead(props.codeError.id, actualCodeError.codeError.numReplies + 1));
+				dispatch(
+					//  TODO does this numReplies work at all? Should come from a post
+					markItemRead(props.codeError.entityGuid, codeError.numReplies + 1)
+				);
 			};
 			// Case 1 - pending post, will never try to fetch replies
 			if (
@@ -1853,17 +1742,18 @@ const ReplyInput = (props: ReplyInputProps) => {
 			dispatch(startGrokLoading(props.codeError));
 		}
 
-		const actualCodeError = await dispatch(upgradePendingCodeError(props.codeError.id, "Comment"));
-		if (!actualCodeError) {
-			setIsLoading(false);
+		await dispatch(upgradePendingCodeError(props.codeError.entityGuid, "Comment"));
+		if (!props.codeError.streamId) {
+			console.warn("codeError missing streamId");
 			return;
 		}
-		dispatch(markItemRead(props.codeError.id, actualCodeError.codeError.numReplies + 1));
+		// TODO is this numReplies ok? should be from post?
+		dispatch(markItemRead(props.codeError.entityGuid, props.codeError.numReplies + 1));
 
 		await dispatch(
 			createPost(
-				actualCodeError.codeError.streamId,
-				actualCodeError.codeError.postId,
+				props.codeError.streamId,
+				props.codeError.postId,
 				replaceHtml(text)!,
 				null,
 				findMentionedUserIds(teamMates, text),
@@ -1962,15 +1852,15 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 	const { codeError, ...baseProps } = props;
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const post =
-			codeError && codeError.postId
-				? getPost(state.posts, codeError!.streamId, codeError.postId)
+			codeError && codeError.postId && codeError.streamId
+				? getPost(state.posts, codeError.streamId, codeError.postId)
 				: undefined;
 
 		return {
 			post,
 			currentTeamId: state.context.currentTeamId,
 			currentUser: state.users[state.session.userId!],
-			author: state.users[props.codeError.creatorId],
+			// author: state.users[props.codeError.creatorId],
 			repos: state.repos,
 			userIsFollowing: (props.codeError.followerIds || []).includes(state.session.userId!),
 			replies: props.collapsed
@@ -2069,16 +1959,16 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 					className={isGrokLoading ? "grok-loading" : "grok-not-loading" + " replies-to-review"}
 					style={{ borderTop: "none", marginTop: 0 }}
 				>
-					{props.codeError.postId && (
+					{props.codeError.postId && props.codeError.streamId && (
 						<>
 							{<MetaLabel>Activity</MetaLabel>}
 							<RepliesToPost
 								streamId={props.codeError.streamId}
 								parentPostId={props.codeError.postId}
-								itemId={props.codeError.id}
+								itemId={props.codeError.entityGuid}
 								numReplies={props.codeError.numReplies}
 								scrollNewTargetCallback={scrollNewTargetCallback}
-								codeErrorId={props.codeError.id}
+								codeErrorId={props.codeError.entityGuid}
 								errorGroup={props.errorGroup}
 								noReply={true}
 								file={currentNrAiFile}
@@ -2164,15 +2054,6 @@ const CodeErrorForId = (props: PropsWithId) => {
 
 	useDidMount(() => {
 		let isValid = true;
-
-		if (codeError == null) {
-			dispatch(fetchCodeError(id))
-				.then(result => {
-					if (!isValid) return;
-					if (result == null) setNotFound(true);
-				})
-				.catch(() => setNotFound(true));
-		}
 
 		return () => {
 			isValid = false;

@@ -40,7 +40,7 @@ import {
 	goToTeamCreation,
 	handlePendingProtocolHandlerUrl,
 	setContext,
-	setCurrentCodeError,
+	setCurrentCodeErrorData,
 	setCurrentCodemark,
 	setCurrentReview,
 	SupportedSSOProvider,
@@ -350,7 +350,7 @@ export const onLogin =
 		} else if (response.state.reviewId) {
 			dispatch(setCurrentReview(response.state.reviewId));
 		} else if (response.state.codeErrorId) {
-			dispatch(setCurrentCodeError(response.state.codeErrorId));
+			dispatch(setCurrentCodeErrorData(response.state.codeErrorId));
 		}
 
 		if (context.pendingProtocolHandlerUrl && !teamCreated) {

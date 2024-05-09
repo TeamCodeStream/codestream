@@ -7,9 +7,8 @@ import {
 	FileLevelTelemetryErrorRate,
 	FileLevelTelemetryMetric,
 	FileLevelTelemetryRequestOptions,
-  FileLevelTelemetrySampleSize,
+	FileLevelTelemetrySampleSize,
 	FunctionLocator,
-	GetFileLevelTelemetryResponse,
 	TelemetryData
 } from "@codestream/protocols/agent";
 
@@ -470,7 +469,7 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			this.resetCache = false;
 
 			if (fileLevelTelemetryResponse == null) {
-				Logger.log("provideCodeLenses no response", {
+				Logger.log("fileLevelTelemetry no response", {
 					fileName: document.fileName,
 					languageId: document.languageId,
 					methodLevelTelemetryRequestOptions
@@ -479,12 +478,12 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			}
 
 			if (!fileLevelTelemetryResponse.repo) {
-				Logger.warn("provideCodeLenses missing repo");
+				Logger.warn("fileLevelTelemetry missing repo");
 				return [];
 			}
 
 			if (fileLevelTelemetryResponse.error) {
-				Logger.warn("provideCodeLenses error", {
+				Logger.warn("fileLevelTelemetry error", {
 					error: fileLevelTelemetryResponse.error
 				});
 				if (fileLevelTelemetryResponse.error.type === "NOT_ASSOCIATED") {
@@ -783,18 +782,18 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 		return codeLenses;
 	}
 
-  private lineHasAnonymousFunction(
-    allSymbols: vscode.DocumentSymbol[],
-    currentLocation: vscode.Range
-  ): boolean {
-    const symbolsForLine = allSymbols.filter(symbol => {
-      return (
-        symbol.range.start.line === currentLocation.start.line && symbol.name.endsWith(" callback")
-      );
-    });
-    Logger.debug(`symbolsForLine ${JSON.stringify(symbolsForLine, null, 2)}`);
-    return symbolsForLine.length > 0;
-  }
+	private lineHasAnonymousFunction(
+		allSymbols: vscode.DocumentSymbol[],
+		currentLocation: vscode.Range
+	): boolean {
+		const symbolsForLine = allSymbols.filter(symbol => {
+			return (
+				symbol.range.start.line === currentLocation.start.line && symbol.name.endsWith(" callback")
+			);
+		});
+		Logger.debug(`symbolsForLine ${JSON.stringify(symbolsForLine, null, 2)}`);
+		return symbolsForLine.length > 0;
+	}
 
 	private tryTrack(
 		cacheKey: string,
@@ -803,7 +802,7 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 		languageId: string,
 		codeLensCount: number
 	) {
-    const doc = this.trackingCache[cacheKey];
+		const doc = this.trackingCache[cacheKey];
 		if (doc && !doc.tracked) {
 			try {
 				this.telemetryService.track("codestream/codelenses displayed", {

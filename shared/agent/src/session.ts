@@ -451,10 +451,7 @@ export class CodeStreamSession {
 		this.agent.registerHandler(
 			BootstrapRequestType,
 			async (e, cancellationToken: CancellationToken) => {
-				const { companies, repos, streams, teams, users, codeErrors } = SessionContainer.instance();
-
-				// needed to ensure we subscribe to object streams for all code errors we have access to
-				await codeErrors.ensureCached();
+				const { companies, repos, streams, teams, users } = SessionContainer.instance();
 
 				const promise = Promise.all([
 					companies.get(),

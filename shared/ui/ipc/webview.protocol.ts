@@ -1,6 +1,5 @@
 import {
 	ObservabilityAnomaly,
-	GetObservabilityAnomaliesResponse,
 	PixieDynamicLoggingFunctionParameter,
 } from "@codestream/protocols/agent";
 import { CodemarkType } from "@codestream/protocols/api";
@@ -42,10 +41,6 @@ export const ShowReviewNotificationType = new NotificationType<ShowReviewNotific
 export interface ShowCodeErrorNotification {
 	codeErrorId: string;
 }
-
-export const ShowCodeErrorNotificationType = new NotificationType<ShowCodeErrorNotification, void>(
-	`${IpcRoutes.Webview}/codeError/show`
-);
 
 // TODO: This should be a request to the webview -- not a notification
 export interface ShowPullRequestwNotification {
