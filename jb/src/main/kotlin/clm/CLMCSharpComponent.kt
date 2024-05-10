@@ -10,14 +10,23 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.util.descendants
 import com.intellij.psi.util.elementType
 
-const val CSHARP_FILE_CLASS = "com.jetbrains.rider.languages.fileTypes.csharp.psi.impl.CSharpFileImpl"
-//const val CSHARP_FILE_CLASS = "com.jetbrains.rider.ideaInterop.fileTypes.csharp.psi.impl.CSharpFileImpl"
+const val CSHARP_FILE_CLASS_NEW = "com.jetbrains.rider.languages.fileTypes.csharp.psi.impl.CSharpFileImpl"
+const val CSHARP_FILE_CLASS_OLD = "com.jetbrains.rider.ideaInterop.fileTypes.csharp.psi.impl.CSharpFileImpl"
+
+private var fileTypeClassName : String
+private val fileTypeClass: Class<PsiFile> = try {
+    fileTypeClassName = CSHARP_FILE_CLASS_NEW
+    CLMCSharpComponent::class.java.classLoader.loadClass(CSHARP_FILE_CLASS_NEW) as Class<PsiFile>
+} catch (e: ClassNotFoundException) {
+    fileTypeClassName = CSHARP_FILE_CLASS_OLD
+    CLMCSharpComponent::class.java.classLoader.loadClass(CSHARP_FILE_CLASS_OLD) as Class<PsiFile>
+}
 
 class CLMCSharpComponent(project: Project) :
     CLMLanguageComponent<CLMCSharpEditorManager>(
         project,
         "csharp",
-        CSHARP_FILE_CLASS,
+        fileTypeClassName,
         ::CLMCSharpEditorManager,
         CSharpSymbolResolver()) {
 
@@ -31,16 +40,14 @@ class CLMCSharpComponent(project: Project) :
 class CSharpSymbolResolver : SymbolResolver {
     private val logger = Logger.getInstance(CSharpSymbolResolver::class.java)
 
-    private val fileTypeClass =
-        CLMCSharpComponent::class.java.classLoader.loadClass(CSHARP_FILE_CLASS) as Class<PsiFile>
-
     /*
         This is actually ONLY getting namespaces from the file and not classes
      */
     override fun getLookupClassNames(psiFile: PsiFile): List<String>? {
         if (!isPsiFileSupported(psiFile)) return null
+
         val namespaces = traverseForElementsOfType(psiFile, setOf("NAMESPACE_KEYWORD"))
-        val elementList = mutableListOf<String>();
+        val elementList = mutableListOf<String>()
         for (namespace in namespaces) {
             val namespaceName = getNamespaceQualifiedName(namespace) ?: continue
             elementList.add(namespaceName)
@@ -61,7 +68,7 @@ class CSharpSymbolResolver : SymbolResolver {
         if (namespace != null) {
             val namespaceNode = traverseForNamespace(psiFile, namespace)
             if (namespaceNode != null) {
-                searchNode = namespaceNode.lastChild // TODO search instead of assume lastChild
+                searchNode = namespaceNode
             }
         }
 
@@ -81,7 +88,8 @@ class CSharpSymbolResolver : SymbolResolver {
     }
 
     override fun findTopLevelFunction(psiFile: PsiFile, functionName: String): NavigatablePsiElement? {
-        // No top level methods in C#? (Yes, technically, but unlikely to be seen in an enterprise .NET application)
+        // No top level methods in C#?
+        // Yes, technically, but unlikely to be seen in an enterprise .NET application)
         return null
     }
 
@@ -147,21 +155,13 @@ class CSharpSymbolResolver : SymbolResolver {
         return null
     }
 
-    private fun traverseForNamespace(element: PsiElement, namespace: String): PsiElement? {
-        if (isCsharpNamespace(element) && getNamespaceQualifiedName(element) == namespace) {
-            return element
-        }
-        element.children.forEach { child ->
-            if (isCsharpNamespace(child) && getNamespaceQualifiedName(child) == namespace) {
-                return child
-            }
-            if (child.children.isNotEmpty()) {
-                child.children.forEach { grandChildren ->
-                    val result = traverseForNamespace(grandChildren, namespace)
-                    if (result != null) {
-                        return result
-                    }
-                }
+    private fun traverseForNamespace(element: PsiElement, namespaceToMatch: String): PsiElement? {
+        val namespaces = traverseForElementsOfType(element, setOf("NAMESPACE_KEYWORD"))
+        for (namespace in namespaces) {
+            val namespaceName = getNamespaceQualifiedName(namespace) ?: continue
+
+            if(namespaceToMatch.equals(namespaceName, ignoreCase = true)) {
+                return element
             }
         }
         return null
@@ -223,7 +223,7 @@ class CSharpSymbolResolver : SymbolResolver {
     }
 
     private fun isCsharpNamespace(psiElement: PsiElement): Boolean =
-        "NAMESPACE_DECLARATION" === psiElement.elementType.toString()
+        "NAMESPACE_KEYWORD" === psiElement.elementType.toString()
 
     private fun findParentOfPredicate(element: PsiElement, predicate: (element: PsiElement) -> Boolean): PsiElement? {
         var searchNode: PsiElement? = element
@@ -246,6 +246,4 @@ class CSharpSymbolResolver : SymbolResolver {
     }
 }
 
-class CLMCSharpEditorManager(editor: Editor, languageId: String) : CLMEditorManager(editor, languageId, true, false, CSharpSymbolResolver()) {
-
-}
+class CLMCSharpEditorManager(editor: Editor, languageId: String) : CLMEditorManager(editor, languageId, true, false, CSharpSymbolResolver())
