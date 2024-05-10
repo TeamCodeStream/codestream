@@ -9,12 +9,9 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.descendants
 import com.intellij.psi.util.elementType
-import kotlin.reflect.KProperty1
-import kotlin.reflect.full.functions
 
-const val CSHARP_FILE_CLASS = "com.jetbrains.rider.ideaInterop.fileTypes.csharp.psi.impl.CSharpFileImpl"
-const val CSHARP_NAMESPACE_CLASS =
-    "com.jetbrains.rider.ideaInterop.fileTypes.csharp.psi.impl.CSharpNamespaceDeclarationImpl"
+const val CSHARP_FILE_CLASS = "com.jetbrains.rider.languages.fileTypes.csharp.psi.impl.CSharpFileImpl"
+//const val CSHARP_FILE_CLASS = "com.jetbrains.rider.ideaInterop.fileTypes.csharp.psi.impl.CSharpFileImpl"
 
 class CLMCSharpComponent(project: Project) :
     CLMLanguageComponent<CLMCSharpEditorManager>(
@@ -37,16 +34,16 @@ class CSharpSymbolResolver : SymbolResolver {
     private val fileTypeClass =
         CLMCSharpComponent::class.java.classLoader.loadClass(CSHARP_FILE_CLASS) as Class<PsiFile>
 
+    /*
+        This is actually ONLY getting namespaces from the file and not classes
+     */
     override fun getLookupClassNames(psiFile: PsiFile): List<String>? {
         if (!isPsiFileSupported(psiFile)) return null
-        val elements = traverseForElementsOfType(psiFile, "CLASS_KEYWORD")
+        val namespaces = traverseForElementsOfType(psiFile, setOf("NAMESPACE_KEYWORD"))
         val elementList = mutableListOf<String>();
-        for (element in elements) {
-            val classNameNode = findFirstSiblingOfType(element, setOf("IDENTIFIER", "DECLARATION_IDENTIFIER", "cs:id-role"))
-                ?: continue
-            val namespaceNode = findParentOfType(classNameNode, setOf("NAMESPACE_DECLARATION", "cs:namespace-block-declaration")) ?: continue
-            val namespaceText = getNamespaceQualifiedName(namespaceNode) ?: continue
-            elementList.add("${namespaceText}.${classNameNode.text}")
+        for (namespace in namespaces) {
+            val namespaceName = getNamespaceQualifiedName(namespace) ?: continue
+            elementList.add(namespaceName)
         }
         return elementList
     }
@@ -59,6 +56,7 @@ class CSharpSymbolResolver : SymbolResolver {
         psiFile: PsiFile, namespace: String?, className: String, functionName: String
     ): PsiElement? {
         if (!isPsiFileSupported(psiFile)) return null
+
         var searchNode: PsiElement? = null
         if (namespace != null) {
             val namespaceNode = traverseForNamespace(psiFile, namespace)
@@ -66,6 +64,7 @@ class CSharpSymbolResolver : SymbolResolver {
                 searchNode = namespaceNode.lastChild // TODO search instead of assume lastChild
             }
         }
+
         if (searchNode == null) {
             searchNode = psiFile
         }
@@ -82,7 +81,7 @@ class CSharpSymbolResolver : SymbolResolver {
     }
 
     override fun findTopLevelFunction(psiFile: PsiFile, functionName: String): NavigatablePsiElement? {
-        // No top level methods in C#?
+        // No top level methods in C#? (Yes, technically, but unlikely to be seen in an enterprise .NET application)
         return null
     }
 
@@ -90,8 +89,10 @@ class CSharpSymbolResolver : SymbolResolver {
        return findParentOfPredicate(psiElement, ::isFunction)
     }
 
-    private fun traverseForElementsOfType(element: PsiElement, elementType: String): List<PsiElement> {
-        return element.descendants(true).filter { it.elementType.toString() == elementType }.toList()
+    private fun traverseForElementsOfType(element: PsiElement, elementTypes: Set<String>): List<PsiElement> {
+        return element.descendants(true).filter {
+            elementTypes.contains(it.elementType.toString())
+        }.toList()
     }
 
     private fun findFirstSiblingOfType(element: PsiElement, elementType: Set<String>): PsiElement? {
@@ -111,9 +112,6 @@ class CSharpSymbolResolver : SymbolResolver {
             return element
         }
         element.children.forEach { child ->
-            // if (child.elementType.toString() != "WHITE_SPACE") {
-            //     println("traverseForName type: ${child.elementType.toString()} text: ${child.text.take(40)} ")
-            // }
             if (child.text == name) {
                 return child
             }
@@ -134,9 +132,6 @@ class CSharpSymbolResolver : SymbolResolver {
             return element
         }
         element.children.forEach { child ->
-            // if (child.elementType.toString() != "WHITE_SPACE") {
-            //     println("traverseForName type: ${child.elementType.toString()} text: ${child.text.take(40)} ")
-            // }
             if (child.text == name && isFunction(child)) {
                 return child
             }
@@ -157,9 +152,6 @@ class CSharpSymbolResolver : SymbolResolver {
             return element
         }
         element.children.forEach { child ->
-            // if (child.elementType.toString() != "WHITE_SPACE") {
-            //     println(child.elementType.toString())
-            // }
             if (isCsharpNamespace(child) && getNamespaceQualifiedName(child) == namespace) {
                 return child
             }
@@ -175,10 +167,19 @@ class CSharpSymbolResolver : SymbolResolver {
         return null
     }
 
+    private fun getNamespaceQualifiedName(element: PsiElement): String? {
+        if(!isCsharpNamespace(element)){
+            return null
+        }
+
+        val namespaceIdentifier = findFirstSiblingOfType(element, setOf("cs:id-role"))
+        return namespaceIdentifier?.text ?: null
+    }
+
     private fun isFunction(element: PsiElement) = isClassicFunction(element) || isLambdaFunction(element)
 
     /*
-   Check if next non-whitespace token is an open paren indicating it is probably a function
+        Check if next non-whitespace token is an open paren indicating it is probably a function
     */
     private fun isClassicFunction(element: PsiElement): Boolean {
         val declarations = setOf("PUBLIC_KEYWORD", "PRIVATE_KEYWORD", "PROTECTED_KEYWORD")
@@ -224,18 +225,6 @@ class CSharpSymbolResolver : SymbolResolver {
     private fun isCsharpNamespace(psiElement: PsiElement): Boolean =
         "NAMESPACE_DECLARATION" === psiElement.elementType.toString()
 
-    private fun findParentOfType(element: PsiElement, searchElements: Set<String>): PsiElement? {
-        var searchNode: PsiElement? = element
-        do {
-            searchNode = searchNode?.parent
-        } while (searchNode != null && searchNode !is PsiFile && !searchElements.contains(searchNode.elementType.toString()))
-        return if (searchElements.contains(searchNode.elementType.toString())) {
-            searchNode
-        } else {
-            null
-        }
-    }
-
     private fun findParentOfPredicate(element: PsiElement, predicate: (element: PsiElement) -> Boolean): PsiElement? {
         var searchNode: PsiElement? = element
         do {
@@ -248,45 +237,13 @@ class CSharpSymbolResolver : SymbolResolver {
         }
     }
 
-    private fun getNamespaceQualifiedName(namespaceNode: PsiElement): String? {
-        return getNamespaceQualifiedNameMethodOne(namespaceNode) ?: getNamespaceQualifiedNameMethodTwo(namespaceNode)
-    }
-
-    private fun getNamespaceQualifiedNameMethodTwo(namespaceNode: PsiElement): String? {
-        val elements = findAllSiblingsOfType(namespaceNode.firstChild, setOf("IDENTIFIER", "DECLARATION_IDENTIFIER", "DOT", "cs:id-role"))
-        return elements.joinToString("") { it.text }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun getNamespaceQualifiedNameMethodOne(namespaceNode: PsiElement): String? {
-        val kClass = namespaceNode::class
-        val qualifiedNameProperty = kClass.members.find { it.name == "qualifiedName" } as KProperty1<Any, *>
-        // com.jetbrains.rider.ideaInterop.fileTypes.csharp.psi.impl.CSharpReferenceNameImpl
-        val cSharpReferenceName = qualifiedNameProperty.get(namespaceNode) ?: return null
-        val getTextFunction = cSharpReferenceName::class.functions.find { it.name == "getText" } ?: return null
-        return getTextFunction.call(cSharpReferenceName) as String?
-    }
-
     private fun isPsiFileSupported(psiFile: PsiFile): Boolean {
         return fileTypeClass.isAssignableFrom(psiFile::class.java)
-    }
-
-    private fun findAllSiblingsOfType(element: PsiElement, elementTypes: Set<String>): List<PsiElement> {
-        var searchNode: PsiElement? = element
-        val elements = mutableListOf<PsiElement>()
-        do {
-            searchNode = searchNode?.nextSibling
-            if (searchNode != null && elementTypes.contains(searchNode.elementType.toString())) {
-                elements.add(searchNode)
-            }
-        } while (searchNode != null)
-        return elements
     }
 
     override fun clmElements(psiFile: PsiFile, clmResult: ClmResult?): List<ClmElements> {
         return listOf()
     }
-
 }
 
 class CLMCSharpEditorManager(editor: Editor, languageId: String) : CLMEditorManager(editor, languageId, true, false, CSharpSymbolResolver()) {
