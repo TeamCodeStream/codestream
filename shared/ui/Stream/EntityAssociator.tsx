@@ -103,8 +103,8 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 		};
 	}
 
-	const handleClick = (e: React.MouseEvent<Element, MouseEvent>): void => {
-		e.preventDefault();
+	const handleClick = (e?: React.MouseEvent<Element, MouseEvent>): void => {
+		e?.preventDefault();
 		if (!selected) {
 			return;
 		}
@@ -166,6 +166,7 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 			if (props.onSuccess) {
 				props.onSuccess({ entityGuid: selected.value });
 			}
+			setSelected(null);
 		}
 	};
 
@@ -184,6 +185,12 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 		};
 	}, [elementRef]);
 
+	useEffect(() => {
+		if (props.isServiceSearch) {
+			handleClick();
+		}
+	}, [selected]);
+
 	return (
 		<NoContent style={{ marginLeft: props.isServiceSearch ? "30px" : "20px" }}>
 			{props.title && <h3>{props.title}</h3>}
@@ -201,14 +208,17 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 					valuePlaceholder={`Select an entity...`}
 				/>
 			</div>
-			<Button
-				style={{ width: "100%", height: "27px", paddingTop: "2px" }}
-				isLoading={isLoading}
-				disabled={isLoading || !selected}
-				onClick={handleClick}
-			>
-				Show Performance Data
-			</Button>
+			{!props.isServiceSearch && (
+				<Button
+					style={{ width: "100%", height: "27px", paddingTop: "2px" }}
+					isLoading={isLoading}
+					disabled={isLoading || !selected}
+					onClick={handleClick}
+				>
+					Show Performance Data
+				</Button>
+			)}
+
 			{props.children}
 		</NoContent>
 	);
