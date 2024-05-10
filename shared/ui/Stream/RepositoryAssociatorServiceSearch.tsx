@@ -107,7 +107,7 @@ export const RepositoryAssociatorServiceSearch = React.memo(
 							const remoteUrl = remote.rawUrl;
 							if (remoteUrl && id) {
 								const name = derivedState.repos[id] ? derivedState.repos[id].name : "repo";
-								const label = `${name} (${remoteUrl})`;
+								const label = `${name}`;
 								results.push({
 									...repo,
 									key: btoa(remoteUrl),
@@ -225,7 +225,7 @@ export const RepositoryAssociatorServiceSearch = React.memo(
 								handleChangeCallback={setSelected}
 								customOption={Option}
 								customWidth={width?.toString()}
-								valuePlaceholder={`Select an repository...`}
+								valuePlaceholder={`Select a repository...`}
 							/>
 						</div>
 					</div>
