@@ -107,7 +107,7 @@ export const RepositoryAssociatorServiceSearch = React.memo(
 							const remoteUrl = remote.rawUrl;
 							if (remoteUrl && id) {
 								const name = derivedState.repos[id] ? derivedState.repos[id].name : "repo";
-								const label = `${name}`;
+								const label = `${name} (${remoteUrl})`;
 								results.push({
 									...repo,
 									key: btoa(remoteUrl),
@@ -197,8 +197,16 @@ export const RepositoryAssociatorServiceSearch = React.memo(
 					have that repository open. If the repository doesn't appear in the list, open it in your
 					IDE.
 				</div>
-				<div style={{ display: "flex", justifyContent: "space-between" }}>
-					<div style={{ width: "100%", marginRight: "10px" }}>
+				<div style={{ display: "flex" }}>
+					<div
+						style={{
+							flexGrow: 1,
+							flexShrink: 1,
+							whiteSpace: "nowrap",
+							overflow: "hidden",
+							marginRight: "10px",
+						}}
+					>
 						<div ref={elementRef} style={{ marginBottom: "10px" }}>
 							<DropdownWithSearch
 								id="input-repo-associator-service-search"

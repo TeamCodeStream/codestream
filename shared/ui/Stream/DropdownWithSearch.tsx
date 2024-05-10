@@ -134,7 +134,17 @@ export const DropdownWithSearch: React.FC<DropdownWithSearchProps> = ({
 		<div>
 			<SelectedValueContainer onClick={e => handleClickSelected(e)}>
 				<SelectedValueRow>
-					<span style={{ color: "var(--text-color)" }}>{selectedOptionOutput()}</span>
+					<span
+						style={{
+							color: "var(--text-color)",
+							whiteSpace: "nowrap",
+							overflow: "hidden",
+							textOverflow: "ellipsis",
+							paddingRight: "10px",
+						}}
+					>
+						{selectedOptionOutput()}
+					</span>
 					<ChevronIcon>
 						<Icon name="chevron-down" />
 					</ChevronIcon>
