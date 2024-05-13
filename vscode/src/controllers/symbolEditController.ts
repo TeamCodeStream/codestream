@@ -54,20 +54,23 @@ export async function copySymbol(
 	try {
 		const editor = await Editor.findOrOpenEditor(Uri.parse(params.uri));
 		if (!editor?.document) {
+			Logger.log("copySymbol: exiting: !editor?.document");
 			return { success: false };
 		}
 		const symbols = await symbolLocator.locate(
 			editor?.document,
 			new CancellationTokenSource().token
 		);
+		Logger.log(`copySymbol: got ${symbols.allSymbols.length} symbols`);
 		const symbol = findSymbol(symbols, params.symbolName);
 		if (!symbol) {
+			Logger.log(`copySymbol: exiting: did not find symbol ${params.symbolName}`);
 			return {
 				success: false
 			};
 		}
 
-		// Logger.warn(`Found symbol ${JSON.stringify(symbol)}`);
+		Logger.log(`copySymbol: found symbol ${params.symbolName}`);
 		const theText = editor.document.getText(symbol.range);
 		return {
 			success: true,

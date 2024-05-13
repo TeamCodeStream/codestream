@@ -49,6 +49,7 @@ import { WarningBox } from "./WarningBox";
 import { isEmpty as _isEmpty } from "lodash";
 import { codeErrorsApi } from "@codestream/webview/store/codeErrors/api/apiResolver";
 import { isSha } from "@codestream/webview/utilities/strings";
+import { parseId } from "@codestream/webview/utilities/newRelic";
 
 const NavHeader = styled.div`
 	// flex-grow: 0;
@@ -656,6 +657,9 @@ export function CodeErrorNav(props: Props) {
 		);
 	}
 	if (multiRepoDetectedError) {
+		const idInfo = derivedState.currentCodeErrorGuid
+			? parseId(derivedState.currentCodeErrorGuid)
+			: undefined;
 		return (
 			<RepositoryAssociator
 				error={multiRepoDetectedError}
@@ -669,27 +673,21 @@ export function CodeErrorNav(props: Props) {
 				onSubmit={(r, skipTracking: boolean = false) => {
 					setIsLoading(true);
 					return new Promise((resolve, reject) => {
-						const payload = {
-							url: r.remote,
-							errorGroupGuid: derivedState.codeError?.entityGuid,
-						};
 						if (!skipTracking) {
 							HostApi.instance.track("codestream/repo_disambiguation succeeded", {
 								event_type: "response",
-								entity_guid: pendingEntityId,
-								account_id: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
+								entity_guid: derivedState.currentEntityGuid,
+								account_id: idInfo?.accountId,
 								meta_data: "item_type: error",
-								meta_data_2: `item_id: ${
-									derivedState.codeError?.objectId || pendingErrorGroupGuid!
-								}`,
+								meta_data_2: `item_id: ${derivedState.currentCodeErrorGuid}`,
 							});
 						}
 						onConnected(r.remote);
 					});
 				}}
 				telemetryOnDisplay={{
-					accountId: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
-					entityGuid: pendingEntityId,
+					accountId: idInfo?.accountId,
+					entityGuid: derivedState.codeError?.objectInfo?.entityId,
 					itemType: "error",
 					modalType: "repoAssociation",
 				}}
@@ -713,8 +711,8 @@ export function CodeErrorNav(props: Props) {
 							url: r.remote,
 							name: r.name,
 							entityId: derivedState.codeError?.objectInfo?.entityId,
-							errorGroupGuid: derivedState.codeError?.entityGuid,
-							parseableAccountId: derivedState.codeError?.entityGuid,
+							errorGroupGuid: derivedState.currentCodeErrorGuid,
+							parseableAccountId: derivedState.currentCodeErrorGuid,
 						};
 						dispatch(api("assignRepository", payload)).then(_ => {
 							setIsLoading(true);
@@ -724,15 +722,15 @@ export function CodeErrorNav(props: Props) {
 								});
 								setRepoAssociationError(undefined);
 								resolve(true);
-
+								const idInfo = derivedState.currentCodeErrorGuid
+									? parseId(derivedState.currentCodeErrorGuid)
+									: undefined;
 								HostApi.instance.track("codestream/repo_association succeeded", {
 									event_type: "response",
-									entity_guid: pendingEntityId,
-									account_id: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
+									entity_guid: derivedState.currentCodeErrorGuid,
+									account_id: idInfo?.accountId,
 									meta_data: "item_type: error",
-									meta_data_2: `item_id: ${
-										derivedState.codeError?.objectId || pendingErrorGroupGuid!
-									}`,
+									meta_data_2: `item_id: ${derivedState.currentCodeErrorGuid}`,
 								});
 
 								let remoteForOnConnected;
