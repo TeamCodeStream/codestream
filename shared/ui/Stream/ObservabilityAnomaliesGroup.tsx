@@ -6,7 +6,6 @@ import { ErrorRow } from "./ErrorRow";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import { HostApi } from "@codestream/webview/webview-api";
 import {
-	EditorRevealSymbolRequestType,
 	IdeNames,
 	OpenEditorViewNotificationType,
 } from "@codestream/protocols/webview";
@@ -107,12 +106,6 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 
 	const handleClick = (anomaly: ObservabilityAnomaly) => {
 		handleClickTelemetry(anomaly);
-		HostApi.instance.send(EditorRevealSymbolRequestType, {
-			codeFilepath: anomaly.codeAttrs?.codeFilepath,
-			codeNamespace: anomaly.codeAttrs?.codeNamespace,
-			codeFunction: anomaly.codeAttrs?.codeFunction,
-			language: anomaly.language,
-		});
 		dispatch(closeAllPanels());
 		dispatch(setCurrentObservabilityAnomaly(anomaly, props.entityGuid!, props.entityName));
 
