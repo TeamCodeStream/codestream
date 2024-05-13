@@ -108,11 +108,12 @@ export const createCodeError =
 				const state = getState();
 				const existingCodeError = getCodeError(state.codeErrors, request.errorGuid);
 				if (!existingCodeError) {
-					throw new Error("ohno");
+					logError(`Could not find codeError ${request.errorGuid} in state`);
+				} else {
+					existingCodeError.postId = response.post.id;
+					existingCodeError.streamId = response.post.streamId;
+					dispatch(updateCodeErrors([existingCodeError]));
 				}
-				existingCodeError.postId = response.post.id;
-				existingCodeError.streamId = response.post.streamId;
-				dispatch(updateCodeErrors([existingCodeError]));
 			}
 			return response;
 		} catch (error) {
