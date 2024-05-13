@@ -224,7 +224,8 @@ export const ObservabilityAnomalyPanel = (props: {
 			setRemappedDeployments(deploymentsObject);
 			setTelemetryResponse(response);
 		} catch (ex) {
-			setWarningOrErrors([{ message: ex.toString() }]);
+			console.error(ex);
+			setWarningOrErrors([{ message: "Error loading telemetry data. Please try again." }]);
 		} finally {
 			setLoading(false);
 		}
