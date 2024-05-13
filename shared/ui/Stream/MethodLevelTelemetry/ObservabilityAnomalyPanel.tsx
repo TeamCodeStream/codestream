@@ -263,37 +263,91 @@ export const ObservabilityAnomalyPanel = (props: {
 
 	const renderTitle = () => {
 		if (!currentAnomaly) return;
+
+		// Top level Anomaly
 		if (!currentAnomaly.scope) {
-			//@TODO - put this href construction logic in the agent
-			const baseUrl = props.isProductionCloud
-				? "https://one.newrelic.com/nr1-core/apm-features/transactions/"
-				: "https://staging-one.newrelic.com/nr1-core/apm-features/transactions/";
-
-			const href = `${baseUrl}${currentEntityGuid}`;
-
 			return (
-				<Link
-					style={{ color: "inherit", textDecoration: "none" }}
-					onClick={e => {
-						e.preventDefault();
-						HostApi.instance.track("codestream/newrelic_link clicked", {
-							entity_guid: currentEntityGuid,
-							meta_data: "destination: transactions",
-							meta_data_2: `codestream_section: transactions`,
-							event_type: "click",
-						});
-						HostApi.instance.send(OpenUrlRequestType, {
-							url: href,
-						});
-					}}
-				>
-					<span style={{ marginRight: "6px" }}>{currentAnomaly.name}</span>
-					{titleHovered && <Icon title="Open on New Relic" delay={1} name="link-external" />}
-				</Link>
+				<>
+					<Link
+						style={{ color: "inherit", textDecoration: "none" }}
+						onClick={e => handleClickTitleLink(e)}
+					>
+						<span style={{ marginRight: "6px" }}>{currentAnomaly.name}</span>
+						{titleHovered && <Icon title="Open on New Relic" delay={1} name="link-external" />}
+					</Link>
+					{props.entityName && (
+						<div
+							className="subtle"
+							style={{ fontSize: "x-small", margin: "2px 0px 6px 0px" }}
+							data-testid={`service-label`}
+						>
+							{props.entityName}
+						</div>
+					)}
+				</>
 			);
 		}
 
-		return <span data-testid={`anomaly-title`}>{currentAnomaly.name}</span>;
+		// Drilled Down Anomaly
+		if (currentAnomaly.scope) {
+			return (
+				<>
+					<div style={{ fontSize: "smaller" }}>{currentAnomaly.scope}</div>
+					{props.entityName && (
+						<div
+							className="subtle"
+							style={{ fontSize: "x-small", marginTop: "2px" }}
+							data-testid={`service-label`}
+						>
+							{props.entityName}
+						</div>
+					)}
+					{currentAnomaly.name && (
+						<div style={{ margin: "10px 0px 10px 0px" }}>
+							<span
+								style={{
+									borderLeft: "2px solid white",
+									borderBottom: "2px solid white",
+									width: "35px",
+									height: "35px",
+									borderRadius: "2px",
+									display: "inline-block",
+									marginLeft: "4px",
+								}}
+							></span>
+							<span
+								style={{ position: "relative", top: "4px", left: "8px" }}
+								data-testid={`anomaly-title`}
+							>
+								{currentAnomaly.name}
+							</span>
+						</div>
+					)}
+				</>
+			);
+		}
+
+		return "";
+	};
+
+	const handleClickTitleLink = e => {
+		e.preventDefault();
+
+		//@TODO - put this href construction logic in the agent
+		const baseUrl = props.isProductionCloud
+			? "https://one.newrelic.com/nr1-core/apm-features/transactions/"
+			: "https://staging-one.newrelic.com/nr1-core/apm-features/transactions/";
+
+		const href = `${baseUrl}${currentEntityGuid}`;
+		HostApi.instance.track("codestream/newrelic_link clicked", {
+			entity_guid: currentEntityGuid,
+			meta_data: "destination: transactions",
+			meta_data_2: `codestream_section: transactions`,
+			event_type: "click",
+		});
+		HostApi.instance.send(OpenUrlRequestType, {
+			url: href,
+		});
 	};
 
 	const goldenMetricAvgDuration = telemetryResponse?.goldenMetrics?.find(
@@ -336,12 +390,7 @@ export const ObservabilityAnomalyPanel = (props: {
 					<PanelHeader title={renderTitle()}></PanelHeader>
 				</div>
 			)}
-			<CancelButton
-				onClick={() => {
-					// dispatch(setCurrentObservabilityAnomaly());
-					// dispatch(closePanel());
-				}}
-			/>
+			<CancelButton onClick={() => {}} />
 
 			<div className="plane-container" style={{ padding: "5px 20px 0px 10px" }}>
 				<div className="standard-form vscroll">
@@ -361,24 +410,10 @@ export const ObservabilityAnomalyPanel = (props: {
 								<div>
 									<div
 										data-testid={`anomaly-transaction-redcolor-index-0`}
-										style={{ color: "red" }}
+										style={{ color: "red", marginBottom: "20px" }}
 									>
 										{avgDurationHeaderText || errorRateHeaderText}
 									</div>
-									<br />
-									{currentAnomaly.scope && (
-										<DataRow>
-											<DataLabel>Transaction:</DataLabel>
-											<DataValue>{currentAnomaly.scope}</DataValue>
-										</DataRow>
-									)}
-									{props.entityName && (
-										<DataRow>
-											<DataLabel>Service:</DataLabel>
-											<DataValue data-testid={`service-label`}>{props.entityName}</DataValue>
-										</DataRow>
-									)}
-									<br />
 
 									{isAvgDurationAnomaly ? (
 										<>
