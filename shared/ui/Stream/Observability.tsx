@@ -6,29 +6,29 @@ import {
 	ERROR_GENERIC_USE_ERROR_MESSAGE,
 	ERROR_NR_INSUFFICIENT_API_KEY,
 	GetEntityCountRequestType,
+	GetFileScmInfoRequestType,
+	GetFileScmInfoResponse,
+	GetIssuesResponse,
+	GetObservabilityAnomaliesRequestType,
+	GetObservabilityAnomaliesResponse,
 	GetObservabilityErrorAssignmentsRequestType,
 	GetObservabilityReposRequestType,
 	GetObservabilityReposResponse,
+	GetReposScmRequestType,
 	GetServiceLevelObjectivesRequestType,
 	GetServiceLevelTelemetryRequestType,
+	isNRErrorResponse,
 	ObservabilityErrorCore,
 	ObservabilityRepo,
-	GetObservabilityAnomaliesResponse,
+	ObservabilityRepoError,
+	ReposScm,
 	ServiceEntitiesViewedRequestType,
 	ServiceLevelObjectiveResult,
-	isNRErrorResponse,
-	GetIssuesResponse,
 	TelemetryData,
-	GetFileScmInfoRequestType,
-	GetFileScmInfoResponse,
-	ObservabilityRepoError,
-	GetReposScmRequestType,
-	ReposScm,
-	GetObservabilityAnomaliesRequestType,
 } from "@codestream/protocols/agent";
 import cx from "classnames";
-import { head as _head, isEmpty as _isEmpty, isNil as _isNil } from "lodash-es";
-import React, { useEffect, useMemo, useState } from "react";
+import { head as _head, isEmpty as _isEmpty } from "lodash-es";
+import React, { useEffect, useState } from "react";
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
@@ -43,9 +43,9 @@ import {
 import { HealthIcon } from "@codestream/webview/src/components/HealthIcon";
 import {
 	HostDidChangeWorkspaceFoldersNotificationType,
+	OpenEditorViewNotificationType,
 	OpenUrlRequestType,
 	RefreshEditorsCodeLensRequestType,
-	OpenEditorViewNotificationType,
 } from "@codestream/protocols/webview";
 import { SecurityIssuesWrapper } from "@codestream/webview/Stream/SecurityIssuesWrapper";
 import { WebviewPanels } from "@codestream/protocols/api";
@@ -70,9 +70,6 @@ import Icon from "./Icon";
 import { Link } from "./Link";
 import { ObservabilityAddAdditionalService } from "./ObservabilityAddAdditionalService";
 import { ObservabilityErrorWrapper } from "./ObservabilityErrorWrapper";
-import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
-import Timestamp from "./Timestamp";
-import Tooltip from "./Tooltip";
 import { WarningBox } from "./WarningBox";
 import { throwIfError } from "@codestream/webview/store/common";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
@@ -86,8 +83,6 @@ import {
 	setApiDemoMode,
 } from "@codestream/webview/store/codeErrors/api/apiResolver";
 import { setDemoMode } from "@codestream/webview/store/codeErrors/actions";
-import { ObservabilityAddAdditionalService } from "./ObservabilityAddAdditionalService";
-import { ObservabilityErrorWrapper } from "./ObservabilityErrorWrapper";
 import { ObservabilityAnomaliesWrapper } from "@codestream/webview/Stream/ObservabilityAnomaliesWrapper";
 import { ObservabilityPreview } from "@codestream/webview/Stream/ObservabilityPreview";
 import {
