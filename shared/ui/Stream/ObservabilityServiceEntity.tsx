@@ -36,7 +36,7 @@ interface Props {
 	calculatingAnomalies: boolean;
 	collapsed: boolean;
 	currentRepoId: string;
-	ea: EntityAccount;
+	ea?: EntityAccount;
 	entityGoldenMetrics?: EntityGoldenMetrics;
 	entityGoldenMetricsErrors: string[];
 	errorInboxError?: string;
@@ -111,171 +111,154 @@ export const ObservabilityServiceEntity = React.memo((props: Props) => {
 
 	return (
 		<>
-			<PaneNodeName
-				data-testid={`entity-name-${ea.entityGuid}`}
-				title={
-					<div
-						style={{
-							display: "flex",
-							alignItems: "center",
-						}}
-					>
-						<HealthIcon color={alertSeverityColor} />
-						<div>
-							<span data-testid={`entity-name-${ea.entityGuid}`}>{ea.entityName}</span>
-							<span
-								className="subtle"
-								style={{
-									fontSize: "11px",
-									verticalAlign: "bottom",
-								}}
-								data-testid={`entity-account-name-${ea.entityGuid}`}
-							>
-								{ea.accountName && ea.accountName.length > 25
-									? ea.accountName.substr(0, 25) + "..."
-									: ea.accountName}
-								{ea?.displayName ? ` (${ea?.displayName})` : ""}
-							</span>
-						</div>
-					</div>
-				}
-				id={ea.entityGuid}
-				labelIsFlex={true}
-				onClick={e => handleClickTopLevelService(e, ea.entityGuid)}
-				collapsed={collapsed}
-				showChildIconOnCollapse={true}
-				actionsVisibleIfOpen={true}
-			>
-				{ea.url && (
-					<Icon
-						name="globe"
-						className={cx("clickable", {
-							"icon-override-actions-visible": true,
-						})}
-						title="View on New Relic"
-						placement="bottomLeft"
-						delay={1}
-						onClick={e => {
-							e.preventDefault();
-							e.stopPropagation();
-							HostApi.instance.track("codestream/newrelic_link clicked", {
-								entity_guid: derivedState.currentMethodLevelTelemetry.newRelicEntityGuid,
-								account_id: derivedState.currentMethodLevelTelemetry.newRelicAccountId,
-								meta_data: "destination: apm_service_summary",
-								meta_data_2: `codestream_section: golden_metrics`,
-								event_type: "click",
-							});
-							HostApi.instance.send(OpenUrlRequestType, {
-								url: ea.url!,
-							});
-						}}
-					/>
-				)}
-				{isServiceSearch && (
-					<Icon
-						name="x"
-						className={cx("clickable", {
-							"icon-override-actions-visible": true,
-						})}
-						title="Clear"
-						placement="bottomLeft"
-						delay={1}
-						onClick={e => {
-							e.preventDefault();
-							e.stopPropagation();
-							dispatch(setCurrentServiceSearchEntity(undefined));
-						}}
-					/>
-				)}
-			</PaneNodeName>
-			{!collapsed && (
+			{ea && (
 				<>
-					{ea.entityGuid === loadingPane ? (
-						<>
-							<ObservabilityLoadingServiceEntity />
-						</>
-					) : (
-						<>
-							<>
-								{isServiceSearch && (
-									<RepositoryAssociatorServiceSearch
-										entityGuid={ea.entityGuid}
-										onSuccess={async e => {
-											HostApi.instance.track("codestream/repo_association succeeded", {
-												event_type: "response",
-												entity_guid: e?.entityGuid,
-												account_id: parseId(e?.entityGuid)?.accountId,
-												meta_data: "",
-												meta_data_2: "",
-												meta_data_3: "entry_point: service_search",
-											});
-											dispatch(setCurrentServiceSearchEntity(undefined));
-											if (
-												setExpandedEntityCallback &&
-												setExpandedEntityUserPrefCallback &&
-												setCurrentRepoIdCallback &&
-												e.repoId &&
-												doRefreshCallback
-											) {
-												setExpandedEntityCallback(undefined);
-												setCurrentRepoIdCallback(e.repoId);
-												setTimeout(() => {
-													doRefreshCallback(true);
-													setExpandedEntityUserPrefCallback(ea.entityGuid);
-													setExpandedEntityCallback(ea.entityGuid);
-												}, 1000);
-											}
+					<PaneNodeName
+						data-testid={`entity-name-${ea.entityGuid}`}
+						title={
+							<div
+								style={{
+									display: "flex",
+									alignItems: "center",
+								}}
+							>
+								<HealthIcon color={alertSeverityColor} />
+								<div>
+									<span data-testid={`entity-name-${ea.entityGuid}`}>{ea.entityName}</span>
+									<span
+										className="subtle"
+										style={{
+											fontSize: "11px",
+											verticalAlign: "bottom",
 										}}
-									/>
-								)}
-								<ObservabilitySummary
-									entityGoldenMetrics={entityGoldenMetrics}
-									loadingGoldenMetrics={loadingGoldenMetrics}
-									entityGoldenMetricsErrors={entityGoldenMetricsErrors}
-									recentIssues={recentIssues?.recentIssues}
-									entityGuid={ea.entityGuid}
-									accountId={ea.accountId}
-									serviceLevelObjectives={serviceLevelObjectives}
-									serviceLevelObjectiveError={serviceLevelObjectiveError}
-									domain={ea?.domain}
-									currentRepoId={currentRepoId}
-									hasServiceLevelObjectives={hasServiceLevelObjectives}
-								/>
-								{anomalyDetectionSupported && (
-									<ObservabilityAnomaliesWrapper
-										accountId={ea.accountId}
-										observabilityAnomalies={observabilityAnomalies}
-										observabilityRepo={observabilityRepo}
-										entityGuid={ea.entityGuid}
-										entityName={ea.entityName}
-										noAccess={noErrorsAccess}
-										calculatingAnomalies={calculatingAnomalies}
-										distributedTracingEnabled={ea?.distributedTracingEnabled}
-										languageAndVersionValidation={ea?.languageAndVersionValidation}
-									/>
-								)}
-								{showErrors && (
+										data-testid={`entity-account-name-${ea.entityGuid}`}
+									>
+										{ea.accountName && ea.accountName.length > 25
+											? ea.accountName.substr(0, 25) + "..."
+											: ea.accountName}
+										{ea?.displayName ? ` (${ea?.displayName})` : ""}
+									</span>
+								</div>
+							</div>
+						}
+						id={ea.entityGuid}
+						labelIsFlex={true}
+						onClick={e => handleClickTopLevelService(e, ea.entityGuid)}
+						collapsed={collapsed}
+						showChildIconOnCollapse={true}
+						actionsVisibleIfOpen={true}
+					>
+						{ea.url && (
+							<Icon
+								name="globe"
+								className={cx("clickable", {
+									"icon-override-actions-visible": true,
+								})}
+								title="View on New Relic"
+								placement="bottomLeft"
+								delay={1}
+								onClick={e => {
+									e.preventDefault();
+									e.stopPropagation();
+									HostApi.instance.track("codestream/newrelic_link clicked", {
+										entity_guid: derivedState.currentMethodLevelTelemetry.newRelicEntityGuid,
+										account_id: derivedState.currentMethodLevelTelemetry.newRelicAccountId,
+										meta_data: "destination: apm_service_summary",
+										meta_data_2: `codestream_section: golden_metrics`,
+										event_type: "click",
+									});
+									HostApi.instance.send(OpenUrlRequestType, {
+										url: ea.url!,
+									});
+								}}
+							/>
+						)}
+						{isServiceSearch && (
+							<Icon
+								name="x"
+								className={cx("clickable", {
+									"icon-override-actions-visible": true,
+								})}
+								title="Clear"
+								placement="bottomLeft"
+								delay={1}
+								onClick={e => {
+									e.preventDefault();
+									e.stopPropagation();
+									dispatch(setCurrentServiceSearchEntity(undefined));
+								}}
+							/>
+						)}
+					</PaneNodeName>
+					{!collapsed && (
+						<>
+							{ea.entityGuid === loadingPane ? (
+								<>
+									<ObservabilityLoadingServiceEntity />
+								</>
+							) : (
+								<>
 									<>
 										{isServiceSearch && (
-											<>
-												<ObservabilityErrorWrapper
-													errorInboxError={errorInboxError}
-													observabilityErrors={observabilityErrors}
-													observabilityRepo={observabilityRepo}
-													observabilityAssignments={observabilityAssignments}
-													errorEntityGuid={ea.entityGuid}
-													noAccess={noErrorsAccess}
-													errorMsg={observabilityErrorsError}
-													domain={ea?.domain}
-													isServiceSearch={true}
-												/>
-											</>
+											<RepositoryAssociatorServiceSearch
+												entityGuid={ea.entityGuid}
+												onSuccess={async e => {
+													HostApi.instance.track("codestream/repo_association succeeded", {
+														event_type: "response",
+														entity_guid: e?.entityGuid,
+														account_id: parseId(e?.entityGuid)?.accountId,
+														meta_data: "",
+														meta_data_2: "",
+														meta_data_3: "entry_point: service_search",
+													});
+													dispatch(setCurrentServiceSearchEntity(undefined));
+													if (
+														setExpandedEntityCallback &&
+														setExpandedEntityUserPrefCallback &&
+														setCurrentRepoIdCallback &&
+														e.repoId &&
+														doRefreshCallback
+													) {
+														setExpandedEntityCallback(undefined);
+														setCurrentRepoIdCallback(e.repoId);
+														setTimeout(() => {
+															doRefreshCallback(true);
+															setExpandedEntityUserPrefCallback(ea.entityGuid);
+															setExpandedEntityCallback(ea.entityGuid);
+														}, 1000);
+													}
+												}}
+											/>
 										)}
-										{!isServiceSearch && (
+										<ObservabilitySummary
+											entityGoldenMetrics={entityGoldenMetrics}
+											loadingGoldenMetrics={loadingGoldenMetrics}
+											entityGoldenMetricsErrors={entityGoldenMetricsErrors}
+											recentIssues={recentIssues?.recentIssues}
+											entityGuid={ea.entityGuid}
+											accountId={ea.accountId}
+											serviceLevelObjectives={serviceLevelObjectives}
+											serviceLevelObjectiveError={serviceLevelObjectiveError}
+											domain={ea?.domain}
+											currentRepoId={currentRepoId}
+											hasServiceLevelObjectives={hasServiceLevelObjectives}
+										/>
+										{anomalyDetectionSupported && (
+											<ObservabilityAnomaliesWrapper
+												accountId={ea.accountId}
+												observabilityAnomalies={observabilityAnomalies}
+												observabilityRepo={observabilityRepo}
+												entityGuid={ea.entityGuid}
+												entityName={ea.entityName}
+												noAccess={noErrorsAccess}
+												calculatingAnomalies={calculatingAnomalies}
+												distributedTracingEnabled={ea?.distributedTracingEnabled}
+												languageAndVersionValidation={ea?.languageAndVersionValidation}
+											/>
+										)}
+										{showErrors && (
 											<>
-												{observabilityErrors?.find(
-													oe => oe?.repoId === observabilityRepo?.repoId
-												) && (
+												{isServiceSearch && (
 													<>
 														<ObservabilityErrorWrapper
 															errorInboxError={errorInboxError}
@@ -286,49 +269,74 @@ export const ObservabilityServiceEntity = React.memo((props: Props) => {
 															noAccess={noErrorsAccess}
 															errorMsg={observabilityErrorsError}
 															domain={ea?.domain}
+															isServiceSearch={true}
 														/>
+													</>
+												)}
+												{!isServiceSearch && (
+													<>
+														{observabilityErrors?.find(
+															oe => oe?.repoId === observabilityRepo?.repoId
+														) && (
+															<>
+																<ObservabilityErrorWrapper
+																	errorInboxError={errorInboxError}
+																	observabilityErrors={observabilityErrors}
+																	observabilityRepo={observabilityRepo}
+																	observabilityAssignments={observabilityAssignments}
+																	errorEntityGuid={ea.entityGuid}
+																	noAccess={noErrorsAccess}
+																	errorMsg={observabilityErrorsError}
+																	domain={ea?.domain}
+																/>
+															</>
+														)}
 													</>
 												)}
 											</>
 										)}
+										{(currentRepoId || isServiceSearch) && ea?.domain === "APM" && (
+											<SecurityIssuesWrapper
+												entityGuid={ea.entityGuid}
+												accountId={ea.accountId}
+												setHasVulnerabilities={setIsVulnPresent}
+											/>
+										)}
+
+										{derivedState.showLogSearch &&
+											(ea?.domain === "APM" || ea?.domain === "EXT") && (
+												<Row
+													style={{
+														padding: "2px 10px 2px 30px",
+													}}
+													className={"pr-row"}
+													onClick={e => {
+														e.preventDefault();
+														e.stopPropagation();
+
+														HostApi.instance.notify(OpenEditorViewNotificationType, {
+															panel: "logs",
+															title: "Logs",
+															entityGuid: ea.entityGuid,
+															entryPoint: "tree_view",
+															ide: {
+																name: derivedState.ideName,
+															},
+														});
+													}}
+												>
+													<span
+														data-testid={`view-logs-${ea.entityGuid}`}
+														style={{ marginLeft: "2px" }}
+													>
+														<Icon style={{ marginRight: "4px" }} name="logs" title="View Logs" />
+														View Logs
+													</span>
+												</Row>
+											)}
 									</>
-								)}
-								{(currentRepoId || isServiceSearch) && ea?.domain === "APM" && (
-									<SecurityIssuesWrapper
-										entityGuid={ea.entityGuid}
-										accountId={ea.accountId}
-										setHasVulnerabilities={setIsVulnPresent}
-									/>
-								)}
-
-								{derivedState.showLogSearch && (ea?.domain === "APM" || ea?.domain === "EXT") && (
-									<Row
-										style={{
-											padding: "2px 10px 2px 30px",
-										}}
-										className={"pr-row"}
-										onClick={e => {
-											e.preventDefault();
-											e.stopPropagation();
-
-											HostApi.instance.notify(OpenEditorViewNotificationType, {
-												panel: "logs",
-												title: "Logs",
-												entityGuid: ea.entityGuid,
-												entryPoint: "tree_view",
-												ide: {
-													name: derivedState.ideName,
-												},
-											});
-										}}
-									>
-										<span data-testid={`view-logs-${ea.entityGuid}`} style={{ marginLeft: "2px" }}>
-											<Icon style={{ marginRight: "4px" }} name="logs" title="View Logs" />
-											View Logs
-										</span>
-									</Row>
-								)}
-							</>
+								</>
+							)}
 						</>
 					)}
 				</>

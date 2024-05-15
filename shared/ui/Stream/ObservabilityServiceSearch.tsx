@@ -159,6 +159,37 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 	const _alertSeverity = entityAccount?.alertSeverity || "";
 	const alertSeverityColor = ALERT_SEVERITY_COLORS[_alertSeverity];
 
+	const observabilityServiceEntityProps = {
+		alertSeverityColor,
+		anomalyDetectionSupported,
+		calculatingAnomalies,
+		collapsed: expandedEntity !== derivedState.currentServiceSearchEntity,
+		currentRepoId,
+		ea: entityAccount,
+		entityGoldenMetrics,
+		entityGoldenMetricsErrors,
+		errorInboxError,
+		handleClickTopLevelService,
+		hasServiceLevelObjectives,
+		loadingGoldenMetrics,
+		loadingPane,
+		noErrorsAccess,
+		observabilityAnomalies,
+		observabilityAssignments,
+		observabilityErrors: errors,
+		observabilityErrorsError: errorsError,
+		recentIssues,
+		serviceLevelObjectiveError,
+		serviceLevelObjectives,
+		setIsVulnPresent,
+		showErrors: errors && !errorsError ? true : false,
+		isServiceSearch: true,
+		setExpandedEntityCallback,
+		setExpandedEntityUserPrefCallback,
+		setCurrentRepoIdCallback,
+		doRefreshCallback,
+	};
+
 	return (
 		<>
 			<PaneNode>
@@ -210,36 +241,7 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 
 				{!loadingEntityAccount && entityAccount && currentServiceSearchEntity && (
 					<>
-						<ObservabilityServiceEntity
-							alertSeverityColor={alertSeverityColor}
-							anomalyDetectionSupported={anomalyDetectionSupported}
-							calculatingAnomalies={calculatingAnomalies}
-							collapsed={expandedEntity !== derivedState.currentServiceSearchEntity}
-							currentRepoId={currentRepoId}
-							ea={entityAccount}
-							entityGoldenMetrics={entityGoldenMetrics}
-							entityGoldenMetricsErrors={entityGoldenMetricsErrors}
-							errorInboxError={errorInboxError}
-							handleClickTopLevelService={handleClickTopLevelService}
-							hasServiceLevelObjectives={hasServiceLevelObjectives}
-							loadingGoldenMetrics={loadingGoldenMetrics}
-							loadingPane={loadingPane}
-							noErrorsAccess={noErrorsAccess}
-							observabilityAnomalies={observabilityAnomalies}
-							observabilityAssignments={observabilityAssignments}
-							observabilityErrors={errors}
-							observabilityErrorsError={errorsError}
-							recentIssues={recentIssues}
-							serviceLevelObjectiveError={serviceLevelObjectiveError}
-							serviceLevelObjectives={serviceLevelObjectives}
-							setIsVulnPresent={setIsVulnPresent}
-							showErrors={errors && !errorsError ? true : false}
-							isServiceSearch={true}
-							setExpandedEntityCallback={setExpandedEntityCallback}
-							setExpandedEntityUserPrefCallback={setExpandedEntityUserPrefCallback}
-							setCurrentRepoIdCallback={setCurrentRepoIdCallback}
-							doRefreshCallback={doRefreshCallback}
-						/>
+						<ObservabilityServiceEntity {...observabilityServiceEntityProps} />
 					</>
 				)}
 			</PaneNode>

@@ -55,6 +55,38 @@ const Option = (props: OptionProps) => {
 	return <components.Option {...props} children={children} />;
 };
 
+export const formatRepoResponse = (response, repos) => {
+	const results: {
+		key: string;
+		remote: string;
+		label: string;
+		name: string;
+		value: string;
+	}[] = [];
+	for (const repo of response.repositories) {
+		if (repo.remotes) {
+			for (const remote of repo.remotes) {
+				const id = repo.id || "";
+				const remoteUrl = remote.rawUrl;
+				if (remoteUrl && id) {
+					const name = repos[id] ? repos[id].name : "repo";
+					const label = `${name} (${remoteUrl})`;
+					results.push({
+						...repo,
+						key: btoa(remoteUrl),
+						remote: remoteUrl,
+						label: label,
+						name: name,
+						value: name,
+					});
+				}
+			}
+		}
+	}
+
+	return results;
+};
+
 export const RepositoryAssociatorServiceSearch = React.memo(
 	(props: PropsWithChildren<RepositoryAssociatorServiceSearchProps>) => {
 		const dispatch = useAppDispatch();
@@ -93,33 +125,7 @@ export const RepositoryAssociatorServiceSearch = React.memo(
 					return [];
 				}
 
-				const results: {
-					key: string;
-					remote: string;
-					label: string;
-					name: string;
-					value: string;
-				}[] = [];
-				for (const repo of response.repositories) {
-					if (repo.remotes) {
-						for (const remote of repo.remotes) {
-							const id = repo.id || "";
-							const remoteUrl = remote.rawUrl;
-							if (remoteUrl && id) {
-								const name = derivedState.repos[id] ? derivedState.repos[id].name : "repo";
-								const label = `${name} (${remoteUrl})`;
-								results.push({
-									...repo,
-									key: btoa(remoteUrl),
-									remote: remoteUrl,
-									label: label,
-									name: name,
-									value: name,
-								});
-							}
-						}
-					}
-				}
+				const results = formatRepoResponse(response, derivedState.repos);
 
 				return results;
 			} catch (error) {

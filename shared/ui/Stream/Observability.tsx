@@ -40,11 +40,8 @@ import {
 	setEntityAccounts,
 	setRefreshAnomalies,
 } from "../store/context/actions";
-import { HealthIcon } from "@codestream/webview/src/components/HealthIcon";
 import {
 	HostDidChangeWorkspaceFoldersNotificationType,
-	OpenEditorViewNotificationType,
-	OpenUrlRequestType,
 	RefreshEditorsCodeLensRequestType,
 } from "@codestream/protocols/webview";
 import { WebviewPanels } from "@codestream/protocols/api";
@@ -63,12 +60,10 @@ import {
 import { HostApi } from "../webview-api";
 import { openPanel, setUserPreference } from "./actions";
 import { ALERT_SEVERITY_COLORS } from "./CodeError/index";
-import { Row } from "./CrossPostIssueControls/IssuesPane";
 import { EntityAssociator } from "./EntityAssociator";
 import Icon from "./Icon";
 import { Link } from "./Link";
 import { ObservabilityAddAdditionalService } from "./ObservabilityAddAdditionalService";
-import { ObservabilityErrorWrapper } from "./ObservabilityErrorWrapper";
 import { WarningBox } from "./WarningBox";
 import { throwIfError } from "@codestream/webview/store/common";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
@@ -82,7 +77,6 @@ import {
 	setApiDemoMode,
 } from "@codestream/webview/store/codeErrors/api/apiResolver";
 import { setDemoMode } from "@codestream/webview/store/codeErrors/actions";
-import { ObservabilityAnomaliesWrapper } from "@codestream/webview/Stream/ObservabilityAnomaliesWrapper";
 import { ObservabilityPreview } from "@codestream/webview/Stream/ObservabilityPreview";
 import { ObservabilityLoadingServiceEntities } from "@codestream/webview/Stream/ObservabilityLoading";
 import { ObservabilityServiceSearch } from "./ObservabilityServiceSearch";
@@ -1365,34 +1359,37 @@ export const Observability = React.memo((props: Props) => {
 														const showErrors = ea?.domain
 															? ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS.includes(ea.domain)
 															: false;
+
+														const observabilityServiceEntityProps = {
+															alertSeverityColor,
+															anomalyDetectionSupported,
+															calculatingAnomalies,
+															collapsed,
+															currentRepoId,
+															ea,
+															entityGoldenMetrics,
+															entityGoldenMetricsErrors,
+															errorInboxError,
+															handleClickTopLevelService,
+															hasServiceLevelObjectives,
+															loadingGoldenMetrics,
+															loadingPane,
+															noErrorsAccess,
+															observabilityAnomalies,
+															observabilityAssignments,
+															observabilityErrors,
+															observabilityErrorsError,
+															observabilityRepo: _observabilityRepo,
+															recentIssues,
+															serviceLevelObjectiveError,
+															serviceLevelObjectives,
+															setIsVulnPresent,
+															showErrors,
+														};
+
 														return (
 															<>
-																<ObservabilityServiceEntity
-																	alertSeverityColor={alertSeverityColor}
-																	anomalyDetectionSupported={anomalyDetectionSupported}
-																	calculatingAnomalies={calculatingAnomalies}
-																	collapsed={collapsed}
-																	currentRepoId={currentRepoId}
-																	ea={ea}
-																	entityGoldenMetrics={entityGoldenMetrics}
-																	entityGoldenMetricsErrors={entityGoldenMetricsErrors}
-																	errorInboxError={errorInboxError}
-																	handleClickTopLevelService={handleClickTopLevelService}
-																	hasServiceLevelObjectives={hasServiceLevelObjectives}
-																	loadingGoldenMetrics={loadingGoldenMetrics}
-																	loadingPane={loadingPane}
-																	noErrorsAccess={noErrorsAccess}
-																	observabilityAnomalies={observabilityAnomalies}
-																	observabilityAssignments={observabilityAssignments}
-																	observabilityErrors={observabilityErrors}
-																	observabilityErrorsError={observabilityErrorsError}
-																	observabilityRepo={_observabilityRepo}
-																	recentIssues={recentIssues}
-																	serviceLevelObjectiveError={serviceLevelObjectiveError}
-																	serviceLevelObjectives={serviceLevelObjectives}
-																	setIsVulnPresent={setIsVulnPresent}
-																	showErrors={showErrors}
-																/>
+																<ObservabilityServiceEntity {...observabilityServiceEntityProps} />
 															</>
 														);
 													})}
