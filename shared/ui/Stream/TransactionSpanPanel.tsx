@@ -473,7 +473,6 @@ export const TransactionSpanPanel = () => {
 						account_id: derivedState.currentTransactionSpan.newRelicAccountId,
 						meta_data: "item_type: span",
 						meta_data_2: `item_id: ${derivedState.currentTransactionSpan.spanId}`,
-						meta_data_3: "entry_point: open_in_ide",
 					});
 					setNeedsRepoAssociation(false);
 					resolve(true);

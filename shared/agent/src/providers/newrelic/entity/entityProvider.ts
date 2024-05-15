@@ -448,26 +448,28 @@ export class EntityProvider implements Disposable {
 				};
 			}>(
 				`query fetchEntitiesByIds($guids: [EntityGuid]!) {
-  actor {    
-    entities(guids: $guids) {
-	 accountId
-	 account {
-        name
-        id
-     }
-	 goldenMetrics {
-        metrics {
-          query
-          name
-        }
-      }
-	 guid
-     name
-	 entityType
-	 type	 
-    }
-  }
-}`,
+					actor {    
+						entities(guids: $guids) {
+						accountId
+						account {
+							name
+							id
+						}
+						goldenMetrics {
+							metrics {
+							query
+							name
+							}
+						}
+						guid
+						name
+						entityType
+						type
+						domain
+						alertSeverity
+						}
+					}
+				}`,
 				{
 					guids: needed,
 				}

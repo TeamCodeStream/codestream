@@ -142,7 +142,8 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 		newRelicGraphqlClient,
 		reposProvider,
 		nrApiConfig,
-		deploymentsProvider
+		deploymentsProvider,
+		entityProvider
 	);
 
 	const entityAccountResolver = new EntityAccountResolver(

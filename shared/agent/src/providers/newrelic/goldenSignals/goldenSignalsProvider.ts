@@ -18,7 +18,6 @@ import {
 	MetricTimesliceNameMapping,
 	NRErrorResponse,
 	ObservabilityRepo,
-	GetEntityFromGuid,
 } from "@codestream/protocols/agent";
 import { CSMe } from "@codestream/protocols/api";
 import { uniqBy as _uniqBy } from "lodash";
@@ -33,6 +32,7 @@ import { NrApiConfig } from "../nrApiConfig";
 import { NrqlQueryBuilder } from "../nrql/nrqlQueryBuilder";
 import { ReposProvider } from "../repos/reposProvider";
 import { mapNRErrorResponse, parseId, toFixedNoRounding } from "../utils";
+import { EntityProvider } from "../entity/entityProvider";
 
 @lsp
 export class GoldenSignalsProvider {
@@ -40,7 +40,8 @@ export class GoldenSignalsProvider {
 		private graphqlClient: NewRelicGraphqlClient,
 		private reposProvider: ReposProvider,
 		private nrApiConfig: NrApiConfig,
-		private deploymentsProvider: DeploymentsProvider
+		private deploymentsProvider: DeploymentsProvider,
+		private entityProvider: EntityProvider
 	) {}
 
 	@lspHandler(GetServiceLevelTelemetryRequestType)
@@ -61,7 +62,13 @@ export class GoldenSignalsProvider {
 
 		let entity;
 		if (request.isServiceSearch) {
-			entity = await this.getEntityFromGuid(request.newRelicEntityGuid);
+			const entities = await this.entityProvider.getEntitiesById({
+				guids: [request.newRelicEntityGuid],
+			});
+
+			if (entities.entities.length > 0) {
+				entity = entities.entities[0];
+			}
 		} else {
 			entity = observabilityRepo?.entityAccounts.find(
 				_ => _.entityGuid === request.newRelicEntityGuid
@@ -83,7 +90,7 @@ export class GoldenSignalsProvider {
 				recentIssuesResponse = await this.getIssues(accountId!, request.newRelicEntityGuid);
 			}
 
-			const validEntityGuid: string = entity?.entityGuid ?? request.newRelicEntityGuid;
+			const validEntityGuid: string = entity?.guid ?? request.newRelicEntityGuid;
 
 			const entityGoldenMetrics = await this.getEntityLevelGoldenMetrics(
 				validEntityGuid,
@@ -94,7 +101,7 @@ export class GoldenSignalsProvider {
 				entityGoldenMetrics: entityGoldenMetrics,
 				newRelicEntityAccounts: observabilityRepo?.entityAccounts ?? [],
 				newRelicAlertSeverity: entity?.alertSeverity,
-				newRelicEntityName: entity?.entityName,
+				newRelicEntityName: entity?.name,
 				newRelicEntityGuid: validEntityGuid,
 				newRelicUrl: `${this.nrApiConfig.productUrl}/redirect/entity/${validEntityGuid}`,
 				recentIssues: recentIssuesResponse,
@@ -102,34 +109,6 @@ export class GoldenSignalsProvider {
 			return response;
 		}
 		return undefined;
-	}
-
-	async getEntityFromGuid(entityGuid: string): Promise<GetEntityFromGuid> {
-		const data = await this.graphqlClient.query(
-			`query errorGroupById($guid: EntityGuid!) {
-				actor {
-				  entity(guid: $guid) {
-					domain
-					alertSeverity
-					name
-				  }
-				}
-			  }
-		  `,
-			{
-				guid: entityGuid,
-			}
-		);
-
-		if (data && data.actor && data.actor.entity) {
-			return {
-				alertSeverity: data.actor.entity.alertSeverity,
-				entityName: data.actor.entity.name,
-				entityGuid: entityGuid,
-			};
-		} else {
-			throw new Error("Invalid data returned from GraphQL query");
-		}
 	}
 
 	async getIssues(

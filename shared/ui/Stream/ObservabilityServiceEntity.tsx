@@ -263,7 +263,7 @@ export const ObservabilityServiceEntity = React.memo((props: Props) => {
 													observabilityErrors={observabilityErrors}
 													observabilityRepo={observabilityRepo}
 													observabilityAssignments={observabilityAssignments}
-													entityGuid={ea.entityGuid}
+													errorEntityGuid={ea.entityGuid}
 													noAccess={noErrorsAccess}
 													errorMsg={observabilityErrorsError}
 													domain={ea?.domain}
@@ -282,7 +282,7 @@ export const ObservabilityServiceEntity = React.memo((props: Props) => {
 															observabilityErrors={observabilityErrors}
 															observabilityRepo={observabilityRepo}
 															observabilityAssignments={observabilityAssignments}
-															entityGuid={ea.entityGuid}
+															errorEntityGuid={ea.entityGuid}
 															noAccess={noErrorsAccess}
 															errorMsg={observabilityErrorsError}
 															domain={ea?.domain}

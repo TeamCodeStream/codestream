@@ -273,7 +273,7 @@ export class ObservabilityErrorsProvider {
 							appName: errorTrace.appName,
 							errorClass: errorTrace.errorClass,
 							message: errorTrace.message,
-							remote: "test", //application.urlValue!,  not sure what to do with this
+							remote: "",
 							errorGroupGuid: response.actor.errorsInbox.errorGroup.id,
 							occurrenceId: errorTrace.occurrenceId,
 							traceId: errorTrace.traceId,

@@ -1565,6 +1565,8 @@ export interface EntityAccount {
 	type?: string;
 	entityTypeDescription?: string;
 	domain?: string;
+	name?: string;
+	guid?: string;
 	url?: string;
 	displayName?: string;
 	tags: {

@@ -11,6 +11,7 @@ describe("newRelicProvider", () => {
 			{} as any,
 			{} as any,
 			{} as any,
+			{} as any,
 			{} as any
 		);
 		const asdf = goldenSignalsProvider.getGoldenSignalsEntity({} as any, {
@@ -34,6 +35,7 @@ describe("newRelicProvider", () => {
 
 	it("getBestEntity-basedOnName", () => {
 		const goldenSignalsProvider = new GoldenSignalsProvider(
+			{} as any,
 			{} as any,
 			{} as any,
 			{} as any,
@@ -69,6 +71,7 @@ describe("newRelicProvider", () => {
 
 	it("getBestEntity-default", () => {
 		const goldenSignalsProvider = new GoldenSignalsProvider(
+			{} as any,
 			{} as any,
 			{} as any,
 			{} as any,
@@ -110,6 +113,7 @@ describe("newRelicProvider", () => {
 	});
 	it("getBestEntity-basedOnpreferences", () => {
 		const goldenSignalsProvider = new GoldenSignalsProvider(
+			{} as any,
 			{} as any,
 			{} as any,
 			{} as any,
@@ -219,7 +223,8 @@ describe("newRelicProvider", () => {
 			graphqlClient as any,
 			{} as any,
 			{} as any,
-			deploymentProviderStub as any
+			deploymentProviderStub as any,
+			{} as any
 		);
 
 		const response = (await goldenSignalsProvider.getEntityLevelGoldenMetrics(
