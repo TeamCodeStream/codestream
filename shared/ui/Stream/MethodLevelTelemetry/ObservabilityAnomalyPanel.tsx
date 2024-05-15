@@ -309,8 +309,8 @@ export const ObservabilityAnomalyPanel = (props: {
 								style={{
 									borderLeft: "2px solid white",
 									borderBottom: "2px solid white",
-									width: "35px",
-									height: "35px",
+									width: "18px",
+									height: "18px",
 									borderRadius: "2px",
 									display: "inline-block",
 									marginLeft: "4px",
