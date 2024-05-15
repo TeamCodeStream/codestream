@@ -259,28 +259,6 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		dispatch(logout());
 	};
 
-	const buildAdminTeamMenuItem = () => {
-		const { company, team, currentUserId, currentUserEmail } = derivedState;
-		const { adminIds } = team;
-
-		if (adminIds && adminIds.includes(currentUserId!)) {
-			const submenu = [
-				{
-					label: "Export Data",
-					key: "export-data",
-					action: () => go(WebviewPanels.Export),
-					disabled: false,
-				},
-			];
-
-			return {
-				label: "Organization Admin",
-				key: "admin",
-				submenu,
-			};
-		} else return null;
-	};
-
 	const menuItems = [] as any;
 
 	interface SubmenuOption {
@@ -346,7 +324,6 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			// 	label: `Invite people to ${derivedState.team.name}`,
 			// 	action: () => dispatch(openModal(WebviewModals.Invite))
 			// },
-			buildAdminTeamMenuItem(),
 			buildSwitchTeamMenuItem(),
 			{ label: "-" },
 		].filter(Boolean)
