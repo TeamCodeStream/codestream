@@ -42,6 +42,23 @@ import { ContextLogger } from "../../contextLogger";
 const ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS = ["APM", "BROWSER", "EXT", "INFRA"];
 import { SourceMapProvider } from "./sourceMapProvider";
 import { getRepoName } from "@codestream/utils/system/string";
+import {
+	BaseError,
+	errorQueryResultToCommonError,
+	ErrorResultWrapper,
+	getFingerprintedErrorTraceQueries,
+} from "./errorQueries";
+
+export type ErrorEventApiResponse<T> = {
+	actor: {
+		account: {
+			nrql: {
+				nrql: string;
+				results: T[];
+			};
+		};
+	};
+};
 
 @lsp
 export class ObservabilityErrorsProvider {
@@ -143,43 +160,52 @@ export class ObservabilityErrorsProvider {
 								continue;
 							}
 
-							const errorTraces = await this.findFingerprintedErrorTraces(
+							const entityType: EntityType =
+								application.source.entity.entityType ?? "APM_APPLICATION_ENTITY";
+							const timeWindow = request.timeWindow ?? "3 days ago";
+							const errorTraceWrappers = await this.findFingerprintedErrorTraces(
 								application.source.entity.account.id,
 								application.source.entity.guid,
-								application.source.entity.entityType,
-								request.timeWindow
+								entityType,
+								timeWindow
 							);
-							for (const errorTrace of errorTraces) {
-								try {
-									const response = await this.getErrorGroupFromNameMessageEntity(
-										errorTrace.errorClass,
-										errorTrace.message,
-										errorTrace.entityGuid
-									);
+							for (const errorTraceWrapper of errorTraceWrappers) {
+								for (const errorTrace of errorTraceWrapper.response) {
+									try {
+										const response = await this.getErrorGroupDetails(
+											errorTrace,
+											errorTraceWrapper.errorQuery.entityType
+										);
 
-									if (response && response.actor.errorsInbox.errorGroup) {
-										observabilityErrors.push({
-											entityId: errorTrace.entityGuid,
-											appName: errorTrace.appName,
-											errorClass: errorTrace.errorClass,
-											message: errorTrace.message,
-											remote: application.urlValue!,
-											errorGroupGuid: response.actor.errorsInbox.errorGroup.id,
-											occurrenceId: errorTrace.occurrenceId,
-											traceId: errorTrace.traceId,
-											count: errorTrace.count,
-											lastOccurrence: errorTrace.lastOccurrence,
-											errorGroupUrl: response.actor.errorsInbox.errorGroup.url,
-										});
-										if (observabilityErrors.length > 4) {
-											gotoEnd = true;
-											break;
+										const commonErrorTrace = errorQueryResultToCommonError(
+											errorTraceWrapper.errorQuery,
+											errorTrace
+										);
+
+										if (response && response.actor.errorsInbox.errorGroup) {
+											observabilityErrors.push({
+												entityId: commonErrorTrace.entityGuid,
+												appName: commonErrorTrace.appName,
+												errorClass: commonErrorTrace.errorClass,
+												message: commonErrorTrace.message,
+												remote: application.urlValue!,
+												errorGroupGuid: response.actor.errorsInbox.errorGroup.id,
+												occurrenceId: commonErrorTrace.occurrenceId,
+												traceId: commonErrorTrace.traceId,
+												count: commonErrorTrace.count,
+												lastOccurrence: commonErrorTrace.lastOccurrence,
+												errorGroupUrl: response.actor.errorsInbox.errorGroup.url,
+											});
+											if (observabilityErrors.length > 4) {
+												gotoEnd = true;
+												break;
+											}
 										}
+									} catch (ex) {
+										ContextLogger.warn("internal error getErrorGroupGuid", {
+											ex: ex,
+										});
 									}
-								} catch (ex) {
-									ContextLogger.warn("internal error getErrorGroupGuid", {
-										ex: ex,
-									});
 								}
 							}
 
@@ -210,26 +236,28 @@ export class ObservabilityErrorsProvider {
 	 *
 	 * @param accountId the NR1 account id to query against
 	 * @param applicationGuid the entityGuid for the application to query for
+	 * @param entityType apm app / browser app / mobile app
+	 * @param timeWindow nrql since string of the format "x days ago"
 	 * @returns list of most recent error traces for each unique fingerprint
 	 */
 	@log()
 	private async findFingerprintedErrorTraces(
 		accountId: number,
 		applicationGuid: string,
-		entityType?: EntityType,
-		timeWindow?: string
-	) {
-		const queries = this.getFingerprintedErrorTraceQueries(applicationGuid, entityType, timeWindow);
+		entityType: EntityType,
+		timeWindow: string
+	): Promise<ErrorResultWrapper[]> {
+		const queries = getFingerprintedErrorTraceQueries(applicationGuid, entityType, timeWindow);
 
-		const results = [];
+		const results: ErrorResultWrapper[] = [];
 		for (const query of queries) {
-			const response = await this.graphqlClient.query(
+			const response: ErrorEventApiResponse<BaseError> = await this.graphqlClient.query(
 				`query fetchErrorsInboxFacetedData($accountId:Int!) {
-						actor {
-						  account(id: $accountId) {
-							nrql(query: "${query}", timeout: 60) { nrql results }
-						  }
-						}
+							actor {
+								account(id: $accountId) {
+								nrql(query: "${query.query}", timeout: 60) { nrql results }
+								}
+							}
 					  }
 					  `,
 				{
@@ -237,38 +265,62 @@ export class ObservabilityErrorsProvider {
 				}
 			);
 			if (response.actor.account.nrql.results?.length) {
-				results.push(...response.actor.account.nrql.results);
+				results.push({ errorQuery: query, response: response.actor.account.nrql.results });
 			}
 		}
 		return results;
 	}
 
+	private getSourceType(entityType?: EntityType): string {
+		switch (entityType) {
+			case "BROWSER_APPLICATION_ENTITY": {
+				return "JAVA_SCRIPT_ERROR";
+			}
+			case "MOBILE_APPLICATION_ENTITY": {
+				return "MOBILE_CRASH";
+			}
+			default: {
+				return "TRANSACTION_ERROR";
+			}
+		}
+	}
+
 	@log()
-	async getErrorGroupFromNameMessageEntity(name: string, message: string, entityGuid: string) {
+	async getErrorGroupDetails(errorTrace: BaseError, entityType: EntityType) {
+		const source = this.getSourceType(entityType);
+		// There are fields that the nerdgraph can't handle - remove them before sending in rawEvent
+		const prunedEvent: any = { ...errorTrace };
+		delete prunedEvent.facet;
+		delete prunedEvent.length;
+		delete prunedEvent.traceId;
+		delete prunedEvent.appName;
 		try {
-			return this.graphqlClient.query(
-				`query getErrorGroupGuid($name: String!, $message:String!, $entityGuid:EntityGuid!) {
-				actor {
-				  errorsInbox {
-					errorGroup(errorEvent: {name: $name,
-					  message: $message,
-					  entityGuid: $entityGuid}) {
-					  id
-					  url
+			const query = `query getErrorGroupGuid(
+				$source: ErrorsInboxEventSource!,
+				$entityGuid: EntityGuid!,
+				$rawEvent: ErrorsInboxRawEvent!) {
+					actor {
+						errorsInbox {
+							errorGroup(errorEvent: { 
+									source: $source,
+									entityGuid: $entityGuid, 
+									event: $rawEvent 
+								})
+								{
+									id
+									url
+							}
+						}
 					}
-				  }
-				}
-			  }`,
-				{
-					name: name,
-					message: message,
-					entityGuid: entityGuid,
-				}
-			);
+			  }`;
+			return this.graphqlClient.query(query, {
+				source: source,
+				rawEvent: prunedEvent,
+				entityGuid: errorTrace.entityGuid,
+			});
 		} catch (ex) {
 			ContextLogger.error(ex, "getErrorGroupFromNameMessageEntity", {
-				name,
-				message,
+				errorTrace,
 			});
 			return undefined;
 		}
@@ -467,95 +519,6 @@ export class ObservabilityErrorsProvider {
 			});
 		}
 		return undefined;
-	}
-
-	private getFingerprintedErrorTraceQueries(
-		applicationGuid: String,
-		entityType?: EntityType,
-		timeWindow?: string
-	): String[] {
-		const since = timeWindow ? `${timeWindow} ago` : "3 days ago";
-		const apmNrql = [
-			"SELECT",
-			"sum(count) AS 'count',", // first field is used to sort with FACET
-			"latest(timestamp) AS 'lastOccurrence',",
-			"latest(id) AS 'occurrenceId',",
-			"latest(appName) AS 'appName',",
-			"latest(error.class) AS 'errorClass',",
-			"latest(message) AS 'message',",
-			"latest(entityGuid) AS 'entityGuid',",
-			"latest(fingerprint) AS 'fingerprintId',",
-			"latest(traceId) AS 'traceId',",
-			"count(id) AS 'length'",
-			"FROM ErrorTrace",
-			`WHERE fingerprint IS NOT NULL AND NOT error.expected AND entityGuid='${applicationGuid}'`,
-			"FACET error.class, message", // group the results by identifiers
-			`SINCE ${since}`,
-			"LIMIT MAX",
-		].join(" ");
-
-		const browserNrql = [
-			"SELECT",
-			"count(*) as 'count',", // first field is used to sort with FACET
-			"latest(timestamp) AS 'lastOccurrence',",
-			"latest(stackHash) AS 'occurrenceId',",
-			"latest(appName) AS 'appName',",
-			"latest(errorClass) AS 'errorClass',",
-			"latest(errorMessage) AS 'message',",
-			"latest(entityGuid) AS 'entityGuid',",
-			"latest(traceId) AS 'traceId',",
-			"count(guid) as 'length'",
-			"FROM JavaScriptError",
-			`WHERE stackHash IS NOT NULL AND entityGuid='${applicationGuid}'`,
-			"FACET stackTrace", // group the results by fingerprint
-			`SINCE ${since}`,
-			"LIMIT MAX",
-		].join(" ");
-
-		const mobileNrql1 = [
-			"SELECT",
-			"count(occurrenceId) as 'count',", // first field is used to sort with FACET
-			"latest(timestamp) AS 'lastOccurrence',",
-			"latest(occurrenceId) AS 'occurrenceId',",
-			"latest(appName) AS 'appName',",
-			"latest(crashLocationClass) AS 'errorClass',",
-			"latest(crashMessage) AS 'message',",
-			"latest(entityGuid) AS 'entityGuid',",
-			"latest(traceId) AS 'traceId',",
-			"count(occurrenceId) as 'length'",
-			"FROM MobileCrash",
-			`WHERE entityGuid='${applicationGuid}'`,
-			"FACET crashFingerprint", // group the results by fingerprint
-			`SINCE ${since}`,
-			"LIMIT MAX",
-		].join(" ");
-
-		const mobileNrql2 = [
-			"SELECT",
-			"count(handledExceptionUuid) as 'count',", // first field is used to sort with FACET
-			"latest(timestamp) AS 'lastOccurrence',",
-			"latest(handledExceptionUuid) AS 'occurrenceId',",
-			"latest(appName) AS 'appName',",
-			"latest(exceptionLocationClass) AS 'errorClass',",
-			"latest(exceptionMessage) AS 'message',",
-			"latest(entityGuid) AS 'entityGuid',",
-			"latest(traceId) AS 'traceId',",
-			"count(handledExceptionUuid) as 'length'",
-			"FROM MobileHandledException",
-			`WHERE entityGuid='${applicationGuid}'`,
-			"FACET handledExceptionUuid", // group the results by fingerprint
-			`SINCE ${since}`,
-			"LIMIT MAX",
-		].join(" ");
-
-		switch (entityType) {
-			case "BROWSER_APPLICATION_ENTITY":
-				return [browserNrql];
-			case "MOBILE_APPLICATION_ENTITY":
-				return [mobileNrql1, mobileNrql2];
-			default:
-				return [apmNrql];
-		}
 	}
 
 	setAssigneeByEmail(request: { errorGroupGuid: string; emailAddress: string }) {
