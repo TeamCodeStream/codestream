@@ -1,7 +1,7 @@
 import React from "react";
 import { NRQLResult } from "@codestream/protocols/agent";
 import { ResponsiveContainer, YAxis, XAxis, BarChart, Bar, Cell } from "recharts";
-import { Colors } from "./utils";
+import { Colors, renameKeyToName } from "./utils";
 
 interface Props {
 	results: NRQLResult[];
@@ -13,24 +13,8 @@ interface Props {
 	height: number;
 }
 
-function renameKeyToNameIfMissing(arr: NRQLResult[]): NRQLResult[] {
-	return arr.map(item => {
-		if (!item.name) {
-			const facetValue = item.facet;
-			for (const key in item) {
-				if (item[key] === facetValue && key !== "facet" && key !== "name") {
-					item.name = item[key];
-					delete item[key];
-					break;
-				}
-			}
-		}
-		return item;
-	});
-}
-
 export const NRQLResultsBar = (props: Props) => {
-	const results = renameKeyToNameIfMissing(props.results);
+	const results = renameKeyToName(props.results);
 
 	// find the first key that has a value that's a number, fallback to count
 	const keyName =

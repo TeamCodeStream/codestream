@@ -1,7 +1,7 @@
 import { NRQLResult } from "@codestream/protocols/agent";
 import React, { useEffect, useState } from "react";
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { Colors, ColorsHash } from "./utils";
+import { Colors, ColorsHash, renameKeyToName } from "./utils";
 import { FacetTooltip } from "./FacetTooltip";
 
 interface Props {
@@ -41,7 +41,8 @@ export const NRQLResultsPie = (props: Props) => {
 		return () => window.removeEventListener("resize", handleResize);
 	}, []);
 
-	const result = props.results ? props.results[0] : undefined;
+	const results = renameKeyToName(props.results);
+	const result = results ? results[0] : undefined;
 	const dataKeys = Object.keys(result || {}).filter(
 		_ => _ !== "beginTimeSeconds" && _ !== "endTimeSeconds" && _ !== "facet"
 	);
@@ -73,7 +74,7 @@ export const NRQLResultsPie = (props: Props) => {
 							<span className="dot" style={{ color: entry.color, marginRight: "6px" }}>
 								●
 							</span>
-							<span>{key}</span>
+							<span>{entry?.value}</span>
 						</div>
 						<div title={k}>{entry.payload.value}</div>
 					</div>
@@ -89,7 +90,7 @@ export const NRQLResultsPie = (props: Props) => {
 				<ResponsiveContainer width="100%" height={400} debounce={1}>
 					<PieChart width={500} height={400}>
 						<Pie
-							data={props.results}
+							data={results}
 							dataKey={dataKeys[0]} // Specify the data key to determine pie slices
 							cx="42%" // Set the x-coordinate of the center of the pie
 							cy="50%" // Set the y-coordinate of the center of the pie
@@ -98,7 +99,7 @@ export const NRQLResultsPie = (props: Props) => {
 							fill="#8884d8" // Specify the fill/color of the pie slices
 						>
 							{/* Render labels */}
-							{props.results.map((_, index) => {
+							{results.map((_, index) => {
 								const color = ColorsHash[index % Colors.length];
 								return (
 									<Cell
