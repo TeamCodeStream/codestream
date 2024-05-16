@@ -11,8 +11,7 @@ import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
 import { debug, lsp, lspHandler } from "../system";
 import { TelemetryService } from "../telemetry/telemetryService";
-import { SegmentTelemetryService } from "../telemetry/segmentTelemetry";
-import { NewRelicTelemetryService } from "../telemetry/newRelicTelemetry";
+import { NewRelicTelemetryService } from "../telemetry/newRelicTelemetryService";
 import UUID from "uuid";
 
 @lsp
@@ -22,10 +21,7 @@ export class TelemetryManager {
 	private _sessionId: string | undefined;
 
 	constructor(session: CodeStreamSession) {
-		this._providers = [
-			new SegmentTelemetryService(session, false),
-			new NewRelicTelemetryService(session, false),
-		];
+		this._providers = [new NewRelicTelemetryService(session, false)];
 	}
 
 	setConsent(hasConsented: boolean) {

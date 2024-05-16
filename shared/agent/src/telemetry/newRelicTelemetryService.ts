@@ -11,7 +11,10 @@ import Analytics from "analytics-node";
 import { FetchCore } from "../system/fetchCore";
 import { debug } from "../system";
 
-export class SegmentTelemetryService {
+/**
+ * NOTE: this still sends one event to segment
+ */
+export class NewRelicTelemetryService {
 	private _segmentInstance: Analytics | undefined;
 	private _superProps: { [key: string]: any };
 	private _distinctId?: string;
@@ -19,10 +22,6 @@ export class SegmentTelemetryService {
 	private _hasOptedOut: boolean;
 	private _session: CodeStreamSession;
 	private _readyPromise: Promise<void>;
-	private _eventQueue: {
-		event: string;
-		data?: { [key: string]: string | number | boolean };
-	}[] = [];
 
 	private _onReady: () => void = () => {};
 	private fetchClient = new FetchCore();
