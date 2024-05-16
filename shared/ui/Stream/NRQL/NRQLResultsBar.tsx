@@ -13,8 +13,25 @@ interface Props {
 	height: number;
 }
 
+function renameKeyToNameIfMissing(arr: NRQLResult[]): NRQLResult[] {
+	return arr.map(item => {
+		if (!item.name) {
+			const facetValue = item.facet;
+			for (const key in item) {
+				if (item[key] === facetValue && key !== "facet" && key !== "name") {
+					item.name = item[key];
+					delete item[key];
+					break;
+				}
+			}
+		}
+		return item;
+	});
+}
+
 export const NRQLResultsBar = (props: Props) => {
-	const results = props.results;
+	const results = renameKeyToNameIfMissing(props.results);
+
 	// find the first key that has a value that's a number, fallback to count
 	const keyName =
 		(results?.length
@@ -54,7 +71,7 @@ export const NRQLResultsBar = (props: Props) => {
 							fill="#8884d8"
 							radius={[5, 5, 5, 5]}
 							barSize={10}
-							label={renderCustomLabel}
+							label={props => renderCustomLabel(props, keyName)}
 							isAnimationActive={true}
 							background={{
 								fill: "var(--app-background-color-hover)",
@@ -78,8 +95,9 @@ export const NRQLResultsBar = (props: Props) => {
 		</div>
 	);
 };
-const renderCustomLabel = props => {
-	const { x, y, width, value, name } = props;
+
+const renderCustomLabel = (props, dataKey) => {
+	const { x, y, width, name, ...rest } = props;
 
 	return (
 		<text x={20} y={y - 10} fill={`var(--text-color)`} textAnchor="left" fontSize={13}>
