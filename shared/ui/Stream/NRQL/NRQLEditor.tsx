@@ -210,6 +210,16 @@ export const NRQLEditor = React.forwardRef(
 					],
 				},
 			});
+			const handleEnterKeyPress = e => {
+				try {
+					if (props.onSubmit) {
+						const val = editorRef.current.getValue();
+						props.onSubmit({ value: val });
+					}
+				} catch (ex) {}
+			};
+
+			editor.addCommand(monaco.KeyCode.Enter, handleEnterKeyPress);
 
 			editor.focus();
 		};

@@ -169,6 +169,7 @@ export const NRQLPanel = (props: {
 		number | undefined
 	>(undefined);
 	const nrqlEditorRef = useRef<NRQLEditorApi>(null);
+	const runButtonRef = useRef(null);
 	const { height: editorHeight, ref: editorRef } = useResizeDetector();
 	const { width, height, ref } = useResizeDetector();
 	const trimmedHeight: number = (height ?? 0) - (height ?? 0) * 0.05;
@@ -197,6 +198,27 @@ export const NRQLPanel = (props: {
 			disposables && disposables.forEach(_ => _.dispose());
 		};
 	}, [accountId]);
+
+	// useEffect(() => {
+	// 	const handleKeyDown = event => {
+	// 		if (event.key === "Enter") {
+	// 			event.preventDefault();
+	// 			executeNRQL(accountId, userQuery);
+	// 		}
+	// 	};
+
+	// 	const editor = nrqlEditorRef.current;
+	// 	if (editor) {
+	// 		// editor.addEventListener("keydown", handleKeyDown);
+	// 	}
+
+	// 	// Cleanup event listener on component unmount
+	// 	return () => {
+	// 		if (editor) {
+	// 			// editor.removeEventListener("keydown", handleKeyDown);
+	// 		}
+	// 	};
+	// }, [accountId, userQuery]);
 
 	useEffect(() => {
 		HostApi.instance.track("codestream/nrql/webview displayed", {
@@ -453,6 +475,7 @@ export const NRQLPanel = (props: {
 									style={{ padding: "0 10px" }}
 									onClick={() => executeNRQL(accountId, userQuery)}
 									loading={isLoading}
+									ref={runButtonRef}
 								>
 									Run
 								</Button>
