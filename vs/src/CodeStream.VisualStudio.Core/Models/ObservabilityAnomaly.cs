@@ -23,7 +23,7 @@ namespace CodeStream.VisualStudio.Core.Models
 		public string Type { get; set; }
 
 		[JsonProperty("codeAttrs", NullValueHandling = NullValueHandling.Ignore)]
-		public IList<CodeAttributes> CodeAttributes { get; set; } = new List<CodeAttributes>();
+		public CodeAttributes CodeAttributes { get; set; }
 
 		[JsonProperty("oldValue", NullValueHandling = NullValueHandling.Ignore)]
 		public decimal OldValue { get; set; }
