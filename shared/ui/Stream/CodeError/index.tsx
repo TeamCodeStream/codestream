@@ -1135,7 +1135,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	useEffect(() => {
 		if (props.showGrok && !props.readOnly) {
 			const submitNrAi = async (functionToEdit?: FunctionToEdit) => {
-				// console.debug("===--- useEffect startGrokLoading");
+				// console.debug("===--- useEffect submitNrAi");
 				props.setGrokRequested();
 				setGrokRequested(true);
 				dispatch(startGrokLoading(props.codeError));
@@ -1161,20 +1161,18 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 					markItemRead(props.codeError.entityGuid, codeError.numReplies + 1)
 				);
 			};
-			// Case 1 - pending post, will never try to fetch replies
-			if (
-				codeError.postId === undefined &&
-				!isGrokLoading &&
-				!grokRequested &&
-				(functionToEdit || functionToEditFailed)
-			) {
-				console.debug("submitNrAi case 1", functionToEdit, functionToEditFailed);
-				submitNrAi(functionToEdit).catch(e => {
-					console.error("submitNrAi failed", e);
-				});
-				return;
-			}
-			// Case 2 - give a chance for replies to load before deciding to submitNrAi
+
+			// console.debug(`useEffect state ${JSON.stringify({
+			// 	functionToEditLength: functionToEdit?.codeBlock.length,
+			// 	functionToEditFailed,
+			// 	isPostThreadsLoading,
+			// 	replies: derivedState?.replies?.length,
+			// 	showGrok: props.showGrok,
+			// 	grokRequested,
+			// 	isGrokLoading
+			// })}`);
+
+			// give a chance for replies to load before deciding to submitNrAi
 			if (
 				!isGrokLoading &&
 				isPostThreadsLoading !== undefined && // Hasn't attempted to load yet
@@ -2051,14 +2049,6 @@ const CodeErrorForId = (props: PropsWithId) => {
 		return getCodeError(state.codeErrors, id);
 	});
 	const [notFound, setNotFound] = useState(false);
-
-	useDidMount(() => {
-		let isValid = true;
-
-		return () => {
-			isValid = false;
-		};
-	});
 
 	if (notFound) {
 		return (

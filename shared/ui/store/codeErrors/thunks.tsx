@@ -283,37 +283,33 @@ export const upgradePendingCodeError =
 				console.warn(`upgradePendingCodeError: no codeError found for ${errorGuid}`);
 				return;
 			}
-			if (analyze) {
-				const { entityGuid, objectType, title, text, stackTraces, objectInfo, postId } =
-					existingCodeError;
-				const accountId = existingCodeError.accountId ?? parseId(entityGuid)?.accountId;
-				if (!accountId) {
-					throw new Error("upgradePendingCodeError could not find accountId");
-				}
-				const newCodeError: CreateShareableCodeErrorRequest = {
-					accountId,
-					errorGuid: entityGuid,
-					objectType,
-					title,
-					text,
-					stackTraces,
-					objectInfo,
-					codeBlock,
-					language,
-					analyze,
-					reinitialize: false, // (seems obsolete now)
-					parentPostId: postId,
-				};
-				const response: CreateShareableCodeErrorResponse = await dispatch(
-					createPostAndCodeError(newCodeError)
-				);
-
-				return {
-					post: response.post,
-				};
-			} else {
-				return {};
+			const { entityGuid, objectType, title, text, stackTraces, objectInfo, postId } =
+				existingCodeError;
+			const accountId = existingCodeError.accountId ?? parseId(entityGuid)?.accountId;
+			if (!accountId) {
+				throw new Error("upgradePendingCodeError could not find accountId");
 			}
+			const newCodeError: CreateShareableCodeErrorRequest = {
+				accountId,
+				errorGuid: entityGuid,
+				objectType,
+				title,
+				text,
+				stackTraces,
+				objectInfo,
+				codeBlock,
+				language,
+				analyze,
+				reinitialize: false, // (seems obsolete now)
+				parentPostId: analyze ? undefined : postId,
+			};
+			const response: CreateShareableCodeErrorResponse = await dispatch(
+				createPostAndCodeError(newCodeError)
+			);
+
+			return {
+				post: response.post,
+			};
 		} catch (ex) {
 			logError(ex, {
 				codeErrorId: errorGuid,
@@ -642,5 +638,15 @@ export const doGetObservabilityErrors = createAppAsyncThunk(
 	"codeErrors/getObservabilityErrors",
 	async (request: GetObservabilityErrorsRequest) => {
 		return await codeErrorsApi.getObservabilityErrors(request);
+	}
+);
+
+export const addAndEnhanceCodeError = createAppAsyncThunk(
+	"codeErrors/enhance",
+	async (codeError: CSCodeError, { dispatch }) => {
+		await dispatch(addCodeErrors([codeError]));
+		await dispatch(
+			upgradePendingCodeError(codeError.entityGuid, "Comment", undefined, undefined, false)
+		);
 	}
 );

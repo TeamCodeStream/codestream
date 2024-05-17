@@ -9,12 +9,9 @@ import {
 } from "@codestream/protocols/agent";
 import { CSStackTraceInfo } from "@codestream/protocols/api";
 
+import { removeCodeError, resetNrAi } from "@codestream/webview/store/codeErrors/actions";
 import {
-	addCodeErrors,
-	removeCodeError,
-	resetNrAi,
-} from "@codestream/webview/store/codeErrors/actions";
-import {
+	addAndEnhanceCodeError,
 	api,
 	fetchErrorGroup,
 	resolveStackTrace,
@@ -443,34 +440,32 @@ export function CodeErrorNav(props: Props) {
 			if (errorGroupResult && repoId) {
 				if (derivedState.currentCodeErrorGuid) {
 					dispatch(
-						addCodeErrors([
-							{
-								accountId: errorGroupResult.accountId,
-								postId: undefined,
-								// these don't matter
-								assignees: [],
-								teamId: undefined,
-								streamId: undefined,
-								fileStreamIds: [],
-								status: "open",
-								numReplies: 0,
-								lastActivityAt: 0,
-								entityGuid: errorGroupGuidToUse,
-								objectType: "errorGroup",
-								title: errorGroupResult.errorGroup?.title || "",
-								text: errorGroupResult.errorGroup?.message || undefined,
-								// storing the permanently parsed stack info
-								stackTraces: actualStackInfo,
-								objectInfo: {
-									repoId: repoId,
-									remote: targetRemote,
-									accountId: errorGroupResult.accountId.toString(),
-									entityId: errorGroupResult?.errorGroup?.entityGuid,
-									entityName: errorGroupResult?.errorGroup?.entityName,
-									hasRelatedRepos: !_isEmpty(codeErrorData?.relatedRepos),
-								},
+						addAndEnhanceCodeError({
+							accountId: errorGroupResult.accountId,
+							postId: undefined,
+							// these don't matter
+							assignees: [],
+							teamId: undefined,
+							streamId: undefined,
+							fileStreamIds: [],
+							status: "open",
+							numReplies: 0,
+							lastActivityAt: 0,
+							entityGuid: errorGroupGuidToUse,
+							objectType: "errorGroup",
+							title: errorGroupResult.errorGroup?.title || "",
+							text: errorGroupResult.errorGroup?.message || undefined,
+							// storing the permanently parsed stack info
+							stackTraces: actualStackInfo,
+							objectInfo: {
+								repoId: repoId,
+								remote: targetRemote,
+								accountId: errorGroupResult.accountId.toString(),
+								entityId: errorGroupResult?.errorGroup?.entityGuid,
+								entityName: errorGroupResult?.errorGroup?.entityName,
+								hasRelatedRepos: !_isEmpty(codeErrorData?.relatedRepos),
 							},
-						])
+						})
 					);
 				}
 			}
