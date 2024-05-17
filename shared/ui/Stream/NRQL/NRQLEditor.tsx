@@ -92,7 +92,9 @@ export const NRQLEditor = React.forwardRef(
 							const val = editorRef.current.getValue();
 							props.onSubmit({ value: val });
 						}
-					} catch (ex) {}
+					} catch (ex) {
+						console.error("handleKeySubmit NRQLEditor error", ex);
+					}
 				};
 
 				editor.addCommand(monaco.KeyMod.WinCtrl | monaco.KeyCode.Enter, handleKeySubmit);
