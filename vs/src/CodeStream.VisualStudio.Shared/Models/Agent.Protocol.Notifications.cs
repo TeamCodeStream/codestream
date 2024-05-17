@@ -2,9 +2,38 @@
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Models;
 
 namespace CodeStream.VisualStudio.Shared.Models
 {
+	public class DidDetectObservabilityAnomaliesNotification
+	{
+		[JsonProperty("entityGuid", NullValueHandling = NullValueHandling.Ignore)]
+		public string EntityGuid { get; set; }
+
+		[JsonProperty("duration", NullValueHandling = NullValueHandling.Ignore)]
+		public IList<ObservabilityAnomaly> Duration { get; set; } =
+			new List<ObservabilityAnomaly>();
+
+		[JsonProperty("errorRate", NullValueHandling = NullValueHandling.Ignore)]
+		public IList<ObservabilityAnomaly> ErrorRate { get; set; } =
+			new List<ObservabilityAnomaly>();
+	}
+
+	public class DidDetectObservabilityAnomaliesNotificationType
+		: NotificationType<DidDetectObservabilityAnomaliesNotification>
+	{
+		public DidDetectObservabilityAnomaliesNotificationType(
+			DidDetectObservabilityAnomaliesNotification @params
+		)
+		{
+			Params = @params;
+		}
+
+		public const string MethodName = "codestream/didDetectObservabilityAnomalies";
+		public override string Method => MethodName;
+	}
+
 	public class DidChangeSessionTokenStatusNotification
 	{
 		[JsonProperty("status", NullValueHandling = NullValueHandling.Ignore)]

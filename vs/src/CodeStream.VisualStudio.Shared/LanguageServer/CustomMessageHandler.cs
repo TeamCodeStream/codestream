@@ -258,6 +258,20 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 				Data = data;
 		}
 
+		[JsonRpcMethod(DidDetectObservabilityAnomaliesNotificationType.MethodName)]
+		public void OnDidDetectObservabilityAnomalies(JToken e)
+		{
+			var @params = e.ToObject<DidDetectObservabilityAnomaliesNotification>();
+			if (@params == null)
+			{
+				return;
+			}
+
+			BrowserService.EnqueueNotification(
+				new DidDetectObservabilityAnomaliesNotificationType(@params)
+			);
+		}
+
 		/// <summary>
 		/// Agent message stating we need have changed document markers
 		/// </summary>
