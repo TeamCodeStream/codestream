@@ -12,7 +12,6 @@ interface Props extends PropsWithChildren<{}>, React.ButtonHTMLAttributes<HTMLBu
 	disabled?: boolean;
 	loading?: boolean;
 	isSecondary?: boolean;
-	ref?: any;
 }
 
 export default function Button({
