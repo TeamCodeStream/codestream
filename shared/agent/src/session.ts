@@ -132,7 +132,7 @@ import {
 	Strings,
 } from "./system";
 import { testGroups } from "./testGroups";
-import { ProxyAgent, setGlobalDispatcher } from "undici";
+import { ProxyAgent, setGlobalDispatcher, Agent as UndiciAgent } from "undici";
 import * as fs from "fs";
 import { FetchCore } from "./system/fetchCore";
 import { tokenHolder } from "./providers/newrelic/TokenHolder";
@@ -308,11 +308,15 @@ export class CodeStreamSession {
 				Logger.log(
 					`Proxy support is in override with url=${redactedUrl}, strictSSL=${_options.proxy.strictSSL}`
 				);
+				// proxy for PubNub
 				this._httpsAgent = new HttpsProxyAgent(_options.proxy.url, {
-					rejectUnauthorized: _options.proxy.strictSSL,
+					rejectUnauthorized: this.rejectUnauthorized,
 				});
 				// Set proxy for fetchCore (undici and future native fetch)
-				const dispatcher = new ProxyAgent({ uri: new URL(_options.proxy.url).toString() });
+				const dispatcher = new ProxyAgent({
+					uri: new URL(_options.proxy.url).toString(),
+					connect: { rejectUnauthorized: this.rejectUnauthorized },
+				});
 				setGlobalDispatcher(dispatcher);
 			} else {
 				Logger.log("Proxy support is in override, but no proxy settings were provided");
@@ -330,7 +334,17 @@ export class CodeStreamSession {
 				} catch {}
 
 				if (proxyUri) {
-					this._httpsAgent = new HttpsProxyAgent(proxyUrl, { rejectUnauthorized: strictSSL });
+					// proxy for PubNub
+					this._httpsAgent = new HttpsProxyAgent(proxyUrl, {
+						rejectUnauthorized: this.rejectUnauthorized,
+					});
+					// Set proxy for fetchCore (undici and future native fetch)
+					setGlobalDispatcher(
+						new ProxyAgent({
+							uri: proxyUrl,
+							connect: { rejectUnauthorized: this.rejectUnauthorized },
+						})
+					);
 				}
 			} else {
 				Logger.log("Proxy support is on, but no proxy url was found");
@@ -340,9 +354,18 @@ export class CodeStreamSession {
 		}
 
 		if (!this._httpsAgent) {
+			// agent for PubNub
 			this._httpsAgent = new HttpsAgent({
 				rejectUnauthorized: this.rejectUnauthorized,
 			});
+			// Set agent for fetchCore (undici and future native fetch)
+			setGlobalDispatcher(
+				new UndiciAgent({
+					connect: {
+						rejectUnauthorized: this.rejectUnauthorized,
+					},
+				})
+			);
 		}
 
 		// if our api server is http (on-prem installation), create a separate http agent
@@ -358,7 +381,7 @@ export class CodeStreamSession {
 		this._api = new CodeStreamApiProvider(
 			_options.serverUrl?.trim(),
 			this.versionInfo,
-			this._httpAgent || this._httpsAgent,
+			this._httpAgent ?? this._httpsAgent,
 			this.rejectUnauthorized,
 			this._nrFetchClient
 		);

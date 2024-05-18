@@ -202,7 +202,6 @@ export class NewRelicGraphqlClient implements Disposable {
 			);
 		}
 		const options = {
-			agent: this.session.proxyAgent ?? undefined,
 			fetch: this.fetchClient.customFetch.bind(this.fetchClient),
 		};
 		const client = new GraphQLClient(graphQlBaseUrl, options);
