@@ -127,5 +127,5 @@
     </actions>
 
     <depends>Git4Idea</depends>
-    <idea-version since-build="232.9559.58"/>
+    <idea-version since-build="233.14808.21"/>
 </idea-plugin>
