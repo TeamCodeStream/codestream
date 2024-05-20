@@ -1426,6 +1426,21 @@ export const GetObservabilityErrorsWithoutReposRequestType = new RequestType<
 	void
 >("codestream/newrelic/errorsWithoutRepos");
 
+export interface GetErrorInboxCommentsRequest {
+	accountId: number;
+	errorGroupGuid: string;
+	entityGuid: string;
+}
+
+export interface GetErrorInboxCommentsResponse {}
+
+export const GetErrorInboxCommentsRequestType = new RequestType<
+	GetErrorInboxCommentsRequest,
+	GetErrorInboxCommentsResponse,
+	void,
+	void
+>("codestream/newrelic/collaboration/errorDiscussionComments");
+
 export interface GetObservabilityAnomaliesRequest {
 	entityGuid: string;
 	sinceDaysAgo: number;

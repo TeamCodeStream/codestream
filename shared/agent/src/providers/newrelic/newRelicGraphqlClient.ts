@@ -144,6 +144,12 @@ export class NewRelicGraphqlClient implements Disposable {
 		return headers;
 	}
 
+	addHeader(key: string, value: string): void {
+		if (!this.headers[key]) {
+			this.headers[key] = value;
+		}
+	}
+
 	protected async client(useOtherRegion?: boolean): Promise<GraphQLClient> {
 		let client: GraphQLClient;
 		const accessToken = tokenHolder.accessToken;
