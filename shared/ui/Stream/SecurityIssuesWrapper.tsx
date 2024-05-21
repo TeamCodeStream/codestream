@@ -37,6 +37,7 @@ interface Props {
 	entityGuid: string;
 	accountId: number;
 	setHasVulnerabilities: Function;
+	isServiceSearch?: boolean;
 }
 
 function isResponseUrlError<T>(obj: unknown): obj is ResponseError<{ url: string }> {
@@ -325,6 +326,8 @@ function LibraryRow(props: { accountId: number; entityGuid: string; library: Lib
 }
 
 export const SecurityIssuesWrapper = React.memo((props: Props) => {
+	const [isExpanded, setIsExpanded] = useState<boolean>(false);
+
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 
@@ -337,7 +340,6 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 			vulnerabilitySeverityFilter,
 		};
 	});
-	const [expanded, setExpanded] = useState<boolean>(false);
 	const [selectedItems, setSelectedItems] = useState<RiskSeverity[]>(
 		derivedState.vulnerabilitySeverityFilter || ["CRITICAL", "HIGH"]
 	);
@@ -355,7 +357,7 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 			severityFilter: isEmpty(selectedItems) ? undefined : selectedItems,
 			rows,
 		},
-		[selectedItems, props.entityGuid, rows, expanded],
+		[selectedItems, props.entityGuid, rows],
 		true
 	);
 
@@ -425,15 +427,23 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 		data && data.totalRecords === 1 ? "1 vulnerability" : `${data?.totalRecords} vulnerabilities`;
 
 	const handleRowOnClick = () => {
-		const { securityIssuesDropdownIsExpanded } = derivedState;
+		if (props.isServiceSearch) {
+			setIsExpanded(!isExpanded);
+		} else {
+			const { securityIssuesDropdownIsExpanded } = derivedState;
 
-		dispatch(
-			setUserPreference({
-				prefPath: ["securityIssuesDropdownIsExpanded"],
-				value: !securityIssuesDropdownIsExpanded,
-			})
-		);
+			dispatch(
+				setUserPreference({
+					prefPath: ["securityIssuesDropdownIsExpanded"],
+					value: !securityIssuesDropdownIsExpanded,
+				})
+			);
+		}
 	};
+
+	const expanded = props.isServiceSearch
+		? isExpanded
+		: derivedState.securityIssuesDropdownIsExpanded;
 
 	return (
 		<>
@@ -446,8 +456,8 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 				onClick={() => handleRowOnClick()}
 				data-testid={`security-issues-dropdown`}
 			>
-				{derivedState.securityIssuesDropdownIsExpanded && <Icon name="chevron-down-thin" />}
-				{!derivedState.securityIssuesDropdownIsExpanded && <Icon name="chevron-right-thin" />}
+				{expanded && <Icon name="chevron-down-thin" />}
+				{!expanded && <Icon name="chevron-right-thin" />}
 				<span
 					data-testid={`vulnerabilities-${props.entityGuid}`}
 					style={{ marginLeft: "2px", marginRight: "5px" }}
@@ -479,35 +489,27 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 					/>
 				</InlineMenu>
 			</Row>
-			{loading && derivedState.securityIssuesDropdownIsExpanded && (
-				<ObservabilityLoadingVulnerabilities />
+			{loading && expanded && <ObservabilityLoadingVulnerabilities />}
+			{error && expanded && getErrorDetails(error)}
+			{expanded && !loading && data && data.totalRecords > 0 && (
+				<>
+					{data.libraries.map(library => {
+						return (
+							<LibraryRow
+								accountId={props.accountId}
+								entityGuid={props.entityGuid}
+								library={library}
+							/>
+						);
+					})}
+					<Additional onClick={loadAll} additional={additional} />
+				</>
 			)}
-			{error && derivedState.securityIssuesDropdownIsExpanded && getErrorDetails(error)}
-			{derivedState.securityIssuesDropdownIsExpanded &&
-				!loading &&
-				data &&
-				data.totalRecords > 0 && (
-					<>
-						{data.libraries.map(library => {
-							return (
-								<LibraryRow
-									accountId={props.accountId}
-									entityGuid={props.entityGuid}
-									library={library}
-								/>
-							);
-						})}
-						<Additional onClick={loadAll} additional={additional} />
-					</>
-				)}
-			{derivedState.securityIssuesDropdownIsExpanded &&
-				!loading &&
-				data &&
-				data.totalRecords === 0 && (
-					<Row data-testid={`no-vulnerabilties-found`} style={{ padding: "0 10px 0 49px" }}>
-						👍 No vulnerabilities found
-					</Row>
-				)}
+			{expanded && !loading && data && data.totalRecords === 0 && (
+				<Row data-testid={`no-vulnerabilties-found`} style={{ padding: "0 10px 0 49px" }}>
+					👍 No vulnerabilities found
+				</Row>
+			)}
 		</>
 	);
 });

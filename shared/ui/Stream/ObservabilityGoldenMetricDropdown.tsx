@@ -18,10 +18,11 @@ interface Props {
 	noDropdown?: boolean;
 	entityGuid: string;
 	accountId?: number;
+	isServiceSearch?: boolean;
 }
 
 export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
-	const [isExpanded, setIsExpanded] = useState<boolean>(true);
+	const [isExpanded, setIsExpanded] = useState<boolean>(props.isServiceSearch ? false : true);
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences, context, ide } = state;
 

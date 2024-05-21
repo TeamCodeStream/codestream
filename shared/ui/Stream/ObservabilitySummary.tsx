@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
 import { setUserPreference } from "./actions";
@@ -26,10 +26,12 @@ interface Props {
 	serviceLevelObjectives: ServiceLevelObjectiveResult[];
 	serviceLevelObjectiveError?: string;
 	currentRepoId: string;
+	isServiceSearch?: boolean;
 }
 
 export const ObservabilitySummary = React.memo((props: Props) => {
 	const dispatch = useAppDispatch();
+	const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
@@ -40,13 +42,17 @@ export const ObservabilitySummary = React.memo((props: Props) => {
 	});
 
 	const handleRowOnClick = () => {
-		const { summaryIsExpanded } = derivedState;
-		dispatch(
-			setUserPreference({
-				prefPath: ["summaryIsExpanded"],
-				value: !summaryIsExpanded,
-			})
-		);
+		if (props.isServiceSearch) {
+			setIsExpanded(!isExpanded);
+		} else {
+			const { summaryIsExpanded } = derivedState;
+			dispatch(
+				setUserPreference({
+					prefPath: ["summaryIsExpanded"],
+					value: !summaryIsExpanded,
+				})
+			);
+		}
 	};
 
 	const unmetObjectives = props.serviceLevelObjectives.filter(v => v.result === "UNDER");
@@ -68,6 +74,8 @@ export const ObservabilitySummary = React.memo((props: Props) => {
 		(percentChange && percentChange >= 0) ||
 		(props.recentIssues && props.recentIssues.length > 0);
 
+	const expanded = props.isServiceSearch ? isExpanded : derivedState.summaryIsExpanded;
+
 	return (
 		<>
 			<Row
@@ -77,8 +85,9 @@ export const ObservabilitySummary = React.memo((props: Props) => {
 				className={"pr-row"}
 				onClick={() => handleRowOnClick()}
 			>
-				{derivedState.summaryIsExpanded && <Icon name="chevron-down-thin" />}
-				{!derivedState.summaryIsExpanded && <Icon name="chevron-right-thin" />}
+				{expanded && <Icon name="chevron-down-thin" />}
+				{!expanded && <Icon name="chevron-right-thin" />}
+
 				<span
 					data-testid={`summary-${props.entityGuid}`}
 					style={{ marginLeft: "2px", marginRight: "5px" }}
@@ -89,7 +98,7 @@ export const ObservabilitySummary = React.memo((props: Props) => {
 					<Icon name="alert" style={{ color: "rgb(188,20,24)" }} className="alert" delay={1} />
 				)}
 			</Row>
-			{derivedState.summaryIsExpanded && (
+			{expanded && (
 				<>
 					<ObservabilityAlertViolations
 						issues={props.recentIssues}
@@ -102,6 +111,7 @@ export const ObservabilitySummary = React.memo((props: Props) => {
 						errors={props.entityGoldenMetricsErrors}
 						entityGuid={props.entityGuid}
 						accountId={props.accountId}
+						isServiceSearch={props.isServiceSearch}
 					/>
 					{props.hasServiceLevelObjectives && props.domain !== "INFRA" && (
 						<ObservabilityServiceLevelObjectives

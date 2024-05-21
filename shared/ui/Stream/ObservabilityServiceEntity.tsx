@@ -242,6 +242,7 @@ export const ObservabilityServiceEntity = React.memo((props: Props) => {
 											domain={ea?.domain}
 											currentRepoId={currentRepoId}
 											hasServiceLevelObjectives={hasServiceLevelObjectives}
+											isServiceSearch={isServiceSearch}
 										/>
 										{anomalyDetectionSupported && (
 											<ObservabilityAnomaliesWrapper
@@ -254,6 +255,7 @@ export const ObservabilityServiceEntity = React.memo((props: Props) => {
 												calculatingAnomalies={calculatingAnomalies}
 												distributedTracingEnabled={ea?.distributedTracingEnabled}
 												languageAndVersionValidation={ea?.languageAndVersionValidation}
+												isServiceSearch={isServiceSearch}
 											/>
 										)}
 										{showErrors && (
@@ -300,6 +302,7 @@ export const ObservabilityServiceEntity = React.memo((props: Props) => {
 												entityGuid={ea.entityGuid}
 												accountId={ea.accountId}
 												setHasVulnerabilities={setIsVulnPresent}
+												isServiceSearch={isServiceSearch}
 											/>
 										)}
 

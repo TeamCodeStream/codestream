@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
 import { Link } from "./Link";
@@ -28,6 +28,7 @@ interface Props {
 
 export const ObservabilityErrorWrapper = React.memo((props: Props) => {
 	const { errorMsg } = props;
+	const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
 	const dispatch = useAppDispatch();
 
@@ -42,15 +43,21 @@ export const ObservabilityErrorWrapper = React.memo((props: Props) => {
 	}, shallowEqual);
 
 	const handleRowOnClick = () => {
-		const { errorDropdownIsExpanded } = derivedState;
+		if (props.isServiceSearch) {
+			setIsExpanded(!isExpanded);
+		} else {
+			const { errorDropdownIsExpanded } = derivedState;
 
-		dispatch(
-			setUserPreference({
-				prefPath: ["errorDropdownIsExpanded"],
-				value: !errorDropdownIsExpanded,
-			})
-		);
+			dispatch(
+				setUserPreference({
+					prefPath: ["errorDropdownIsExpanded"],
+					value: !errorDropdownIsExpanded,
+				})
+			);
+		}
 	};
+
+	const expanded = props.isServiceSearch ? isExpanded : derivedState.errorDropdownIsExpanded;
 
 	return (
 		<>
@@ -62,8 +69,8 @@ export const ObservabilityErrorWrapper = React.memo((props: Props) => {
 				onClick={() => handleRowOnClick()}
 				data-testid={`observabilty-errors-dropdown`}
 			>
-				{derivedState.errorDropdownIsExpanded && <Icon name="chevron-down-thin" />}
-				{!derivedState.errorDropdownIsExpanded && <Icon name="chevron-right-thin" />}
+				{expanded && <Icon name="chevron-down-thin" />}
+				{!expanded && <Icon name="chevron-right-thin" />}
 				<span style={{ margin: "0 5px 0 2px" }}>Errors</span>
 				{errorMsg && (
 					<Icon
@@ -76,7 +83,7 @@ export const ObservabilityErrorWrapper = React.memo((props: Props) => {
 					/>
 				)}
 			</Row>
-			{derivedState.errorDropdownIsExpanded &&
+			{expanded &&
 				(props.noAccess ? (
 					<Row
 						style={{
