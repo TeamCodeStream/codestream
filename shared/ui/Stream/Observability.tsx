@@ -620,6 +620,8 @@ export const Observability = React.memo((props: Props) => {
 					}`,
 					meta_data_2: `slos_listed: ${hasServiceLevelObjectives}`,
 					meta_data_3: `vulnerabilities_listed: ${isVulnPresent}`,
+					meta_data_4: `anomalies_listed: ${!_isEmpty(observabilityAnomalies)}`,
+					meta_data_5: `entry_point: tree_view`,
 					event_type: "modal_display",
 				};
 

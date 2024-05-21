@@ -746,6 +746,7 @@ export function CodeErrorNav(props: Props) {
 									account_id: idInfo?.accountId,
 									meta_data: "item_type: error",
 									meta_data_2: `item_id: ${derivedState.currentCodeErrorGuid}`,
+									meta_data_3: `entry_point: open_in_ide`,
 								});
 
 								let remoteForOnConnected;
