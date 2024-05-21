@@ -33,8 +33,6 @@ import {
 	DeletePostResponse,
 	DeleteUserRequest,
 	DeleteUserResponse,
-	DetectTeamAnomaliesRequest,
-	DetectTeamAnomaliesResponse,
 	EditPostRequest,
 	EditPostResponse,
 	FetchCodeErrorsRequest,
@@ -458,8 +456,6 @@ export interface ApiProvider {
 	announceHistoryFetch(info: HistoryFetchInfo): void;
 
 	fetchBuilds(request: FetchThirdPartyBuildsRequest): Promise<FetchThirdPartyBuildsResponse>;
-
-	detectTeamAnomalies(request: DetectTeamAnomaliesRequest): Promise<DetectTeamAnomaliesResponse>;
 
 	get usingServiceGatewayAuth(): boolean;
 	setUsingServiceGatewayAuth(): void;

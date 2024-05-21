@@ -157,7 +157,8 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 		entityAccountResolver,
 		reposProvider,
 		newRelicGraphqlClient,
-		deploymentsProvider
+		deploymentsProvider,
+		genericFetchClient
 	);
 
 	disposables.push(anomaliesProvider);

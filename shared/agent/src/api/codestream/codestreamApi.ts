@@ -54,8 +54,6 @@ import {
 	DeleteTeamTagRequestType,
 	DeleteUserRequest,
 	DeleteUserResponse,
-	DetectTeamAnomaliesRequest,
-	DetectTeamAnomaliesRequestType,
 	DidChangeDataNotificationType,
 	ERROR_GENERIC_USE_ERROR_MESSAGE,
 	EditPostRequest,
@@ -2390,27 +2388,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 		throw new Error("Not supported");
 	}
 
-	@lspHandler(DetectTeamAnomaliesRequestType)
-	@log()
-	async detectTeamAnomalies(request: DetectTeamAnomaliesRequest) {
-		const { teams, users } = SessionContainer.instance();
-		const currentTeam = await teams.getByIdFromCache(this.teamId);
-		const currentUser = await users.getByIdFromCache(this.userId);
-		if (!currentTeam || !currentUser) return {};
-		const url = SessionContainer.instance().session.o11yServerUrl;
-		if (url) {
-			return this.fetch(
-				`${url}/detect/${currentTeam.id}`,
-				{
-					method: "post",
-				},
-				tokenHolder.accessToken
-			);
-		} else {
-			return {};
-		}
-	}
-
 	async delete<R extends object>(url: string, token?: string | AccessToken): Promise<R> {
 		const init: ExtraRequestInit = {};
 		if (!token && url.indexOf("/no-auth/") === -1) {
@@ -2542,12 +2519,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			}
 
 			const method = (init && init.method) || "GET";
-			let absoluteUrl;
-			if (url.match(/^http(s)?:/)) {
-				absoluteUrl = url;
-			} else {
-				absoluteUrl = `${this.baseUrl}${url}`;
-			}
+			const absoluteUrl = `${this.baseUrl}${url}`;
 
 			const context =
 				this._middleware.length > 0

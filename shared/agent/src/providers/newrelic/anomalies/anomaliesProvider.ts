@@ -1,4 +1,6 @@
 import {
+	DetectTeamAnomaliesRequest,
+	DetectTeamAnomaliesRequestType,
 	DidChangeCodelensesNotificationType,
 	GetObservabilityAnomaliesRequest,
 	GetObservabilityAnomaliesRequestType,
@@ -13,7 +15,7 @@ import { Logger } from "../../../logger";
 import { Functions } from "../../../system/function";
 import Cache from "@codestream/utils/system/timedCache";
 import { SessionContainer } from "../../../container";
-import { DEFAULT_CLM_SETTINGS } from "@codestream/protocols/api";
+import { CSAccessTokenType, DEFAULT_CLM_SETTINGS } from "@codestream/protocols/api";
 import { CodeStreamAgent } from "../../../agent";
 import { ReposProvider } from "../repos/reposProvider";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
@@ -23,6 +25,8 @@ import { EntityAccountResolver } from "../clm/entityAccountResolver";
 import { Disposable } from "../../../system/disposable";
 import wait = Functions.wait;
 import { AnomalyDetectorDrillDown } from "../anomalyDetectionDrillDown";
+import { FetchCore } from "../../../system/fetchCore";
+import { tokenHolder } from "../TokenHolder";
 
 @lsp
 export class AnomaliesProvider implements Disposable {
@@ -42,7 +46,8 @@ export class AnomaliesProvider implements Disposable {
 		private entityAccountResolver: EntityAccountResolver,
 		private reposProvider: ReposProvider,
 		private graphqlClient: NewRelicGraphqlClient,
-		private deploymentsProvider: DeploymentsProvider
+		private deploymentsProvider: DeploymentsProvider,
+		private fetchClient: FetchCore
 	) {
 		this.init();
 	}
@@ -55,7 +60,14 @@ export class AnomaliesProvider implements Disposable {
 	}
 
 	getLastObservabilityAnomaliesResponse(entityGuid: string) {
-		return this._lastObservabilityAnomaliesResponse.get(entityGuid);
+		//return this._lastObservabilityAnomaliesResponse.get(entityGuid);
+		const result = SessionContainer.instance().session.getCachedAnomalyData(entityGuid);
+		return (
+			result && {
+				responseTime: result.durationAnomalies,
+				errorRate: result.errorRateAnomalies,
+			}
+		);
 	}
 
 	private observabilityAnomaliesCacheKey(request: GetObservabilityAnomaliesRequest): string {
@@ -225,6 +237,27 @@ export class AnomaliesProvider implements Disposable {
 		} catch (e) {
 			Logger.warn("pollObservabilityAnomaliesCore error", e);
 		}
+	}
+
+	@lspHandler(DetectTeamAnomaliesRequestType)
+	@log()
+	async detectTeamAnomalies(request: DetectTeamAnomaliesRequest) {
+		const me = await SessionContainer.instance().users.getMe();
+		const url = SessionContainer.instance().session.o11yServerUrl;
+		const tokenHeader =
+			tokenHolder.tokenType === CSAccessTokenType.ACCESS_TOKEN ? "x-access-token" : "x-id-token";
+		const token = tokenHolder.accessToken;
+		const teamId = me?.teamIds[0];
+		if (!url || !token || !me || !teamId) return {};
+
+		let headers: { [key: string]: string } = {
+			"Content-Type": "application/json",
+			[tokenHeader]: token,
+		};
+		return this.fetchClient.customFetch(`${url}/detect/${teamId}`, {
+			method: "post",
+			headers,
+		});
 	}
 
 	/*

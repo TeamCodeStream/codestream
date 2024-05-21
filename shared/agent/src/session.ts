@@ -83,6 +83,7 @@ import {
 	SessionTokenStatus,
 	DidChangeSessionTokenStatusNotificationType,
 	DidDetectObservabilityAnomaliesNotificationType,
+	EntityObservabilityAnomalies,
 } from "@codestream/protocols/agent";
 import {
 	CSAccessTokenType,
@@ -281,6 +282,7 @@ export class CodeStreamSession {
 	private _broadcasterRecoveryTimer: NodeJS.Timeout | undefined;
 	private _echoTimer: NodeJS.Timeout | undefined;
 	private _echoDidTimeout: boolean = false;
+	private _cachedAnomalyData: { [entityGuid: string]: EntityObservabilityAnomalies } = {};
 
 	constructor(
 		public readonly agent: CodeStreamAgent,
@@ -695,6 +697,9 @@ export class CodeStreamSession {
 				for (let datum of e.data) {
 					if (typeof datum === "object") {
 						for (let entityGuid in datum) {
+							this._cachedAnomalyData[entityGuid] = datum[
+								entityGuid
+							] as EntityObservabilityAnomalies;
 							this.agent.sendNotification(DidDetectObservabilityAnomaliesNotificationType, {
 								entityGuid,
 								duration: datum[entityGuid].durationAnomalies,
@@ -941,6 +946,10 @@ export class CodeStreamSession {
 	private _providers: ThirdPartyProviders = {};
 	get providers() {
 		return this._providers!;
+	}
+
+	public getCachedAnomalyData(entityGuid: string): EntityObservabilityAnomalies | undefined {
+		return this._cachedAnomalyData[entityGuid];
 	}
 
 	@memoize
