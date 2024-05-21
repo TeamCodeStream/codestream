@@ -388,7 +388,6 @@ export const ObservabilityAnomalyPanel = (props: {
 					<PanelHeader title={renderTitle()}></PanelHeader>
 				</div>
 			)}
-			<CancelButton onClick={() => {}} />
 
 			<div className="plane-container" style={{ padding: "5px 20px 0px 10px" }}>
 				<div className="standard-form vscroll">
