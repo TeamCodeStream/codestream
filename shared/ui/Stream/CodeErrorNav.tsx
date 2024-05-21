@@ -14,6 +14,7 @@ import {
 	addAndEnhanceCodeError,
 	api,
 	fetchErrorGroup,
+	fetchNewRelicErrorGroup,
 	resolveStackTrace,
 	setErrorGroup,
 } from "@codestream/webview/store/codeErrors/thunks";
@@ -44,9 +45,9 @@ import { ClearModal, Step, Subtext, Tip } from "./ReviewNav";
 import { ScrollBox } from "./ScrollBox";
 import { WarningBox } from "./WarningBox";
 import { isEmpty as _isEmpty } from "lodash";
-import { codeErrorsApi } from "@codestream/webview/store/codeErrors/api/apiResolver";
 import { isSha } from "@codestream/webview/utilities/strings";
 import { parseId } from "@codestream/webview/utilities/newRelic";
+import { confirmPopup } from "@codestream/webview/Stream/Confirm";
 
 const NavHeader = styled.div`
 	// flex-grow: 0;
@@ -271,21 +272,40 @@ export function CodeErrorNav(props: Props) {
 
 		try {
 			let errorGroupResult: GetNewRelicErrorGroupResponse | undefined = undefined;
-			errorGroupResult = await codeErrorsApi.getNewRelicErrorGroup({
-				errorGroupGuid: errorGroupGuidToUse,
-				occurrenceId: occurrenceIdToUse,
-				entityGuid: entityIdToUse,
-				timestamp: codeErrorData?.timestamp,
-			});
+			errorGroupResult = await dispatch(
+				fetchNewRelicErrorGroup({
+					errorGroupGuid: errorGroupGuidToUse,
+					occurrenceId: occurrenceIdToUse,
+					entityGuid: entityIdToUse,
+					timestamp: codeErrorData?.timestamp,
+				})
+			).unwrap();
 
 			if (!errorGroupResult || errorGroupResult?.error?.message) {
 				const title = "Unexpected Error";
 				const description = errorGroupResult?.error?.message || "unknown error";
-				setError({
-					title,
-					description,
-					details: errorGroupResult?.error?.details,
-				});
+				if (errorGroupResult?.error?.message === "Access denied.") {
+					confirmPopup({
+						title: "Error Can't Be Opened",
+						message: "You do not have access to this error group.",
+						centered: true,
+						buttons: [
+							{
+								label: "OK",
+								className: "control-button",
+								action: _e => {
+									dispatch(setCurrentCodeErrorData());
+								}, // Close the code error discussion},
+							},
+						],
+					});
+				} else {
+					setError({
+						title,
+						description,
+						details: errorGroupResult?.error?.details,
+					});
+				}
 				logError(`${title}, description: ${description}`, {
 					currentCodeErrorGuid: derivedState.currentCodeErrorGuid!,
 					errorGroupGuid: errorGroupGuidToUse,
