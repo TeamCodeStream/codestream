@@ -41,21 +41,21 @@
 		"@babel/preset-typescript": "7.7.2",
 		"@babel/runtime": "7.7.2",
 		"@types/keytar": "4.4.2",
-		"@types/lodash-es": "4.17.7",
+		"@types/lodash-es": "4.17.12",
 		"@types/node": "18",
 		"@types/node-fetch": "2.6.1",
 		"@types/uuid": "3.4.5",
-		"@typescript-eslint/eslint-plugin": "6.19.1",
-		"@typescript-eslint/parser": "6.19.1",
+		"@typescript-eslint/eslint-plugin": "7.10.0",
+		"@typescript-eslint/parser": "7.10.0",
 		"@ungap/structured-clone": "1.2.0",
 		"babel-loader": "8.2.3",
 		"babel-plugin-styled-components": "2.0.2",
 		"core-js": "3.36.0",
-		"esbuild": "0.19.8",
-		"eslint": "8.56.0",
+		"esbuild": "0.21.3",
+		"eslint": "8.57.0",
 		"less": "4.1.2",
 		"prettier": "3.0.0",
-		"tsx": "4.6.2",
-		"typescript": "5.3.3"
+		"tsx": "4.10.5",
+		"typescript": "5.4.5"
 	}
 }
