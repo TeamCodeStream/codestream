@@ -253,43 +253,49 @@ export class ObservabilityErrorsProvider {
 		let gotoEnd = false;
 
 		try {
-			const errorTraces = await this.findFingerprintedErrorTraces(
+			const errorTraceWrappers = await this.findFingerprintedErrorTraces(
 				request.accountId,
 				request.entityGuid,
 				request.entityType,
 				request.timeWindow
 			);
-			for (const errorTrace of errorTraces) {
-				try {
-					const response = await this.getErrorGroupFromNameMessageEntity(
-						errorTrace.errorClass,
-						errorTrace.message,
-						errorTrace.entityGuid
-					);
+			for (const errorTraceWrapper of errorTraceWrappers) {
+				for (const errorTrace of errorTraceWrapper.response) {
+					try {
+						const response = await this.getErrorGroupDetails(
+							errorTrace,
+							errorTraceWrapper.errorQuery.entityType
+						);
 
-					if (response && response.actor.errorsInbox.errorGroup) {
-						observabilityErrors.push({
-							entityId: errorTrace.entityGuid,
-							appName: errorTrace.appName,
-							errorClass: errorTrace.errorClass,
-							message: errorTrace.message,
-							remote: "",
-							errorGroupGuid: response.actor.errorsInbox.errorGroup.id,
-							occurrenceId: errorTrace.occurrenceId,
-							traceId: errorTrace.traceId,
-							count: errorTrace.count,
-							lastOccurrence: errorTrace.lastOccurrence,
-							errorGroupUrl: response.actor.errorsInbox.errorGroup.url,
-						});
-						if (observabilityErrors.length > 4) {
-							gotoEnd = true;
-							break;
+						const commonErrorTrace = errorQueryResultToCommonError(
+							errorTraceWrapper.errorQuery,
+							errorTrace
+						);
+
+						if (response && response.actor.errorsInbox.errorGroup) {
+							observabilityErrors.push({
+								entityId: commonErrorTrace.entityGuid,
+								appName: commonErrorTrace.appName,
+								errorClass: commonErrorTrace.errorClass,
+								message: commonErrorTrace.message,
+								remote: "",
+								errorGroupGuid: response.actor.errorsInbox.errorGroup.id,
+								occurrenceId: commonErrorTrace.occurrenceId,
+								traceId: commonErrorTrace.traceId,
+								count: commonErrorTrace.count,
+								lastOccurrence: commonErrorTrace.lastOccurrence,
+								errorGroupUrl: response.actor.errorsInbox.errorGroup.url,
+							});
+							if (observabilityErrors.length > 4) {
+								gotoEnd = true;
+								break;
+							}
 						}
+					} catch (ex) {
+						ContextLogger.warn("internal error getErrorGroupGuid", {
+							ex: ex,
+						});
 					}
-				} catch (ex) {
-					ContextLogger.warn("internal error getErrorGroupGuid", {
-						ex: ex,
-					});
 				}
 			}
 		} catch (ex) {
@@ -320,7 +326,7 @@ export class ObservabilityErrorsProvider {
 	private async findFingerprintedErrorTraces(
 		accountId: number,
 		applicationGuid: string,
-		entityType: EntityType,
+		entityType: EntityType | string,
 		timeWindow: string
 	): Promise<ErrorResultWrapper[]> {
 		const queries = getFingerprintedErrorTraceQueries(applicationGuid, entityType, timeWindow);

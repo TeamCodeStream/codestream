@@ -65,7 +65,7 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
 			currentServiceSearchEntity: state.context.currentServiceSearchEntity,
-			recentErrorsTimeWindow: state.preferences.codeErrorTimeWindow,
+			recentErrorsTimeWindow: state.preferences.codeErrorTimeWindow || "",
 		};
 	});
 
@@ -119,7 +119,7 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 	};
 
 	const fetchErrors = async () => {
-		if (entityAccount) {
+		if (entityAccount && entityAccount.type) {
 			setLoadingErrors(true);
 			const response = await HostApi.instance.send(GetObservabilityErrorsWithoutReposRequestType, {
 				accountId: entityAccount.accountId,

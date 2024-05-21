@@ -147,7 +147,7 @@ export class EntityProvider implements Disposable {
 					guid: string;
 					name: string;
 					entityType: EntityType;
-					type: string;
+					type: EntityType;
 					tags: { key: string; values: string[] }[];
 				};
 			};

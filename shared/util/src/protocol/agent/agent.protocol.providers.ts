@@ -1362,8 +1362,8 @@ export interface GetObservabilityErrorsRequest {
 export interface GetObservabilityErrorsWithoutReposRequest {
 	entityGuid: string;
 	accountId: number;
-	entityType?: EntityTypeKey | string;
-	timeWindow?: string;
+	entityType: string;
+	timeWindow: string;
 }
 
 export interface GetObservabilityErrorsWithoutReposResponse {
@@ -2224,7 +2224,7 @@ export interface Entity {
 	goldenMetrics?: { metrics?: MethodGoldenMetrics[] };
 	guid: string;
 	name: string;
-	type?: Type | string;
+	type?: string;
 	entityType?: EntityType;
 	tags?: {
 		key: string;

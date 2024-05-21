@@ -282,7 +282,7 @@ const errorQueryGroups: ErrorQueryTemplate[] = [
 // to a common type via errorQueryResultToCommonError
 export function getFingerprintedErrorTraceQueries(
 	applicationGuid: string,
-	entityType: EntityType,
+	entityType: EntityType | string,
 	since: string
 ): ErrorQuery[] {
 	return errorQueryGroups
