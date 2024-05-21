@@ -43,7 +43,6 @@ export const MarkdownText = styled(
 		max-width: 100%;
 		overflow-x: auto; // A long code snippet can extend past the container and look weird
 	}
-	white-space: pre-wrap;
 	word-wrap: break-word;
 	// need to increase priority for the li padding
 	.codestream .stream & {

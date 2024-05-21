@@ -30,11 +30,52 @@ const copyIcon = (text: string) => {
 	return `<div class="code-buttons copy-icon-display-none"><span class="icon clickable" onclick="navigator.clipboard.writeText(\`${copyText}\`).then(() => console.log('Successfully copied'), () => { const textArea = document.createElement('textarea'); textArea.value = \`${copyText}\`; textArea.style.top = '0'; textArea.style.left = '0'; textArea.style.position = 'fixed'; document.body.appendChild(textArea); textArea.focus(); textArea.select(); try { document.execCommand('copy') ? console.log('Successfully copied (fallback)') : console('Copy failed'); } catch (e) { console.error('Copy error', e); } document.body.removeChild(textArea); })">${Icons8.copy.toSVG()}</span></div>`;
 };
 
+type LanguageBlock = {
+	language?: string;
+	block: string;
+};
+
+const languages = [
+	"java",
+	"kotlin",
+	"ruby",
+	"javascript",
+	"typescript",
+	"python",
+	"php",
+	"go",
+	"golang",
+	"csharp",
+	"ruby",
+	"bash",
+	"c",
+	"cpp",
+	"css",
+	"json",
+	"less",
+];
+
+function stripLanguage(str: string): LanguageBlock {
+	const firstLine = str.slice(0, str.indexOf("\n"));
+	if (languages.includes(firstLine)) {
+		return {
+			language: firstLine,
+			block: str.slice(str.indexOf("\n") + 1),
+		};
+	}
+	return {
+		block: str,
+	};
+}
+
 const md = new MarkdownIt({
 	breaks: true,
 	linkify: true,
 	highlight: function (str, lang) {
-		const codeHTML = prettyPrintOne(escapeHtml(str), lang, true);
+		const langInfo = stripLanguage(str);
+		// Could use langInfo.language later above clode block but due to this
+		// <pre first requirement it can't be done easily
+		const codeHTML = prettyPrintOne(escapeHtml(langInfo.block), lang, true);
 		return `<pre class="code prettyprint" data-scrollable="true">${codeHTML}</pre>${copyIcon(
 			str
 		)}</div>`; // we need it to begin with <pre for markdown-it to behave properly, so we add the beginning div later

@@ -1136,6 +1136,7 @@
 		.code.prettyprint {
 			position: relative;
 			padding-left: 0;
+			display: block;
 		}
 		x.prettyprint::before {
 			content: "";
@@ -2425,6 +2426,12 @@
 				color: @text-color-info;
 				transform: scale(1.4);
 			}
+		}
+		.markdown-code-language {
+			display: block;
+			padding: 0;
+			background: none;
+			border: 0;
 		}
 	}
 	.headshot-popup {
