@@ -29,6 +29,7 @@ import { RepositoryAssociatorServiceSearch } from "./RepositoryAssociatorService
 import { parseId } from "../utilities/newRelic";
 import { useAppDispatch } from "../utilities/hooks";
 import { setCurrentServiceSearchEntity } from "../store/context/actions";
+import { isEmpty as _isEmpty } from "lodash-es";
 
 interface Props {
 	alertSeverityColor: string;
@@ -199,7 +200,7 @@ export const ObservabilityServiceEntity = React.memo((props: Props) => {
 							) : (
 								<>
 									<>
-										{isServiceSearch && (
+										{isServiceSearch && _isEmpty(ea.repoEntities) && (
 											<RepositoryAssociatorServiceSearch
 												entityGuid={ea.entityGuid}
 												onSuccess={async e => {

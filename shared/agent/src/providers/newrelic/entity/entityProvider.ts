@@ -160,6 +160,8 @@ export class EntityProvider implements Disposable {
 			entity
 		);
 
+		const mappedRepoEntities = await this.reposProvider.findMappedRemoteByEntity(entity.guid);
+
 		return {
 			entity: {
 				accountId: entity?.account?.id || 1,
@@ -174,6 +176,7 @@ export class EntityProvider implements Disposable {
 				distributedTracingEnabled,
 				languageAndVersionValidation,
 				url: `${this.nrApiConfig.productUrl}/redirect/entity/${entity.guid}`,
+				repoEntities: mappedRepoEntities,
 			},
 		};
 	}

@@ -1573,6 +1573,7 @@ export interface EntityAccount {
 		key: string;
 		values: string[];
 	}[];
+	repoEntities?: RelatedRepoWithRemotes[];
 }
 
 export interface LanguageAndVersionValidation {
