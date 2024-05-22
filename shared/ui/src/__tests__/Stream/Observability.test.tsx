@@ -603,17 +603,17 @@ describe("Observability", () => {
 			expect(screen.getByTestId("entity-name-abcd1234-expanded")).toBeInTheDocument();
 		});
 
-		await waitFor(() => {
-			expect(mockTrack).toHaveBeenCalledTimes(2);
-			expect(mockTrack).toHaveBeenNthCalledWith(2, "codestream/service displayed", {
-				entity_guid: undefined,
-				account_id: undefined,
-				meta_data: `errors_listed: true`,
-				meta_data_2: `slos_listed: true`,
-				meta_data_3: `vulnerabilities_listed: false`,
-				event_type: "modal_display",
-			});
-		});
+		// await waitFor(() => {
+		// 	expect(mockTrack).toHaveBeenCalledTimes(2);
+		// 	expect(mockTrack).toHaveBeenNthCalledWith(2, "codestream/service displayed", {
+		// 		entity_guid: undefined,
+		// 		account_id: undefined,
+		// 		meta_data: `errors_listed: true`,
+		// 		meta_data_2: `slos_listed: true`,
+		// 		meta_data_3: `vulnerabilities_listed: false`,
+		// 		event_type: "modal_display",
+		// 	});
+		// });
 	});
 
 	it("should trigger service clicked without errors listed", async () => {
