@@ -30,3 +30,18 @@ export function renameKeyToName(arr: NRQLResult[]): NRQLResult[] {
 		return item;
 	});
 }
+
+export function validateAndConvertUnixTimestampSeconds(timestamp) {
+	if (!Number.isInteger(timestamp)) {
+		return timestamp;
+	}
+
+	const date = new Date(timestamp * 1000);
+
+	if (date.getTime() === timestamp * 1000) {
+		return date;
+		``;
+	} else {
+		return timestamp;
+	}
+}
