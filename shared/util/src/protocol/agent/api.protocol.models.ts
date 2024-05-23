@@ -8,7 +8,12 @@ import {
 	RiskSeverity,
 	ThirdPartyProviders,
 } from "./agent.protocol";
-import { CSEligibleJoinCompany, CSPossibleAuthDomain, CSReviewCheckpoint, ObjectInfo } from "./api.protocol";
+import {
+	CSEligibleJoinCompany,
+	CSPossibleAuthDomain,
+	CSReviewCheckpoint,
+	ObjectInfo,
+} from "./api.protocol";
 
 /* NOTE: there can be dynamic panel names that begin with configure-provider- or configure-enterprise- */
 export enum WebviewPanels {
@@ -378,7 +383,7 @@ export interface CSCodeError {
 	permalink?: string;
 	resolvedAt?: number;
 	objectType?: "errorGroup";
-	objectInfo: ObjectInfo
+	objectInfo: ObjectInfo;
 	accountId?: number;
 	traceId?: string;
 }
@@ -801,14 +806,14 @@ export interface FetchRequestQuery {
 }
 
 export enum CodeErrorTimeWindow {
-	"HalfHour" = "30 minutes",
-	"Hour" = "1 hour",
-	"ThreeHours" = "3 hours",
-	"SixHours" = "6 hours",
-	"TwelveHours" = "12 hours",
-	"OneDay" = "24 hours",
-	"ThreeDays" = "3 days",
-	"SevenDays" = "7 days",
+	"HalfHour" = "30 minutes ago",
+	"Hour" = "1 hour ago",
+	"ThreeHours" = "3 hours ago",
+	"SixHours" = "6 hours ago",
+	"TwelveHours" = "12 hours ago",
+	"OneDay" = "24 hours ago",
+	"ThreeDays" = "3 days ago",
+	"SevenDays" = "7 days ago",
 }
 
 export type SidebarPanes = {
