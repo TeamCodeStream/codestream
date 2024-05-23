@@ -33,6 +33,7 @@ import { AccountProvider } from "./account/accountProvider";
 import { EntityGuidDocumentParser } from "./entity/entityGuidDocumentParser";
 import { FetchCore } from "../../system/fetchCore";
 import { SourceMapProvider } from "./errors/sourceMapProvider";
+import { CollaborationTeamProvider } from "./errors/collabProvider";
 
 interface NrContainer {
 	repos: ReposProvider;
@@ -217,6 +218,7 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 
 	const logsProvider = new LoggingProvider(newRelicGraphqlClient);
 	const nrqlProvider = new NrNRQLProvider(newRelicGraphqlClient);
+	const collabProvider = new CollaborationTeamProvider(newRelicGraphqlClient);
 
 	nrDirectives = new NrDirectives(
 		newRelicGraphqlClient,

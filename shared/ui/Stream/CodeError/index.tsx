@@ -1,6 +1,7 @@
 import {
 	CodeBlock,
 	DidChangeObservabilityDataNotificationType,
+	GetErrorInboxCommentsRequestType,
 	GetNewRelicAssigneesRequestType,
 	NewRelicErrorGroup,
 	ResolveStackTraceResponse,
@@ -592,6 +593,13 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 
 		buildStates();
 		buildAssignees();
+
+		// trigger agent code
+		HostApi.instance.send(GetErrorInboxCommentsRequestType, {
+			accountId: props.errorGroup!.accountId,
+			errorGroupGuid: props.errorGroup!.guid,
+			entityGuid: props.errorGroup!.entityGuid,
+		});
 	});
 
 	const title = (props.codeError?.title || "").split(/(\.)/).map(part => (

@@ -1,3 +1,4 @@
+import { ContextLogger } from "providers/contextLogger";
 import {
 	GetErrorInboxCommentsRequest,
 	GetErrorInboxCommentsRequestType,
@@ -6,46 +7,45 @@ import {
 import { log } from "../../../system/decorators/log";
 import { lsp, lspHandler } from "../../../system/decorators/lsp";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
-import { NrApiConfig } from "../nrApiConfig";
-import { ReposProvider } from "../repos/reposProvider";
 import { generateHash } from "./collabDiscussionUtils";
-import { SourceMapProvider } from "./sourceMapProvider";
+import { mapNRErrorResponse } from "../utils";
+import { CollaborationContext } from "./collab.types";
 
 @lsp
 export class CollaborationTeamProvider {
 	private nerdletId = "errors-inbox.error-group-details";
 	private inboxEntityType = "WORKLOAD";
 
-	constructor(
-		private reposProvider: ReposProvider,
-		private graphqlClient: NewRelicGraphqlClient,
-		private nrApiConfig: NrApiConfig,
-		private sourceMapProvider: SourceMapProvider
-	) {
-		graphqlClient.addHeader("Nerd-Graph-Unsafe-Experimental-Opt-In", "Collaboration");
+	constructor(private graphqlClient: NewRelicGraphqlClient) {
+		this.graphqlClient.addHeader("Nerd-Graph-Unsafe-Experimental-Opt-In", "Collaboration");
 	}
 
-	@lspHandler(GetErrorInboxCommentsRequestType)
-	@log()
-	async createCollabrationContext(
-		request: GetErrorInboxCommentsRequest
-	): Promise<GetErrorInboxCommentsResponse> {
-		const { accountId, errorGroupGuid, entityGuid } = { ...request };
+	private async createCollaborationContext(
+		accountId: number,
+		errorGroupGuid: string,
+		entityGuid: string
+	): Promise<CollaborationContext> {
+		try {
+			const referenceId = await generateHash({
+				accountId: accountId,
+				entityGuid: entityGuid,
+				nerdletId: this.nerdletId,
+				pageId: [errorGroupGuid, this.inboxEntityType],
+			});
 
-		const referencePayload = {
-			accountId: accountId,
-			entityGuid: entityGuid,
-			nerdletId: this.nerdletId,
-			pageId: [errorGroupGuid, this.inboxEntityType],
-		};
-
-		const referenceId = generateHash(referencePayload);
-
-		const query = `
+			const query = `
 			mutation {
 				collaborationCreateContext(
 					accountId: ${accountId}
-					contextMetadata: ${referencePayload}
+					contextMetadata: {
+						accountId: ${accountId},
+						entityGuid: "${entityGuid}",
+						nerdletId: "${this.nerdletId}",
+						pageId: [
+							"${errorGroupGuid}",
+							"${this.inboxEntityType}"
+						]
+					}
 					entityGuid: "${entityGuid}"
 					id: "${referenceId}"
 					referenceUrl: "https://dev-one.newrelic.com/errors-inbox"
@@ -68,9 +68,64 @@ export class CollaborationTeamProvider {
 				}
 			}`;
 
-		const response = await this.graphqlClient.mutate<{ data }>(query);
+			const response = await this.graphqlClient.mutate<CollaborationContext>(query);
 
-		const context = response?.data.collaborationCreateContext;
-		return "2";
+			return response;
+		} catch (ex) {
+			ContextLogger.warn("createCollaborationContext failure", {
+				accountId,
+				errorGroupGuid,
+				entityGuid,
+				error: ex,
+			});
+
+			throw ex;
+		}
+	}
+
+	@lspHandler(GetErrorInboxCommentsRequestType)
+	@log()
+	async GetErrorInboxComments(
+		request: GetErrorInboxCommentsRequest
+	): Promise<GetErrorInboxCommentsResponse> {
+		try {
+			const { accountId, errorGroupGuid, entityGuid } = { ...request };
+
+			const context = await this.createCollaborationContext(accountId, errorGroupGuid, entityGuid);
+
+			const commentsQuery = `
+			{
+				actor {
+					collaboration {
+						threadsByContextId(contextId: "${context.collaborationCreateContext.id}") {
+							entities {
+								comments {
+									entities {
+										mentions {
+											type
+											mentionableItemId
+										}
+										body
+										creator {
+											name
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}`;
+
+			const response = await this.graphqlClient.query(commentsQuery);
+
+			return context;
+		} catch (ex) {
+			ContextLogger.warn("createCollaborationContext failure", {
+				request,
+				error: ex,
+			});
+			return { error: mapNRErrorResponse(ex) };
+		}
 	}
 }

@@ -26,13 +26,10 @@ import {
 import * as Dom from "graphql-request/dist/types.dom";
 import { ContextLogger } from "../contextLogger";
 import { Disposable } from "../../system/disposable";
-import { NrApiConfig } from "./nrApiConfig";
+import { NrApiConfig, PRODUCTION_EU_GRAPHQL_URL, PRODUCTION_US_GRAPHQL_URL } from "./nrApiConfig";
 import { FetchCore } from "../../system/fetchCore";
 import { isSuppressedException } from "../../system/suppressedNetworkExceptions";
 import { tokenHolder } from "./TokenHolder";
-
-const PRODUCTION_US_GRAPHQL_URL = "https://api.newrelic.com/graphql";
-const PRODUCTION_EU_GRAPHQL_URL = "https://api-eu.newrelic.com/graphql";
 
 const ignoredErrors = [GraphqlNrqlTimeoutError];
 
@@ -102,6 +99,7 @@ export class NewRelicGraphqlClient implements Disposable {
 	private _newRelicUserId: number | undefined = undefined;
 	private _accountIds: number[] | undefined = undefined;
 	private _onGraphqlClientConnected = new Array<OnGraphqlClientConnected>();
+	private _additionalHeaders: { [key: string]: string } = {};
 
 	constructor(
 		private nrApiConfig: NrApiConfig,
@@ -110,19 +108,16 @@ export class NewRelicGraphqlClient implements Disposable {
 		private versionInfo: VersionInfo,
 		private isProductionCloud: boolean,
 		private fetchClient: FetchCore
-	) {}
+	) {
+		session.api.baseUrl.includes("");
+	}
+
+	get graphqlUrl() {
+		return this.nrApiConfig.graphqlUrl;
+	}
 
 	get apiUrl() {
 		return this.nrApiConfig.apiUrl;
-	}
-
-	get graphQlBaseUrl() {
-		return `${this.nrApiConfig.productUrl}/graphql`;
-		// if (tokenHolder.bearerToken) {
-		// 	return `${this.nrApiConfig.productUrl}/graphql`;
-		// } else {
-		// 	return `${this.apiUrl}/graphql`;
-		// }
 	}
 
 	addOnGraphqlClientConnected(onGraphqlClientConnected: OnGraphqlClientConnected) {
@@ -134,20 +129,22 @@ export class NewRelicGraphqlClient implements Disposable {
 
 		const token = tokenHolder.accessToken;
 		if (token) {
-			// TODO ok to assume bearerToken?
 			if (tokenHolder.tokenType === "access") {
 				headers["x-access-token"] = token;
 			} else {
 				headers["x-id-token"] = token;
 			}
 		}
+
+		Object.keys(this._additionalHeaders).map(ah => {
+			headers[ah] = this._additionalHeaders[ah];
+		});
+
 		return headers;
 	}
 
 	addHeader(key: string, value: string): void {
-		if (!this.headers[key]) {
-			this.headers[key] = value;
-		}
+		this._additionalHeaders[key] = value;
 	}
 
 	protected async client(useOtherRegion?: boolean): Promise<GraphQLClient> {
@@ -156,9 +153,9 @@ export class NewRelicGraphqlClient implements Disposable {
 		if (!accessToken) {
 			throw new ResponseError(ERROR_LOGGED_OUT, "User is not logged in");
 		}
-		// if (useOtherRegion && this.session.isProductionCloud) {
+
 		if (useOtherRegion) {
-			const newGraphQlBaseUrl = this.graphQlBaseUrl;
+			const newGraphQlBaseUrl = this.graphqlUrl;
 			if (newGraphQlBaseUrl === PRODUCTION_US_GRAPHQL_URL) {
 				client = this._client = await this.createClientAndValidateKey(
 					PRODUCTION_EU_GRAPHQL_URL,
@@ -171,22 +168,22 @@ export class NewRelicGraphqlClient implements Disposable {
 				);
 			} else {
 				client =
-					this._client ?? (await this.createClientAndValidateKey(this.graphQlBaseUrl, accessToken));
+					this._client ?? (await this.createClientAndValidateKey(this.graphqlUrl, accessToken));
 			}
 			this._clientUrlNeedsUpdate = true;
 		} else {
 			if (this._clientUrlNeedsUpdate) {
-				client = await this.createClientAndValidateKey(this.graphQlBaseUrl, accessToken);
+				client = await this.createClientAndValidateKey(this.graphqlUrl, accessToken);
 				this._clientUrlNeedsUpdate = false;
 			} else {
 				client =
-					this._client ?? (await this.createClientAndValidateKey(this.graphQlBaseUrl, accessToken));
+					this._client ?? (await this.createClientAndValidateKey(this.graphqlUrl, accessToken));
 			}
 		}
 
 		client.setHeaders(this.headers);
 		ContextLogger.setData({
-			nrUrl: this.graphQlBaseUrl,
+			nrUrl: this.graphqlUrl,
 			versionInfo: {
 				version: this.versionInfo?.extension?.version,
 				build: this.versionInfo?.extension?.build,
@@ -426,7 +423,7 @@ export class NewRelicGraphqlClient implements Disposable {
 		// If multiRegion, and we are doing an entitySearch query, add region values
 		if (responseOther) {
 			let responseRegion, responseRegionOther;
-			if (this.graphQlBaseUrl === PRODUCTION_US_GRAPHQL_URL) {
+			if (this.graphqlUrl === PRODUCTION_US_GRAPHQL_URL) {
 				responseRegion = "US";
 				responseRegionOther = "EU";
 			} else {
