@@ -6,8 +6,8 @@ import Icon from "../Icon";
 import Tooltip from "../Tooltip";
 import { isEmpty as _isEmpty } from "lodash-es";
 
-const MIN_COL_WIDTH = 140;
-const MAX_COL_WIDTH = 400;
+const MIN_COL_WIDTH = 200;
+const MAX_COL_WIDTH = 450;
 const MIN_ROW_HEIGHT = 100;
 
 const cellStyle = {
@@ -166,12 +166,27 @@ export const NRQLResultsTable = (props: Props) => {
 	};
 
 	const calculateColumnWidths = (firstRowResults: { [key: string]: string | number }) => {
-		return Object.entries(firstRowResults).map(([key, value]) => {
+		let columnWidths = Object.entries(firstRowResults).map(([key, value]) => {
 			const keyValue = typeof key === "string" ? key : String(key);
 			const valueString = typeof value === "string" ? value : String(value);
 			const columnToPass = keyValue.length > valueString.length ? keyValue : valueString;
 			return calculateColumnWidth(columnToPass);
 		});
+
+		const sumColumnWidths = columnWidths.reduce((accumulator, currentValue) => {
+			return accumulator + currentValue;
+		}, 0);
+
+		if (sumColumnWidths < Number(props.width)) {
+			const targetWidth = Number(props.width) - 10;
+			const difference = targetWidth - sumColumnWidths;
+			const numberOfColumns = columnWidths.length;
+			const addToEach = difference / numberOfColumns;
+
+			columnWidths = columnWidths.map(width => width + addToEach);
+		}
+
+		return columnWidths;
 	};
 
 	const generateGridData = results => {
