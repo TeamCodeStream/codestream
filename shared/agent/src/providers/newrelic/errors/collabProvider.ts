@@ -10,10 +10,11 @@ import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 import { generateHash } from "./collabDiscussionUtils";
 import { mapNRErrorResponse } from "../utils";
 import {
-	CollaborationCreateContextResponse,
-	CollaborationCreateThreadResponse,
-	CollaborationUpdateThreadStatusResponse,
-} from "./collab.types";
+	CreateContextResponse,
+	CreateThreadResponse,
+	UpdateThreadStatusResponse,
+} from "./collaboration.mutation.types";
+import { CommentsByThreadIdResponse } from "./collaboration.query.types";
 
 @lsp
 export class CollaborationTeamProvider {
@@ -30,8 +31,9 @@ export class CollaborationTeamProvider {
 		accountId: number,
 		entityGuid: string,
 		errorGroupGuid: string
-	): Promise<CollaborationUpdateThreadStatusResponse> {
-		const createThreadQuery = `
+	): Promise<UpdateThreadStatusResponse> {
+		try {
+			const createThreadQuery = `
 			mutation {
 				collaborationCreateThread(
 					contextId: "${contextId}"
@@ -50,11 +52,11 @@ export class CollaborationTeamProvider {
 				}
 			}`;
 
-		const createThreadResponse = await this.graphqlClient.mutate<CollaborationCreateThreadResponse>(
-			createThreadQuery
-		);
+			const createThreadResponse = await this.graphqlClient.mutate<CreateThreadResponse>(
+				createThreadQuery
+			);
 
-		const updateThreadStatusQuery = `
+			const updateThreadStatusQuery = `
 			mutation {
 				collaborationUpdateThreadStatus(
 					id: ${createThreadResponse.collaborationCreateThread.id},
@@ -64,19 +66,29 @@ export class CollaborationTeamProvider {
 				}
 			}`;
 
-		const updateThreadResponse =
-			await this.graphqlClient.mutate<CollaborationUpdateThreadStatusResponse>(
+			const updateThreadResponse = await this.graphqlClient.mutate<UpdateThreadStatusResponse>(
 				updateThreadStatusQuery
 			);
 
-		return updateThreadResponse;
+			return updateThreadResponse;
+		} catch (ex) {
+			ContextLogger.warn("createThread failure", {
+				contextId,
+				accountId,
+				errorGroupGuid,
+				entityGuid,
+				error: ex,
+			});
+
+			throw ex;
+		}
 	}
 
 	private async bootstrapCollaborationDiscussion(
 		accountId: number,
 		errorGroupGuid: string,
 		entityGuid: string
-	): Promise<CollaborationCreateContextResponse> {
+	): Promise<CreateContextResponse> {
 		try {
 			const referenceId = await generateHash({
 				accountId: accountId,
@@ -110,7 +122,7 @@ export class CollaborationTeamProvider {
 				}
 			}`;
 
-			const response = await this.graphqlClient.mutate<CollaborationCreateContextResponse>(query);
+			const response = await this.graphqlClient.mutate<CreateContextResponse>(query);
 
 			if (!response.collaborationCreateContext.latestThreadId) {
 				const thread = await this.createThread(referenceId, accountId, entityGuid, errorGroupGuid);
@@ -150,19 +162,15 @@ export class CollaborationTeamProvider {
 			{
 				actor {
 					collaboration {
-						threadsByContextId(contextId: "${context.collaborationCreateContext.id}") {
+						commentsByThreadId(threadId: "${context.collaborationCreateContext.latestThreadId}") {
 							entities {
-								comments {
-									entities {
-										mentions {
-											type
-											mentionableItemId
-										}
-										body
-										creator {
-											name
-										}
-									}
+								body
+								id
+								systemMessageType
+								creator {
+									email
+									name
+									userId
 								}
 							}
 						}
@@ -170,14 +178,21 @@ export class CollaborationTeamProvider {
 				}
 			}`;
 
-			const response = await this.graphqlClient.query(commentsQuery);
+			const response = await this.graphqlClient.query<CommentsByThreadIdResponse>(commentsQuery);
 
-			return response;
+			const comments = response.actor.collaboration.commentsByThreadId.entities.map(e => {
+				return e;
+			});
+
+			return {
+				comments,
+			};
 		} catch (ex) {
-			ContextLogger.warn("createCollaborationContext failure", {
+			ContextLogger.warn("GetErrorInboxComments failure", {
 				request,
 				error: ex,
 			});
+
 			return { error: mapNRErrorResponse(ex) };
 		}
 	}
