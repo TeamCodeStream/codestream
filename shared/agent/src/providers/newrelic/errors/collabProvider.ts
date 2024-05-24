@@ -13,8 +13,10 @@ import {
 	CreateContextResponse,
 	CreateThreadResponse,
 	UpdateThreadStatusResponse,
-} from "./collaboration.mutation.types";
-import { CommentsByThreadIdResponse } from "./collaboration.query.types";
+	CommentsByThreadIdResponse,
+	ThreadsByContextIdResponse,
+	BootStrapResponse,
+} from "./collaboration.types";
 
 @lsp
 export class CollaborationTeamProvider {
@@ -88,7 +90,7 @@ export class CollaborationTeamProvider {
 		accountId: number,
 		errorGroupGuid: string,
 		entityGuid: string
-	): Promise<CreateContextResponse> {
+	): Promise<BootStrapResponse> {
 		try {
 			const referenceId = await generateHash({
 				accountId: accountId,
@@ -97,41 +99,69 @@ export class CollaborationTeamProvider {
 				pageId: [errorGroupGuid, this.inboxEntityType],
 			});
 
-			const query = `
-			mutation {
-				collaborationCreateContext(
-					accountId: ${accountId}
-					contextMetadata: {
-						accountId: ${accountId},
-						entityGuid: "${entityGuid}",
-						nerdletId: "${this.nerdletId}",
-						pageId: [
-							"${errorGroupGuid}",
-							"${this.inboxEntityType}"
-						]
+			const createContextQuery = `
+				mutation {
+					collaborationCreateContext(
+						accountId: ${accountId}
+						contextMetadata: {
+							accountId: ${accountId},
+							entityGuid: "${entityGuid}",
+							nerdletId: "${this.nerdletId}",
+							pageId: [
+								"${errorGroupGuid}",
+								"${this.inboxEntityType}"
+							]
+						}
+						entityGuid: "${entityGuid}"
+						id: "${referenceId}"
+						referenceUrl: "${this.referenceUrl}"
+					) 
+					{
+						id
 					}
-					entityGuid: "${entityGuid}"
-					id: "${referenceId}"
-					referenceUrl: "${this.referenceUrl}"
-				) 
-				{
-					id
-					latestThreadId
-					latestThreadCommentId
-					deactivated
+				}`;
+
+			const createContextResponse = await this.graphqlClient.mutate<CreateContextResponse>(
+				createContextQuery
+			);
+
+			const getThreadsQuery = `
+			{
+				actor {
+				  collaboration {
+					threadsByContextId(contextId: "${createContextResponse.collaborationCreateContext.id}") {
+					  entities {
+						id
+						latestCommentTime
+						status
+						deactivated
+					  }
+					}
+				  }
 				}
 			}`;
 
-			const response = await this.graphqlClient.mutate<CreateContextResponse>(query);
+			const getThreadsResponse = await this.graphqlClient.query<ThreadsByContextIdResponse>(
+				getThreadsQuery
+			);
 
-			if (!response.collaborationCreateContext.latestThreadId) {
+			const mostRecentThread =
+				getThreadsResponse?.actor?.collaboration?.threadsByContextId?.entities
+					.filter(t => t?.deactivated === false && t?.status.toLocaleLowerCase() === "open")
+					.sort((t1, t2) => t1?.latestCommentTime - t2?.latestCommentTime)
+					.pop();
+
+			let mostRecentThreadId = mostRecentThread?.id;
+
+			if (!mostRecentThread) {
 				const thread = await this.createThread(referenceId, accountId, entityGuid, errorGroupGuid);
-
-				response.collaborationCreateContext.latestThreadId =
-					thread.collaborationUpdateThreadStatus.id;
+				mostRecentThreadId = thread.collaborationUpdateThreadStatus.id;
 			}
 
-			return response;
+			return {
+				contextId: createContextResponse.collaborationCreateContext.id,
+				threadId: mostRecentThreadId!,
+			};
 		} catch (ex) {
 			ContextLogger.warn("bootstrapCollaborationDiscussion failure", {
 				accountId,
@@ -152,7 +182,7 @@ export class CollaborationTeamProvider {
 		try {
 			const { accountId, errorGroupGuid, entityGuid } = { ...request };
 
-			const context = await this.bootstrapCollaborationDiscussion(
+			const bootstrapResponse = await this.bootstrapCollaborationDiscussion(
 				accountId,
 				errorGroupGuid,
 				entityGuid
@@ -162,7 +192,7 @@ export class CollaborationTeamProvider {
 			{
 				actor {
 					collaboration {
-						commentsByThreadId(threadId: "${context.collaborationCreateContext.latestThreadId}") {
+						commentsByThreadId(threadId: "${bootstrapResponse.threadId}") {
 							entities {
 								body
 								id
