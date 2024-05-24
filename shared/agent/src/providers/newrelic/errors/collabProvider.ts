@@ -9,22 +9,74 @@ import { lsp, lspHandler } from "../../../system/decorators/lsp";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 import { generateHash } from "./collabDiscussionUtils";
 import { mapNRErrorResponse } from "../utils";
-import { CollaborationContext } from "./collab.types";
+import {
+	CollaborationCreateContextResponse,
+	CollaborationCreateThreadResponse,
+	CollaborationUpdateThreadStatusResponse,
+} from "./collab.types";
 
 @lsp
 export class CollaborationTeamProvider {
 	private nerdletId = "errors-inbox.error-group-details";
 	private inboxEntityType = "WORKLOAD";
+	private referenceUrl = "https://dev-one.newrelic.com/errors-inbox";
 
 	constructor(private graphqlClient: NewRelicGraphqlClient) {
 		this.graphqlClient.addHeader("Nerd-Graph-Unsafe-Experimental-Opt-In", "Collaboration");
 	}
 
-	private async createCollaborationContext(
+	private async createThread(
+		contextId: string,
+		accountId: number,
+		entityGuid: string,
+		errorGroupGuid: string
+	): Promise<CollaborationUpdateThreadStatusResponse> {
+		const createThreadQuery = `
+			mutation {
+				collaborationCreateThread(
+					contextId: "${contextId}"
+					contextMetadata: {
+						accountId: ${accountId}, 
+						entityGuid: "${entityGuid}", 
+						nerdletId: "${this.nerdletId}", 
+						pageId: [
+							"${errorGroupGuid}", 
+							"${this.inboxEntityType}"
+						]
+					}
+					referenceUrl: "${this.referenceUrl}"
+				) {
+					id
+				}
+			}`;
+
+		const createThreadResponse = await this.graphqlClient.mutate<CollaborationCreateThreadResponse>(
+			createThreadQuery
+		);
+
+		const updateThreadStatusQuery = `
+			mutation {
+				collaborationUpdateThreadStatus(
+					id: ${createThreadResponse.collaborationCreateThread.id},
+					status: "OPEN"
+				) {
+					id
+				}
+			}`;
+
+		const updateThreadResponse =
+			await this.graphqlClient.mutate<CollaborationUpdateThreadStatusResponse>(
+				updateThreadStatusQuery
+			);
+
+		return updateThreadResponse;
+	}
+
+	private async bootstrapCollaborationDiscussion(
 		accountId: number,
 		errorGroupGuid: string,
 		entityGuid: string
-	): Promise<CollaborationContext> {
+	): Promise<CollaborationCreateContextResponse> {
 		try {
 			const referenceId = await generateHash({
 				accountId: accountId,
@@ -48,31 +100,28 @@ export class CollaborationTeamProvider {
 					}
 					entityGuid: "${entityGuid}"
 					id: "${referenceId}"
-					referenceUrl: "https://dev-one.newrelic.com/errors-inbox"
+					referenceUrl: "${this.referenceUrl}"
 				) 
 				{
 					id
-					referenceUrl
-					organizationId
-					modifiedAt
 					latestThreadId
-					latestThreadCommentTime
 					latestThreadCommentId
-					latestThreadCommentCreatorId
-					entityGuid
 					deactivated
-					creatorId
-					createdAt
-					contextMetadata
-					accountId
 				}
 			}`;
 
-			const response = await this.graphqlClient.mutate<CollaborationContext>(query);
+			const response = await this.graphqlClient.mutate<CollaborationCreateContextResponse>(query);
+
+			if (!response.collaborationCreateContext.latestThreadId) {
+				const thread = await this.createThread(referenceId, accountId, entityGuid, errorGroupGuid);
+
+				response.collaborationCreateContext.latestThreadId =
+					thread.collaborationUpdateThreadStatus.id;
+			}
 
 			return response;
 		} catch (ex) {
-			ContextLogger.warn("createCollaborationContext failure", {
+			ContextLogger.warn("bootstrapCollaborationDiscussion failure", {
 				accountId,
 				errorGroupGuid,
 				entityGuid,
@@ -91,7 +140,11 @@ export class CollaborationTeamProvider {
 		try {
 			const { accountId, errorGroupGuid, entityGuid } = { ...request };
 
-			const context = await this.createCollaborationContext(accountId, errorGroupGuid, entityGuid);
+			const context = await this.bootstrapCollaborationDiscussion(
+				accountId,
+				errorGroupGuid,
+				entityGuid
+			);
 
 			const commentsQuery = `
 			{
@@ -119,7 +172,7 @@ export class CollaborationTeamProvider {
 
 			const response = await this.graphqlClient.query(commentsQuery);
 
-			return context;
+			return response;
 		} catch (ex) {
 			ContextLogger.warn("createCollaborationContext failure", {
 				request,

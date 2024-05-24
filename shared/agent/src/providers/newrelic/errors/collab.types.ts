@@ -1,4 +1,4 @@
-export interface CollaborationContext {
+export interface CollaborationCreateContextResponse {
 	collaborationCreateContext: {
 		accountId: number;
 		contextMetadata: {
@@ -7,17 +7,20 @@ export interface CollaborationContext {
 			nerdletId: string;
 			pageId: string[];
 		};
-		createdAt: string;
-		creatorId: string;
-		deactived: boolean;
-		entityGuid: string;
 		id: string;
-		latestThreadCommentCreatorId: string;
 		latestThreadCommentId: string;
-		latestThreadCommentTime: string;
 		latestThreadId: string;
-		modifiedAt: string;
-		organizationId: string;
-		referenceUrl: string;
+	};
+}
+
+export interface CollaborationCreateThreadResponse {
+	collaborationCreateThread: {
+		id: string;
+	};
+}
+
+export interface CollaborationUpdateThreadStatusResponse {
+	collaborationUpdateThreadStatus: {
+		id: string;
 	};
 }
