@@ -1432,7 +1432,20 @@ export interface GetErrorInboxCommentsRequest {
 	entityGuid: string;
 }
 
-export interface GetErrorInboxCommentsResponse {}
+export interface GetErrorInboxCommentsResponse {
+	comments?: {
+		body: string;
+		id: string;
+		systemMessageType: string;
+		creator: {
+			email: string;
+			name: string;
+			userId: string;
+		};
+	}[];
+
+	error?: NRErrorResponse;
+}
 
 export const GetErrorInboxCommentsRequestType = new RequestType<
 	GetErrorInboxCommentsRequest,

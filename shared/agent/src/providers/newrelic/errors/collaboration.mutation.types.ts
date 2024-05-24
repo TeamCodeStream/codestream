@@ -1,4 +1,4 @@
-export interface CollaborationCreateContextResponse {
+export interface CreateContextResponse {
 	collaborationCreateContext: {
 		accountId: number;
 		contextMetadata: {
@@ -13,13 +13,13 @@ export interface CollaborationCreateContextResponse {
 	};
 }
 
-export interface CollaborationCreateThreadResponse {
+export interface CreateThreadResponse {
 	collaborationCreateThread: {
 		id: string;
 	};
 }
 
-export interface CollaborationUpdateThreadStatusResponse {
+export interface UpdateThreadStatusResponse {
 	collaborationUpdateThreadStatus: {
 		id: string;
 	};
