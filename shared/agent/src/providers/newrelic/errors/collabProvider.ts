@@ -167,6 +167,7 @@ export class CollaborationTeamProvider {
 								body
 								id
 								systemMessageType
+								createdAt
 								creator {
 									email
 									name
@@ -180,9 +181,12 @@ export class CollaborationTeamProvider {
 
 			const response = await this.graphqlClient.query<CommentsByThreadIdResponse>(commentsQuery);
 
-			const comments = response.actor.collaboration.commentsByThreadId.entities.map(e => {
-				return e;
-			});
+			const comments = response.actor.collaboration.commentsByThreadId.entities
+				.filter(e => !e.systemMessageType)
+				.sort((e1, e2) => e1.createdAt - e2.createdAt)
+				.map(e => {
+					return e;
+				});
 
 			return {
 				comments,
