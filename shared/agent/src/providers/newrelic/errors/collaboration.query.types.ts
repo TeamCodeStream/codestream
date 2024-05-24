@@ -6,6 +6,7 @@ export interface CommentsByThreadIdResponse {
 					body: string;
 					id: string;
 					systemMessageType: string;
+					createdAt: number;
 					creator: {
 						email: string;
 						name: string;
