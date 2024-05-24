@@ -76,13 +76,14 @@ export class NrNRQLProvider {
 			}
 
 			const response = await this.graphqlClient.runNrqlWithMetadata<any>(accountId, query, 400);
+			let results = response.results;
 
 			void this.saveRecentQuery(request);
 
 			const facet = response?.rawResponse?.metadata?.facet;
 			return {
 				accountId,
-				results: response.results,
+				results: results,
 
 				metadata: {
 					eventType: response?.rawResponse?.metadata?.eventType,

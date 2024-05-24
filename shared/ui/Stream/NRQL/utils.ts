@@ -31,17 +31,59 @@ export function renameKeyToName(arr: NRQLResult[]): NRQLResult[] {
 	});
 }
 
-export function validateAndConvertUnixTimestampSeconds(timestamp) {
+export function validateAndConvertUnixTimestamp(timestamp: number, isRelative?: boolean): string {
 	if (!Number.isInteger(timestamp)) {
-		return timestamp;
+		return String(timestamp);
 	}
 
-	const date = new Date(timestamp * 1000);
+	const date = new Date(timestamp);
 
-	if (date.getTime() === timestamp * 1000) {
-		return date;
-		``;
+	if (date.getTime() === timestamp) {
+		if (isRelative) {
+			return timeAgo(date);
+		}
+		return date.toLocaleString(undefined, {
+			month: "short",
+			day: "2-digit",
+			year: "numeric",
+			hour: "2-digit",
+			minute: "2-digit",
+			second: "2-digit",
+			hour12: false,
+		});
 	} else {
-		return timestamp;
+		return String(timestamp);
 	}
+}
+
+function timeAgo(date: Date): string {
+	const now = new Date();
+	const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+	let value: number, unit: Intl.RelativeTimeFormatUnit;
+	if (seconds < 60) {
+		value = seconds;
+		unit = "second";
+	} else if (seconds < 3600) {
+		value = Math.floor(seconds / 60);
+		unit = "minute";
+	} else if (seconds < 86400) {
+		value = Math.floor(seconds / 3600);
+		unit = "hour";
+	} else if (seconds < 604800) {
+		value = Math.floor(seconds / 86400);
+		unit = "day";
+	} else if (seconds < 2629800) {
+		value = Math.floor(seconds / 604800);
+		unit = "week";
+	} else if (seconds < 31557600) {
+		value = Math.floor(seconds / 2629800);
+		unit = "month";
+	} else {
+		value = Math.floor(seconds / 31557600);
+		unit = "year";
+	}
+
+	const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+	return rtf.format(-value, unit);
 }

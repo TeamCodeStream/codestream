@@ -1,6 +1,7 @@
 import React from "react";
 import { NRQLResult } from "@codestream/protocols/agent";
 import styled from "styled-components";
+import { validateAndConvertUnixTimestamp } from "./utils";
 
 const BillboardValueWrapper = styled.div`
 	margin: 10px;
@@ -26,11 +27,11 @@ interface Props {
 }
 
 export const NRQLResultsBillboard = (props: Props) => {
-	let firstResult = props.results[0];
-	let onlyKey = Object.keys(firstResult)[0];
-	const value = firstResult[onlyKey];
+	const formatLargeNumber = (number, isTimestamp) => {
+		if (isTimestamp) {
+			return validateAndConvertUnixTimestamp(number, true);
+		}
 
-	const formatLargeNumber = number => {
 		const units = ["K", "M", "B", "T"];
 
 		let roundedNumber = number;
@@ -51,17 +52,30 @@ export const NRQLResultsBillboard = (props: Props) => {
 		return `${roundedNumber} ${unit}`;
 	};
 
+	const hasTimestampKey = str => {
+		if (str.includes("timestamp")) {
+			return true;
+		}
+		return false;
+	};
+
+	let firstResult = props.results[0];
+	let onlyKey = Object.keys(firstResult)[0];
+	const isTimestamp = hasTimestampKey(onlyKey);
+	const value = firstResult[onlyKey];
+
 	return (
 		<BillboardValueWrapper>
 			<BillboardValue title={value}>
-				{typeof value === "number" ? formatLargeNumber(value) : value}
+				{typeof value === "number" ? formatLargeNumber(value, isTimestamp) : value}
 			</BillboardValue>
-			{props.eventType && (
+			{props.eventType && !isTimestamp && (
 				<BillboardValueType>
 					{props.eventType.replace(/_/g, " ")}
 					{typeof value === "number" && value > 1 && <>s</>}
 				</BillboardValueType>
 			)}
+			{props.eventType && isTimestamp && <BillboardValueType>Timestamp</BillboardValueType>}
 		</BillboardValueWrapper>
 	);
 };
