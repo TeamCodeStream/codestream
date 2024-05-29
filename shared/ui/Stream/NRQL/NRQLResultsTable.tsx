@@ -50,7 +50,7 @@ export const NRQLResultsTable = (props: Props) => {
 		let value: string | number;
 		const cellValue = rowArray[columnIndex];
 
-		if (columnName === "timestamp") {
+		if (columnName.includes("timestamp")) {
 			if (typeof cellValue === "number") {
 				value = validateAndConvertUnixTimestamp(cellValue);
 			} else {
