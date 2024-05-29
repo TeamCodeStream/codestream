@@ -514,7 +514,12 @@ export const NRQLPanel = (props: {
 									<NRQLResultsBar height={trimmedHeight} results={results} facet={facet!} />
 								)}
 								{resultsTypeGuess.selected === "stackedBar" && (
-									<NRQLResultsStackedBar height={trimmedHeight} results={results} facet={facet!} />
+									<NRQLResultsStackedBar
+										height={trimmedHeight}
+										results={results}
+										facet={facet!}
+										eventType={eventType}
+									/>
 								)}
 								{resultsTypeGuess.selected === "pie" && (
 									<NRQLResultsPie results={results} facet={facet!} />
