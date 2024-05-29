@@ -28,6 +28,10 @@ export class CollaborationTeamProvider {
 		this.graphqlClient.addHeader("Nerd-Graph-Unsafe-Experimental-Opt-In", "Collaboration");
 	}
 
+	/**
+	 * This is called as part of the bootstrapping method, as a thread must exist to add comments, but a user doesn't
+	 * need to be concerned with that aspect of it, so we'll just always create one on their behalf if need be.
+	 */
 	private async createThread(
 		contextId: string,
 		accountId: number,
@@ -86,6 +90,10 @@ export class CollaborationTeamProvider {
 		}
 	}
 
+	/**
+	 * When the IDE calls for comments for a given error group, we need to ensure certain criteria are met and exist.
+	 * This method exists and handles all the bootstrapping; use it in between ANY calls to get comments.
+	 */
 	private async bootstrapCollaborationDiscussion(
 		accountId: number,
 		errorGroupGuid: string,

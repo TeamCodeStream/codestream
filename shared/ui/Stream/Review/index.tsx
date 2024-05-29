@@ -82,7 +82,6 @@ import { LocateRepoButton } from "../LocateRepoButton";
 import { MarkdownText } from "../MarkdownText";
 import Menu from "../Menu";
 import { MessageInput, AttachmentField } from "../MessageInput";
-import { RepliesToPost } from "../Posts/RepliesToPost";
 import { PRErrorBox } from "../PullRequestComponents";
 import { AddReactionIcon, Reactions } from "../Reactions";
 import { ReviewForm } from "../ReviewForm";
@@ -1300,12 +1299,12 @@ const ReviewForReview = (props: PropsWithReview) => {
 			return (
 				<Footer className="replies-to-review" style={{ borderTop: "none", marginTop: 0 }}>
 					{derivedState.replies.length > 0 && <MetaLabel>Activity</MetaLabel>}
-					<RepliesToPost
+					{/* <RepliesToPost
 						streamId={props.review.streamId}
 						parentPostId={props.review.postId}
 						itemId={props.review.id}
 						numReplies={props.review.numReplies}
-					/>
+					/> */}
 					{InputContainer && !props.isAmending && (
 						<InputContainer>
 							<ReplyInput

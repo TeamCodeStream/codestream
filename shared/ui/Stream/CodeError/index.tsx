@@ -1,7 +1,9 @@
 import {
 	CodeBlock,
 	DidChangeObservabilityDataNotificationType,
+	ErrorInboxComment,
 	GetErrorInboxCommentsRequestType,
+	GetErrorInboxCommentsResponse,
 	GetNewRelicAssigneesRequestType,
 	NewRelicErrorGroup,
 	ResolveStackTraceResponse,
@@ -593,13 +595,6 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 
 		buildStates();
 		buildAssignees();
-
-		// trigger agent code
-		HostApi.instance.send(GetErrorInboxCommentsRequestType, {
-			accountId: props.errorGroup!.accountId,
-			errorGroupGuid: props.errorGroup!.guid,
-			entityGuid: props.errorGroup!.entityGuid,
-		});
 	});
 
 	const title = (props.codeError?.title || "").split(/(\.)/).map(part => (
@@ -1908,6 +1903,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 		getNrAiPostLength(state, props.codeError.streamId, props.codeError.postId)
 	);
 	const functionToEdit = useAppSelector(state => state.codeErrors.functionToEdit);
+	const [comments, setComments] = useState<ErrorInboxComment[]>([]);
 
 	function scrollToNew() {
 		const target = scrollNewTarget?.current;
@@ -1951,6 +1947,23 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 				if ($stackTrace) $stackTrace.focus();
 			});
 		}
+
+		HostApi.instance
+			.send(GetErrorInboxCommentsRequestType, {
+				accountId: props.errorGroup!.accountId,
+				errorGroupGuid: props.errorGroup!.guid,
+				entityGuid: props.errorGroup!.entityGuid,
+			})
+			.then((r: GetErrorInboxCommentsResponse) => {
+				if (r.comments && r.comments.length > 0) {
+					setComments(r.comments);
+				} else if (r.error) {
+					console.error("CHEESE", r.error.error.message);
+				}
+			})
+			.catch(err => {
+				console.error("CHEESE", err);
+			});
 	});
 
 	const renderFooter =
@@ -1965,12 +1978,14 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 					className={isGrokLoading ? "grok-loading" : "grok-not-loading" + " replies-to-review"}
 					style={{ borderTop: "none", marginTop: 0 }}
 				>
-					{props.codeError.postId && props.codeError.streamId && (
+					{
+						//props.codeError.postId && props.codeError.streamId && (
 						<>
 							{<MetaLabel>Activity</MetaLabel>}
 							<RepliesToPost
-								streamId={props.codeError.streamId}
-								parentPostId={props.codeError.postId}
+								comments={comments}
+								//streamId={props.codeError.streamId}
+								//parentPostId={props.codeError.postId}
 								itemId={props.codeError.entityGuid}
 								numReplies={props.codeError.numReplies}
 								scrollNewTargetCallback={scrollNewTargetCallback}
@@ -1988,7 +2003,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 								</DelayedRender>
 							)}
 						</>
-					)}
+					}
 
 					{InputContainer && !derivedState.isPDIdev && (
 						<InputContainer>
