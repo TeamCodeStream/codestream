@@ -11,6 +11,7 @@ interface StatesToDisplay {
 const STATES_TO_DISPLAY_STRINGS: StatesToDisplay = {
 	area: "Area",
 	bar: "Bar",
+	stackedBar: "Stacked Bar",
 	billboard: "Billboard",
 	json: "JSON",
 	line: "Line",

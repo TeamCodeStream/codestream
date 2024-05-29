@@ -52,7 +52,16 @@ let nrColumnsByAccountByCollectionName: NrColumnsByAccountByCollectionName = {};
 
 @lsp
 export class NrNRQLProvider {
-	static ALL_RESULT_TYPES = ["table", "json", "billboard", "line", "bar", "area", "pie"];
+	static ALL_RESULT_TYPES = [
+		"table",
+		"json",
+		"billboard",
+		"line",
+		"bar",
+		"stacked bar",
+		"area",
+		"pie",
+	];
 
 	constructor(private graphqlClient: NewRelicGraphqlClient) {}
 
@@ -343,20 +352,20 @@ export class NrNRQLProvider {
 					};
 				};
 			}>(`{
-  actor {
-    accounts {
-      id
-      name
-    }
-    queryHistory {
-      nrql(options: {limit: 50}) {
-        query
-        accountIds
-        createdAt
-      }
-    }
-  }
-}`);
+				actor {
+					accounts {
+						id
+						name
+					}
+					queryHistory {
+						nrql(options: {limit: 50}) {
+							query
+							accountIds
+							createdAt
+						}
+					}
+				}
+			}`);
 
 			if (response) {
 				const accounts = response?.actor?.accounts || [];
@@ -486,7 +495,7 @@ export class NrNRQLProvider {
 				return { selected: "json", enabled: ["json"] };
 			}
 			// easy timeseries data like a TIMESERIES of a count
-			return { selected: "line", enabled: ["table", "json", "line", "area"] };
+			return { selected: "line", enabled: ["table", "json", "line", "area", "stackedBar"] };
 		}
 		if (isFacet) {
 			return { selected: "bar", enabled: ["bar", "json", "pie", "table"] };

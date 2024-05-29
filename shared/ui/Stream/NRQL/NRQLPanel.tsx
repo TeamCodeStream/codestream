@@ -25,6 +25,7 @@ import ExportResults from "./ExportResults";
 import { NRQLEditorApi, NRQLEditor } from "./NRQLEditor";
 import { NRQLResultsArea } from "./NRQLResultsArea";
 import { NRQLResultsBar } from "./NRQLResultsBar";
+import { NRQLResultsStackedBar } from "./NRQLResultsStackedBar";
 import { NRQLResultsBillboard } from "./NRQLResultsBillboard";
 import { NRQLResultsJSON } from "./NRQLResultsJSON";
 import { NRQLResultsLine } from "./NRQLResultsLine";
@@ -511,6 +512,9 @@ export const NRQLPanel = (props: {
 								{resultsTypeGuess.selected === "json" && <NRQLResultsJSON results={results} />}
 								{resultsTypeGuess.selected === "bar" && (
 									<NRQLResultsBar height={trimmedHeight} results={results} facet={facet!} />
+								)}
+								{resultsTypeGuess.selected === "stackedBar" && (
+									<NRQLResultsStackedBar height={trimmedHeight} results={results} facet={facet!} />
 								)}
 								{resultsTypeGuess.selected === "pie" && (
 									<NRQLResultsPie results={results} facet={facet!} />
