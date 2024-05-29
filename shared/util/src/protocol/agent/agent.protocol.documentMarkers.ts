@@ -174,19 +174,3 @@ export const GetDocumentFromMarkerRequestType = new RequestType<
 	void,
 	void
 >("codestream/textDocument/fromMarker");
-
-export interface CalculateNonLocalRangesRequest {
-	ranges: Range[];
-	uri: string;
-}
-
-export interface CalculateNonLocalRangesResponse {
-	ranges: Range[];
-}
-
-export const CalculateNonLocalRangesRequestType = new RequestType<
-	CalculateNonLocalRangesRequest,
-	CalculateNonLocalRangesResponse,
-	void,
-	void
->("codestream/textDocument/calculateNonLocalRanges");

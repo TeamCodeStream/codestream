@@ -7,7 +7,6 @@ import {
 	EventEmitter,
 	ExtensionContext,
 	OutputChannel,
-	Range as VSCodeRange,
 	Uri,
 	window,
 	workspace
@@ -42,7 +41,6 @@ import {
 	ArchiveStreamRequestType,
 	BaseAgentOptions,
 	BootstrapRequestType,
-	CalculateNonLocalRangesRequestType,
 	CloseStreamRequestType,
 	CodeStreamEnvironmentInfo,
 	CreateChannelStreamRequestType,
@@ -171,7 +169,6 @@ import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions, log } from "../system";
 import { getInitializationOptions } from "../extension";
-import { Editor } from "../extensions";
 import { resolveStackTracePaths } from "./resolveStackTracePathsHandler";
 import { ViewColumn } from "@codestream/protocols/webview";
 
@@ -536,13 +533,6 @@ export class CodeStreamAgentConnection implements Disposable {
 				repoId: marker.repoId,
 				file: marker.file,
 				markerId: marker.id
-			});
-		}
-
-		getRangesForUri(ranges: VSCodeRange[], uri: string) {
-			return this._connection.sendRequest(CalculateNonLocalRangesRequestType, {
-				ranges: Editor.toSerializableRange(ranges),
-				uri
 			});
 		}
 	})(this);
