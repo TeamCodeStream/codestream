@@ -789,18 +789,20 @@ const UnreadReply = (props: {
 		];
 	}, [props.starred]);
 
-	return (
-		<StyledReply
-			author={props.author}
-			post={props.post}
-			showParentPreview
-			renderMenu={
-				menuItems.length === 0
-					? undefined
-					: (target, close) => target && <Menu items={menuItems} target={target} action={close} />
-			}
-		/>
-	);
+	// TODO COLLAB
+	return <></>;
+	// return (
+	// 	<StyledReply
+	// 		author={props.author}
+	// 		post={props.post}
+	// 		showParentPreview
+	// 		renderMenu={
+	// 			menuItems.length === 0
+	// 				? undefined
+	// 				: (target, close) => target && <Menu items={menuItems} target={target} action={close} />
+	// 		}
+	// 	/>
+	// );
 };
 
 const createUnknownUser = id => ({ username: id, fullName: "Unknown" });

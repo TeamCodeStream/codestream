@@ -1424,6 +1424,17 @@ export const GetObservabilityErrorsWithoutReposRequestType = new RequestType<
 	void
 >("codestream/newrelic/errorsWithoutRepos");
 
+export interface ErrorInboxComment {
+	body: string;
+	id: string;
+	systemMessageType: string;
+	creator: {
+		email: string;
+		name: string;
+		userId: string;
+	};
+}
+
 export interface GetErrorInboxCommentsRequest {
 	accountId: number;
 	errorGroupGuid: string;
@@ -1431,17 +1442,7 @@ export interface GetErrorInboxCommentsRequest {
 }
 
 export interface GetErrorInboxCommentsResponse {
-	comments?: {
-		body: string;
-		id: string;
-		systemMessageType: string;
-		creator: {
-			email: string;
-			name: string;
-			userId: string;
-		};
-	}[];
-
+	comments?: ErrorInboxComment[];
 	error?: NRErrorResponse;
 }
 
