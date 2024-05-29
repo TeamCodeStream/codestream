@@ -162,7 +162,7 @@ export class ObservabilityErrorsProvider {
 
 							const entityType: EntityType =
 								application.source.entity.entityType ?? "APM_APPLICATION_ENTITY";
-							const timeWindow = request.timeWindow ?? "3 days ago";
+							const timeWindow = request.timeWindow ?? "3 days";
 							const errorTraceWrappers = await this.findFingerprintedErrorTraces(
 								application.source.entity.account.id,
 								application.source.entity.guid,

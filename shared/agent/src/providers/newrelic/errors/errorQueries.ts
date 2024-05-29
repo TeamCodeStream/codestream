@@ -194,7 +194,7 @@ const errorQueryGroups: ErrorQueryTemplate[] = [
 				"FROM ErrorTrace",
 				`WHERE fingerprint IS NOT NULL AND NOT error.expected AND entityGuid='<%= applicationGuid %>'`,
 				"FACET error.class, message", // group the results by identifiers
-				`SINCE <%= since %>`,
+				`SINCE <%= since %> AGO`,
 				"LIMIT MAX",
 			].join(" ")
 		),
@@ -218,7 +218,7 @@ const errorQueryGroups: ErrorQueryTemplate[] = [
 				"FROM JavaScriptError",
 				`WHERE stackHash IS NOT NULL AND entityGuid='<%= applicationGuid %>'`,
 				"FACET stackTrace", // group the results by fingerprint
-				`SINCE <%= since %>`,
+				`SINCE <%= since %> AGO`,
 				"LIMIT MAX",
 			].join(" ")
 		),
@@ -244,7 +244,7 @@ const errorQueryGroups: ErrorQueryTemplate[] = [
 				"FROM MobileCrash",
 				`WHERE entityGuid='<%= applicationGuid %>'`,
 				"FACET crashFingerprint", // group the results by fingerprint
-				`SINCE <%= since %>}`,
+				`SINCE <%= since %> AGO`,
 				"LIMIT MAX",
 			].join(" ")
 		),
@@ -268,7 +268,7 @@ const errorQueryGroups: ErrorQueryTemplate[] = [
 				"FROM MobileHandledException",
 				`WHERE entityGuid='<%= applicationGuid %>'`,
 				"FACET handledExceptionUuid", // group the results by fingerprint
-				`SINCE <%= since %>`,
+				`SINCE <%= since %> AGO`,
 				"LIMIT MAX",
 			].join(" ")
 		),
