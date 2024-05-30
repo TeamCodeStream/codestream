@@ -1426,7 +1426,7 @@ export const GetObservabilityErrorsWithoutReposRequestType = new RequestType<
 	void
 >("codestream/newrelic/errorsWithoutRepos");
 
-export interface ErrorInboxComment {
+export interface CollaborationComment {
 	body: string;
 	id: string;
 	systemMessageType: string;
@@ -1444,7 +1444,7 @@ export interface GetErrorInboxCommentsRequest {
 }
 
 export interface GetErrorInboxCommentsResponse {
-	comments?: ErrorInboxComment[];
+	comments?: CollaborationComment[];
 	error?: NRErrorResponse;
 }
 
@@ -1453,7 +1453,23 @@ export const GetErrorInboxCommentsRequestType = new RequestType<
 	GetErrorInboxCommentsResponse,
 	void,
 	void
->("codestream/newrelic/collaboration/errorDiscussionComments");
+>("codestream/newrelic/collaboration/getErrorComments");
+
+export interface CreateCollaborationCommentRequest {
+	threadId: string;
+	body: string;
+}
+
+export interface CreateCollaborationCommentResponse {
+	commentId: string;
+}
+
+export const CreateCollaborationCommentRequestType = new RequestType<
+	CreateCollaborationCommentRequest,
+	CreateCollaborationCommentResponse,
+	void,
+	void
+>("codestream/newrelic/collaboration/createComment");
 
 export interface GetObservabilityAnomaliesRequest {
 	entityGuid: string;

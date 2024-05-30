@@ -1,7 +1,7 @@
 import {
 	CodeBlock,
+	CollaborationComment,
 	DidChangeObservabilityDataNotificationType,
-	ErrorInboxComment,
 	GetErrorInboxCommentsRequestType,
 	GetErrorInboxCommentsResponse,
 	GetNewRelicAssigneesRequestType,
@@ -1903,7 +1903,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 		getNrAiPostLength(state, props.codeError.streamId, props.codeError.postId)
 	);
 	const functionToEdit = useAppSelector(state => state.codeErrors.functionToEdit);
-	const [comments, setComments] = useState<ErrorInboxComment[]>([]);
+	const [comments, setComments] = useState<CollaborationComment[]>([]);
 
 	function scrollToNew() {
 		const target = scrollNewTarget?.current;
