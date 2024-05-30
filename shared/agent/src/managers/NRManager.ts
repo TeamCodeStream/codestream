@@ -134,7 +134,7 @@ export class NRManager {
 		errorGroupGuid,
 		stackTrace,
 		occurrenceId,
-	}: ParseStackTraceRequest): Promise<ParseStackTraceResponse> {
+	}: ParseStackTraceRequest): Promise<ParseStackTraceResponse | undefined> {
 		const lines: string[] = typeof stackTrace === "string" ? stackTrace.split("\n") : stackTrace;
 		const whole = lines.join("\n");
 
@@ -143,7 +143,7 @@ export class NRManager {
 		// avoid having to determine the language
 
 		// take an educated guess on the language, based on a simple search for file extension,
-		// before attempting to parse accoding to the generating language
+		// before attempting to parse according to the generating language
 		let lang = this.guessStackTraceLanguage(lines);
 		if (lang) {
 			return StackTraceParsers[lang](whole);
@@ -188,10 +188,14 @@ export class NRManager {
 			}
 
 			// take the last one
-			const response = info || ({} as ParseStackTraceResponse);
-			response.warning = {
-				message: "Unable to parse language from stack trace",
-			};
+			const response = info;
+			if (response && !response?.language) {
+				// Only show this warning if language wasn't inferred from trying all
+				// the StackTraceParsers
+				response.warning = {
+					message: "Unable to parse language from stack trace",
+				};
+			}
 			return response;
 		}
 	}
@@ -283,6 +287,9 @@ export class NRManager {
 			stackTrace,
 			occurrenceId,
 		});
+		if (!parsedStackInfo) {
+			return { error: "Unable to parse stack trace" };
+		}
 		if (parsedStackInfo.parseError) {
 			return { error: parsedStackInfo.parseError };
 		} else if (ref && !parsedStackInfo.lines.find(line => !line.error)) {
