@@ -9,10 +9,11 @@ import {
 	Tooltip as ReTooltip,
 	Legend,
 	TooltipProps,
+	RectangleProps,
 } from "recharts";
 import { ColorsHash, Colors } from "./utils";
 import Tooltip from "../Tooltip";
-import { FacetLineTooltip } from "./FacetLineTooltip";
+import { StackedBarTooltip } from "./StackedBarTooltip";
 
 interface Props {
 	results: NRQLResult[];
@@ -115,7 +116,7 @@ export const NRQLResultsStackedBar = (props: Props) => {
 		setActiveIndex(undefined);
 	};
 
-	const FacetLineLegend = ({ payload }: { payload?: { dataKey: string; color: string }[] }) => {
+	const StackedBarLegend = ({ payload }: { payload?: { dataKey: string; color: string }[] }) => {
 		return (
 			<div
 				style={{
@@ -170,7 +171,7 @@ export const NRQLResultsStackedBar = (props: Props) => {
 	return (
 		<div className="histogram-chart">
 			<div style={{ height: props.height, overflowY: "auto" }}>
-				<ResponsiveContainer width="95%" height={500} debounce={1}>
+				<ResponsiveContainer width="99%" height={500} debounce={1}>
 					<BarChart
 						width={500}
 						height={400}
@@ -188,19 +189,23 @@ export const NRQLResultsStackedBar = (props: Props) => {
 							tickFormatter={formatXAxisTime}
 						/>
 						<YAxis tick={{ fontSize: 11 }} />
-						{/* <ReTooltip content={<EventTypeTooltip eventType={eventType || "count"} />} />
-						<Legend
-							wrapperStyle={{ margin: "15px" }}
-							content={<EventTypeLegend eventType={eventType} />}
-						/> */}
-
-						<ReTooltip content={<FacetLineTooltip activeDotKey={activeDotKey} />} />
-						<Legend content={<FacetLineLegend />} />
+						<ReTooltip content={<StackedBarTooltip activeDotKey={activeDotKey} />} />
+						<Legend content={<StackedBarLegend />} />
 
 						{uniqueFacetValues.map((_, index) => {
 							const color = ColorsHash[index % Colors.length];
 							//@TODO figure out if stackId needs to be better
-							return <Bar key={_} dataKey={_} stackId="a" fill={color} />;
+							return (
+								<Bar
+									key={_}
+									dataKey={_}
+									stackId="a"
+									fill={ColorsHash[index % Colors.length]}
+									onMouseOver={e => customMouseOver(_, index)}
+									onMouseLeave={e => customMouseLeave()}
+									fillOpacity={activeIndex === undefined ? 1 : activeIndex === index ? 1 : 0.5}
+								/>
+							);
 						})}
 					</BarChart>
 				</ResponsiveContainer>
@@ -229,4 +234,21 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label })
 	}
 
 	return null;
+};
+
+interface CustomBackgroundProps extends RectangleProps {
+	index: number;
+	activeIndex: number | undefined;
+}
+
+const CustomBackground: React.FC<RectangleProps> = ({
+	fill,
+	x,
+	y,
+	width,
+	height,
+	// index,
+	// activeIndex,
+}) => {
+	return <rect x={x} y={y} width={width} height={height} fill={"transparent"} />;
 };

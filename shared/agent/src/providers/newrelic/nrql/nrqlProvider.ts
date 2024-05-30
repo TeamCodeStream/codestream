@@ -478,7 +478,7 @@ export class NrNRQLProvider {
 		const isTimeseries = metadata?.timeSeries || metadata?.contents?.timeSeries;
 		const isFacet = metadata?.facet;
 		if (isTimeseries && isFacet) {
-			// TODO stacked bar and line and area
+			// TODO add area
 			return { selected: "line", enabled: ["table", "json", "line", "stackedBar"] };
 		}
 
@@ -495,7 +495,7 @@ export class NrNRQLProvider {
 				return { selected: "json", enabled: ["json"] };
 			}
 			// easy timeseries data like a TIMESERIES of a count
-			return { selected: "line", enabled: ["table", "json", "line", "area", "stackedBar"] };
+			return { selected: "line", enabled: ["table", "json", "line", "area"] };
 		}
 		if (isFacet) {
 			return { selected: "bar", enabled: ["bar", "json", "pie", "table"] };
