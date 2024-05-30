@@ -9,9 +9,16 @@ import {
 	Tooltip as ReTooltip,
 	Legend,
 } from "recharts";
-import { ColorsHash, Colors } from "./utils";
+import {
+	ColorsHash,
+	Colors,
+	truncate,
+	fillNullValues,
+	getUniqueDataKeyAndFacetValues,
+	formatXAxisTime,
+} from "./utils";
 import Tooltip from "../Tooltip";
-import { StackedBarTooltip } from "./StackedBarTooltip";
+import { FacetLineTooltip } from "./FacetLineTooltip";
 
 interface Props {
 	results: NRQLResult[];
@@ -19,22 +26,6 @@ interface Props {
 	height: number;
 	eventType?: string;
 }
-
-const formatXAxisTime = time => {
-	const date = new Date(time * 1000);
-	return `${date.toLocaleTimeString()}`;
-};
-
-const getUniqueDataKeyAndFacetValues = (results, facet) => {
-	const result = results ? results[0] : undefined;
-
-	const defaultFilterKeys = ["beginTimeSeconds", "endTimeSeconds", "facet"];
-	const filterKeys = defaultFilterKeys.concat(facet);
-
-	const dataKeys = Object.keys(result || {}).filter(key => !filterKeys.includes(key));
-	const uniqueFacetValues: string[] = [...new Set<string>(results.map(obj => obj.facet))];
-	return { dataKeys, uniqueFacetValues };
-};
 
 const formatResultsForStackedBarChart = (originalArray, uniqueFacets, dataKeys) => {
 	const groupedByEndTime = {};
@@ -60,27 +51,6 @@ const formatResultsForStackedBarChart = (originalArray, uniqueFacets, dataKeys) 
 	}));
 
 	return fillNullValues(newArray);
-};
-
-const fillNullValues = array => {
-	array.forEach((obj, i) => {
-		Object.keys(obj).forEach(key => {
-			if (key !== "endTimeSeconds" && obj[key] === null) {
-				let j = i - 1;
-				while (j >= 0 && array[j][key] === null) j--;
-				obj[key] = j >= 0 ? array[j][key] : 0;
-			}
-		});
-	});
-	return array.filter(obj =>
-		Object.keys(obj).some(key => key !== "endTimeSeconds" && obj[key] !== undefined)
-	);
-};
-
-const truncate = (str: string, max: number) => {
-	if (!str) return str;
-	if (str.length >= max) return `${str.substring(0, max - 1)}${"\u2026"}`;
-	return str;
 };
 
 export const NRQLResultsStackedBar = (props: Props) => {
@@ -189,7 +159,7 @@ export const NRQLResultsStackedBar = (props: Props) => {
 						<YAxis tick={{ fontSize: 11 }} />
 						<ReTooltip
 							cursor={{ fill: "transparent" }}
-							content={<StackedBarTooltip activeDotKey={activeDotKey} />}
+							content={<FacetLineTooltip activeDotKey={activeDotKey} />}
 						/>
 						<Legend content={<StackedBarLegend />} />
 

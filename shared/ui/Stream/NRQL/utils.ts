@@ -87,3 +87,40 @@ function timeAgo(date: Date): string {
 	const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
 	return rtf.format(-value, unit);
 }
+
+export const truncate = (str: string, max: number) => {
+	if (!str) return str;
+	if (str.length >= max) return `${str.substring(0, max - 1)}${"\u2026"}`;
+	return str;
+};
+
+export const formatXAxisTime = time => {
+	const date = new Date(time * 1000);
+	return `${date.toLocaleTimeString()}`;
+};
+
+export const getUniqueDataKeyAndFacetValues = (results, facet) => {
+	const result = results ? results[0] : undefined;
+
+	const defaultFilterKeys = ["beginTimeSeconds", "endTimeSeconds", "facet"];
+	const filterKeys = defaultFilterKeys.concat(facet);
+
+	const dataKeys = Object.keys(result || {}).filter(key => !filterKeys.includes(key));
+	const uniqueFacetValues: string[] = [...new Set<string>(results.map(obj => obj.facet))];
+	return { dataKeys, uniqueFacetValues };
+};
+
+export const fillNullValues = array => {
+	array.forEach((obj, i) => {
+		Object.keys(obj).forEach(key => {
+			if (key !== "endTimeSeconds" && obj[key] === null) {
+				let j = i - 1;
+				while (j >= 0 && array[j][key] === null) j--;
+				obj[key] = j >= 0 ? array[j][key] : 0;
+			}
+		});
+	});
+	return array.filter(obj =>
+		Object.keys(obj).some(key => key !== "endTimeSeconds" && obj[key] !== undefined)
+	);
+};
