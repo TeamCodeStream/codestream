@@ -8,8 +8,6 @@ import {
 	Bar,
 	Tooltip as ReTooltip,
 	Legend,
-	TooltipProps,
-	RectangleProps,
 } from "recharts";
 import { ColorsHash, Colors } from "./utils";
 import Tooltip from "../Tooltip";
@@ -189,21 +187,23 @@ export const NRQLResultsStackedBar = (props: Props) => {
 							tickFormatter={formatXAxisTime}
 						/>
 						<YAxis tick={{ fontSize: 11 }} />
-						<ReTooltip content={<StackedBarTooltip activeDotKey={activeDotKey} />} />
+						<ReTooltip
+							cursor={{ fill: "transparent" }}
+							content={<StackedBarTooltip activeDotKey={activeDotKey} />}
+						/>
 						<Legend content={<StackedBarLegend />} />
 
-						{uniqueFacetValues.map((_, index) => {
-							const color = ColorsHash[index % Colors.length];
-							//@TODO figure out if stackId needs to be better
+						{uniqueFacetValues.map((facet, facetIndex) => {
+							const color = ColorsHash[facetIndex % Colors.length];
 							return (
 								<Bar
-									key={_}
-									dataKey={_}
+									key={facet}
+									dataKey={facet}
 									stackId="a"
-									fill={ColorsHash[index % Colors.length]}
-									onMouseOver={e => customMouseOver(_, index)}
+									fill={color}
+									onMouseOver={e => customMouseOver(facet, facetIndex)}
 									onMouseLeave={e => customMouseLeave()}
-									fillOpacity={activeIndex === undefined ? 1 : activeIndex === index ? 1 : 0.5}
+									fillOpacity={activeIndex === undefined ? 1 : activeIndex === facetIndex ? 1 : 0.5}
 								/>
 							);
 						})}
@@ -212,43 +212,4 @@ export const NRQLResultsStackedBar = (props: Props) => {
 			</div>
 		</div>
 	);
-};
-
-interface CustomTooltipProps extends TooltipProps<number, string> {}
-
-const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
-	if (active && payload && payload.length) {
-		return (
-			<div
-				className="custom-tooltip"
-				style={{ backgroundColor: "#fff", padding: "10px", border: "1px solid #ccc" }}
-			>
-				<p className="label">{`${label}`}</p>
-				{payload.map((entry, index) => (
-					<p key={`item-${index}`} style={{ color: entry.color }}>
-						{`${entry.name}: ${entry.value}`}
-					</p>
-				))}
-			</div>
-		);
-	}
-
-	return null;
-};
-
-interface CustomBackgroundProps extends RectangleProps {
-	index: number;
-	activeIndex: number | undefined;
-}
-
-const CustomBackground: React.FC<RectangleProps> = ({
-	fill,
-	x,
-	y,
-	width,
-	height,
-	// index,
-	// activeIndex,
-}) => {
-	return <rect x={x} y={y} width={width} height={height} fill={"transparent"} />;
 };
