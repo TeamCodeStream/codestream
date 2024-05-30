@@ -55,7 +55,6 @@
 		"@grpc/proto-loader": "0.7.7",
 		"@microsoft/microsoft-graph-client": "2.0.0",
 		"@slack/web-api": "6.9.1",
-		"analytics-node": "3.5.0",
 		"async-mutex": "0.3.2",
 		"bufferutil": "4.0.6",
 		"chokidar": "3.5.3",
@@ -100,7 +99,6 @@
 	"devDependencies": {
 		"@luckycatfactory/esbuild-graphql-loader": "3.8.1",
 		"@microsoft/microsoft-graph-types": "1.10.0",
-		"@types/analytics-node": "3.1.7",
 		"@types/convert-source-map": "1.5.2",
 		"@types/diff": "5.0.2",
 		"@types/diff-match-patch": "1.0.32",

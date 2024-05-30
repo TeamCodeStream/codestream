@@ -4,18 +4,12 @@ import uuid from "uuid/v4";
 import { Logger } from "../logger";
 import { CodeStreamSession, SessionStatusChangedEvent } from "../session";
 import { SessionStatus } from "../types";
-
 // FIXME: sorry, typescript purists: i simply gave up trying to get the type definitions for this module to work
 import { TelemetryData, TelemetryEventName } from "@codestream/protocols/agent";
-import Analytics from "analytics-node";
 import { FetchCore } from "../system/fetchCore";
 import { debug } from "../system";
 
-/**
- * NOTE: this still sends one event to segment
- */
 export class NewRelicTelemetryService {
-	private _segmentInstance: Analytics | undefined;
 	private _superProps: { [key: string]: any };
 	private _distinctId?: string;
 	private _anonymousId: string;
@@ -45,8 +39,6 @@ export class NewRelicTelemetryService {
 
 		const props = {
 			...opts,
-			//Endpoint: session.versionInfo.ide.name,
-			//"Endpoint Detail": session.versionInfo.ide.detail,
 		};
 		this._superProps = props;
 		this._hasOptedOut = hasOptedOut;
@@ -68,18 +60,7 @@ export class NewRelicTelemetryService {
 
 	async initialize() {
 		Logger.debug("Telemetry initializing...");
-		let token = "";
-		try {
-			token = await this._session.api.getTelemetryKey();
-		} catch (ex) {
-			Logger.error(ex);
-		}
-
-		try {
-			this._segmentInstance = new Analytics(token);
-		} catch (ex) {
-			Logger.error(ex);
-		}
+		// noop
 		Logger.debug("Telemetry initialized");
 		this._onReady();
 	}
@@ -99,38 +80,24 @@ export class NewRelicTelemetryService {
 
 	identify(id: string, props?: { [key: string]: any }) {
 		this._distinctId = id;
-		if (this._hasOptedOut || this._segmentInstance == null) {
+		if (this._hasOptedOut) {
 			return;
 		}
 
 		try {
 			Logger.debug(`Telemetry identify ${this._distinctId}`);
-			/*
-			this._segmentInstance.identify({
-				userId: this._distinctId,
-				anonymousId: this._anonymousId,
-				traits: props,
-			});
-			this._segmentInstance.flush();
-			*/
 		} catch (ex) {
 			Logger.error(ex);
 		}
 	}
 
 	setAnonymousId(id: string) {
-		if (this._hasOptedOut || this._segmentInstance == null) {
+		if (this._hasOptedOut) {
 			return;
 		}
 		try {
 			Logger.debug(`Telemetry setAnonymousId ${id}`);
 			this._anonymousId = id;
-			/*
-			this._segmentInstance.identify({
-				anonymousId: id,
-			});
-			this._segmentInstance.flush();
-			*/
 		} catch (ex) {
 			Logger.error(ex);
 		}
@@ -159,35 +126,19 @@ export class NewRelicTelemetryService {
 	track(event: TelemetryEventName, data?: TelemetryData) {
 		const cc = Logger.getCorrelationContext();
 
-		if (this._hasOptedOut || this._segmentInstance == null) {
-			Logger.debug("Cannot track, user has opted out or no segment instance");
+		if (this._hasOptedOut) {
+			Logger.debug("Cannot track, user has opted out");
 			return;
 		}
 
 		const payload: { [key: string]: any } = { ...data, ...this._superProps };
-
-		//if (this._distinctId != null) {
-		//	payload["distinct_id"] = this._distinctId;
-		//}
 
 		Logger.debug(
 			`Tracking userId=${this._distinctId} anonymousId=${this._anonymousId}:`,
 			event,
 			payload
 		);
-		try {
-			if (event === "codestream/user/login succeeded") {
-				this._segmentInstance.track({
-					userId: this._distinctId,
-					anonymousId: this._anonymousId,
-					event,
-					properties: payload,
-				});
-				this._segmentInstance.flush();
-			}
-		} catch (ex) {
-			Logger.error(ex, cc);
-		}
+
 		try {
 			if (this._session.newRelicTaxonomyEnforcerUrl) {
 				this.fetchClient

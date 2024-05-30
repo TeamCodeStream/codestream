@@ -871,10 +871,6 @@ export interface CSTrackProviderPostRequest {
 	parentPostId?: string;
 }
 
-export interface CSGetTelemetryKeyResponse {
-	key: string;
-}
-
 export interface CSGetApiCapabilitiesResponse {
 	capabilities: CSApiCapabilities;
 }

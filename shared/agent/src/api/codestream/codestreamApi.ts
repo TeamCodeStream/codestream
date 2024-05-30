@@ -196,7 +196,6 @@ import {
 	CSGetStreamsResponse,
 	CSGetTeamResponse,
 	CSGetTeamsResponse,
-	CSGetTelemetryKeyResponse,
 	CSGetUserResponse,
 	CSGetUsersResponse,
 	CSInviteUserRequest,
@@ -2003,15 +2002,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 		);
 		safeDecode(preferences);
 		return preferences;
-	}
-
-	@log()
-	async getTelemetryKey(): Promise<string> {
-		const telemetrySecret = "84$gTe^._qHm,#D";
-		const response = await this.get<CSGetTelemetryKeyResponse>(
-			`/no-auth/telemetry-key?secret=${encodeURIComponent(telemetrySecret)}`
-		);
-		return response.key;
 	}
 
 	@log()

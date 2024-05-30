@@ -340,7 +340,7 @@ export interface ApiProvider {
 	updateStatus(request: UpdateStatusRequest): Promise<UpdateStatusResponse>;
 	getPreferences(): Promise<GetPreferencesResponse>;
 	updatePresence(request: UpdatePresenceRequest): Promise<UpdatePresenceResponse>;
-	getTelemetryKey(): Promise<string>;
+
 	getApiCapabilities(): Promise<CSApiCapabilities>;
 
 	// createFileStream(request: CreateFileStreamRequest): Promise<CreateFileStreamResponse>;
