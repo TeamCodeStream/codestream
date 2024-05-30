@@ -1,14 +1,11 @@
-import { ErrorInboxComment, NewRelicErrorGroup, PostPlus } from "@codestream/protocols/agent";
+import { CollaborationComment, NewRelicErrorGroup, PostPlus } from "@codestream/protocols/agent";
 import { CSPost, CSUser } from "@codestream/protocols/api";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { ProfileLink } from "@codestream/webview/src/components/ProfileLink";
 import { CodeStreamState } from "@codestream/webview/store";
 import { editCodemark } from "@codestream/webview/store/codemarks/thunks";
 import { Post } from "@codestream/webview/store/posts/types";
-import {
-	getTeamMembers,
-	getTeamTagsHash,
-} from "@codestream/webview/store/users/reducer";
+import { getTeamMembers, getTeamTagsHash } from "@codestream/webview/store/users/reducer";
 import { useAppDispatch } from "@codestream/webview/utilities/hooks";
 import { escapeHtml, replaceHtml } from "@codestream/webview/utils";
 import cx from "classnames";
@@ -200,7 +197,7 @@ const ComposeWrapper = styled.div.attrs(() => ({
 export interface ReplyProps {
 	author: Partial<CSUser>;
 	post?: Post;
-	comment: ErrorInboxComment;
+	comment: CollaborationComment;
 	file?: string;
 	functionToEdit?: FunctionToEdit;
 	codeErrorId?: string;

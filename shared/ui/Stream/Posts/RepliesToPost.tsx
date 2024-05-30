@@ -1,10 +1,7 @@
-import { ErrorInboxComment, NewRelicErrorGroup, PostPlus } from "@codestream/protocols/agent";
+import { CollaborationComment, NewRelicErrorGroup, PostPlus } from "@codestream/protocols/agent";
 import { CodeStreamState } from "@codestream/webview/store";
 import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
-import {
-	currentUserIsAdminSelector,
-	getTeamMates,
-} from "@codestream/webview/store/users/reducer";
+import { currentUserIsAdminSelector, getTeamMates } from "@codestream/webview/store/users/reducer";
 import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import { mapFilter } from "@codestream/webview/utils";
 import { groupBy } from "lodash-es";
@@ -37,7 +34,7 @@ export const RepliesToPostContext = React.createContext({
 });
 
 export const RepliesToPost = (props: {
-	comments: ErrorInboxComment[];
+	comments: CollaborationComment[];
 	streamId?: string;
 	parentPostId?: string;
 	itemId: string;
@@ -160,7 +157,7 @@ export const RepliesToPost = (props: {
 	// );
 
 	const getMenuItems = useCallback(
-		(comment: ErrorInboxComment) => {
+		(comment: CollaborationComment) => {
 			const menuItems: MenuItem[] = [];
 
 			if (!props.noReply) {
@@ -216,7 +213,7 @@ export const RepliesToPost = (props: {
 
 	return (
 		<RepliesToPostContext.Provider value={contextValue}>
-			{mapFilter(props.comments, (comment: ErrorInboxComment) => {
+			{mapFilter(props.comments, (comment: CollaborationComment) => {
 				idx++;
 				const menuItems = getMenuItems(comment);
 				const renderMenu =

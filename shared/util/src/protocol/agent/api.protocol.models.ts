@@ -806,14 +806,14 @@ export interface FetchRequestQuery {
 }
 
 export enum CodeErrorTimeWindow {
-	"HalfHour" = "30 minutes ago",
-	"Hour" = "1 hour ago",
-	"ThreeHours" = "3 hours ago",
-	"SixHours" = "6 hours ago",
-	"TwelveHours" = "12 hours ago",
-	"OneDay" = "24 hours ago",
-	"ThreeDays" = "3 days ago",
-	"SevenDays" = "7 days ago",
+	"HalfHour" = "30 minutes",
+	"Hour" = "1 hour",
+	"ThreeHours" = "3 hours",
+	"SixHours" = "6 hours",
+	"TwelveHours" = "12 hours",
+	"OneDay" = "24 hours",
+	"ThreeDays" = "3 days",
+	"SevenDays" = "7 days",
 }
 
 export type SidebarPanes = {
