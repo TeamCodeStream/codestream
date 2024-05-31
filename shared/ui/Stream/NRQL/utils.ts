@@ -95,12 +95,16 @@ export const truncate = (str: string, max: number) => {
 };
 
 export const formatXAxisTime = time => {
+	if (typeof time !== "number") {
+		return "";
+	}
+
 	const date = new Date(time * 1000);
-	return `${date.toLocaleTimeString()}`;
+	return date.toLocaleTimeString();
 };
 
 export const getUniqueDataKeyAndFacetValues = (results, facet) => {
-	const result = results ? results[0] : undefined;
+	const result = results ? results[0] : {};
 
 	const defaultFilterKeys = ["beginTimeSeconds", "endTimeSeconds", "facet"];
 	const filterKeys = defaultFilterKeys.concat(facet);
@@ -111,6 +115,10 @@ export const getUniqueDataKeyAndFacetValues = (results, facet) => {
 };
 
 export const fillNullValues = array => {
+	if (!Array.isArray(array)) {
+		return [];
+	}
+
 	array.forEach((obj, i) => {
 		Object.keys(obj).forEach(key => {
 			if (key !== "endTimeSeconds" && obj[key] === null) {
@@ -120,6 +128,7 @@ export const fillNullValues = array => {
 			}
 		});
 	});
+
 	return array.filter(obj =>
 		Object.keys(obj).some(key => key !== "endTimeSeconds" && obj[key] !== undefined)
 	);
