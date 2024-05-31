@@ -135,7 +135,10 @@ describe("getResultsType", () => {
 			],
 			{ timeSeries: true, facet: "count" } as any
 		);
-		expect(result).toStrictEqual({ selected: "line", enabled: ["table", "json", "line"] });
+		expect(result).toStrictEqual({
+			selected: "line",
+			enabled: ["table", "json", "line", "stackedBar"],
+		});
 	});
 
 	it("is json (timeseries)", () => {
