@@ -144,8 +144,7 @@ export class GitService implements IGitService, Disposable {
 			this._getDefaultBranch,
 			(repoPath, remote) => `${repoPath}|${remote}`
 		);
-		this._memoizedGetRepoRemotes = this._getRepoRemotes;
-		console.warn("hello world");
+		this._memoizedGetRepoRemotes = memoize(this._getRepoRemotes);
 		this._repositories = new GitRepositories(session, repoLocator);
 	}
 

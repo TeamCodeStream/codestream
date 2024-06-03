@@ -108,15 +108,15 @@ export class ReposProvider implements Disposable {
 	): Promise<GetObservabilityReposResponse> {
 		const { force = false, isMultiRegion } = request;
 		const cacheKey = JSON.stringify(request);
-		// if (!force) {
-		// 	const cached = this._observabilityReposCache.get(cacheKey);
-		// 	if (cached) {
-		// 		Logger.log("getObservabilityRepos: from cache", {
-		// 			cacheKey,
-		// 		});
-		// 		return cached;
-		// 	}
-		// }
+		if (!force) {
+			const cached = this._observabilityReposCache.get(cacheKey);
+			if (cached) {
+				Logger.log("getObservabilityRepos: from cache", {
+					cacheKey,
+				});
+				return cached;
+			}
+		}
 		const response: GetObservabilityReposResponse = { repos: [] };
 		try {
 			const { scm } = this.sessionServiceContainer;
