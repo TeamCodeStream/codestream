@@ -58,11 +58,6 @@ export class GitRemoteParser {
 		for (const line of lines) {
 			const match = remoteRegex.exec(line);
 			if (match) {
-				console.log("Full match:", match[0]);
-				console.log("Remote name:", match[1]);
-				console.log("URL:", match[2]);
-				console.log("Operation:", match[3]);
-
 				// Stops excessive memory usage -- https://bugs.chromium.org/p/v8/issues/detail?id=2869
 				const url = ` ${match[2]}`.substr(1);
 
@@ -94,10 +89,7 @@ export class GitRemoteParser {
 		}
 
 		if (!remotes.length) {
-			console.warn("No remotes parsed. Data:", data);
 			return [];
-		} else {
-			console.debug("Remotes parsed successfully:", remotes);
 		}
 
 		return remotes;
