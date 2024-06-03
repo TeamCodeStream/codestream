@@ -36,7 +36,7 @@ export class GitRepository {
 	}
 
 	getRemotes() {
-		return SessionContainer.instance().git.getRepoRemotes(this.path);
+		return SessionContainer.instance().git.getRepoRemotes(this.path, true);
 	}
 
 	/**
