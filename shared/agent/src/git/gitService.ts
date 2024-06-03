@@ -144,7 +144,8 @@ export class GitService implements IGitService, Disposable {
 			this._getDefaultBranch,
 			(repoPath, remote) => `${repoPath}|${remote}`
 		);
-		this._memoizedGetRepoRemotes = memoize(this._getRepoRemotes);
+		this._memoizedGetRepoRemotes = this._getRepoRemotes;
+		console.warn("hello world");
 		this._repositories = new GitRepositories(session, repoLocator);
 	}
 
@@ -831,8 +832,16 @@ export class GitService implements IGitService, Disposable {
 	private async _getRepoRemotes(repoPath: string) {
 		try {
 			const data = await git({ cwd: repoPath }, "remote", "-v");
-			return await GitRemoteParser.parse(data, repoPath);
-		} catch {
+			if (!data) {
+				throw new Error("No data returned from git remote command");
+			}
+			let parsedData = await GitRemoteParser.parse(data, repoPath);
+			if (!parsedData) {
+				throw new Error("Failed to parse remote data");
+			}
+			return parsedData;
+		} catch (error) {
+			console.error(`Failed to get repo remotes for ${repoPath}:`, error);
 			return [];
 		}
 	}

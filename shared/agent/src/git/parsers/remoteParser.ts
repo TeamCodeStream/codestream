@@ -35,7 +35,8 @@ import { GitRemote, GitRemoteType } from "../models/remote";
 
 const emptyStr = "";
 
-const remoteRegex = /^(.*)\t(.*)\s\((.*)\)$/gm;
+const remoteRegex = /^(\S+)\s+(\S+)\s+\((\w+)\)$/;
+
 const urlRegex =
 	/^(?:(git:\/\/)(.*?)(?::.*?)?\/|(https?:\/\/)(?:.*?@)?(.*?)(?::.*?)?\/|git@(.*):|(ssh:\/\/)(?:.*@)?(.*?)(?::.*?)?(?:\/|(?=~))|(?:.*?@)(.*?):)(.*)$/;
 const hostnameRegex = new RegExp("hostname (.*)");
@@ -52,45 +53,52 @@ export class GitRemoteParser {
 		const remotes: GitRemote[] = [];
 		const groups = Object.create(null);
 
-		let url: string;
-		let scheme: string;
-		let domain: string;
-		let path: string;
-		let uniqueness: string;
-		let remote: GitRemote | undefined;
-		let match: RegExpExecArray | null = null;
-		do {
-			match = remoteRegex.exec(data);
-			if (match == null) break;
+		const lines = data.trim().split("\n");
 
-			// Stops excessive memory usage -- https://bugs.chromium.org/p/v8/issues/detail?id=2869
-			url = ` ${match[2]}`.substr(1);
+		for (const line of lines) {
+			const match = remoteRegex.exec(line);
+			if (match) {
+				console.log("Full match:", match[0]);
+				console.log("Remote name:", match[1]);
+				console.log("URL:", match[2]);
+				console.log("Operation:", match[3]);
 
-			[scheme, domain, path] = await this.parseGitUrl(url);
-
-			uniqueness = `${domain}/${path}`;
-			remote = groups[uniqueness];
-			if (remote === undefined) {
-				remote = new GitRemote(
-					repoPath,
-					// Stops excessive memory usage -- https://bugs.chromium.org/p/v8/issues/detail?id=2869
-					` ${match[1]}`.substr(1),
-					url,
-					scheme,
-					domain,
-					path,
-					// Stops excessive memory usage -- https://bugs.chromium.org/p/v8/issues/detail?id=2869
-					[{ url: url, type: ` ${match[3]}`.substr(1) as GitRemoteType }]
-				);
-				remotes.push(remote);
-				groups[uniqueness] = remote;
-			} else {
 				// Stops excessive memory usage -- https://bugs.chromium.org/p/v8/issues/detail?id=2869
-				remote.types.push({ url: url, type: ` ${match[3]}`.substr(1) as GitRemoteType });
-			}
-		} while (match != null);
+				const url = ` ${match[2]}`.substr(1);
 
-		if (!remotes.length) return [];
+				const [scheme, domain, path] = await this.parseGitUrl(url);
+
+				const uniqueness = `${domain}/${path}`;
+				let remote = groups[uniqueness];
+				if (remote === undefined) {
+					remote = new GitRemote(
+						repoPath,
+						// Stops excessive memory usage -- https://bugs.chromium.org/p/v8/issues/detail?id=2869
+						` ${match[1]}`.substr(1),
+						url,
+						scheme,
+						domain,
+						path,
+						// Stops excessive memory usage -- https://bugs.chromium.org/p/v8/issues/detail?id=2869
+						[{ url: url, type: ` ${match[3]}`.substr(1) as GitRemoteType }]
+					);
+					remotes.push(remote);
+					groups[uniqueness] = remote;
+				} else {
+					// Stops excessive memory usage -- https://bugs.chromium.org/p/v8/issues/detail?id=2869
+					remote.types.push({ url: url, type: ` ${match[3]}`.substr(1) as GitRemoteType });
+				}
+			} else {
+				console.warn("No match found for:", line);
+			}
+		}
+
+		if (!remotes.length) {
+			console.warn("No remotes parsed. Data:", data);
+			return [];
+		} else {
+			console.debug("Remotes parsed successfully:", remotes);
+		}
 
 		return remotes;
 	}
