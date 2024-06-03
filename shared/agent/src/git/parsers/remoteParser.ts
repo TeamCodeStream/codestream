@@ -56,7 +56,7 @@ export class GitRemoteParser {
 		const lines = data.trim().split("\n");
 
 		for (const line of lines) {
-			const match = remoteRegex.exec(line);
+			const match = line.match(remoteRegex);
 			if (match) {
 				// Stops excessive memory usage -- https://bugs.chromium.org/p/v8/issues/detail?id=2869
 				const url = ` ${match[2]}`.substr(1);
@@ -84,7 +84,7 @@ export class GitRemoteParser {
 					remote.types.push({ url: url, type: ` ${match[3]}`.substr(1) as GitRemoteType });
 				}
 			} else {
-				console.warn("No match found for:", line);
+				Logger.warn("No match found for:", line);
 			}
 		}
 

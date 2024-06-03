@@ -840,7 +840,7 @@ export class GitService implements IGitService, Disposable {
 			}
 			return parsedData;
 		} catch (error) {
-			console.error(`Failed to get repo remotes for ${repoPath}:`, error);
+			Logger.error(error);
 			return [];
 		}
 	}
