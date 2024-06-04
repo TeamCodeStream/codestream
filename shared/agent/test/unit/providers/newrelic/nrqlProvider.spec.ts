@@ -100,6 +100,16 @@ AND status = 'baz'
 */`);
 		expect(result).toBe("");
 	});
+
+	it("escape forward slashes", () => {
+		const result = provider.transformQuery(`FROM Collection
+SELECT foo
+WHERE url = 'https://www.google.com/'`);
+
+		console.log(result);
+
+		expect(result).toBe(`FROM Collection SELECT foo WHERE url = 'https://www.google.com/'`);
+	});
 });
 
 describe("getResultsType", () => {

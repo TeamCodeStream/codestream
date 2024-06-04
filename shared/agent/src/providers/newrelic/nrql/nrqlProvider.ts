@@ -117,7 +117,7 @@ export class NrNRQLProvider {
 	}
 
 	/**
- * Removes comments from the end of a string
+ * Removes comments from the end of a string, unless it has been single-quoted
  * 
  * FROM Collection
  * SELECT foo -- that's the foo
@@ -135,8 +135,12 @@ export class NrNRQLProvider {
  * @param nrql 
  * @returns 
  */
-	private removeNrqlComments(nrql: string) {
-		return nrql.replace(/(\-\-|\/\/|\/*\*[\s\S]*?\*\/).*$/gm, "");
+	private removeNrqlComments(nrql: string): string {
+		return nrql.replace(/'[^']*'|(\-\-|\/\/|\/*\*[\s\S]*?\*\/).*$/gm, (match, group1) => {
+			// If group1 is undefined, it means we matched a single-quoted string, so we return the match as is.
+			// Otherwise, we return an empty string to remove the comment.
+			return typeof group1 === "undefined" ? match : "";
+		});
 	}
 
 	transformQuery(nrql: string) {
