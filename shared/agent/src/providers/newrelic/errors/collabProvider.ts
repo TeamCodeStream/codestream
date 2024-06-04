@@ -231,6 +231,7 @@ export class CollaborationTeamProvider {
 				});
 
 			return {
+				threadId: bootstrapResponse.threadId,
 				comments,
 			};
 		} catch (ex) {

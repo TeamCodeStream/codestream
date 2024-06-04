@@ -165,6 +165,19 @@ export const currentUserIsAdminSelector = createSelector(
 	}
 );
 
+export const currentNrUserIdSelector = createSelector(
+	(state: CodeStreamState) => state.users,
+	(state: CodeStreamState) => state.session,
+
+	(users, session) => {
+		if (!session.userId) {
+			return false;
+		}
+		const me = users[session.userId];
+		return me.nrUserId;
+	}
+);
+
 export const getStreamMembers = createSelector(
 	state => state.users,
 	(state: CodeStreamState, streamOrId: CSStream | string) => {

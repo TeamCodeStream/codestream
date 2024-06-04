@@ -19,7 +19,6 @@ import Icon from "../Icon";
 import { MarkdownText } from "../MarkdownText";
 import { MessageInput } from "../MessageInput";
 import { AddReactionIcon } from "../Reactions";
-import { RepliesToPostContext } from "./RepliesToPost";
 import { NrAiComponent } from "@codestream/webview/Stream/Posts/NrAiComponent";
 import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
 
@@ -140,14 +139,6 @@ export const ReplyBody = styled.span`
 	}
 `;
 
-const ParentPreview = styled.span`
-	margin-left: 23px;
-	height: 1.4em;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: pre;
-`;
-
 export const MarkdownContent = styled.div`
 	margin-left: 27px;
 	display: flex;
@@ -155,33 +146,6 @@ export const MarkdownContent = styled.div`
 
 	> *:not(:last-child) {
 		margin-bottom: 10px;
-	}
-`;
-
-const ReviewMarkerActionsWrapper = styled.div`
-	margin-left: 13px;
-
-	.code {
-		margin: 5px 0 !important;
-	}
-
-	.file-info {
-		font-size: 11px;
-		display: flex;
-		flex-flow: row wrap;
-	}
-
-	.file-info .monospace {
-		display: block;
-		white-space: nowrap;
-	}
-
-	.icon {
-		vertical-align: 2px;
-	}
-
-	.internal-link {
-		text-decoration: none;
 	}
 `;
 
@@ -214,7 +178,6 @@ export interface ReplyProps {
 
 export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) => {
 	const dispatch = useAppDispatch();
-	const { setEditingPostId, setReplyingToPostId } = React.useContext(RepliesToPostContext);
 	const [menuState, setMenuState] = React.useState<{
 		open: boolean;
 		target?: any;
@@ -249,7 +212,6 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) =>
 
 	const reset = () => {
 		setNewReplyText(escapedPostText);
-		setEditingPostId("");
 	};
 
 	const codemark = undefined;
@@ -264,9 +226,6 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) =>
 	// 	return getPost(state.posts, props.post.streamId, props.post.parentPostId!);
 	// });
 
-	const isNestedReply = false; // props.showParentPreview && parentPost.parentPostId != null;
-	const numNestedReplies = props.nestedReplies ? props.nestedReplies.length : 0;
-	const hasNestedReplies = numNestedReplies > 0;
 	const isForGrok = false; // !isPending(props.post) && props.post.forGrok;
 
 	const postText = props.comment.body; // codemark != null ? codemark.text : props.post?.text;
@@ -325,7 +284,6 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) =>
 			{props.threadId && props.lastNestedReply && <div className="bar-left-last-child" />}
 			{props.threadId && <div className="bar-left-connector" />}
 			<ReplyBody>
-				{hasNestedReplies && <div className="bar-left-parent" />}
 				<AuthorInfo style={{ fontWeight: 700 }}>
 					{author.id && (
 						<ProfileLink id={props.author.id || ""}>
@@ -333,7 +291,6 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) =>
 						</ProfileLink>
 					)}
 					<span className="reply-author">
-						{/* {props.author.username} */}
 						{props.comment.creator.name}
 						{emote}
 						{checkpoint && (
@@ -354,22 +311,8 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) =>
 								to this review
 							</span>
 						)}
-						{/* {codemark && codemark.isChangeRequest && (
-							<span className="emote">requested a change</span>
-						)} */}
-						{/* <Timestamp relative time={props.post.createdAt} edited={props.post.hasBeenEdited} /> */}
 					</span>
 					<div style={{ marginLeft: "auto", whiteSpace: "nowrap" }}>
-						{/* {!props.noReply && (
-							<Icon
-								title="Reply"
-								name="reply"
-								placement="top"
-								className="reply clickable"
-								onClick={() => setReplyingToPostId(props.threadId || props.post.id)}
-							/>
-						)} */}
-						{/* {!isPending(props.post) && <AddReactionIcon post={props.post} />} */}
 						{renderedMenu}
 						{props.renderMenu && (
 							<KebabIcon
@@ -389,11 +332,6 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) =>
 						)}
 					</div>
 				</AuthorInfo>
-				{/* {isNestedReply && (
-					<ParentPreview>
-						Reply to <a>{parentPost.text.substring(0, 80)}</a>
-					</ParentPreview>
-				)} */}
 				{isEditing && (
 					<>
 						<ComposeWrapper>
@@ -453,111 +391,11 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) =>
 								className="reply-markdown-content"
 							/>
 							<Attachments post={props.post as CSPost} />
-							{/* {hasTags && (
-								<MetaDescriptionForTags>
-									{codemark!.tags!.map((tagId: string) => {
-										const tag = teamTagsById[tagId];
-
-										if (tag == undefined) return;
-										return <Tag key={tagId} tag={tag} />;
-									})}
-								</MetaDescriptionForTags>
-							)} */}
 						</MarkdownContent>
 						{markers}
 					</>
 				)}
-				{/* {!isPending(props.post) && <Reactions post={props.post} />} */}
 			</ReplyBody>
-			{/* {props.nestedReplies &&
-				props.nestedReplies.length > 0 &&
-				props.nestedReplies.map((r, index) => (
-					<NestedReply
-						editingPostId={props.editingPostId}
-						key={r.id}
-						post={r}
-						functionToEdit={props.functionToEdit}
-						threadId={props.post.id}
-						lastNestedReply={index === numNestedReplies - 1}
-					/>
-				))} */}
 		</Root>
 	);
 });
-
-// const NestedReply = (props: {
-// 	post: Post;
-// 	threadId: string;
-// 	errorGroup?: NewRelicErrorGroup;
-// 	functionToEdit?: FunctionToEdit;
-// 	editingPostId?: string;
-// 	lastNestedReply?: boolean;
-// }) => {
-// 	const dispatch = useAppDispatch();
-// 	const { setReplyingToPostId, setEditingPostId } = React.useContext(RepliesToPostContext);
-// 	const author = useSelector((state: CodeStreamState) => state.users[props.post.creatorId]);
-// 	const currentUserId = useSelector((state: CodeStreamState) => state.session.userId);
-
-// 	const menuItems = React.useMemo(() => {
-// 		const menuItems: any[] = [];
-
-// 		menuItems.push({
-// 			label: "Reply",
-// 			key: "reply",
-// 			action: () => setReplyingToPostId(props.threadId),
-// 		});
-
-// 		if (props.post.creatorId === currentUserId) {
-// 			menuItems.push({ label: "Edit", key: "edit", action: () => setEditingPostId(props.post.id) });
-// 			menuItems.push({
-// 				label: "Delete",
-// 				key: "delete",
-// 				action: () => {
-// 					confirmPopup({
-// 						title: "Are you sure?",
-// 						message: "Deleting a post cannot be undone.",
-// 						centered: true,
-// 						buttons: [
-// 							{ label: "Go Back", className: "control-button" },
-// 							{
-// 								label: "Delete Post",
-// 								className: "delete",
-// 								wait: true,
-// 								action: () => {
-// 									dispatch(
-// 										deletePostApi({
-// 											streamId: props.post.streamId,
-// 											postId: props.post.id,
-// 											sharedTo: isPending(props.post) ? undefined : props.post.sharedTo,
-// 										})
-// 									);
-// 								},
-// 							},
-// 						],
-// 					});
-// 				},
-// 			});
-// 		}
-
-// 		return menuItems;
-// 	}, [props.post]);
-
-// 	return (
-// 		<NestedReplyRoot
-// 			author={author}
-// 			post={props.post}
-// 			errorGroup={props.errorGroup}
-// 			editingPostId={props.editingPostId}
-// 			threadId={props.threadId}
-// 			lastNestedReply={props.lastNestedReply}
-// 			functionToEdit={props.functionToEdit}
-// 			renderMenu={(target, close) => <Menu target={target} action={close} items={menuItems} />}
-// 		/>
-// 	);
-// };
-
-// const NestedReplyRoot = styled(Reply)`
-// 	padding-top: 15px;
-// 	padding-left: 25px;
-// 	padding-bottom: 0;
-// `;
