@@ -50,7 +50,6 @@ import {
 import { isConnected } from "@codestream/webview/store/providers/reducer";
 import {
 	currentUserIsAdminSelector,
-	findMentionedUserIds,
 	getTeamMates,
 	getTeamMembers,
 	isCurrentUserInternal,
@@ -59,7 +58,7 @@ import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview
 import { isSha } from "@codestream/webview/utilities/strings";
 import { emptyArray, replaceHtml } from "@codestream/webview/utils";
 import { HostApi } from "@codestream/webview/webview-api";
-import { createPost, invite, markItemRead } from "../actions";
+import { createComment, invite, markItemRead } from "../actions";
 import { Attachments } from "../Attachments";
 import {
 	BigTitle,
@@ -973,54 +972,6 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 			});
 		}
 
-		// commented out until we have back-end support as per
-		// https://trello.com/c/MhAWDZNF/6886-remove-delete-and-follow-unfollow
-		// {
-		// 	label: derivedState.userIsFollowing ? "Unfollow" : "Follow",
-		// 	key: "toggle-follow",
-		// 	icon: <Icon name="eye" />,
-		// 	action: () => {
-		// 		const value = !derivedState.userIsFollowing;
-		// 		const changeType = value ? "Followed" : "Unfollowed";
-		// 		HostApi.instance.send(FollowCodeErrorRequestType, {
-		// 			id: codeError.id,
-		// 			value
-		// 		});
-		// 		HostApi.instance.track("Notification Change", {
-		// 			Change: `Code Error ${changeType}`,
-		// 			"Source of Change": "Code Error menu"
-		// 		});
-		// 	}
-		// }
-
-		// commented out until we have back-end support as per
-		// https://trello.com/c/MhAWDZNF/6886-remove-delete-and-follow-unfollow
-		// if (codeError?.creatorId === derivedState.currentUser.id) {
-		// 	items.push({
-		// 		label: "Delete",
-		// 		icon: <Icon name="trash" />,
-		// 		action: () => {
-		// 			confirmPopup({
-		// 				title: "Are you sure?",
-		// 				message: "Deleting a code error cannot be undone.",
-		// 				centered: true,
-		// 				buttons: [
-		// 					{ label: "Go Back", className: "control-button" },
-		// 					{
-		// 						label: "Delete Code Error",
-		// 						className: "delete",
-		// 						wait: true,
-		// 						action: () => {
-		// 							dispatch(deleteCodeError(codeError.id));
-		// 							dispatch(setCurrentCodeError());
-		// 						}
-		// 					}
-		// 				]
-		// 			});
-		// 		}
-		// 	});
-		// }
-
 		return items;
 	}, [codeError, collapsed, props.errorGroup, derivedState.post]);
 
@@ -1710,6 +1661,7 @@ export type ReplyInputProps = {
 	codeError: CSCodeError;
 	setGrokRequested: () => void;
 	showGrok: boolean;
+	threadId: string;
 };
 
 const ReplyInput = (props: ReplyInputProps) => {
@@ -1735,35 +1687,37 @@ const ReplyInput = (props: ReplyInputProps) => {
 		// don't create empty replies
 		if (text.length === 0) return;
 
-		props.setGrokRequested();
+		//props.setGrokRequested();
 
 		setIsLoading(true);
 		// console.debug("*** ReplyInput showGrok", props.showGrok);
-		if (props.showGrok && text.match(/@AI/gim)) {
-			dispatch(startGrokLoading(props.codeError));
-		}
+		// if (props.showGrok && text.match(/@AI/gim)) {
+		// 	dispatch(startGrokLoading(props.codeError));
+		// }
 
-		await dispatch(upgradePendingCodeError(props.codeError.entityGuid, "Comment"));
-		if (!props.codeError.streamId) {
-			console.warn("codeError missing streamId");
-			return;
-		}
-		// TODO is this numReplies ok? should be from post?
-		dispatch(markItemRead(props.codeError.entityGuid, props.codeError.numReplies + 1));
+		// await dispatch(upgradePendingCodeError(props.codeError.entityGuid, "Comment"));
+		// if (!props.codeError.streamId) {
+		// 	console.warn("codeError missing streamId");
+		// 	return;
+		// }
+		// // TODO is this numReplies ok? should be from post?
+		// dispatch(markItemRead(props.codeError.entityGuid, props.codeError.numReplies + 1));
 
-		await dispatch(
-			createPost(
-				props.codeError.streamId,
-				props.codeError.postId,
-				replaceHtml(text)!,
-				null,
-				findMentionedUserIds(teamMates, text),
-				{
-					entryPoint: "Code Error",
-					files: attachments,
-				}
-			)
-		);
+		await dispatch(createComment(replaceHtml(text)!, props.threadId));
+
+		// await dispatch(
+		// 	createPost(
+		// 		//props.codeError.streamId,
+		// 		//props.codeError.postId,
+		// 		replaceHtml(text)!,
+		// 		null,
+		// 		findMentionedUserIds(teamMates, text),
+		// 		{
+		// 			entryPoint: "Code Error",
+		// 			files: attachments,
+		// 		}
+		// 	)
+		// );
 
 		setIsLoading(false);
 		setText("");
@@ -1861,7 +1815,6 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 			post,
 			currentTeamId: state.context.currentTeamId,
 			currentUser: state.users[state.session.userId!],
-			// author: state.users[props.codeError.creatorId],
 			repos: state.repos,
 			userIsFollowing: (props.codeError.followerIds || []).includes(state.session.userId!),
 			replies: props.collapsed
@@ -1903,7 +1856,9 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 		getNrAiPostLength(state, props.codeError.streamId, props.codeError.postId)
 	);
 	const functionToEdit = useAppSelector(state => state.codeErrors.functionToEdit);
+
 	const [comments, setComments] = useState<CollaborationComment[]>([]);
+	const [threadId, setThreadId] = useState<string>("");
 
 	function scrollToNew() {
 		const target = scrollNewTarget?.current;
@@ -1932,10 +1887,6 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 		}
 	}, [currentGrokRepliesLength, isGrokLoading, derivedState.post]);
 
-	function scrollNewTargetCallback(ref: RefObject<HTMLElement>) {
-		setScrollNewTarget(ref);
-	}
-
 	function setGrokRequested() {
 		setIsGrokRequested(true);
 	}
@@ -1955,8 +1906,9 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 				entityGuid: props.errorGroup!.entityGuid,
 			})
 			.then((r: GetErrorInboxCommentsResponse) => {
-				if (r.comments && r.comments.length > 0) {
+				if (r.threadId && r.comments && r.comments.length > 0) {
 					setComments(r.comments);
+					setThreadId(r.threadId);
 				} else if (r.error) {
 					console.error("CHEESE", r.error.error.message);
 				}
@@ -1971,29 +1923,18 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 		((Footer, InputContainer) => {
 			if (props.collapsed) return null;
 
-			// console.debug(`===--- length: ${currentGrokRepliesLength} isGrokLoading: ${isGrokLoading} ---===`);
-
 			return (
 				<Footer
 					className={isGrokLoading ? "grok-loading" : "grok-not-loading" + " replies-to-review"}
 					style={{ borderTop: "none", marginTop: 0 }}
 				>
 					{
-						//props.codeError.postId && props.codeError.streamId && (
 						<>
 							{<MetaLabel>Activity</MetaLabel>}
 							<RepliesToPost
 								comments={comments}
-								//streamId={props.codeError.streamId}
-								//parentPostId={props.codeError.postId}
-								itemId={props.codeError.entityGuid}
-								numReplies={props.codeError.numReplies}
-								scrollNewTargetCallback={scrollNewTargetCallback}
-								codeErrorId={props.codeError.entityGuid}
-								errorGroup={props.errorGroup}
-								noReply={true}
-								file={currentNrAiFile}
-								functionToEdit={functionToEdit}
+								//file={currentNrAiFile}
+								//functionToEdit={functionToEdit}
 							/>
 							{grokError && (
 								<DelayedRender>
@@ -2008,6 +1949,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 					{InputContainer && !derivedState.isPDIdev && (
 						<InputContainer>
 							<ReplyInput
+								threadId={threadId}
 								codeError={codeError}
 								setGrokRequested={setGrokRequested}
 								showGrok={showGrok}

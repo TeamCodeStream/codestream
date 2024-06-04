@@ -1,183 +1,42 @@
-import { CollaborationComment, NewRelicErrorGroup, PostPlus } from "@codestream/protocols/agent";
+import { CollaborationComment } from "@codestream/protocols/agent";
 import { CodeStreamState } from "@codestream/webview/store";
-import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
-import { currentUserIsAdminSelector, getTeamMates } from "@codestream/webview/store/users/reducer";
-import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
+import {
+	currentNrUserIdSelector,
+	currentUserIsAdminSelector,
+	getTeamMates,
+} from "@codestream/webview/store/users/reducer";
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { mapFilter } from "@codestream/webview/utils";
-import { groupBy } from "lodash-es";
-import React, { RefObject, useCallback, useEffect } from "react";
-import styled from "styled-components";
-import { markItemRead } from "../actions";
+import React, { useCallback } from "react";
 import { confirmPopup } from "../Confirm";
 import Menu from "../Menu";
-import { AttachmentField } from "../MessageInput";
 import { Reply } from "./Reply";
 import { MenuItem } from "@codestream/webview/src/components/controls/InlineMenu";
-import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
 
-const ComposeWrapper = styled.div.attrs(() => ({
-	className: "compose codemark-compose",
-}))`
-	&&& {
-		padding: 0 !important;
-	}
-`;
-
-const InlineMessageContainer = styled.div`
-	padding: 10px 25px 0 50px !important;
-	margin-top: -15px; // need to make up for the bottom margin from the preceding reply
-`;
-
-export const RepliesToPostContext = React.createContext({
-	setReplyingToPostId(postId: string) {},
-	setEditingPostId(postId: string) {},
-});
-
-export const RepliesToPost = (props: {
-	comments: CollaborationComment[];
-	streamId?: string;
-	parentPostId?: string;
-	itemId: string;
-	numReplies: number;
-	codeErrorId?: string;
-	errorGroup?: NewRelicErrorGroup;
-	noReply?: boolean;
-	file?: string;
-	functionToEdit?: FunctionToEdit;
-	scrollNewTargetCallback?: (target: RefObject<HTMLElement>) => void;
-}) => {
+export const RepliesToPost = (props: { comments: CollaborationComment[] }) => {
 	const dispatch = useAppDispatch();
 	const currentUserId = useAppSelector((state: CodeStreamState) => state.session.userId!);
-	const replies = useAppSelector((state: CodeStreamState) =>
-		getThreadPosts(state, props.streamId, props.parentPostId, true)
-	) as PostPlus[];
+	const currentNrUserId = useAppSelector(currentNrUserIdSelector);
 	const currentUserIsAdmin = useAppSelector(currentUserIsAdminSelector);
-	const nestedRepliesByParent = React.useMemo(() => {
-		const nestedReplies = replies.filter(r => r.parentPostId !== props.parentPostId);
-		return groupBy(nestedReplies, "parentPostId");
-	}, [replies]);
 	const allUsers = useAppSelector((state: CodeStreamState) => state.users);
 	const teamMates = useAppSelector((state: CodeStreamState) => getTeamMates(state));
-	const [replyingToPostId, setReplyingToPostId] = React.useState<string | null>();
 	const [editingPostId, setEditingPostId] = React.useState<string | undefined>();
-	const [newReplyText, setNewReplyText] = React.useState("");
-	const [attachments, setAttachments] = React.useState<AttachmentField[]>([]);
-	const [isLoading, setIsLoading] = React.useState(false);
-	const lastCommentRef = React.useRef<HTMLDivElement>(null);
-
-	const contextValue = React.useMemo(
-		() => ({
-			setReplyingToPostId: setReplyingToPostId,
-			setEditingPostId: setEditingPostId,
-		}),
-		[]
-	);
-
-	useDidMount(() => {
-		//dispatch(fetchThread(props.streamId, props.parentPostId));
-	});
-
-	useEffect(() => {
-		if (props.scrollNewTargetCallback) {
-			// console.debug(`====> setting scrollNewTargetCallback`, lastCommentRef);
-			props.scrollNewTargetCallback(lastCommentRef);
-		}
-	}, [lastCommentRef]);
-
-	const submit = async () => {
-		// don't create empty replies
-		if (newReplyText.length === 0) return;
-
-		setIsLoading(true);
-		dispatch(markItemRead(props.itemId, props.numReplies + 1));
-		// await dispatch(
-		// 	createPost(
-		// 		props.streamId,
-		// 		replyingToPostId!,
-		// 		replaceHtml(newReplyText)!,
-		// 		null,
-		// 		findMentionedUserIds(teamMates, newReplyText),
-		// 		{ files: attachments }
-		// 	)
-		// );
-		setIsLoading(false);
-		setNewReplyText("");
-		setAttachments([]);
-		setReplyingToPostId(undefined);
-	};
-
-	// const getMenuItems = useCallback(
-	// 	(reply: PostPlus) => {
-	// 		const menuItems: MenuItem[] = [];
-
-	// 		if (!props.noReply) {
-	// 			menuItems.push({
-	// 				label: "Reply",
-	// 				key: "reply",
-	// 				action: () => setReplyingToPostId(reply.id),
-	// 			});
-	// 		}
-	// 		if (reply.creatorId === currentUserId) {
-	// 			menuItems.push({ label: "Edit", key: "edit", action: () => setEditingPostId(reply.id) });
-	// 		}
-	// 		if (reply.creatorId === currentUserId || currentUserIsAdmin) {
-	// 			menuItems.push({
-	// 				label: "Delete",
-	// 				key: "delete",
-	// 				action: () => {
-	// 					confirmPopup({
-	// 						title: "Are you sure?",
-	// 						message: "Deleting a post cannot be undone.",
-	// 						centered: true,
-	// 						buttons: [
-	// 							{ label: "Go Back", className: "control-button" },
-	// 							{
-	// 								label: "Delete Post",
-	// 								className: "delete",
-	// 								wait: true,
-	// 								action: () => {
-	// 									dispatch(
-	// 										deletePostApi({
-	// 											streamId: reply.streamId,
-	// 											postId: reply.id,
-	// 											sharedTo: reply.sharedTo,
-	// 										})
-	// 									);
-	// 								},
-	// 							},
-	// 						],
-	// 					});
-	// 				},
-	// 			});
-	// 		}
-
-	// 		return menuItems;
-	// 	},
-	// 	[props.noReply, replies, currentUserId, currentUserIsAdmin]
-	// );
 
 	const getMenuItems = useCallback(
 		(comment: CollaborationComment) => {
 			const menuItems: MenuItem[] = [];
 
-			if (!props.noReply) {
-				menuItems.push({
-					label: "Reply",
-					key: "reply",
-					//action: () => setReplyingToPostId(reply.id),
-				});
-			}
-			if (comment.creator.userId === currentUserId) {
+			if (comment.creator.userId === currentNrUserId) {
 				menuItems.push({ label: "Edit", key: "edit" }); //action: () => setEditingPostId(reply.id) });
 			}
-			if (comment.creator.userId === currentUserId || currentUserIsAdmin) {
+			if (comment.creator.userId === currentNrUserId || currentUserIsAdmin) {
 				menuItems.push({
 					label: "Delete",
 					key: "delete",
 					action: () => {
 						confirmPopup({
 							title: "Are you sure?",
-							message: "Deleting a post cannot be undone.",
+							message: "Deleting a comment cannot be undone.",
 							centered: true,
 							buttons: [
 								{ label: "Go Back", className: "control-button" },
@@ -203,16 +62,13 @@ export const RepliesToPost = (props: {
 
 			return menuItems;
 		},
-		[props.noReply, replies, currentUserId, currentUserIsAdmin]
+		[currentUserId, currentUserIsAdmin]
 	);
 
 	let idx = 0;
 
-	// TODO COLLAB
-	// replies vs CollabReplies
-
 	return (
-		<RepliesToPostContext.Provider value={contextValue}>
+		<>
 			{mapFilter(props.comments, (comment: CollaborationComment) => {
 				idx++;
 				const menuItems = getMenuItems(comment);
@@ -225,99 +81,14 @@ export const RepliesToPost = (props: {
 				return (
 					<React.Fragment key={comment.id}>
 						<Reply
-							ref={idx === replies.length ? lastCommentRef : null}
 							author={allUsers[comment.creator.userId]}
-							file={props.file}
-							functionToEdit={props.functionToEdit}
 							comment={comment}
 							editingPostId={editingPostId}
-							codeErrorId={props.codeErrorId}
-							errorGroup={props.errorGroup}
 							renderMenu={renderMenu}
-							noReply={props.noReply}
 						/>
 					</React.Fragment>
 				);
 			})}
-		</RepliesToPostContext.Provider>
-
-		// <RepliesToPostContext.Provider value={contextValue}>
-		// 	{mapFilter(replies, (reply: PostPlus) => {
-		// 		idx++;
-		// 		if (reply.parentPostId != null && nestedRepliesByParent.hasOwnProperty(reply.parentPostId))
-		// 			return null;
-		// 		const menuItems = getMenuItems(reply);
-		// 		const renderMenu =
-		// 			menuItems.length === 0
-		// 				? undefined
-		// 				: (target, close) => {
-		// 						return <Menu target={target} action={close} items={menuItems} />;
-		// 				  };
-		// 		return (
-		// 			<React.Fragment key={reply.id}>
-		// 				<Reply
-		// 					ref={idx === replies.length ? lastCommentRef : null}
-		// 					author={allUsers[reply.creatorId]}
-		// 					file={props.file}
-		// 					functionToEdit={props.functionToEdit}
-		// 					post={reply}
-		// 					editingPostId={editingPostId}
-		// 					nestedReplies={nestedRepliesByParent[reply.id]}
-		// 					codeErrorId={props.codeErrorId}
-		// 					errorGroup={props.errorGroup}
-		// 					renderMenu={renderMenu}
-		// 					noReply={props.noReply}
-		// 				/>
-
-		// 				{reply.id === replyingToPostId && (
-		// 					<InlineMessageContainer>
-		// 						<ComposeWrapper>
-		// 							<MessageInput
-		// 								text={newReplyText}
-		// 								onChange={setNewReplyText}
-		// 								onSubmit={submit}
-		// 								multiCompose
-		// 								autoFocus
-		// 								attachments={attachments}
-		// 								attachmentContainerType="reply"
-		// 								setAttachments={setAttachments}
-		// 							/>
-		// 						</ComposeWrapper>
-		// 						<div style={{ display: "flex", justifyContent: "flex-end" }}>
-		// 							<Button
-		// 								className="control-button cancel"
-		// 								style={{
-		// 									// fixed width to handle the isLoading case
-		// 									width: "80px",
-		// 									margin: "10px 10px",
-		// 								}}
-		// 								onClick={() => {
-		// 									setReplyingToPostId(undefined);
-		// 									setNewReplyText("");
-		// 								}}
-		// 							>
-		// 								Cancel
-		// 							</Button>
-		// 							<Button
-		// 								style={{
-		// 									// fixed width to handle the isLoading case
-		// 									width: "80px",
-		// 									margin: "10px 0",
-		// 								}}
-		// 								className={cx("control-button", { cancel: newReplyText.length === 0 })}
-		// 								type="submit"
-		// 								disabled={newReplyText.length === 0}
-		// 								onClick={submit}
-		// 								loading={isLoading}
-		// 							>
-		// 								Submit
-		// 							</Button>
-		// 						</div>
-		// 					</InlineMessageContainer>
-		// 				)}
-		// 			</React.Fragment>
-		// 		);
-		// 	})}
-		//</RepliesToPostContext.Provider>
+		</>
 	);
 };

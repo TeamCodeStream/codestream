@@ -28,7 +28,7 @@ export interface CommentsByThreadIdResponse {
 					creator: {
 						email: string;
 						name: string;
-						userId: string;
+						userId: number;
 					};
 				}[];
 			};

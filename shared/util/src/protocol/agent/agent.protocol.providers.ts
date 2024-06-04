@@ -1431,7 +1431,7 @@ export interface CollaborationComment {
 	creator: {
 		email: string;
 		name: string;
-		userId: string;
+		userId: number;
 	};
 }
 
@@ -1442,6 +1442,7 @@ export interface GetErrorInboxCommentsRequest {
 }
 
 export interface GetErrorInboxCommentsResponse {
+	threadId?: string;
 	comments?: CollaborationComment[];
 	error?: NRErrorResponse;
 }

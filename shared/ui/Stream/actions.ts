@@ -4,6 +4,7 @@ import {
 	CodemarkPlus,
 	CreateChannelStreamRequestType,
 	CreateChannelStreamResponse,
+	CreateCollaborationCommentRequestType,
 	CreateDirectStreamRequestType,
 	CreateDirectStreamResponse,
 	CreatePostRequestType,
@@ -309,6 +310,15 @@ export type CreatePostExtras = {
 	reviewCheckpoint?: number;
 	crossPostIssueValues?: CrossPostIssueValues;
 };
+
+export const createComment =
+	(text: string, threadId: string, mentions?: string[]) =>
+	async (dispatch, getState: () => CodeStreamState) => {
+		const response = await HostApi.instance.send(CreateCollaborationCommentRequestType, {
+			threadId: threadId,
+			body: text,
+		});
+	};
 
 export const createPost =
 	(
