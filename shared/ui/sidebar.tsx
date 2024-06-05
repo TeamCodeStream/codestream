@@ -1064,11 +1064,7 @@ const confirmSwitchToTeam = function (
 	const { teamId, companyName } = options;
 
 	if (type === "code error") {
-		if (
-			!options.codeError ||
-			!currentUser ||
-			!(options.codeError.followerIds || []).includes(currentUser.id)
-		) {
+		if (!options.codeError || !currentUser) {
 			const title = "No access";
 			const message = `You don't have access to this ${type}`;
 			confirmPopup({

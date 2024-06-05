@@ -1,26 +1,31 @@
-import { CollaborationComment, NewRelicErrorGroup, PostPlus } from "@codestream/protocols/agent";
-import { CSPost, CSUser } from "@codestream/protocols/api";
+import { CollaborationComment, NewRelicErrorGroup } from "@codestream/protocols/agent";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { ProfileLink } from "@codestream/webview/src/components/ProfileLink";
 import { CodeStreamState } from "@codestream/webview/store";
-import { editCodemark } from "@codestream/webview/store/codemarks/thunks";
-import { Post } from "@codestream/webview/store/posts/types";
-import { getTeamMembers, getTeamTagsHash } from "@codestream/webview/store/users/reducer";
-import { useAppDispatch } from "@codestream/webview/utilities/hooks";
+import {
+	codestreamUserFromNrUserId,
+	getTeamMembers,
+	getTeamTagsHash,
+} from "@codestream/webview/store/users/reducer";
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { escapeHtml, replaceHtml } from "@codestream/webview/utils";
 import cx from "classnames";
-import React, { forwardRef, Ref } from "react";
+import React, { forwardRef, Ref, useCallback, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
-import { Attachments } from "../Attachments";
 import Button from "../Button";
 import { KebabIcon } from "../Codemark/BaseCodemark";
 import Icon from "../Icon";
 import { MarkdownText } from "../MarkdownText";
 import { MessageInput } from "../MessageInput";
 import { AddReactionIcon } from "../Reactions";
-import { NrAiComponent } from "@codestream/webview/Stream/Posts/NrAiComponent";
 import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
+import { CSCodeError } from "@codestream/protocols/api";
+import { setPostReplyCallback } from "@codestream/webview/store/codeErrors/api/apiResolver";
+import { createComment } from "../actions";
+import { AskGrok } from "../NRAI/AskGrok";
+import Tooltip from "../Tooltip";
+import { ButtonRow } from "@codestream/webview/src/components/Dialog";
 
 const AuthorInfo = styled.div`
 	display: flex;
@@ -101,7 +106,7 @@ const Root = styled.div`
 	}
 `;
 
-export const ReplyBody = styled.span`
+export const CommentBody = styled.span`
 	display: flex;
 	flex-direction: column;
 	position: relative;
@@ -158,26 +163,108 @@ const ComposeWrapper = styled.div.attrs(() => ({
 	}
 `;
 
-export interface ReplyProps {
-	author: Partial<CSUser>;
-	post?: Post;
+export interface CommentProps {
 	comment: CollaborationComment;
+	editingCommentId?: string;
+
 	file?: string;
 	functionToEdit?: FunctionToEdit;
 	codeErrorId?: string;
 	errorGroup?: NewRelicErrorGroup;
-	nestedReplies?: PostPlus[];
 	renderMenu?: (target: any, onClose: () => void) => React.ReactNode;
 	className?: string;
-	showParentPreview?: boolean;
-	editingPostId?: string;
 	threadId?: string; // only set for nested replies
-	lastNestedReply?: boolean;
-	noReply?: boolean;
 }
 
-export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) => {
+export type CommentInputProps = {
+	codeError: CSCodeError;
+	setGrokRequested: () => void;
+	showGrok: boolean;
+	threadId: string;
+};
+
+export const CommentInput = (props: CommentInputProps) => {
 	const dispatch = useAppDispatch();
+	const [text, setText] = useState("");
+	const [isAskGrokOpen, setIsAskGrokOpen] = useState(false);
+	//const [attachments, setAttachments] = useState<AttachmentField[]>([]);
+	const [isLoading, setIsLoading] = useState(false);
+	//const teamMates = useAppSelector((state: CodeStreamState) => getTeamMates(state));
+	const demoMode = useAppSelector((state: CodeStreamState) => state.codeErrors.demoMode);
+
+	const postDemoReply = useCallback((text: string) => {
+		setText(text);
+	}, []);
+
+	useMemo(() => {
+		if (demoMode.enabled) {
+			setPostReplyCallback(postDemoReply);
+		}
+	}, [postDemoReply]);
+
+	const submit = async () => {
+		if (text.length === 0) return;
+
+		//props.setGrokRequested();
+		setIsLoading(true);
+
+		await dispatch(createComment(replaceHtml(text)!, props.threadId));
+
+		setIsLoading(false);
+		setText("");
+		//setAttachments([]);
+	};
+
+	return (
+		<>
+			{isAskGrokOpen && <AskGrok setText={setText} onClose={() => setIsAskGrokOpen(false)} />}
+			<MessageInput
+				multiCompose
+				text={text}
+				placeholder="Add a comment..."
+				onChange={setText}
+				onSubmit={submit}
+				//attachments={attachments}
+				//attachmentContainerType="reply"
+				//setAttachments={setAttachments}
+				suggestGrok={props.showGrok}
+			/>
+			<ButtonRow
+				style={{
+					margin: 0,
+					display: "flex",
+					flexDirection: "row-reverse",
+					justifyContent: "space-between",
+				}}
+			>
+				<Tooltip
+					title={
+						<span>
+							Submit Comment
+							<span className="keybinding extra-pad">
+								{navigator.appVersion.includes("Macintosh") ? "⌘" : "Ctrl"} ENTER
+							</span>
+						</span>
+					}
+					placement="bottomRight"
+					delay={1}
+				>
+					<Button disabled={text.length === 0} onClick={submit} loading={isLoading}>
+						Comment
+					</Button>
+				</Tooltip>
+				{props.showGrok && (
+					<Button style={{ marginLeft: 0 }} onClick={() => setIsAskGrokOpen(true)}>
+						<Icon name="nrai" />
+						<span style={{ paddingLeft: "4px" }}>Ask AI</span>
+					</Button>
+				)}
+			</ButtonRow>
+		</>
+	);
+};
+
+export const Comment = forwardRef((props: CommentProps, ref: Ref<HTMLDivElement>) => {
 	const [menuState, setMenuState] = React.useState<{
 		open: boolean;
 		target?: any;
@@ -186,26 +273,27 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) =>
 	const [isLoading, setIsLoading] = React.useState(false);
 	const teamMembers = useSelector((state: CodeStreamState) => getTeamMembers(state));
 	const teamTagsById = useSelector((state: CodeStreamState) => getTeamTagsHash(state));
+	const author = useSelector((state: CodeStreamState) =>
+		codestreamUserFromNrUserId(state.users, props.comment.creator.userId)
+	);
 
 	const submit = async () => {
-		// don't create empty replies
+		// TODO CONSIDER -
+		// Should we delete the comment altogether if they delete all the text and submit?
 		if (newReplyText.length === 0) return;
 
-		const { post } = props;
 		setIsLoading(true);
 
-		if (codemark) {
-			await dispatch(editCodemark(codemark, { text: replaceHtml(newReplyText)! }));
-		} else {
-			// await dispatch(
-			// 	editPost(
-			// 		post.streamId,
-			// 		post.id,
-			// 		replaceHtml(newReplyText)!,
-			// 		findMentionedUserIds(teamMembers, newReplyText)
-			// 	)
-			// );
-		}
+		// TODO COLLAB-ERRORS: Comment Editing
+		// await dispatch(
+		// 	editPost(
+		// 		post.streamId,
+		// 		post.id,
+		// 		replaceHtml(newReplyText)!,
+		// 		findMentionedUserIds(teamMembers, newReplyText)
+		// 	)
+		// );
+
 		reset();
 		setIsLoading(false);
 	};
@@ -214,21 +302,8 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) =>
 		setNewReplyText(escapedPostText);
 	};
 
-	const codemark = undefined;
-	// useSelector((state: CodeStreamState) =>
-	// 	isPending(props.post) ? null : getCodemark(state.codemarks, props.post.codemarkId)
-	// );
-
-	const hasTags = false; //codemark && codemark.tags && codemark.tags.length > 0;
-
-	const parentPost = undefined;
-	// useSelector((state: CodeStreamState) => {
-	// 	return getPost(state.posts, props.post.streamId, props.post.parentPostId!);
-	// });
-
 	const isForGrok = false; // !isPending(props.post) && props.post.forGrok;
-
-	const postText = props.comment.body; // codemark != null ? codemark.text : props.post?.text;
+	const postText = props.comment.body;
 	const escapedPostText = escapeHtml(postText);
 	const [newReplyText, setNewReplyText] = React.useState(escapedPostText);
 
@@ -237,80 +312,30 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) =>
 		menuState.open &&
 		props.renderMenu(menuState.target, () => setMenuState({ open: false }));
 
-	const renderEmote = () => {
-		//let matches = (props.post.text || "").match(/^\/me\s+(.*)/);
-		let matches = (props.comment.body || "").match(/^\/me\s+(.*)/);
-		if (matches) {
-			return <MarkdownText text={matches[1]} className="emote" inline={true}></MarkdownText>;
-		} else return null;
-	};
-	const emote = renderEmote();
-
-	const markers = [];
-	//  (() => {
-	// 	if (codemark == null || codemark.markers == null || codemark.markers.length === 0) return;
-
-	// 	const numMarkers = codemark.markers.length;
-	// 	// not allowing any of the capabilities (they default to off anyway)
-	// 	const capabilities: any = {};
-	// 	return codemark.markers.map((marker, index) => (
-	// 		<ReviewMarkerActionsWrapper key={index}>
-	// 			<MarkerActions
-	// 				key={marker.id}
-	// 				codemark={codemark}
-	// 				marker={marker}
-	// 				capabilities={capabilities}
-	// 				isAuthor={false}
-	// 				alwaysRenderCode={true}
-	// 				markerIndex={index}
-	// 				numMarkers={numMarkers}
-	// 				jumpToMarker={false}
-	// 				selected={true}
-	// 				disableHighlightOnHover={true}
-	// 				disableDiffCheck={true}
-	// 			/>
-	// 		</ReviewMarkerActionsWrapper>
-	// 	));
-	// })();
-
-	const isEditing = false; // props.editingPostId === props.post.id;
-	const checkpoint = false; //props.post.reviewCheckpoint;
-
-	const author = props.author || { username: "???" };
+	// TODO COLLAB-ERRORS: Emotes for what, exactly?
+	// const renderEmote = () => {
+	// 	let matches = (props.comment.body || "").match(/^\/me\s+(.*)/);
+	// 	if (matches) {
+	// 		return <MarkdownText text={matches[1]} className="emote" inline={true}></MarkdownText>;
+	// 	} else return null;
+	// };
+	// const emote = renderEmote();
+	const isEditing = props.comment.id === props.editingCommentId;
+	//const author = props.author || { username: "???" };
 
 	return (
 		<Root ref={ref} className={props.className}>
-			{props.threadId && !props.lastNestedReply && <div className="bar-left-not-last-child" />}
-			{props.threadId && props.lastNestedReply && <div className="bar-left-last-child" />}
-			{props.threadId && <div className="bar-left-connector" />}
-			<ReplyBody>
+			<div className="bar-left-connector" />
+			<CommentBody>
 				<AuthorInfo style={{ fontWeight: 700 }}>
-					{author.id && (
-						<ProfileLink id={props.author.id || ""}>
-							<Headshot size={20} person={props.author} />{" "}
+					{author && (
+						<ProfileLink id={author.id || ""}>
+							<Headshot size={20} person={author} />{" "}
 						</ProfileLink>
 					)}
 					<span className="reply-author">
 						{props.comment.creator.name}
-						{emote}
-						{checkpoint && (
-							<span className="emote">
-								added{" "}
-								<a
-									onClick={() => {
-										const element = document.getElementById("commits-update-" + checkpoint);
-										if (element) {
-											element.scrollIntoView({ behavior: "smooth" });
-											element.classList.add("highlight-pulse");
-											setTimeout(() => element.classList.remove("highlight-pulse"), 1500);
-										}
-									}}
-								>
-									update #{checkpoint}
-								</a>{" "}
-								to this review
-							</span>
-						)}
+						{/* {emote} */}
 					</span>
 					<div style={{ marginLeft: "auto", whiteSpace: "nowrap" }}>
 						{renderedMenu}
@@ -332,6 +357,7 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) =>
 						)}
 					</div>
 				</AuthorInfo>
+
 				{isEditing && (
 					<>
 						<ComposeWrapper>
@@ -372,7 +398,8 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) =>
 						</div>
 					</>
 				)}
-				{isForGrok && props.errorGroup && (
+
+				{/* {isForGrok && props.errorGroup && (
 					<NrAiComponent
 						codeErrorId={props.codeErrorId}
 						post={props.post as PostPlus}
@@ -381,8 +408,9 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) =>
 						file={props.file!}
 						functionToEdit={props.functionToEdit}
 					/>
-				)}
-				{emote || isEditing || isForGrok ? null : (
+				)} */}
+
+				{isEditing || isForGrok ? null : (
 					<>
 						<MarkdownContent className="reply-content-container">
 							<MarkdownText
@@ -390,12 +418,10 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<HTMLDivElement>) =>
 								includeCodeBlockCopy={props.comment.creator.name === "AI"}
 								className="reply-markdown-content"
 							/>
-							<Attachments post={props.post as CSPost} />
 						</MarkdownContent>
-						{markers}
 					</>
 				)}
-			</ReplyBody>
+			</CommentBody>
 		</Root>
 	);
 });

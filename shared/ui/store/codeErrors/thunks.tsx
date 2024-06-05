@@ -110,8 +110,8 @@ export const createCodeError =
 				if (!existingCodeError) {
 					logError(`Could not find codeError ${request.errorGuid} in state`);
 				} else {
-					existingCodeError.postId = response.post.id;
-					existingCodeError.streamId = response.post.streamId;
+					//existingCodeError.postId = response.post.id;
+					//existingCodeError.streamId = response.post.streamId;
 					dispatch(updateCodeErrors([existingCodeError]));
 				}
 			}
@@ -283,8 +283,7 @@ export const upgradePendingCodeError =
 				console.warn(`upgradePendingCodeError: no codeError found for ${errorGuid}`);
 				return;
 			}
-			const { entityGuid, objectType, title, text, stackTraces, objectInfo, postId } =
-				existingCodeError;
+			const { entityGuid, objectType, title, text, stackTraces, objectInfo } = existingCodeError;
 			const accountId = existingCodeError.accountId ?? parseId(entityGuid)?.accountId;
 			if (!accountId) {
 				throw new Error("upgradePendingCodeError could not find accountId");
@@ -301,7 +300,7 @@ export const upgradePendingCodeError =
 				language,
 				analyze,
 				reinitialize: false, // (seems obsolete now)
-				parentPostId: analyze ? undefined : postId,
+				//parentPostId: analyze ? undefined : postId,
 			};
 			const response: CreateShareableCodeErrorResponse = await dispatch(
 				createPostAndCodeError(newCodeError)
@@ -600,7 +599,8 @@ export const resolveStackTrace = createAppAsyncThunk(
 	}
 );
 
-export const startGrokLoading = (codeError: CSCodeError) => (dispatch, getState) => {
+{
+	/* export const startGrokLoading = (codeError: CSCodeError) => (dispatch, getState) => {
 	const state: CodeStreamState = getState();
 	const grokPostLength = getNrAiPostLength(state, codeError.streamId, codeError.postId);
 	// console.debug(
@@ -610,7 +610,8 @@ export const startGrokLoading = (codeError: CSCodeError) => (dispatch, getState)
 	dispatch(setFunctionToEditFailed(false));
 	dispatch(setGrokError(undefined));
 	dispatch(setGrokRepliesLength(grokPostLength));
-};
+}; */
+}
 
 export const handleGrokError = (grokError: CSAsyncGrokError) => dispatch => {
 	dispatch(setGrokLoading(false));

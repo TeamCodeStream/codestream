@@ -1,5 +1,5 @@
+import { normalizeCodeMarkdown } from "@codestream/webview/Stream/NRAI/patchHelper";
 import { describe, it, expect } from "@jest/globals";
-import { normalizeCodeMarkdown } from "@codestream/webview/Stream/Posts/patchHelper";
 
 describe("patchHelper normalizeCodeMarkdown", () => {
 	it("should remove text before the code block", () => {

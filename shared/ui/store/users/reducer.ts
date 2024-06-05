@@ -150,6 +150,20 @@ export const findMentionedUserIds = (members: CSUser[], text: string) => {
 	return mentionedUserIds;
 };
 
+/**
+ * Given an NR User Id, find a CodeStream user from it
+ */
+export const codestreamUserFromNrUserId = createSelector(
+	(state: UsersState) => state.users,
+	(_: any, nrUserId: number) => nrUserId,
+	(users, nrUserId: number) => {
+		for (let user of Object.values(users)) {
+			if (user.nrUserId === nrUserId) return user;
+		}
+		return undefined;
+	}
+);
+
 export const currentUserIsAdminSelector = createSelector(
 	(state: CodeStreamState) => state.users,
 	(state: CodeStreamState) => state.teams,

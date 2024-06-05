@@ -27,8 +27,8 @@ const FeedbackCompleted = styled.div`
 `;
 
 export interface NrAiFeedbackProps {
-	postId: string;
-	errorId: string;
+	//postId: string;
+	errorGroupGuid: string;
 }
 
 type FeedbackType = "up" | "down";
@@ -101,8 +101,8 @@ export function NrAiFeedbackForm(props: NrAiFeedbackFormProps) {
 	const submitHandler = async () => {
 		setIsLoading(true);
 		const telemetryPayload = {
-			"Error Group ID": props.errorId,
-			"Post ID": props.postId,
+			"Error Group ID": props.errorGroupGuid,
+			//"Post ID": props.postId,
 			Direction: thumbMap.get(props.feedbackType),
 		};
 
