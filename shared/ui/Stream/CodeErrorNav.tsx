@@ -700,12 +700,6 @@ export function CodeErrorNav(props: Props) {
 						onConnected(r.remote);
 					});
 				}}
-				telemetryOnDisplay={{
-					accountId: idInfo?.accountId,
-					entityGuid: derivedState.codeError?.objectInfo?.entityId,
-					itemType: "error",
-					modalType: "repoAssociation",
-				}}
 			/>
 		);
 	}
@@ -779,6 +773,12 @@ export function CodeErrorNav(props: Props) {
 							}
 						});
 					});
+				}}
+				telemetryOnDisplay={{
+					accountId: derivedState.codeError?.accountId,
+					entityGuid: derivedState.currentEntityGuid,
+					itemType: "error",
+					modalType: "repoAssociation",
 				}}
 			/>
 		);

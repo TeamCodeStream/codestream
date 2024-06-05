@@ -2,13 +2,14 @@ import {
 	ChangeDataType,
 	DidChangeDataNotificationType,
 	DidChangeObservabilityDataNotificationType,
+	GetObservabilityEntityByGuidRequestType,
 	GetReposScmRequestType,
 	RelatedRepository,
 	ReposScm,
 } from "@codestream/protocols/agent";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import { logWarning } from "../../logger";
@@ -48,6 +49,13 @@ export type EnhancedRepoScm = ReposScm & {
 	label: string;
 };
 
+export type TelemetryOnDisplay = {
+	itemType: "span" | "error";
+	modalType: "repoAssociation";
+	entityGuid?: string;
+	accountId?: number;
+};
+
 export function RepositoryAssociator(props: {
 	error: { title: string; description: string };
 	disableEmitDidChangeObservabilityDataNotification?: boolean;
@@ -59,12 +67,7 @@ export function RepositoryAssociator(props: {
 	isLoadingParent?: boolean;
 	noSingleItemDropdownSkip?: boolean;
 	relatedRepos?: RelatedRepository[];
-	telemetryOnDisplay?: {
-		itemType: "span" | "error";
-		modalType: "repoAssociation";
-		entityGuid?: string;
-		accountId?: number;
-	};
+	telemetryOnDisplay?: TelemetryOnDisplay;
 }) {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const codeError = state.context.currentCodeErrorGuid
@@ -88,14 +91,33 @@ export function RepositoryAssociator(props: {
 	const [hasFetchedRepos, setHasFetchedRepos] = React.useState(false);
 	const [skipRender, setSkipRender] = React.useState(false);
 
+	const sentTelemetryRef = useRef<string | null>(null);
+
+	const sendTelemetry = async (t: TelemetryOnDisplay) => {
+		if (t && t.modalType === "repoAssociation" && t.entityGuid) {
+			const refString = [t.modalType, t.itemType, t.accountId, t.entityGuid].join(":");
+			let accountId = t.accountId;
+			if (!accountId) {
+				const e = await HostApi.instance.send(GetObservabilityEntityByGuidRequestType, {
+					id: t.entityGuid,
+				});
+				accountId = e.entity.accountId;
+			}
+			if (sentTelemetryRef.current !== refString) {
+				HostApi.instance.track("codestream/repo_association_modal displayed", {
+					event_type: "modal_display",
+					entity_guid: t.entityGuid,
+					account_id: accountId,
+					meta_data: `item_type: ${t.itemType}`,
+				});
+				sentTelemetryRef.current = refString;
+			}
+		}
+	};
+
 	useEffect(() => {
-		if (props.telemetryOnDisplay && props.telemetryOnDisplay.modalType === "repoAssociation") {
-			HostApi.instance.track("codestream/repo_association_modal displayed", {
-				event_type: "modal_display",
-				entity_guid: props.telemetryOnDisplay.entityGuid,
-				account_id: props.telemetryOnDisplay.accountId,
-				meta_data: `item_type: ${props.telemetryOnDisplay.itemType}`,
-			});
+		if (props.telemetryOnDisplay) {
+			sendTelemetry(props.telemetryOnDisplay);
 		}
 	}, [props.telemetryOnDisplay]);
 
