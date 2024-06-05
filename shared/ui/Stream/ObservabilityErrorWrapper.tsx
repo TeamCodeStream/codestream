@@ -117,6 +117,7 @@ export const ObservabilityErrorWrapper = React.memo((props: Props) => {
 							entityGuid={props.errorEntityGuid}
 							errorInboxError={props.errorInboxError}
 							domain={props?.domain}
+							isServiceSearch={props?.isServiceSearch}
 						/>
 						<ObservabilityErrorDropdown
 							observabilityErrors={props.observabilityErrors}

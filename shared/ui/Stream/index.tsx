@@ -71,6 +71,7 @@ import { ChangeUsername } from "./ChangeUsername";
 import { ChangeWorksOn } from "./ChangeWorksOn";
 import { CodemarkForm } from "./CodemarkForm";
 import { CodemarkView } from "./CodemarkView";
+import { ErrorRoadblock } from "./ErrorRoadblock";
 import ConfigureAzureDevOpsPanel from "./ConfigureAzureDevOpsPanel";
 import ConfigureEnterprisePanel from "./ConfigureEnterprisePanel";
 import ConfigureNewRelicPanel from "./ConfigureNewRelicPanel";
@@ -482,6 +483,7 @@ export class SimpleStream extends PureComponent<Props> {
 						{activeModal === WebviewModals.ChangePassword && <ChangePassword />}
 						{activeModal === WebviewModals.ChangeTeamName && <ChangeTeamName />}
 						{activeModal === WebviewModals.ChangeCompanyName && <ChangeCompanyName />}
+						{activeModal === WebviewModals.ErrorRoadblock && <ErrorRoadblock />}
 						{activeModal === WebviewModals.FinishReview && <FinishReview />}
 						{activeModal === WebviewModals.Profile && <ProfilePanel />}
 						{activeModal === WebviewModals.Invite && <Invite />}

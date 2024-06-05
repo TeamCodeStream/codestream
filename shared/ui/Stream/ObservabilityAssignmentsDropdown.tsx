@@ -12,12 +12,15 @@ import {
 	GetObservabilityErrorGroupMetadataResponse,
 	ObservabilityErrorCore,
 } from "@codestream/protocols/agent";
+import { openModal } from "../store/context/actions";
+import { WebviewModals } from "@codestream/protocols/webview";
 
 interface Props {
 	observabilityAssignments?: ObservabilityErrorCore[];
 	entityGuid?: string;
 	errorInboxError?: string;
 	domain?: string;
+	isServiceSearch?: boolean;
 }
 
 export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
@@ -43,6 +46,8 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 	if (!filteredAssignments) {
 		return null;
 	}
+
+	const popup = (modal: WebviewModals) => dispatch(openModal(modal));
 
 	return (
 		<>
@@ -85,36 +90,40 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 										customPadding={"0 10px 0 50px"}
 										isLoading={isLoadingErrorGroupGuid === indexedErrorGroupGuid}
 										onClick={async e => {
-											try {
-												setIsLoadingErrorGroupGuid(indexedErrorGroupGuid);
-												const response = (await HostApi.instance.send(
-													GetObservabilityErrorGroupMetadataRequestType,
-													{ errorGroupGuid: _.errorGroupGuid }
-												)) as GetObservabilityErrorGroupMetadataResponse;
-												if (response) {
-													await dispatch(
-														openErrorGroup({
-															errorGroupGuid: _.errorGroupGuid,
-															occurrenceId: response.occurrenceId,
-															data: {
-																multipleRepos: response?.relatedRepos?.length > 1,
-																relatedRepos: response?.relatedRepos,
-																sessionStart: derivedState.sessionStart,
+											if (props.isServiceSearch) {
+												popup(WebviewModals.ErrorRoadblock);
+											} else {
+												try {
+													setIsLoadingErrorGroupGuid(indexedErrorGroupGuid);
+													const response = (await HostApi.instance.send(
+														GetObservabilityErrorGroupMetadataRequestType,
+														{ errorGroupGuid: _.errorGroupGuid }
+													)) as GetObservabilityErrorGroupMetadataResponse;
+													if (response) {
+														await dispatch(
+															openErrorGroup({
+																errorGroupGuid: _.errorGroupGuid,
 																occurrenceId: response.occurrenceId,
-																openType: "Observability Section",
-																remote: _?.remote || undefined,
-																stackSourceMap: response?.stackSourceMap,
-																domain: props.domain,
-															},
-														})
-													);
-												} else {
-													console.error("could not open error group");
+																data: {
+																	multipleRepos: response?.relatedRepos?.length > 1,
+																	relatedRepos: response?.relatedRepos,
+																	sessionStart: derivedState.sessionStart,
+																	occurrenceId: response.occurrenceId,
+																	openType: "Observability Section",
+																	remote: _?.remote || undefined,
+																	stackSourceMap: response?.stackSourceMap,
+																	domain: props.domain,
+																},
+															})
+														);
+													} else {
+														console.error("could not open error group");
+													}
+												} catch (ex) {
+													console.error(ex);
+												} finally {
+													setIsLoadingErrorGroupGuid("");
 												}
-											} catch (ex) {
-												console.error(ex);
-											} finally {
-												setIsLoadingErrorGroupGuid("");
 											}
 										}}
 									></ErrorRow>
