@@ -47,7 +47,7 @@ import { FormattedPlural } from "react-intl";
 import { Codemark } from "./Codemark/index";
 import { Review } from "./Review";
 import { saveReviews } from "../store/reviews/actions";
-import { Reply } from "./Posts/Reply";
+import { Comment } from "./Discussions/Comment";
 import { LoadingMessage } from "../src/components/LoadingMessage";
 import { Headshot } from "../src/components/Headshot";
 import { ProfileLink } from "../src/components/ProfileLink";
@@ -758,7 +758,7 @@ const SeeReplies = styled.div`
 	text-align: center;
 `;
 
-const StyledReply = styled(Reply)`
+const StyledReply = styled(Comment)`
 	padding-left: 10px;
 	padding-right: 10px;
 	border-left: 2px solid var(--text-color-info);

@@ -372,13 +372,13 @@ export interface CSCodeError {
 	// an array of people who have resolved the code error
 	resolvedBy?: CSCodeErrorResolutions;
 	teamId?: string;
-	streamId?: string;
-	postId?: string;
+	//streamId?: string;
+	//postId?: string;
 	fileStreamIds?: string[];
 	status?: CSCodeErrorStatus;
 	numReplies: number;
 	lastActivityAt: number;
-	followerIds?: string[];
+	//followerIds?: string[];
 	codeAuthorIds?: string[];
 	permalink?: string;
 	resolvedAt?: number;

@@ -1,10 +1,8 @@
 import React, { useCallback, useContext, useMemo } from "react";
 import { NewRelicErrorGroup, PostPlus } from "@codestream/protocols/agent";
 import { MarkdownText } from "@codestream/webview/Stream/MarkdownText";
-import { MarkdownContent } from "@codestream/webview/Stream/Posts/Reply";
 import styled, { ThemeContext } from "styled-components";
 import { Button } from "@codestream/webview/src/components/Button";
-import { normalizeCodeMarkdown } from "@codestream/webview/Stream/Posts/patchHelper";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { isGrokStreamLoading } from "@codestream/webview/store/posts/reducer";
 import { isPending } from "@codestream/webview/store/posts/types";
@@ -18,6 +16,8 @@ import { HostApi } from "@codestream/webview/webview-api";
 import { URI } from "vscode-uri";
 import { setApplyFixCallback } from "@codestream/webview/store/codeErrors/api/apiResolver";
 import { CodeStreamState } from "@codestream/webview/store";
+import { MarkdownContent } from "../Discussions/Comment";
+import { normalizeCodeMarkdown } from "./patchHelper";
 
 export const DiffSection = styled.div`
 	margin: 10px 0;
@@ -40,7 +40,6 @@ export type NrAiComponentProps = {
 };
 
 function Markdown(props: { text: string }) {
-	// TODO do i need attachments and tags in a Grok component? proly not.
 	return (
 		<MarkdownContent className="error-content-container">
 			<MarkdownText text={props.text} className="error-markdown-content" />
@@ -49,7 +48,6 @@ function Markdown(props: { text: string }) {
 }
 
 export function NrAiComponent(props: NrAiComponentProps) {
-	// console.debug("NrAiComponent", props);
 	const dispatch = useAppDispatch();
 	const monaco = useMonaco();
 	const isGrokLoading = useAppSelector(isGrokStreamLoading);
@@ -93,7 +91,6 @@ export function NrAiComponent(props: NrAiComponentProps) {
 
 	const normalizedCodeFix = useMemo(() => {
 		const result = normalizeCodeMarkdown(props.post.parts?.codeFix);
-		// console.debug("normalizedCodeFix", result);
 		return result;
 	}, [props.post.parts?.codeFix]);
 
@@ -176,7 +173,7 @@ export function NrAiComponent(props: NrAiComponentProps) {
 			<Markdown text={parts?.description ?? ""} />
 			{showFeedback && (
 				<>
-					<NrAiFeedback postId={props.post.id} errorId={props.codeErrorId!} />
+					<NrAiFeedback errorGroupGuid={props.codeErrorId!} />
 				</>
 			)}
 		</section>
