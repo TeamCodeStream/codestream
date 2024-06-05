@@ -18,7 +18,6 @@ import { PostsState } from "@codestream/webview/store/posts/types";
 import {
 	closeModal,
 	closePanel,
-	createPostAndCodemark,
 	markPostUnread,
 	openPanel,
 	setUserPreference,
@@ -114,7 +113,6 @@ interface DispatchProps {
 	clearDynamicLogging: Function;
 	closeModal: Function;
 	closePanel: Function;
-	createPostAndCodemark: Function;
 	markPostUnread: Function;
 	openPanel: typeof openPanel;
 	setCurrentCodemark: typeof setCurrentCodemark;
@@ -524,7 +522,7 @@ export class SimpleStream extends PureComponent<Props> {
 							{activePanel === WebviewPanels.PRInfo && (
 								<PRInfoModal onClose={() => this.props.closePanel()} />
 							)}
-							{activePanel === WebviewPanels.NewComment && (
+							{/* {activePanel === WebviewPanels.NewComment && (
 								<CodemarkForm
 									commentType="comment"
 									streamId={this.props.postStreamId}
@@ -535,8 +533,8 @@ export class SimpleStream extends PureComponent<Props> {
 									multiLocation={true}
 									dontAutoSelectLine={true}
 								/>
-							)}
-							{activePanel === WebviewPanels.NewIssue && (
+							)} */}
+							{/* {activePanel === WebviewPanels.NewIssue && (
 								<CodemarkForm
 									commentType="issue"
 									streamId={this.props.postStreamId}
@@ -547,7 +545,7 @@ export class SimpleStream extends PureComponent<Props> {
 									multiLocation={true}
 									dontAutoSelectLine={true}
 								/>
-							)}
+							)} */}
 							{activePanel === WebviewPanels.CodeError && (
 								<>
 									<DelayedRender>
@@ -761,10 +759,10 @@ export class SimpleStream extends PureComponent<Props> {
 			const state = this.context.store.getState();
 			const newPostEntryPoint =
 				state && state.context ? state.context.newPostEntryPoint : undefined;
-			retVal = await this.props.createPostAndCodemark(
-				attributes,
-				newPostEntryPoint || "Global Nav"
-			);
+			// retVal = await this.props.createPostAndCodemark(
+			// 	attributes,
+			// 	newPostEntryPoint || "Global Nav"
+			// );
 			this.props.closePanel();
 		} finally {
 			this.props.setNewPostEntry(undefined);
@@ -836,7 +834,6 @@ export default connect(mapStateToProps, {
 	clearDynamicLogging,
 	closeModal,
 	closePanel,
-	createPostAndCodemark,
 	markPostUnread,
 	openPanel,
 	setCurrentCodemark,

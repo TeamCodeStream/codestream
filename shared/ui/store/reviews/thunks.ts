@@ -29,8 +29,6 @@ import {
 } from "@codestream/webview/store/reviews/actions";
 import { addStreams } from "@codestream/webview/store/streams/actions";
 import { findMentionedUserIds, getTeamMembers } from "@codestream/webview/store/users/reducer";
-import { createPost } from "@codestream/webview/Stream/actions";
-import { phraseList } from "@codestream/webview/utilities/strings";
 import { mapFilter } from "@codestream/webview/utils";
 import { HostApi } from "@codestream/webview/webview-api";
 
@@ -172,15 +170,15 @@ export const editReview =
 				}).filter(Boolean);
 
 				if (filteredUsers.length) {
-					dispatch(
-						createPost(
-							response.review.streamId,
-							response.review.postId,
-							`/me added ${phraseList(filteredUsers.map(u => `@${u.username}`))} to this review`,
-							null,
-							filteredUsers.map(u => u.id)
-						)
-					);
+					// dispatch(
+					// 	createPost(
+					// 		response.review.streamId,
+					// 		response.review.postId,
+					// 		`/me added ${phraseList(filteredUsers.map(u => `@${u.username}`))} to this review`,
+					// 		null,
+					// 		filteredUsers.map(u => u.id)
+					// 	)
+					// );
 				}
 			}
 
@@ -188,16 +186,16 @@ export const editReview =
 				// FIXME multiple-repo
 				const checkpoint = attributes.repoChanges[0].checkpoint || 0;
 
-				dispatch(
-					createPost(
-						response.review.streamId,
-						response.review.postId,
-						replyText || "",
-						undefined,
-						undefined,
-						{ reviewCheckpoint: checkpoint }
-					)
-				);
+				// dispatch(
+				// 	createPost(
+				// 		response.review.streamId,
+				// 		response.review.postId,
+				// 		replyText || "",
+				// 		undefined,
+				// 		undefined,
+				// 		{ reviewCheckpoint: checkpoint }
+				// 	)
+				// );
 			}
 
 			if (attributes.sharedTo) {

@@ -7,7 +7,7 @@ import {
 	NewRelicErrorGroup,
 	ResolveStackTraceResponse,
 } from "@codestream/protocols/agent";
-import { CSCodeError, CSPost, CSStackTraceLine, CSUser } from "@codestream/protocols/api";
+import { CSCodeError, CSStackTraceLine, CSUser } from "@codestream/protocols/api";
 import React, { PropsWithChildren, RefObject, useEffect, useMemo, useRef, useState } from "react";
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
@@ -55,7 +55,6 @@ import Icon from "../Icon";
 import { Link } from "../Link";
 import Menu from "../Menu";
 import { DiscussionThread } from "../Discussions/DiscussionThread";
-import { AddReactionIcon } from "../Reactions";
 import { RepoMetadata } from "../Review";
 import Timestamp from "../Timestamp";
 import Tooltip from "../Tooltip";
@@ -79,12 +78,10 @@ export interface BaseCodeErrorProps extends CardProps {
 	codeError: CSCodeError;
 	errorGroup?: NewRelicErrorGroup;
 	parsedStack?: ResolveStackTraceResponse;
-	//post?: CSPost;
 	repoInfo?: RepoMetadata;
 	headerError?: SimpleError;
 	currentUserId?: string;
 	collapsed?: boolean;
-	isFollowing?: boolean;
 	assignees?: CSUser[];
 	renderFooter?: (
 		footer: typeof CardFooter,
@@ -104,9 +101,7 @@ export interface BaseCodeErrorProps extends CardProps {
 export interface BaseCodeErrorHeaderProps {
 	codeError: CSCodeError;
 	errorGroup?: NewRelicErrorGroup;
-	post?: CSPost;
 	collapsed?: boolean;
-	isFollowing?: boolean;
 	assignees?: CSUser[];
 	setIsEditing: Function;
 	resolutionTip?: any;
@@ -114,7 +109,6 @@ export interface BaseCodeErrorHeaderProps {
 
 export interface BaseCodeErrorMenuProps {
 	codeError: CSCodeError;
-	//post?: CSPost;
 	errorGroup?: NewRelicErrorGroup;
 	setIsEditing: Function;
 	collapsed?: boolean;
@@ -309,7 +303,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 			});
 
 			setIsAssigneeChanging(true);
-			//await dispatch(upgradePendingCodeError(props.codeError.entityGuid, "Assignee Change"));
+
 			await dispatch(
 				api("setAssignee", {
 					errorGroupGuid: props.errorGroup?.guid!,
@@ -379,7 +373,6 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 		e.stopPropagation();
 		setIsAssigneeChanging(true);
 
-		//await dispatch(upgradePendingCodeError(props.codeError.entityGuid, "Assignee Change"));
 		await dispatch(
 			api("removeAssignee", {
 				errorGroupGuid: props.errorGroup?.guid,
@@ -751,7 +744,6 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 						)}
 
 						<>
-							{props.post && <AddReactionIcon post={props.post} className="in-review" />}
 							{props.children ||
 								(codeError && (
 									<>
@@ -764,7 +756,6 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 										>
 											<BaseCodeErrorMenu
 												codeError={codeError}
-												//post={props.post}
 												errorGroup={props.errorGroup}
 												collapsed={collapsed}
 												setIsEditing={props.setIsEditing}
@@ -779,9 +770,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 			<Header>
 				<Icon name="alert" className="type" />
 				<BigTitle>
-					<HeaderActions>
-						{props.post && <AddReactionIcon post={props.post} className="in-review" />}
-					</HeaderActions>
+					<HeaderActions></HeaderActions>
 					<ApmServiceTitle>
 						<Tooltip
 							title={
@@ -1036,7 +1025,6 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	// 				  }
 	// 				: undefined;
 	// 			await dispatch(
-	// 				upgradePendingCodeError(
 	// 					props.codeError.entityGuid,
 	// 					"Comment",
 	// 					codeBlock,
@@ -1514,20 +1502,8 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 };
 
 const renderMetaSectionCollapsed = (props: BaseCodeErrorProps) => {
-	if (!props.isFollowing) return null;
 	return (
 		<MetaSectionCollapsed>
-			{props.isFollowing && (
-				<span>
-					<Icon
-						className="detail-icon"
-						title="You are following this code error"
-						placement="bottomLeft"
-						align={{ offset: [-18, 4] }}
-						name="eye"
-					/>
-				</span>
-			)}
 			{props.codeError.numReplies > 0 && (
 				<Tooltip title="Show replies" placement="bottom">
 					<span className="detail-icon">

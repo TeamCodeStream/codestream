@@ -464,11 +464,9 @@ export function CodeErrorNav(props: Props) {
 					dispatch(
 						addAndEnhanceCodeError({
 							accountId: errorGroupResult.accountId,
-							//postId: undefined,
 							// these don't matter
 							assignees: [],
 							teamId: undefined,
-							//streamId: undefined,
 							fileStreamIds: [],
 							status: "open",
 							numReplies: 0,
