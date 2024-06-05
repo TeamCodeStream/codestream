@@ -18,10 +18,6 @@ import {
 } from "@codestream/protocols/agent";
 
 export interface CodeErrorsApi {
-	createShareableCodeError(
-		request: CreateShareableCodeErrorRequest
-	): Promise<CreateShareableCodeErrorResponse>;
-
 	fetchPostReplies(request: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse>;
 
 	updateCodeErrors(request: UpdateCodeErrorRequest): Promise<UpdateCodeErrorResponse>;

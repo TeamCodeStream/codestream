@@ -77,14 +77,7 @@ import {
 	safe,
 } from "../utils";
 import { HostApi } from "../webview-api";
-import {
-	closePanel,
-	createPostAndReview,
-	openModal,
-	openPanel,
-	setCodemarkStatus,
-	setUserPreference,
-} from "./actions";
+import { closePanel, openModal, openPanel, setUserPreference } from "./actions";
 import { SetUserPreferenceRequest } from "./actions.types";
 import Button from "./Button";
 import CancelButton from "./CancelButton";
@@ -2567,12 +2560,10 @@ const ConnectedReviewForm = connect(mapStateToProps, {
 	openPanel,
 	openModal,
 	closePanel,
-	createPostAndReview,
 	editReview,
 	setUserPreference,
 	setCurrentReview,
 	setCurrentRepo,
-	setCodemarkStatus,
 	setNewPostEntry,
 })(ReviewForm);
 

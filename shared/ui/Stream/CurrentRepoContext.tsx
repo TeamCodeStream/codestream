@@ -10,7 +10,6 @@ import { shallowEqual, useSelector } from "react-redux";
 import styled from "styled-components";
 import { setUserPreference } from "./actions";
 import { CodeStreamState } from "../store";
-import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 import { setEditorContext } from "../store/editorContext/actions";
 import { useDidMount } from "../utilities/hooks";
 import { isNotOnDisk } from "../utils";
@@ -132,7 +131,7 @@ export const CurrentRepoContext = React.memo((props: Props) => {
 			}
 		}
 
-		await fetchDocumentMarkers(textEditorUri);
+		//await fetchDocumentMarkers(textEditorUri);
 	};
 
 	return (

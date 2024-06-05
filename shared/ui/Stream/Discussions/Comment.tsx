@@ -20,7 +20,7 @@ import { MarkdownText } from "../MarkdownText";
 import { MessageInput } from "../MessageInput";
 import { AddReactionIcon } from "../Reactions";
 import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
-import { CSCodeError } from "@codestream/protocols/api";
+import { CSCodeError, CSUser } from "@codestream/protocols/api";
 import { setPostReplyCallback } from "@codestream/webview/store/codeErrors/api/apiResolver";
 import { createComment } from "../actions";
 import { AskGrok } from "../NRAI/AskGrok";
@@ -187,9 +187,7 @@ export const CommentInput = (props: CommentInputProps) => {
 	const dispatch = useAppDispatch();
 	const [text, setText] = useState("");
 	const [isAskGrokOpen, setIsAskGrokOpen] = useState(false);
-	//const [attachments, setAttachments] = useState<AttachmentField[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
-	//const teamMates = useAppSelector((state: CodeStreamState) => getTeamMates(state));
 	const demoMode = useAppSelector((state: CodeStreamState) => state.codeErrors.demoMode);
 
 	const postDemoReply = useCallback((text: string) => {
@@ -275,7 +273,7 @@ export const Comment = forwardRef((props: CommentProps, ref: Ref<HTMLDivElement>
 	const teamTagsById = useSelector((state: CodeStreamState) => getTeamTagsHash(state));
 	const author = useSelector((state: CodeStreamState) =>
 		codestreamUserFromNrUserId(state.users, props.comment.creator.userId)
-	);
+	) as CSUser | undefined;
 
 	const submit = async () => {
 		// TODO CONSIDER -

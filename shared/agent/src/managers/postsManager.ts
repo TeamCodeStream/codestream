@@ -626,6 +626,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		return { posts, codemarks: [] };
 	}
 
+	// TODO COLLAB-ERRORS: NO LONGER USED?
 	// this is what the webview will call to create codeErrors in the sharing model
 	@lspHandler(CreateShareableCodeErrorRequestType)
 	@log()

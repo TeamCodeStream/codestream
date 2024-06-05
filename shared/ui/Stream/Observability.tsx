@@ -31,7 +31,6 @@ import { head as _head, isEmpty as _isEmpty } from "lodash-es";
 import React, { useEffect, useState } from "react";
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
-import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 import { setEditorContext } from "../store/editorContext/actions";
 import { isNotOnDisk } from "../utils";
 import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
@@ -1166,7 +1165,7 @@ export const Observability = React.memo((props: Props) => {
 			}
 		}
 
-		await fetchDocumentMarkers(textEditorUri);
+		//await fetchDocumentMarkers(textEditorUri);
 	};
 
 	return (

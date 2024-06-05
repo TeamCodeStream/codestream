@@ -1,7 +1,4 @@
 import {
-	CodeBlock,
-	CreateShareableCodeErrorRequest,
-	CreateShareableCodeErrorResponse,
 	CSAsyncGrokError,
 	CSGrokStream,
 	DidResolveStackTraceLineNotification,
@@ -25,16 +22,11 @@ import {
 	setFunctionToEditFailed,
 	setGrokError,
 	setGrokLoading,
-	setGrokRepliesLength,
 } from "@codestream/webview/store/codeErrors/actions";
-import { getCodeError } from "@codestream/webview/store/codeErrors/reducer";
 import { setCurrentCodeErrorData } from "@codestream/webview/store/context/actions";
 import { createAppAsyncThunk } from "@codestream/webview/store/helper";
-import { addPosts, appendGrokStreamingResponse } from "@codestream/webview/store/posts/actions";
-import { getNrAiPostLength } from "@codestream/webview/store/posts/reducer";
+import { appendGrokStreamingResponse } from "@codestream/webview/store/posts/actions";
 import { GrokStreamEvent } from "@codestream/webview/store/posts/types";
-import { addStreams } from "@codestream/webview/store/streams/actions";
-import { createPostAndCodeError } from "@codestream/webview/Stream/actions";
 import { highlightRange } from "@codestream/webview/Stream/api-functions";
 import { Position, Range } from "vscode-languageserver-types";
 import { URI } from "vscode-uri";
@@ -43,7 +35,6 @@ import {
 	codeErrorsIDEApi,
 } from "@codestream/webview/store/codeErrors/api/apiResolver";
 import { CodeErrorData } from "@codestream/protocols/webview";
-import { parseId } from "@codestream/webview/utilities/newRelic";
 import { deletePostApi } from "@codestream/webview/store/posts/thunks";
 
 export const updateCodeErrors =
@@ -92,35 +83,6 @@ export interface CreateCodeErrorError {
 	reason: "share" | "create";
 	message?: string;
 }
-
-export const createCodeError =
-	(request: CreateShareableCodeErrorRequest) =>
-	async (dispatch, getState): Promise<CreateShareableCodeErrorResponse> => {
-		// console.debug("createCodeError", attributes);
-		try {
-			const response = await codeErrorsApi.createShareableCodeError(request);
-			if (response.codeError) {
-				dispatch(addCodeErrors([response.codeError]));
-				dispatch(addStreams([response.stream]));
-				dispatch(addPosts([response.post]));
-			} else if (response.post && response.stream) {
-				// non-mongo mode - enhance the code error with the response
-				const state = getState();
-				const existingCodeError = getCodeError(state.codeErrors, request.errorGuid);
-				if (!existingCodeError) {
-					logError(`Could not find codeError ${request.errorGuid} in state`);
-				} else {
-					//existingCodeError.postId = response.post.id;
-					//existingCodeError.streamId = response.post.streamId;
-					dispatch(updateCodeErrors([existingCodeError]));
-				}
-			}
-			return response;
-		} catch (error) {
-			logError("Error creating a code error", error);
-			throw { reason: "create", message: error.toString() } as CreateCodeErrorError;
-		}
-	};
 
 export const setProviderError =
 	(providerId: string, errorGroupGuid: string, error?: { message: string }) => dispatch => {
@@ -251,71 +213,6 @@ export const openErrorGroup = createAppAsyncThunk(
 		}
 	}
 );
-
-/**
- * codeErrors (CodeStream's representation of a NewRelic error group error) can be ephemeral
- * and by default, they are not persisted to the data store. before certain actions happen from the user
- * we will create a concrete version of the codeError, then run the operation requiring it.
- *
- * a pending codeError has an ide that begins with PENDING, and fully looks like `PENDING-${errorGroupGuid}`.
- *
- */
-// Cannot easily be converted to a useAppAsyncThunk since CodeErrorNav.tsx is super difficult to convert to functional component
-export const upgradePendingCodeError =
-	(
-		errorGuid: string,
-		source: "Comment" | "Status Change" | "Assignee Change",
-		codeBlock?: CodeBlock,
-		language?: string,
-		analyze = false
-	) =>
-	async (dispatch, getState: () => CodeStreamState) => {
-		console.debug("upgradePendingCodeError", {
-			codeErrorId: errorGuid,
-			source,
-			codeBlock,
-			language,
-		});
-		try {
-			const state = getState();
-			const existingCodeError = getCodeError(state.codeErrors, errorGuid);
-			if (!existingCodeError) {
-				console.warn(`upgradePendingCodeError: no codeError found for ${errorGuid}`);
-				return;
-			}
-			const { entityGuid, objectType, title, text, stackTraces, objectInfo } = existingCodeError;
-			const accountId = existingCodeError.accountId ?? parseId(entityGuid)?.accountId;
-			if (!accountId) {
-				throw new Error("upgradePendingCodeError could not find accountId");
-			}
-			const newCodeError: CreateShareableCodeErrorRequest = {
-				accountId,
-				errorGuid: entityGuid,
-				objectType,
-				title,
-				text,
-				stackTraces,
-				objectInfo,
-				codeBlock,
-				language,
-				analyze,
-				reinitialize: false, // (seems obsolete now)
-				//parentPostId: analyze ? undefined : postId,
-			};
-			const response: CreateShareableCodeErrorResponse = await dispatch(
-				createPostAndCodeError(newCodeError)
-			);
-
-			return {
-				post: response.post,
-			};
-		} catch (ex) {
-			logError(ex, {
-				codeErrorId: errorGuid,
-			});
-		}
-		return undefined;
-	};
 
 /**
  * Provider api
@@ -646,8 +543,5 @@ export const addAndEnhanceCodeError = createAppAsyncThunk(
 	"codeErrors/enhance",
 	async (codeError: CSCodeError, { dispatch }) => {
 		await dispatch(addCodeErrors([codeError]));
-		await dispatch(
-			upgradePendingCodeError(codeError.entityGuid, "Comment", undefined, undefined, false)
-		);
 	}
 );

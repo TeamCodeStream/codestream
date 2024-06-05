@@ -15,9 +15,7 @@ import {
 	CardProps,
 	getCardProps,
 } from "../../src/components/Card";
-import { setCodemarkStatus } from "../actions";
 import { PROVIDER_MAPPINGS } from "../CrossPostIssueControls/types";
-import { DropdownButton } from "../DropdownButton";
 import Icon from "../Icon";
 import { Link } from "../Link";
 import { MarkdownText } from "../MarkdownText";
@@ -93,20 +91,20 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 	let { collapsed } = props;
 	// collapsed = false;
 
-	const resolve = () => {
-		dispatch(setCodemarkStatus(codemark.id, CodemarkStatus.Closed));
-	};
+	// const resolve = () => {
+	// 	dispatch(setCodemarkStatus(codemark.id, CodemarkStatus.Closed));
+	// };
 
-	const reopen = () => dispatch(setCodemarkStatus(codemark.id, CodemarkStatus.Open));
+	// const reopen = () => dispatch(setCodemarkStatus(codemark.id, CodemarkStatus.Open));
 
-	const resolveItem = { label: "Resolve", action: resolve };
-	const reopenItem = { label: "Reopen", action: reopen };
+	// const resolveItem = { label: "Resolve", action: resolve };
+	// const reopenItem = { label: "Reopen", action: reopen };
 
 	const renderIssueDropdownAndMenu = renderActions && codemark.type === CodemarkType.Issue;
 	const menu = (
 		<HeaderActions>
 			{props.post && <AddReactionIcon post={props.post} />}
-			{renderIssueDropdownAndMenu &&
+			{/* {renderIssueDropdownAndMenu &&
 				(codemark.status === CodemarkStatus.Closed ? (
 					<DropdownButton
 						size="compact"
@@ -119,7 +117,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 					<DropdownButton size="compact" items={[resolveItem, { label: "-" }, ...menuItems]}>
 						Open
 					</DropdownButton>
-				))}
+				))} */}
 			{!renderIssueDropdownAndMenu && renderedMenu}
 			{!renderIssueDropdownAndMenu && props.renderMenu && (
 				<KebabIcon

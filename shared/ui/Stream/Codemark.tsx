@@ -53,18 +53,11 @@ import {
 } from "../store/users/reducer";
 import { emptyArray, range } from "../utils";
 import { HostApi } from "../webview-api";
-import {
-	createPost,
-	fetchThread,
-	setCodemarkPinned,
-	setCodemarkStatus,
-	setUserPreference,
-} from "./actions";
+import { fetchThread, setUserPreference } from "./actions";
 import { SetUserPreferenceRequest } from "./actions.types";
 import { getDocumentFromMarker } from "./api-functions";
 import { Attachments } from "./Attachments";
 import CodemarkDetails from "./CodemarkDetails";
-import { CodemarkForm } from "./CodemarkForm";
 import { confirmPopup } from "./Confirm";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { DropdownButton } from "./DropdownButton";
@@ -97,12 +90,9 @@ interface State {
 }
 
 interface DispatchProps {
-	createPost: typeof createPost;
 	deleteCodemark: typeof deleteCodemark;
 	editCodemark: typeof editCodemark;
 	fetchThread: typeof fetchThread;
-	setCodemarkStatus: typeof setCodemarkStatus;
-	setCodemarkPinned: typeof setCodemarkPinned;
 	setUserPreference: (request: SetUserPreferenceRequest) => void;
 	getPosts: typeof getPosts;
 	setCurrentCodemark: typeof setCurrentCodemark;
@@ -288,7 +278,7 @@ export class Codemark extends React.Component<Props, State> {
 		if (this.state.isEditing)
 			return (
 				<div className="editing-codemark-container">
-					<CodemarkForm
+					{/* <CodemarkForm
 						isEditing
 						editingCodemark={this.props.codemark}
 						commentType={this.props.codemark!.type}
@@ -296,7 +286,7 @@ export class Codemark extends React.Component<Props, State> {
 						onClickClose={this.cancelEditing}
 						streamId={this.props.codemark!.streamId}
 						collapsed={false}
-					/>
+					/> */}
 				</div>
 			);
 
@@ -508,14 +498,14 @@ export class Codemark extends React.Component<Props, State> {
 	};
 
 	closeIssue = () => {
-		const { codemark, setCodemarkStatus } = this.props;
-		setCodemarkStatus(codemark!.id, "closed");
+		//const { codemark, setCodemarkStatus } = this.props;
+		//setCodemarkStatus(codemark!.id, "closed");
 		// this.submitReply("/me closed this issue");
 	};
 
 	openIssue = () => {
-		const { codemark, setCodemarkStatus } = this.props;
-		setCodemarkStatus(codemark!.id, "open");
+		//const { codemark, setCodemarkStatus } = this.props;
+		//setCodemarkStatus(codemark!.id, "open");
 		// this.submitReply("/me reopened this issue");
 	};
 
@@ -840,7 +830,7 @@ export class Codemark extends React.Component<Props, State> {
 		}
 		this.props.addCodemarks([updatedCodemark]);
 
-		this.props.setCodemarkPinned(codemark, value);
+		//this.props.setCodemarkPinned(codemark, value);
 		// HostApi.instance.send(SetCodemarkPinnedRequestType, {
 		// 	codemarkId: codemark.id,
 		// 	value
@@ -2179,8 +2169,6 @@ export default connect(
 	// @ts-ignore
 	mapStateToProps,
 	{
-		setCodemarkStatus,
-		setCodemarkPinned,
 		setUserPreference,
 		deleteCodemark,
 		editCodemark,
@@ -2190,7 +2178,6 @@ export default connect(
 		repositionCodemark,
 		addDocumentMarker,
 		addCodemarks,
-		createPost,
 		setCurrentReview,
 		setCurrentPullRequest,
 		setCurrentCodeErrorData,

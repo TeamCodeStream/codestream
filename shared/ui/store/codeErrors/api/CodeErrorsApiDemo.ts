@@ -1,6 +1,4 @@
 import {
-	CreateShareableCodeErrorRequest,
-	CreateShareableCodeErrorResponse,
 	ExecuteThirdPartyTypedType,
 	FetchPostRepliesRequest,
 	FetchPostRepliesResponse,
@@ -26,7 +24,6 @@ import { HostApi } from "@codestream/webview/webview-api";
 import { getObservabilityErrorsResponse } from "@codestream/webview/store/codeErrors/api/data/getObservabilityErrorsResponse";
 import {
 	codeErrorId,
-	getCreateSharableCodeErrorResponse,
 	parentPostId,
 	postId,
 	streamId,
@@ -39,11 +36,11 @@ class CodeErrorsApiDemo implements CodeErrorsApi {
 	private _nraiUserId: string | undefined;
 	private _entityId: string | undefined;
 
-	async createShareableCodeError(
-		request: CreateShareableCodeErrorRequest
-	): Promise<CreateShareableCodeErrorResponse> {
-		return getCreateSharableCodeErrorResponse(this._currentRepoId!);
-	}
+	// async createShareableCodeError(
+	// 	request: CreateShareableCodeErrorRequest
+	// ): Promise<CreateShareableCodeErrorResponse> {
+	// 	return getCreateSharableCodeErrorResponse(this._currentRepoId!);
+	// }
 
 	async fetchPostReplies(request: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse> {
 		const result = getFetchPostRepliesResponse(
