@@ -11,6 +11,7 @@ import {
 	GetObservabilityEntityByGuidRequestType,
 } from "@codestream/protocols/agent";
 import { useDidMount } from "../utilities/hooks";
+import Icon from "../Stream/Icon";
 
 const ButtonRow = styled.div`
 	text-align: center;
@@ -69,7 +70,19 @@ export const ErrorRoadblock = props => {
 					</fieldset>
 				</form>
 			)}
-			{loadingEntityAccount && <div style={{ width: "234px", height: "160px" }}>&nbsp;</div>}
+			{loadingEntityAccount && (
+				<div
+					style={{
+						width: "234px",
+						height: "160px",
+						display: "flex",
+						justifyContent: "center",
+						alignItems: "center",
+					}}
+				>
+					<Icon style={{ transform: "scale(2)" }} name="sync" loading={true} />
+				</div>
+			)}
 		</Dialog>
 	);
 };
