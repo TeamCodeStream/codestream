@@ -2,7 +2,6 @@ import {
 	ChangeDataType,
 	DidChangeDataNotificationType,
 	DidChangeObservabilityDataNotificationType,
-	GetObservabilityEntityByGuidRequestType,
 	GetReposScmRequestType,
 	RelatedRepository,
 	ReposScm,
@@ -21,6 +20,7 @@ import { LoadingMessage } from "../../src/components/LoadingMessage";
 import { isEmpty as _isEmpty } from "lodash-es";
 import { getCodeError } from "../../store/codeErrors/reducer";
 import { CSCodeError } from "@codestream/protocols/api";
+import { parseId } from "@codestream/webview/utilities/newRelic";
 
 const Ellipsize = styled.div`
 	button {
@@ -95,14 +95,11 @@ export function RepositoryAssociator(props: {
 
 	const sendTelemetry = async (t: TelemetryOnDisplay) => {
 		if (t && t.modalType === "repoAssociation" && t.entityGuid) {
-			const refString = [t.modalType, t.itemType, t.accountId, t.entityGuid].join(":");
 			let accountId = t.accountId;
 			if (!accountId) {
-				const e = await HostApi.instance.send(GetObservabilityEntityByGuidRequestType, {
-					id: t.entityGuid,
-				});
-				accountId = e.entity.accountId;
+				accountId = parseId(t.entityGuid)?.accountId;
 			}
+			const refString = [t.modalType, t.itemType, accountId, t.entityGuid].join(":");
 			if (sentTelemetryRef.current !== refString) {
 				HostApi.instance.track("codestream/repo_association_modal displayed", {
 					event_type: "modal_display",
