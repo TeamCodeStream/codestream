@@ -220,11 +220,17 @@ export class NRManager {
 		const matchingRepoPath = matchingRepo?.path;
 		let firstWarning: WarningOrError | undefined = undefined;
 		let resolvedRef: string | undefined = ref;
+		let firstNotification: WarningOrError | undefined = undefined;
 
 		// NOTE: the warnings should not prevent a stack trace from being displayed
 		const setWarning = (warning: WarningOrError) => {
 			// only set the warning if we haven't already set it.
 			if (!firstWarning) firstWarning = warning;
+		};
+
+		const setNotification = (notification: WarningOrError) => {
+			// only set the warning if we haven't already set it.
+			if (!firstNotification) firstNotification = notification;
 		};
 
 		if (domain === "BROWSER" && isEmpty(stackSourceMap)) {
@@ -242,9 +248,12 @@ export class NRManager {
 				}) not found in your editor. Open it in order to navigate the stack trace.`,
 			});
 		}
-
+		setNotification({
+			message: `[Associate a build sha or release tag with your errors] so that CodeStream can help make sure you’re looking at the right version of the code.`,
+			helpUrl: CONFIGURE_ERROR_REF_HELP_URL,
+		});
 		if (!ref) {
-			setWarning({
+			setNotification({
 				message: `[Associate a build sha or release tag with your errors] so that CodeStream can help make sure you’re looking at the right version of the code.`,
 				helpUrl: CONFIGURE_ERROR_REF_HELP_URL,
 			});
@@ -345,6 +354,7 @@ export class NRManager {
 
 		return {
 			warning: firstWarning,
+			notification: firstNotification,
 			resolvedStackInfo,
 			parsedStackInfo,
 		};

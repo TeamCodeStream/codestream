@@ -57,6 +57,7 @@ export interface ResolveStackTraceResponse {
 	parsedStackInfo?: CSStackTraceInfo; // this is parsed info relative to the given sha, to be stored
 	resolvedStackInfo?: CSStackTraceInfo; // this is relative to the user's current sha, ephemeral
 	warning?: WarningOrError;
+	notification?: WarningOrError;
 	error?: string;
 }
 
@@ -225,8 +226,7 @@ export type LookupNewRelicOrganizationsResponse = {
 	orgId: number;
 }[];
 
-export interface DetectTeamAnomaliesRequest {
-}
+export interface DetectTeamAnomaliesRequest {}
 
 export interface DetectTeamAnomaliesResponse {
 	[key: string]: any;
@@ -238,4 +238,3 @@ export const DetectTeamAnomaliesRequestType = new RequestType<
 	void,
 	void
 >("codestream/detectTeamAnomalies");
-	

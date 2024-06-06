@@ -44,6 +44,7 @@ import { Icon } from "./Icon";
 import { ClearModal, Step, Subtext, Tip } from "./ReviewNav";
 import { ScrollBox } from "./ScrollBox";
 import { WarningBox } from "./WarningBox";
+import { NotificationBox } from "./NotificationBox";
 import { isEmpty as _isEmpty } from "lodash";
 import { isSha } from "@codestream/webview/utilities/strings";
 import { parseId } from "@codestream/webview/utilities/newRelic";
@@ -184,6 +185,7 @@ export function CodeErrorNav(props: Props) {
 	>(undefined);
 	const [repoWarning, setRepoWarning] = useState<WarningOrError | undefined>(undefined);
 	const [repoError, setRepoError] = useState<string | undefined>(undefined);
+	const [repoNotification, setRepoNotification] = useState<WarningOrError | undefined>(undefined);
 	const { errorGroup } = derivedState;
 	const [isResolved, setIsResolved] = useState(false);
 	const [parsedStack, setParsedStack] = useState<ResolveStackTraceResponse | undefined>(undefined);
@@ -493,6 +495,7 @@ export function CodeErrorNav(props: Props) {
 				setParsedStack(stackInfo);
 				setRepoError(stackInfo.error);
 				setRepoWarning(stackInfo.warning);
+				setRepoNotification(stackInfo.notification);
 			}
 
 			setIsResolved(true);
@@ -555,6 +558,19 @@ export function CodeErrorNav(props: Props) {
 		if (!items.length) return null;
 
 		return <WarningBox items={items} />;
+	};
+
+	const tryBuildNotification = () => {
+		if (derivedState.demoMode || derivedState.errorsDemoMode.enabled) return null;
+
+		const items: WarningOrError[] = [];
+		if (repoNotification) {
+			items.push(repoNotification);
+		}
+
+		if (!items.length) return null;
+
+		return <NotificationBox items={items} />;
 	};
 
 	useDidMount(() => {
@@ -852,7 +868,7 @@ export function CodeErrorNav(props: Props) {
 								width: "100%",
 							}}
 						>
-							{/* TODO perhaps consolidate these? */}
+							{tryBuildNotification()}
 							{tryBuildWarningsOrErrors()}
 
 							<StyledCodeError className={hoverButton == "stacktrace" ? "pulse" : ""}>
