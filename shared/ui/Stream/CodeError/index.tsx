@@ -11,7 +11,6 @@ import { CSCodeError, CSStackTraceLine, CSUser } from "@codestream/protocols/api
 import React, { PropsWithChildren, RefObject, useEffect, useMemo, useRef, useState } from "react";
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
-
 import { OpenEditorViewNotificationType, OpenUrlRequestType } from "@codestream/protocols/webview";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { Loading } from "@codestream/webview/Container/Loading";
@@ -270,7 +269,6 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 			teamMembers: teamMembers,
 			emailAddress: state.session.userId ? state.users[state.session.userId]?.email : "",
 			hideCodeErrorInstructions: state.preferences.hideCodeErrorInstructions,
-			isPDIdev: isFeatureEnabled(state, "PDIdev"),
 			isNonCsOrg: !company.codestreamOnly,
 		};
 	});
@@ -639,77 +637,60 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 					</div>
 
 					<div style={{ marginLeft: "auto", alignItems: "center", whiteSpace: "nowrap" }}>
-						<>
-							{derivedState.isPDIdev && (
+						<DropdownButton
+							title="Assignee"
+							items={items}
+							variant="secondary"
+							size="compact"
+							noChevronDown={!errorGroupHasNoAssignee()}
+						>
+							<div
+								style={{
+									display: "inline-block",
+									opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25",
+								}}
+							>
 								<>
 									{props.errorGroup && (
 										<>
-											{errorGroupHasNoAssignee() ? (
-												<Icon name="person" />
+											{isAssigneeChanging ? (
+												<Icon name="sync" className="spin" />
 											) : (
-												<Headshot
-													size={16}
-													display="inline-block"
-													className="no-right-margin"
-													person={{
-														fullName: props.errorGroup.assignee?.name,
-														email: props.errorGroup.assignee?.email,
-													}}
-												/>
-											)}
-										</>
-									)}
-								</>
-							)}
-
-							{!derivedState.isPDIdev && (
-								<DropdownButton
-									title="Assignee"
-									items={items}
-									variant="secondary"
-									size="compact"
-									noChevronDown={!errorGroupHasNoAssignee()}
-								>
-									<div
-										style={{
-											display: "inline-block",
-											opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25",
-										}}
-									>
-										<>
-											{props.errorGroup && (
 												<>
-													{isAssigneeChanging ? (
-														<Icon name="sync" className="spin" />
+													{errorGroupHasNoAssignee() ? (
+														<Icon name="person" />
 													) : (
-														<>
-															{errorGroupHasNoAssignee() ? (
-																<Icon name="person" />
-															) : (
-																<Headshot
-																	size={16}
-																	display="inline-block"
-																	className="no-right-margin"
-																	person={{
-																		fullName: props.errorGroup.assignee?.name,
-																		email: props.errorGroup.assignee?.email,
-																	}}
-																/>
-															)}
-														</>
+														<Headshot
+															size={16}
+															display="inline-block"
+															className="no-right-margin"
+															person={{
+																fullName: props.errorGroup.assignee?.name,
+																email: props.errorGroup.assignee?.email,
+															}}
+														/>
 													)}
 												</>
 											)}
 										</>
-									</div>
-								</DropdownButton>
-							)}
-						</>
+									)}
+								</>
+							</div>
+						</DropdownButton>
 
 						{states && (
 							<>
 								<div style={{ display: "inline-block", width: "5px" }} />
-								{derivedState.isPDIdev && (
+
+								<DropdownButton
+									items={states}
+									selectedKey={props.errorGroup?.state || "UNKNOWN"}
+									isLoading={isStateChanging}
+									variant="secondary"
+									size="compact"
+									onButtonClicked={_e => {}}
+									wrap
+								>
 									<div
 										style={{
 											display: "inline-block",
@@ -718,28 +699,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 									>
 										{STATES_TO_DISPLAY_STRINGS[props.errorGroup?.state || "UNKNOWN"]}
 									</div>
-								)}
-
-								{!derivedState.isPDIdev && (
-									<DropdownButton
-										items={states}
-										selectedKey={props.errorGroup?.state || "UNKNOWN"}
-										isLoading={isStateChanging}
-										variant="secondary"
-										size="compact"
-										onButtonClicked={_e => {}}
-										wrap
-									>
-										<div
-											style={{
-												display: "inline-block",
-												opacity: resolutionDropdownOptionsWrapperOpacity(),
-											}}
-										>
-											{STATES_TO_DISPLAY_STRINGS[props.errorGroup?.state || "UNKNOWN"]}
-										</div>
-									</DropdownButton>
-								)}
+								</DropdownButton>
 							</>
 						)}
 
@@ -833,8 +793,6 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 		target: undefined,
 	});
 
-	const [shareModalOpen, setShareModalOpen] = useState(false);
-
 	const permalinkRef = useRef<HTMLTextAreaElement>(null);
 
 	const menuItems = useMemo(() => {
@@ -913,17 +871,6 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 
 		return items;
 	}, [codeError, collapsed, props.errorGroup]);
-
-	if (shareModalOpen) {
-		// TODO COLLAB-ERRORS: We need to share?
-		// return (
-		// 	<SharingModal
-		// 		codeError={props.codeError!}
-		// 		post={derivedState.post}
-		// 		onClose={() => setShareModalOpen(false)}
-		// 	/>
-		// );
-	}
 
 	if (collapsed) {
 		return (
@@ -1472,30 +1419,6 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			{renderStackTrace()}
 			{currentCodeErrorData?.traceId && renderLogsIcon()}
 			{props.collapsed && renderMetaSectionCollapsed(props)}
-			{/* 
-			TODO COLLAB-ERRORS: Sharing to other providers?
-			{!props.collapsed &&
-				props &&
-				props.post &&
-				props.post.sharedTo &&
-				props.post.sharedTo.length > 0 && (
-					<div className="related">
-						<div className="related-label">Shared To</div>
-						{props.post.sharedTo.map(target => {
-							const providerDisplay = PROVIDER_MAPPINGS[target.providerId];
-							return (
-								<Link className="external-link" href={target.url}>
-									{providerDisplay && providerDisplay.icon && (
-										<span>
-											<Icon name={providerDisplay.icon} />
-										</span>
-									)}
-									{target.channelName}
-								</Link>
-							);
-						})}
-					</div>
-				)} */}
 			{renderedFooter}
 		</MinimumWidthCard>
 	);
@@ -1552,8 +1475,6 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 			currentTeamId: state.context.currentTeamId,
 			currentUser: state.users[state.session.userId!],
 			repos: state.repos,
-
-			isPDIdev: isFeatureEnabled(state, "PDIdev"),
 		};
 	}, shallowEqual);
 
@@ -1579,7 +1500,6 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 
 	const [headerError, setHeaderError] = useState<SimpleError>();
 	const [isEditing, setIsEditing] = useState(false);
-	const [shareModalOpen, setShareModalOpen] = useState(false);
 	const [scrollNewTarget, setScrollNewTarget] = useState<RefObject<HTMLElement> | undefined>(
 		undefined
 	);
@@ -1679,7 +1599,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 						</>
 					}
 
-					{InputContainer && !derivedState.isPDIdev && (
+					{InputContainer && (
 						<InputContainer>
 							<CommentInput
 								threadId={threadId}
@@ -1711,31 +1631,20 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 	}, [codeError, derivedState.repos]);
 
 	return (
-		<>
-			{/*
-			TODO COLLAB-ERRORS: Sharing?
-			 {shareModalOpen && (
-				<SharingModal
-					codeError={props.codeError}
-					post={derivedState.post}
-					onClose={() => setShareModalOpen(false)}
-				/>
-			)} */}
-			<BaseCodeError
-				{...baseProps}
-				parsedStack={props.parsedStack}
-				codeError={props.codeError}
-				repoInfo={repoInfo}
-				currentUserId={derivedState.currentUser.id}
-				renderFooter={renderFooter}
-				setIsEditing={setIsEditing}
-				headerError={headerError}
-				setGrokRequested={setGrokRequested}
-				readOnly={props.readOnly === true}
-				setCurrentNrAiFile={setCurrentNrAiFile}
-				showGrok={showGrok}
-			/>
-		</>
+		<BaseCodeError
+			{...baseProps}
+			parsedStack={props.parsedStack}
+			codeError={props.codeError}
+			repoInfo={repoInfo}
+			currentUserId={derivedState.currentUser.id}
+			renderFooter={renderFooter}
+			setIsEditing={setIsEditing}
+			headerError={headerError}
+			setGrokRequested={setGrokRequested}
+			readOnly={props.readOnly === true}
+			setCurrentNrAiFile={setCurrentNrAiFile}
+			showGrok={showGrok}
+		/>
 	);
 };
 
