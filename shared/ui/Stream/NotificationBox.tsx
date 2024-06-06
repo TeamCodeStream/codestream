@@ -11,8 +11,6 @@ interface NotificationBoxRootProps {
 
 export const NotificationBoxRoot = styled.div<NotificationBoxRootProps>`
 	margin: ${props => props.customMargin || "10px 10px 20px 0"};
-	// border: 1px solid var(--base-border-color);
-	// background: var(--app-background-color-hover);
 	border: 1px solid rgb(0, 206, 124, 0.4);
 	background: rgb(0, 206, 124, 0.05);
 	border-radius: 5px;
