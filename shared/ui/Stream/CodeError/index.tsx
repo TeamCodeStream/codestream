@@ -1,5 +1,4 @@
 import {
-	CollaborationComment,
 	DidChangeObservabilityDataNotificationType,
 	GetErrorInboxCommentsRequestType,
 	GetErrorInboxCommentsResponse,
@@ -23,7 +22,6 @@ import { getCodeError } from "@codestream/webview/store/codeErrors/reducer";
 import {
 	api,
 	copySymbolFromIde,
-	fetchErrorGroup,
 	jumpToStackLine,
 } from "@codestream/webview/store/codeErrors/thunks";
 import { isGrokStreamLoading } from "@codestream/webview/store/posts/reducer";
@@ -61,6 +59,9 @@ import { isFeatureEnabled } from "../../store/apiVersioning/reducer";
 import { isEmpty } from "lodash-es";
 import { getNrCapability } from "@codestream/webview/store/nrCapabilities/thunks";
 import { CommentInput } from "../Discussions/Comment";
+import copy from "copy-to-clipboard";
+import { Discussion } from "@codestream/webview/store/types";
+import { DiscussionLoadingSkeleton } from "../Discussions/SkeletonLoader";
 
 interface SimpleError {
 	/**
@@ -82,18 +83,11 @@ export interface BaseCodeErrorProps extends CardProps {
 	currentUserId?: string;
 	collapsed?: boolean;
 	assignees?: CSUser[];
-	renderFooter?: (
-		footer: typeof CardFooter,
-		inputContainer?: typeof ComposeWrapper
-	) => React.ReactNode;
-	setIsEditing: Function;
 	onRequiresCheckPreconditions?: Function;
 	stackFrameClickDisabled?: boolean;
 	stackTraceTip?: any;
 	resolutionTip?: any;
-	setGrokRequested: () => void;
 	readOnly: boolean;
-	setCurrentNrAiFile: (file: string) => void;
 	showGrok: boolean;
 }
 
@@ -102,14 +96,12 @@ export interface BaseCodeErrorHeaderProps {
 	errorGroup?: NewRelicErrorGroup;
 	collapsed?: boolean;
 	assignees?: CSUser[];
-	setIsEditing: Function;
 	resolutionTip?: any;
 }
 
 export interface BaseCodeErrorMenuProps {
 	codeError: CSCodeError;
 	errorGroup?: NewRelicErrorGroup;
-	setIsEditing: Function;
 	collapsed?: boolean;
 }
 
@@ -243,6 +235,11 @@ const STATES_TO_DISPLAY_STRINGS = {
 	UNRESOLVED: "Unresolved",
 	// if not connected, we're unknown, just say "Status"
 	UNKNOWN: "Status",
+};
+
+const InitialDiscussion: Discussion = {
+	threadId: "",
+	comments: [],
 };
 
 // if child props are passed in, we assume they are the action buttons/menu for the header
@@ -718,7 +715,6 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 												codeError={codeError}
 												errorGroup={props.errorGroup}
 												collapsed={collapsed}
-												setIsEditing={props.setIsEditing}
 											/>
 										</div>
 									</>
@@ -782,6 +778,7 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 	const dispatch = useAppDispatch();
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
+			entityGuid: state.context.currentEntityGuid!,
 			currentUserId: state.session.userId!,
 			currentUser: state.users[state.session.userId!],
 		};
@@ -798,73 +795,55 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 	const menuItems = useMemo(() => {
 		const items: DropdownButtonItems[] = [];
 
-		if (props.errorGroup) {
-			items.push({
-				label: "Refresh",
-				icon: <Icon name="refresh" />,
-				key: "refresh",
-				action: async () => {
-					setIsLoading(true);
-					await dispatch(fetchErrorGroup({ codeError: props.codeError }));
-					setIsLoading(false);
-				},
-			});
-		}
-		// no postId means pending
-		// TODO COLLAB-ERRORS: Permalink where?
-		// if (!props.codeError?.postId) {
+		// if (props.errorGroup) {
 		// 	items.push({
-		// 		label: "Copy Link",
-		// 		icon: <Icon name="copy" />,
-		// 		key: "copy-permalink",
-		// 		action: () => {
-		// 			if (permalinkRef && permalinkRef.current) {
-		// 				permalinkRef.current.select();
-		// 				document.execCommand("copy");
-		// 			}
+		// 		label: "Refresh",
+		// 		icon: <Icon name="refresh" />,
+		// 		key: "refresh",
+		// 		action: async () => {
+		// 			setIsLoading(true);
+		// 			await dispatch(
+		// 				fetchErrorGroup({ codeError: props.codeError, entityGuid: derivedState.entityGuid })
+		// 			);
+		// 			setIsLoading(false);
 		// 		},
 		// 	});
 		// }
 
+		if (props.codeError?.permalink) {
+			items.push({
+				label: "Copy Link",
+				icon: <Icon name="copy" />,
+				key: "copy-permalink",
+				action: () => {
+					copy(props.codeError.permalink!);
+				},
+			});
+		}
+
 		if (currentUserIsAdmin) {
 			items.push({
-				label: "Delete All Replies",
+				label: "Delete All Comments",
 				icon: <Icon name="trash" />,
 				key: "deleteAll-permalink",
 				action: () => {
-					// TODO COLLAB-ERRORS: DELETE ALL COMMENTD
-					// if (derivedState.post) {
-					// 	confirmPopup({
-					// 		title: "Are you sure?",
-					// 		message:
-					// 			"This will delete all posts in this conversation. Deleting a post cannot be undone.",
-					// 		centered: true,
-					// 		buttons: [
-					// 			{ label: "Go Back", className: "control-button" },
-					// 			{
-					// 				label: "Delete Post",
-					// 				className: "delete",
-					// 				wait: true,
-					// 				action: async () => {
-					// 					const post = derivedState.post;
-					// 					if (!post) {
-					// 						return;
-					// 					}
-					// 					// Deleting the parent post will (soft) delete the codeError
-					// 					// and all the child posts
-					// 					await dispatch(
-					// 						deletePostApi({
-					// 							streamId: post.streamId,
-					// 							postId: post.id,
-					// 							sharedTo: post.sharedTo,
-					// 						})
-					// 					);
-					// 					dispatch(setCurrentCodeErrorData()); // Close the code error discussion
-					// 				},
-					// 			},
-					// 		],
-					// 	});
-					// }
+					confirmPopup({
+						title: "Are you sure?",
+						message:
+							"This will delete all comments in this conversation. Deleting a comment cannot be undone.",
+						centered: true,
+						buttons: [
+							{ label: "Go Back", className: "control-button" },
+							{
+								label: "Delete Comments",
+								className: "delete",
+								wait: true,
+								action: async () => {
+									//await deleteThread();
+								},
+							},
+						],
+					});
 				},
 			});
 		}
@@ -938,10 +917,10 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			currentCodeErrorData,
 			hideCodeErrorInstructions: state.preferences.hideCodeErrorInstructions,
 			traceId: currentCodeErrorData?.traceId,
+
 			ideName: state.ide.name,
 		};
 	}, shallowEqual);
-	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
 	const { codeError, errorGroup, currentCodeErrorData } = derivedState;
 
 	const [currentSelectedLine, setCurrentSelectedLineIndex] = useState<number>(
@@ -950,58 +929,28 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	const [didJumpToFirstAvailableLine, setDidJumpToFirstAvailableLine] = useState(false);
 	const [copyMethodState, setMethodCopyState] = useState<CopyMethodState>("NOT_STARTED");
 	const [jumpLocation, setJumpLocation] = useState<number | undefined>();
-	const [grokRequested, setGrokRequested] = useState(false);
 
 	const functionToEdit = useAppSelector(state => state.codeErrors.functionToEdit);
 	const functionToEditFailed = useAppSelector(state => state.codeErrors.functionToEditFailed);
 	const isGrokLoading = useAppSelector(isGrokStreamLoading);
+	const [currentNrAiFile, setCurrentNrAiFile] = useState<string | undefined>(undefined);
 
-	// TODO COLLAB-ERRORS: Submitting to Grok will need to change given new thread concept
-	// useEffect(() => {
-	// 	if (props.showGrok && !props.readOnly) {
-	// 		const submitNrAi = async (functionToEdit?: FunctionToEdit) => {
-	// 			// console.debug("===--- useEffect submitNrAi");
-	// 			props.setGrokRequested();
-	// 			setGrokRequested(true);
-	// 			dispatch(startGrokLoading(props.codeError));
-	// 			const codeBlock: CodeBlock | undefined = functionToEdit
-	// 				? {
-	// 						range: functionToEdit.range,
-	// 						code: functionToEdit.codeBlock,
-	// 						uri: functionToEdit.uri,
-	// 				  }
-	// 				: undefined;
-	// 			await dispatch(
-	// 					props.codeError.entityGuid,
-	// 					"Comment",
-	// 					codeBlock,
-	// 					functionToEdit?.language,
-	// 					true
-	// 				)
-	// 			);
+	const [error, setError] = useState<string>();
+	const [discussion, setDiscussion] = useState<Discussion>(InitialDiscussion);
+	const [discussionIsLoading, setDiscussionIsLoading] = useState<boolean>(false);
 
-	// 			dispatch(
-	// 				//  TODO does this numReplies work at all? Should come from a post
-	// 				markItemRead(props.codeError.entityGuid, codeError.numReplies + 1)
-	// 			);
-	// 		};
+	const grokNraiCapability = useAppSelector(
+		(state: CodeStreamState) => state.nrCapabilities.nrai === true
+	);
+	const grokFeatureEnabled = useAppSelector((state: CodeStreamState) =>
+		isFeatureEnabled(state, "showGrok")
+	);
 
-	// 		// give a chance for replies to load before deciding to submitNrAi
-	// 		if (
-	// 			!isGrokLoading &&
-	// 			isPostThreadsLoading !== undefined && // Hasn't attempted to load yet
-	// 			!isPostThreadsLoading && // Not currently loading
-	// 			!grokRequested &&
-	// 			derivedState.replies.length === 0 && // Has loaded replies and they are empty
-	// 			(functionToEdit || functionToEditFailed)
-	// 		) {
-	// 			console.debug("submitNrAi case 2", functionToEdit, functionToEditFailed);
-	// 			submitNrAi(functionToEdit).catch(e => {
-	// 				console.error("submitNrAi failed", e);
-	// 			});
-	// 		}
-	// 	}
-	// }, [functionToEdit, functionToEditFailed, props.showGrok]);
+	const showGrok = useMemo(() => {
+		const result = grokNraiCapability || grokFeatureEnabled;
+		console.debug("grokStates", { grokNraiCapability, grokFeatureEnabled, result });
+		return result;
+	}, [grokNraiCapability, grokFeatureEnabled]);
 
 	const onClickStackLine = async (event, lineIndex) => {
 		event && event.preventDefault();
@@ -1080,7 +1029,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 								const stackLine = stackInfo.lines[jumpLocation];
 								if (stackLine.fileFullPath) {
 									console.log("setCurrentNrAiFile", stackLine.fileFullPath);
-									props.setCurrentNrAiFile(stackLine.fileFullPath);
+									setCurrentNrAiFile(stackLine.fileFullPath);
 									// Open actual file for NRAI - no ref param
 									dispatch(
 										jumpToStackLine({
@@ -1336,18 +1285,94 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 		return null;
 	};
 
+	const loadDiscussion = () => {
+		if (!currentCodeErrorData) {
+			return;
+		}
+
+		setDiscussionIsLoading(true);
+
+		HostApi.instance
+			.send(GetErrorInboxCommentsRequestType, {
+				accountId: currentCodeErrorData.accountId!,
+				errorGroupGuid: currentCodeErrorData.errorGroupGuid!,
+				entityGuid: currentCodeErrorData.entityGuid!,
+			})
+			.then((response: GetErrorInboxCommentsResponse) => {
+				if (response.error) {
+					setError(response.error.error.message);
+				} else {
+					setDiscussion({
+						threadId: response.threadId!,
+						comments: response.comments!,
+					});
+				}
+			})
+			.catch(err => {
+				setError(err);
+			})
+			.finally(() => {
+				setDiscussionIsLoading(false);
+			});
+	};
+
+	useEffect(() => {
+		loadDiscussion();
+	}, [errorGroup]);
+
+	const renderFooter = () => {
+		return (
+			<CardFooter
+				className={isGrokLoading ? "grok-loading" : "grok-not-loading" + " replies-to-review"}
+				style={{ borderTop: "none", marginTop: 0 }}
+			>
+				{!error && !discussion && discussionIsLoading && (
+					<DiscussionLoadingSkeleton></DiscussionLoadingSkeleton>
+				)}
+
+				{!error && discussion && !discussionIsLoading && (
+					<>
+						{<MetaLabel>Discussion</MetaLabel>}
+
+						<DiscussionThread
+							discussion={discussion}
+							file={currentNrAiFile}
+							functionToEdit={functionToEdit}
+							isLoading={discussionIsLoading}
+							reloadDiscussion={loadDiscussion}
+						/>
+
+						<ComposeWrapper>
+							<CommentInput
+								threadId={discussion.threadId}
+								codeError={codeError}
+								showGrok={showGrok}
+								isLoading={discussionIsLoading}
+								reloadDiscussion={loadDiscussion}
+							/>
+						</ComposeWrapper>
+					</>
+				)}
+				{error && !discussionIsLoading && (
+					<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
+						<h4>{error}</h4>
+					</div>
+				)}
+			</CardFooter>
+		);
+	};
+
 	const repoRef = isSha(props.repoInfo?.ref)
 		? props.repoInfo?.ref?.substr(0, 7)
 		: props.repoInfo?.ref;
+
 	return (
 		<MinimumWidthCard {...getCardProps(props)} noCard={!props.collapsed}>
 			{props.collapsed && (
 				<BaseCodeErrorHeader
 					codeError={codeError}
 					errorGroup={errorGroup}
-					//post={props.post}
 					collapsed={props.collapsed}
-					setIsEditing={props.setIsEditing}
 				/>
 			)}
 			{props.headerError && props.headerError.message && (
@@ -1419,7 +1444,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			{renderStackTrace()}
 			{currentCodeErrorData?.traceId && renderLogsIcon()}
 			{props.collapsed && renderMetaSectionCollapsed(props)}
-			{renderedFooter}
+			{renderFooter()}
 		</MinimumWidthCard>
 	);
 };
@@ -1444,7 +1469,6 @@ type FromBaseCodeErrorProps = Pick<
 	| "hoverEffect"
 	| "onClick"
 	| "className"
-	| "renderFooter"
 	| "stackFrameClickDisabled"
 	| "stackTraceTip"
 	| "resolutionTip"
@@ -1469,7 +1493,7 @@ export type CodeErrorProps = PropsWithId | PropsWithCodeError;
 
 const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 	const dispatch = useAppDispatch();
-	const { codeError, ...baseProps } = props;
+	const { codeError, errorGroup, ...baseProps } = props;
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
 			currentTeamId: state.context.currentTeamId,
@@ -1508,9 +1532,6 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 
 	const functionToEdit = useAppSelector(state => state.codeErrors.functionToEdit);
 
-	const [comments, setComments] = useState<CollaborationComment[]>([]);
-	const [threadId, setThreadId] = useState<string>("");
-
 	function scrollToNew() {
 		const target = scrollNewTarget?.current;
 		if (target) {
@@ -1532,17 +1553,6 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 		dispatch(getNrCapability("nrai"));
 	});
 
-	// TODO COLLAB-ERRORS: Scroll to Grok post?
-	// useEffect(() => {
-	// 	if ((isGrokRequested || isGrokLoading) && currentGrokRepliesLength > 0) {
-	// 		scrollToNew();
-	// 	}
-	// }, [currentGrokRepliesLength, isGrokLoading, derivedState.post]);
-
-	function setGrokRequested() {
-		setIsGrokRequested(true);
-	}
-
 	useDidMount(() => {
 		if (!props.collapsed) {
 			requestAnimationFrame(() => {
@@ -1550,68 +1560,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 				if ($stackTrace) $stackTrace.focus();
 			});
 		}
-
-		HostApi.instance
-			.send(GetErrorInboxCommentsRequestType, {
-				accountId: props.errorGroup!.accountId,
-				errorGroupGuid: props.errorGroup!.guid,
-				entityGuid: props.errorGroup!.entityGuid,
-			})
-			.then((r: GetErrorInboxCommentsResponse) => {
-				if (r.threadId && r.comments && r.comments.length > 0) {
-					setComments(r.comments);
-					setThreadId(r.threadId);
-				} else if (r.error) {
-					console.error("CHEESE", r.error.error.message);
-				}
-			})
-			.catch(err => {
-				console.error("CHEESE", err);
-			});
 	});
-
-	const renderFooter =
-		props.renderFooter ||
-		((Footer, InputContainer) => {
-			if (props.collapsed) return null;
-
-			return (
-				<Footer
-					className={isGrokLoading ? "grok-loading" : "grok-not-loading" + " replies-to-review"}
-					style={{ borderTop: "none", marginTop: 0 }}
-				>
-					{
-						<>
-							{<MetaLabel>Activity</MetaLabel>}
-							<DiscussionThread
-								threadId={threadId}
-								comments={comments}
-								//file={currentNrAiFile}
-								//functionToEdit={functionToEdit}
-							/>
-							{grokError && (
-								<DelayedRender>
-									<div className="color-warning">
-										<div>{grokError.message}</div>
-									</div>
-								</DelayedRender>
-							)}
-						</>
-					}
-
-					{InputContainer && (
-						<InputContainer>
-							<CommentInput
-								threadId={threadId}
-								codeError={codeError}
-								setGrokRequested={setGrokRequested}
-								showGrok={showGrok}
-							/>
-						</InputContainer>
-					)}
-				</Footer>
-			);
-		});
 
 	const repoInfo = useMemo(() => {
 		const { stackTraces } = codeError;
@@ -1637,12 +1586,8 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 			codeError={props.codeError}
 			repoInfo={repoInfo}
 			currentUserId={derivedState.currentUser.id}
-			renderFooter={renderFooter}
-			setIsEditing={setIsEditing}
 			headerError={headerError}
-			setGrokRequested={setGrokRequested}
 			readOnly={props.readOnly === true}
-			setCurrentNrAiFile={setCurrentNrAiFile}
 			showGrok={showGrok}
 		/>
 	);
@@ -1654,6 +1599,7 @@ const CodeErrorForId = (props: PropsWithId) => {
 	const codeError = useAppSelector((state: CodeStreamState) => {
 		return getCodeError(state.codeErrors, id);
 	});
+
 	const [notFound, setNotFound] = useState(false);
 
 	if (notFound) {

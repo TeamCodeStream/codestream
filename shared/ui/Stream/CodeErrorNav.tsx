@@ -14,6 +14,7 @@ import {
 	addAndEnhanceCodeError,
 	api,
 	fetchErrorGroup,
+	fetchErrorGroupDiscussion,
 	fetchNewRelicErrorGroup,
 	resolveStackTrace,
 	setErrorGroup,
@@ -150,8 +151,10 @@ export function CodeErrorNav(props: Props) {
 			? getCodeError(state.codeErrors, state.context.currentCodeErrorGuid)
 			: undefined;
 		const errorGroup = getErrorGroup(state.codeErrors, codeError);
+		const discussion = state.codeErrors.discussion;
 
 		const result = {
+			codeErrorDiscussion: discussion,
 			demoMode: state.preferences.demoMode,
 			errorsDemoMode: state.codeErrors.demoMode,
 			codeErrorStateBootstrapped: state.codeErrors.bootstrapped,
@@ -249,7 +252,12 @@ export function CodeErrorNav(props: Props) {
 		}
 
 		setIsLoading(true);
-		dispatch(fetchErrorGroup({ codeError: derivedState.codeError }));
+		dispatch(
+			fetchErrorGroup({
+				codeError: derivedState.codeError,
+				entityGuid: derivedState.currentEntityGuid,
+			})
+		);
 	}, [derivedState.codeError, errorGroup]);
 
 	const onConnected = async (newRemote?: string) => {
@@ -261,6 +269,7 @@ export function CodeErrorNav(props: Props) {
 		let refToUse: string | undefined;
 		const entityIdToUse =
 			derivedState.codeError?.objectInfo?.entityId ?? derivedState.currentEntityGuid;
+		const accountIdToUse = parseId(entityIdToUse!)?.accountId;
 
 		if (!errorGroupGuidToUse) {
 			console.error("missing error group guid");
@@ -317,6 +326,14 @@ export function CodeErrorNav(props: Props) {
 				});
 				return;
 			}
+
+			await dispatch(
+				fetchErrorGroupDiscussion({
+					accountId: accountIdToUse!,
+					errorGroupGuid: errorGroupGuidToUse,
+					entityGuid: entityIdToUse!,
+				})
+			);
 
 			let repoId: string | undefined = undefined;
 			let stackInfo: ResolveStackTraceResponse | undefined = undefined;
@@ -853,7 +870,6 @@ export function CodeErrorNav(props: Props) {
 					codeError={derivedState.codeError!}
 					errorGroup={errorGroup}
 					collapsed={false}
-					setIsEditing={setIsEditing}
 				></BaseCodeErrorHeader>
 			</NavHeader>
 			{props.composeOpen ? null : (

@@ -8,6 +8,7 @@ import { logError } from "@codestream/webview/logger";
 import { HostApi } from "@codestream/webview/webview-api";
 import { action } from "../common";
 import { CodeErrorsActionsTypes, FunctionToEdit } from "./types";
+import { Discussion } from "../types";
 
 export const reset = () => action("RESET");
 
@@ -96,6 +97,9 @@ export const _setErrorGroup = (errorGroupGuid: string, data: NewRelicErrorGroup)
 		id: errorGroupGuid,
 		data,
 	});
+
+export const setErrorGroupDiscussion = (discussion: Discussion) =>
+	action(CodeErrorsActionsTypes.SetDiscussion, discussion);
 
 export const _isLoadingErrorGroup = (errorGroupGuid: string, data: any) =>
 	action(CodeErrorsActionsTypes.IsLoadingErrorGroup, {

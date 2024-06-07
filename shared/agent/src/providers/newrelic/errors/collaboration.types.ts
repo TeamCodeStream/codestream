@@ -1,16 +1,8 @@
-interface BaseCollaborationResponse {
+export interface BaseCollaborationResponse {
 	[key: string]: {
 		id: string;
 	};
 }
-
-// In most cases such as these, all we really care about getting back is the ID
-// of the thing that was created.
-export interface CreateContextResponse extends BaseCollaborationResponse {}
-export interface CreateThreadResponse extends BaseCollaborationResponse {}
-export interface UpdateThreadStatusResponse extends BaseCollaborationResponse {}
-export interface CreateCommentResponse extends BaseCollaborationResponse {}
-
 export interface BootStrapResponse {
 	contextId: string;
 	threadId: string;
@@ -22,6 +14,7 @@ export interface CommentsByThreadIdResponse {
 			commentsByThreadId: {
 				entities: {
 					body: string;
+					deactivated: boolean;
 					id: string;
 					systemMessageType: string;
 					createdAt: number;
