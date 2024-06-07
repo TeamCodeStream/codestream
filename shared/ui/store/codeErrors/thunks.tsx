@@ -2,6 +2,7 @@ import {
 	CSAsyncGrokError,
 	CSGrokStream,
 	DidResolveStackTraceLineNotification,
+	GetErrorInboxCommentsRequestType,
 	GetNewRelicErrorGroupRequest,
 	GetObservabilityErrorsRequest,
 	ResolveStackTracePositionResponse,
@@ -36,6 +37,8 @@ import {
 } from "@codestream/webview/store/codeErrors/api/apiResolver";
 import { CodeErrorData } from "@codestream/protocols/webview";
 import { deletePostApi } from "@codestream/webview/store/posts/thunks";
+import { HostApi } from "@codestream/webview/webview-api";
+import { Discussion } from "../types";
 
 export const updateCodeErrors =
 	(codeErrors: CSCodeError[]) => async (dispatch, getState: () => CodeStreamState) => {
@@ -112,29 +115,70 @@ type FetchErrorGroupParameters = {
 	entityGuid?: string;
 };
 
+type FetchErrorGroupDiscussionParameters = {
+	accountId: number;
+	errorGroupGuid: string;
+	entityGuid: string;
+};
+
 export const fetchErrorGroup = createAppAsyncThunk(
 	"codeErrors/fetchErrorGroup",
 	async ({ codeError, occurrenceId, entityGuid }: FetchErrorGroupParameters, { dispatch }) => {
-		let objectId;
+		let errorGroupGuid;
 		try {
-			// this is an errorGroupGuid
-			objectId = codeError?.entityGuid;
-			dispatch(_isLoadingErrorGroup(objectId, { isLoading: true }));
+			errorGroupGuid = codeError?.entityGuid;
+			dispatch(_isLoadingErrorGroup(errorGroupGuid, { isLoading: true }));
 			const result = await dispatch(
 				fetchNewRelicErrorGroup({
-					errorGroupGuid: objectId!,
+					errorGroupGuid: errorGroupGuid!,
 					// might not have a codeError.stackTraces from discussions
 					occurrenceId: occurrenceId ?? codeError.stackTraces[0].occurrenceId,
 					entityGuid: entityGuid,
 				})
 			).unwrap();
-			dispatch(_isLoadingErrorGroup(objectId, { isLoading: true }));
+
+			dispatch(_isLoadingErrorGroup(errorGroupGuid, { isLoading: true }));
+
 			if (result.errorGroup) {
 				dispatch(_setErrorGroup(codeError.entityGuid, result.errorGroup));
 			}
 		} catch (error) {
-			logError(error, { detail: `failed to fetchErrorGroup`, objectId });
+			logError(error, { detail: `failed to fetchErrorGroup`, objectId: errorGroupGuid });
 			return undefined;
+		}
+	}
+);
+
+export const fetchErrorGroupDiscussion = createAppAsyncThunk(
+	"codeErrors/fetchErrorGroupDiscussion",
+	async (
+		{ accountId, errorGroupGuid, entityGuid }: FetchErrorGroupDiscussionParameters,
+		{ dispatch }
+	): Promise<Discussion> => {
+		try {
+			const results = await HostApi.instance.send(GetErrorInboxCommentsRequestType, {
+				accountId: accountId,
+				errorGroupGuid: errorGroupGuid,
+				entityGuid: entityGuid,
+			});
+
+			if (results.error) {
+				throw new Error(results.error.error.message);
+			}
+
+			return {
+				threadId: results.threadId!,
+				comments: results.comments!,
+			};
+		} catch (ex) {
+			logError(ex, {
+				detail: `failed to fetchErrorGroupDiscussion`,
+				accountId,
+				errorGroupGuid,
+				entityGuid,
+			});
+
+			throw ex;
 		}
 	}
 );

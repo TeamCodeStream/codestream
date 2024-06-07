@@ -156,7 +156,7 @@ export const findMentionedUserIds = (members: CSUser[], text: string) => {
 export const codestreamUserFromNrUserId = createSelector(
 	(state: UsersState) => state,
 	(_: any, nrUserId: number) => nrUserId,
-	(users, nrUserId: number) => {
+	(users: UsersState, nrUserId: number) => {
 		for (let user of Object.values(users)) {
 			if (user.nrUserId === nrUserId) return user;
 		}

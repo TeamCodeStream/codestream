@@ -3,9 +3,18 @@ import {
 	CreateCollaborationCommentRequest,
 	CreateCollaborationCommentRequestType,
 	CreateCollaborationCommentResponse,
+	DeleteCollaborationCommentRequest,
+	DeleteCollaborationCommentRequestType,
+	DeleteCollaborationCommentResponse,
+	DeleteCollaborationThreadRequest,
+	DeleteCollaborationThreadRequestType,
+	DeleteCollaborationThreadResponse,
 	GetErrorInboxCommentsRequest,
 	GetErrorInboxCommentsRequestType,
 	GetErrorInboxCommentsResponse,
+	UpdateCollaborationCommentRequest,
+	UpdateCollaborationCommentRequestType,
+	UpdateCollaborationCommentResponse,
 } from "../../../../../util/src/protocol/agent/agent.protocol.providers";
 import { log } from "../../../system/decorators/log";
 import { lsp, lspHandler } from "../../../system/decorators/lsp";
@@ -13,19 +22,112 @@ import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 import { generateHash } from "./collabDiscussionUtils";
 import { mapNRErrorResponse } from "../utils";
 import {
-	CreateContextResponse,
-	CreateThreadResponse,
-	UpdateThreadStatusResponse,
 	CommentsByThreadIdResponse,
 	ThreadsByContextIdResponse,
 	BootStrapResponse,
-	CreateCommentResponse,
+	BaseCollaborationResponse,
 } from "./collaboration.types";
 
 @lsp
 export class CollaborationTeamProvider {
 	constructor(private graphqlClient: NewRelicGraphqlClient) {
 		this.graphqlClient.addHeader("Nerd-Graph-Unsafe-Experimental-Opt-In", "Collaboration");
+	}
+
+	@lspHandler(UpdateCollaborationCommentRequestType)
+	@log()
+	async updateCollaborationComment(
+		request: UpdateCollaborationCommentRequest
+	): Promise<UpdateCollaborationCommentResponse> {
+		try {
+			const { commentId, body } = { ...request };
+
+			const updateCommentQuery = `
+				mutation {
+					collaborationUpdateComment(id: "${commentId}", body: "${body}") {
+						id
+					}
+				}`;
+
+			const updateCommentResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
+				updateCommentQuery
+			);
+
+			return {
+				commentId: updateCommentResponse.collaborationUpdateComment.id,
+			};
+		} catch (ex) {
+			ContextLogger.warn("updateCollaborationComment failure", {
+				request,
+				error: ex,
+			});
+
+			return { error: mapNRErrorResponse(ex) };
+		}
+	}
+
+	@lspHandler(DeleteCollaborationCommentRequestType)
+	@log()
+	async deleteCollaborationComment(
+		request: DeleteCollaborationCommentRequest
+	): Promise<DeleteCollaborationCommentResponse> {
+		try {
+			const commentId = request.commentId;
+
+			const deleteCommentQuery = `
+				mutation {
+					collaborationDeactivateComment(id: "${commentId}") {
+						id
+					}
+				}`;
+
+			const deleteCommentResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
+				deleteCommentQuery
+			);
+
+			return {
+				commentId: deleteCommentResponse.collaborationDeactivateComment.id,
+			};
+		} catch (ex) {
+			ContextLogger.warn("deleteCollaborationComment failure", {
+				request,
+				error: ex,
+			});
+
+			return { error: mapNRErrorResponse(ex) };
+		}
+	}
+
+	@lspHandler(DeleteCollaborationThreadRequestType)
+	@log()
+	async deleteCollaborationThread(
+		request: DeleteCollaborationThreadRequest
+	): Promise<DeleteCollaborationThreadResponse> {
+		try {
+			const threadId = request.threadId;
+
+			const deleteThreadQuery = `
+				mutation {
+					collaborationDeactivateThread(id: "${threadId}") {
+						id
+					}
+				}`;
+
+			const deleteThreadResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
+				deleteThreadQuery
+			);
+
+			return {
+				threadId: deleteThreadResponse.collaborationDeactivateThread.id,
+			};
+		} catch (ex) {
+			ContextLogger.warn("deleteCollaborationThread failure", {
+				request,
+				error: ex,
+			});
+
+			return { error: mapNRErrorResponse(ex) };
+		}
 	}
 
 	@lspHandler(CreateCollaborationCommentRequestType)
@@ -36,6 +138,10 @@ export class CollaborationTeamProvider {
 		try {
 			const { threadId, body } = { ...request };
 
+			// TODO :
+			// If threadId is undefined
+			// bootstrap a new thread?
+
 			const createCommentQuery = `
 				mutation {
 					collaborationCreateComment(body: "${body}", threadId: "${threadId}") {
@@ -43,7 +149,7 @@ export class CollaborationTeamProvider {
 					}
 				}`;
 
-			const createCommentResponse = await this.graphqlClient.mutate<CreateCommentResponse>(
+			const createCommentResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
 				createCommentQuery
 			);
 
@@ -68,7 +174,7 @@ export class CollaborationTeamProvider {
 		accountId: number,
 		entityGuid: string,
 		errorGroupGuid: string
-	): Promise<UpdateThreadStatusResponse> {
+	): Promise<string> {
 		try {
 			const createThreadQuery = `
 				mutation {
@@ -77,7 +183,7 @@ export class CollaborationTeamProvider {
 					}
 				}`;
 
-			const createThreadResponse = await this.graphqlClient.mutate<CreateThreadResponse>(
+			const createThreadResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
 				createThreadQuery
 			);
 
@@ -91,11 +197,11 @@ export class CollaborationTeamProvider {
 					}
 				}`;
 
-			const updateThreadResponse = await this.graphqlClient.mutate<UpdateThreadStatusResponse>(
+			const updateThreadResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
 				updateThreadStatusQuery
 			);
 
-			return updateThreadResponse;
+			return updateThreadResponse.collaborationUpdateThreadStatus.id;
 		} catch (ex) {
 			ContextLogger.warn("createThread failure", {
 				contextId,
@@ -133,7 +239,7 @@ export class CollaborationTeamProvider {
 					}
 				}`;
 
-			const createContextResponse = await this.graphqlClient.mutate<CreateContextResponse>(
+			const createContextResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
 				createContextQuery
 			);
 
@@ -166,8 +272,12 @@ export class CollaborationTeamProvider {
 			let mostRecentThreadId = mostRecentThread?.id;
 
 			if (!mostRecentThread) {
-				const thread = await this.createThread(contextId, accountId, entityGuid, errorGroupGuid);
-				mostRecentThreadId = thread.collaborationUpdateThreadStatus.id;
+				mostRecentThreadId = await this.createThread(
+					contextId,
+					accountId,
+					entityGuid,
+					errorGroupGuid
+				);
 			}
 
 			return {
@@ -207,6 +317,7 @@ export class CollaborationTeamProvider {
 							commentsByThreadId(threadId: "${bootstrapResponse.threadId}") {
 								entities {
 									body
+									deactivated
 									id
 									systemMessageType
 									createdAt
@@ -225,6 +336,8 @@ export class CollaborationTeamProvider {
 
 			const comments = response.actor.collaboration.commentsByThreadId.entities
 				.filter(e => !e.systemMessageType)
+				.filter(e => e.deactivated === false)
+				.filter(e => e.creator.userId != 0)
 				.sort((e1, e2) => e1.createdAt - e2.createdAt)
 				.map(e => {
 					return e;

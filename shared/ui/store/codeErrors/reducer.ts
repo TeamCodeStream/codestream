@@ -19,6 +19,7 @@ const initialState: CodeErrorsState = {
 	grokError: undefined,
 	functionToEditFailed: false,
 	demoMode: { enabled: false, count: 0 },
+	discussion: { threadId: "", comments: [] },
 };
 
 export function reduceCodeErrors(
@@ -57,6 +58,10 @@ export function reduceCodeErrors(
 				functionToEditFailed: state.functionToEditFailed,
 				demoMode: state.demoMode,
 			};
+		}
+
+		case CodeErrorsActionsTypes.SetDiscussion: {
+			return { ...state, discussion: action.payload };
 		}
 		case CodeErrorsActionsTypes.SetFunctionToEdit: {
 			if (action.payload) {

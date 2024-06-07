@@ -112,6 +112,10 @@ export interface CodeErrorData {
 	stackSourceMap?: string;
 	domain?: string;
 	traceId?: string;
+
+	entityGuid?: string;
+	accountId?: number;
+	errorGroupGuid?: string;
 }
 
 export interface TeamlessContext {

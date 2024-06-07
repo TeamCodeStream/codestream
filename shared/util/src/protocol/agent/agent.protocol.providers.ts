@@ -1457,12 +1457,13 @@ export const GetErrorInboxCommentsRequestType = new RequestType<
 >("codestream/newrelic/collaboration/getErrorComments");
 
 export interface CreateCollaborationCommentRequest {
-	threadId: string;
+	threadId?: string;
 	body: string;
 }
 
 export interface CreateCollaborationCommentResponse {
-	commentId: string;
+	commentId?: string;
+	error?: NRErrorResponse;
 }
 
 export const CreateCollaborationCommentRequestType = new RequestType<
@@ -1471,6 +1472,55 @@ export const CreateCollaborationCommentRequestType = new RequestType<
 	void,
 	void
 >("codestream/newrelic/collaboration/createComment");
+
+export interface DeleteCollaborationThreadRequest {
+	threadId: string;
+}
+
+export interface DeleteCollaborationThreadResponse {
+	threadId?: string;
+	error?: NRErrorResponse;
+}
+
+export const DeleteCollaborationThreadRequestType = new RequestType<
+	DeleteCollaborationThreadRequest,
+	DeleteCollaborationThreadResponse,
+	void,
+	void
+>("codestream/newrelic/collaboration/deleteThread");
+
+export interface DeleteCollaborationCommentRequest {
+	commentId: string;
+}
+
+export interface DeleteCollaborationCommentResponse {
+	commentId?: string;
+	error?: NRErrorResponse;
+}
+
+export const DeleteCollaborationCommentRequestType = new RequestType<
+	DeleteCollaborationCommentRequest,
+	DeleteCollaborationCommentResponse,
+	void,
+	void
+>("codestream/newrelic/collaboration/deleteComment");
+
+export interface UpdateCollaborationCommentRequest {
+	commentId: string;
+	body: string;
+}
+
+export interface UpdateCollaborationCommentResponse {
+	commentId?: string;
+	error?: NRErrorResponse;
+}
+
+export const UpdateCollaborationCommentRequestType = new RequestType<
+	UpdateCollaborationCommentRequest,
+	UpdateCollaborationCommentResponse,
+	void,
+	void
+>("codestream/newrelic/collaboration/updateComment");
 
 export interface GetObservabilityAnomaliesRequest {
 	entityGuid: string;

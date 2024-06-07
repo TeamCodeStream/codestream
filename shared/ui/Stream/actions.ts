@@ -3,7 +3,6 @@ import {
 	CloseStreamRequestType,
 	CreateChannelStreamRequestType,
 	CreateChannelStreamResponse,
-	CreateCollaborationCommentRequestType,
 	CreateDirectStreamRequestType,
 	CreateDirectStreamResponse,
 	CreateTeamTagRequestType,
@@ -98,13 +97,8 @@ export const markItemRead = (itemId: string, numReplies: number) => () => {
 };
 
 export const createComment =
-	(text: string, threadId: string, mentions?: string[]) =>
-	async (dispatch, getState: () => CodeStreamState) => {
-		const response = await HostApi.instance.send(CreateCollaborationCommentRequestType, {
-			threadId: threadId,
-			body: text,
-		});
-	};
+	(text: string, threadId?: string, mentions?: string[]) =>
+	async (dispatch, getState: () => CodeStreamState) => {};
 
 export const editPost =
 	(streamId: string, postId: string, text: string, mentionedUserIds?: string[]) =>

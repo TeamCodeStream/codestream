@@ -2,6 +2,7 @@ import { CSCodeError } from "@codestream/protocols/api";
 import { Index } from "@codestream/utils/types";
 import { CSAsyncError, NewRelicErrorGroup } from "@codestream/protocols/agent";
 import { Range } from "vscode-languageserver-protocol";
+import { Discussion } from "../types";
 
 export enum CodeErrorsActionsTypes {
 	AddCodeErrors = "ADD_CODEERRORS",
@@ -19,6 +20,7 @@ export enum CodeErrorsActionsTypes {
 	IsLoadingErrorGroup = "@codeError/IsLoadingErrorGroup",
 	ResetNrAi = "@codeError/ResetNrAiState",
 	SetDemoMode = "@codeError/SetDemoMode",
+	SetDiscussion = "@codeError/SetDiscussion",
 }
 
 export type FunctionToEdit = {
@@ -44,4 +46,5 @@ export type CodeErrorsState = {
 	grokError: CSAsyncError | undefined;
 	functionToEditFailed: boolean;
 	demoMode: { enabled: boolean; count: number };
+	discussion?: Discussion;
 };

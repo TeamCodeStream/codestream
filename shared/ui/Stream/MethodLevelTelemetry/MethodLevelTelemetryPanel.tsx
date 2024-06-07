@@ -440,6 +440,13 @@ export const MethodLevelTelemetryPanel = () => {
 																				openType: "CLM Details",
 																				remote: _?.remote || undefined,
 																				stackSourceMap: response?.stackSourceMap,
+																				errorGroupGuid: _.errorGroupGuid,
+																				accountId:
+																					derivedState.currentMethodLevelTelemetry
+																						.newRelicAccountId,
+																				entityGuid:
+																					derivedState.currentMethodLevelTelemetry
+																						.newRelicEntityGuid,
 																			},
 																		})
 																	);
