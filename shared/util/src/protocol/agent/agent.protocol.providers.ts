@@ -2847,6 +2847,7 @@ export interface GetNRQLResponse {
 		facet?: string[];
 		eventType?: string;
 		since?: string;
+		hasAlias?: boolean;
 	};
 	error?: NRErrorResponse;
 	resultsTypeGuess?: ResultsTypeGuess;

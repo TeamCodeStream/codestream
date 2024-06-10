@@ -164,6 +164,7 @@ export const NRQLPanel = (props: {
 	const [resultsTypeGuess, setResultsTypeGuess] = useState<ResultsTypeGuess>(
 		DEFAULT_VISUALIZATION_GUESS as ResultsTypeGuess
 	);
+	const [hasAlias, setHasAlias] = useState<boolean | undefined>(undefined);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [nrqlError, setNRQLError] = useState<string | undefined>("");
 	const [shouldRefetchRecentQueriesTimestamp, setShouldRefetchRecentQueriesTimestamp] = useState<
@@ -307,6 +308,7 @@ export const NRQLPanel = (props: {
 						}
 					}
 					setFacet(response.metadata.facet);
+					setHasAlias(response.metadata?.hasAlias);
 				}
 				setShouldRefetchRecentQueriesTimestamp(new Date().getTime());
 			}
@@ -496,7 +498,11 @@ export const NRQLPanel = (props: {
 									/>
 								)}
 								{resultsTypeGuess.selected === "billboard" && (
-									<NRQLResultsBillboard results={results} eventType={eventType} />
+									<NRQLResultsBillboard
+										results={results}
+										eventType={eventType}
+										hasAlias={hasAlias}
+									/>
 								)}
 								{resultsTypeGuess.selected === "area" && (
 									<NRQLResultsArea eventType={eventType} results={results} />

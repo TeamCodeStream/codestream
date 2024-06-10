@@ -89,6 +89,7 @@ export class NrNRQLProvider {
 			void this.saveRecentQuery(request);
 
 			const facet = response?.rawResponse?.metadata?.facet;
+			const hasAlias = this.hasAlias(query);
 			return {
 				accountId,
 				results: response.results,
@@ -97,6 +98,7 @@ export class NrNRQLProvider {
 					since: response?.rawResponse?.metadata?.rawSince,
 					// facet is an array or string, normalize to array
 					facet: facet ? (Array.isArray(facet) ? facet : [facet]) : undefined,
+					hasAlias,
 				},
 				resultsTypeGuess: this.getResultsType(
 					response.results,
@@ -115,26 +117,39 @@ export class NrNRQLProvider {
 			};
 		}
 	}
+	/**
+	 *
+	 * Check to see if a query has an alias through use of a regex
+	 * Generally used for the billboard nrql query result display
+	 *
+	 * @param query
+	 * @returns
+	 */
+	private hasAlias(query: string): boolean {
+		const aliasRegex = /([\w\(\),\s\*]+)\s+as\s+('?.+?'?)/gi;
+
+		return aliasRegex.test(query);
+	}
 
 	/**
- * Removes comments from the end of a string, unless it has been single-quoted
- * 
- * FROM Collection
- * SELECT foo -- that's the foo
-  WHERE queryTypes = 'bar' /* that's the bar
-  on two lines *\/
-  AND status = 'baz' // baz is here
+	 * Removes comments from the end of a string, unless it has been single-quoted
+	 * 
+	 * FROM Collection
+	 * SELECT foo -- that's the foo
+		WHERE queryTypes = 'bar' /* that's the bar
+		on two lines *\/
+		AND status = 'baz' // baz is here
 
-  becomes:
+		becomes:
 
-  FROM Collection
-  SELECT foo
-  WHERE queryTypes = 'bar
-  AND status = 'baz'
- * 
- * @param nrql 
- * @returns 
- */
+		FROM Collection
+		SELECT foo
+		WHERE queryTypes = 'bar
+		AND status = 'baz'
+	* 
+	* @param nrql 
+	* @returns 
+	*/
 	private removeNrqlComments(nrql: string): string {
 		return nrql.replace(/'[^']*'|(\-\-|\/\/|\/*\*[\s\S]*?\*\/).*$/gm, (match, group1) => {
 			// If group1 is undefined, it means we matched a single-quoted string, so we return the match as is.

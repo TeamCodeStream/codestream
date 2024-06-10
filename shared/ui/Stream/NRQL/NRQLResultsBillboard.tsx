@@ -20,10 +20,9 @@ const BillboardValueType = styled.div`
 
 interface Props {
 	results: NRQLResult[];
-	/**
-	 * Name of the collection
-	 */
+	// Name of the collection
 	eventType?: string;
+	hasAlias?: boolean;
 }
 
 export const NRQLResultsBillboard = (props: Props) => {
@@ -69,9 +68,15 @@ export const NRQLResultsBillboard = (props: Props) => {
 			<BillboardValue title={value}>
 				{typeof value === "number" ? formatLargeNumber(value, isTimestamp) : value}
 			</BillboardValue>
-			{props.eventType && !isTimestamp && (
+			{props.eventType && !isTimestamp && !props.hasAlias && (
 				<BillboardValueType>
 					{props.eventType.replace(/_/g, " ")}
+					{typeof value === "number" && value > 1 && <>s</>}
+				</BillboardValueType>
+			)}
+			{props.eventType && !isTimestamp && props.hasAlias && (
+				<BillboardValueType>
+					{onlyKey.replace(/_/g, " ")}
 					{typeof value === "number" && value > 1 && <>s</>}
 				</BillboardValueType>
 			)}
