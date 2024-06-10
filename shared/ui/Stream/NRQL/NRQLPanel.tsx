@@ -164,7 +164,7 @@ export const NRQLPanel = (props: {
 	const [resultsTypeGuess, setResultsTypeGuess] = useState<ResultsTypeGuess>(
 		DEFAULT_VISUALIZATION_GUESS as ResultsTypeGuess
 	);
-	const [hasAlias, setHasAlias] = useState<boolean | undefined>(undefined);
+	const [hasAlias, setHasAlias] = useState<boolean>(false);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [nrqlError, setNRQLError] = useState<string | undefined>("");
 	const [shouldRefetchRecentQueriesTimestamp, setShouldRefetchRecentQueriesTimestamp] = useState<
@@ -308,7 +308,7 @@ export const NRQLPanel = (props: {
 						}
 					}
 					setFacet(response.metadata.facet);
-					setHasAlias(response.metadata?.hasAlias);
+					setHasAlias(response.metadata.hasAlias);
 				}
 				setShouldRefetchRecentQueriesTimestamp(new Date().getTime());
 			}

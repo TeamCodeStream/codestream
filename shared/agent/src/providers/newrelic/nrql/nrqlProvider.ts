@@ -125,7 +125,7 @@ export class NrNRQLProvider {
 	 * @param query
 	 * @returns
 	 */
-	private hasAlias(query: string): boolean {
+	hasAlias(query: string): boolean {
 		const aliasRegex = /([\w\(\),\s\*]+)\s+as\s+('?.+?'?)/gi;
 
 		return aliasRegex.test(query);

@@ -202,3 +202,34 @@ describe("getResultsType", () => {
 		expect(result).toStrictEqual({ selected: "bar", enabled: ["bar", "json", "pie", "table"] });
 	});
 });
+
+describe("hasAlias", () => {
+	const provider = new NrNRQLProvider({} as any);
+
+	it("query with an alias returns true", () => {
+		const query = "SELECT count(*) as 'Count' FROM Transactions SINCE 1 hour ago";
+		expect(provider.hasAlias(query)).toBe(true);
+	});
+
+	it("query without an alias returns false", () => {
+		const query = "SELECT count(*) FROM Transactions SINCE 1 hour ago";
+		expect(provider.hasAlias(query)).toBe(false);
+	});
+
+	it("query with complex alias returns true", () => {
+		const query =
+			"SELECT average(sessionDuration) as 'Average Session Duration' FROM Sessions SINCE 1 hour ago";
+		expect(provider.hasAlias(query)).toBe(true);
+	});
+
+	it("query with alias inside function returns true", () => {
+		const query =
+			"SELECT percentile(sessionDuration, 95) as '95th Percentile' FROM Sessions SINCE 1 hour ago";
+		expect(provider.hasAlias(query)).toBe(true);
+	});
+
+	it("query with single letter alias returns true", () => {
+		const query = "SELECT count(*) as C FROM Transactions SINCE 1 hour ago";
+		expect(provider.hasAlias(query)).toBe(true);
+	});
+});

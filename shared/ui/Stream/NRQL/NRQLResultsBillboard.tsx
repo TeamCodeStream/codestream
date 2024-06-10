@@ -22,10 +22,12 @@ interface Props {
 	results: NRQLResult[];
 	// Name of the collection
 	eventType?: string;
-	hasAlias?: boolean;
+	hasAlias: boolean;
 }
 
 export const NRQLResultsBillboard = (props: Props) => {
+	const { results, eventType, hasAlias } = props;
+
 	const formatLargeNumber = (number, isTimestamp) => {
 		if (isTimestamp) {
 			return validateAndConvertUnixTimestamp(number, true);
@@ -58,29 +60,24 @@ export const NRQLResultsBillboard = (props: Props) => {
 		return false;
 	};
 
-	let firstResult = props.results[0];
-	let onlyKey = Object.keys(firstResult)[0];
+	const firstResult = results[0];
+	const onlyKey = Object.keys(firstResult)[0];
 	const isTimestamp = hasTimestampKey(onlyKey);
 	const value = firstResult[onlyKey];
+	const formattedValue = typeof value === "number" ? formatLargeNumber(value, isTimestamp) : value;
+	const eventTypeText =
+		eventType && !isTimestamp && (hasAlias ? onlyKey : eventType).replace(/_/g, " ");
 
 	return (
 		<BillboardValueWrapper>
-			<BillboardValue title={value}>
-				{typeof value === "number" ? formatLargeNumber(value, isTimestamp) : value}
-			</BillboardValue>
-			{props.eventType && !isTimestamp && !props.hasAlias && (
+			<BillboardValue title={value}>{formattedValue}</BillboardValue>
+			{eventTypeText && (
 				<BillboardValueType>
-					{props.eventType.replace(/_/g, " ")}
-					{typeof value === "number" && value > 1 && <>s</>}
+					{eventTypeText}
+					{typeof value === "number" && value > 1 && "s"}
 				</BillboardValueType>
 			)}
-			{props.eventType && !isTimestamp && props.hasAlias && (
-				<BillboardValueType>
-					{onlyKey.replace(/_/g, " ")}
-					{typeof value === "number" && value > 1 && <>s</>}
-				</BillboardValueType>
-			)}
-			{props.eventType && isTimestamp && <BillboardValueType>Timestamp</BillboardValueType>}
+			{eventType && isTimestamp && <BillboardValueType>Timestamp</BillboardValueType>}
 		</BillboardValueWrapper>
 	);
 };
