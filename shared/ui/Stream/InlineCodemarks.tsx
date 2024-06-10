@@ -71,7 +71,7 @@ import {
 import { HostApi } from "../webview-api";
 import { setUserPreference } from "./actions";
 import { SetUserPreferenceRequest } from "./actions.types";
-import { CodeErrorNav } from "./CodeErrorNav";
+import { CodeErrorNavigator } from "./CodeError/CodeErrorNavigator";
 import Codemark from "./Codemark";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import Feedback from "./Feedback";
@@ -1205,7 +1205,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					{currentReviewId ? (
 						<ReviewNav reviewId={currentReviewId} composeOpen={composeOpen} />
 					) : currentCodeErrorGuid ? (
-						<CodeErrorNav composeOpen={composeOpen} />
+						<CodeErrorNavigator composeOpen={composeOpen} />
 					) : currentPullRequestId ? (
 						currentPullRequestProviderId === "github*com" ||
 						currentPullRequestProviderId === "github/enterprise" ? (

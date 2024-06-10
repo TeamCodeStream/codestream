@@ -58,7 +58,7 @@ import {
 } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { openPanel, setUserPreference } from "./actions";
-import { ALERT_SEVERITY_COLORS } from "./CodeError/index";
+import { ALERT_SEVERITY_COLORS } from "./CodeError/CodeError.Types";
 import { EntityAssociator } from "./EntityAssociator";
 import Icon from "./Icon";
 import { Link } from "./Link";

@@ -14,7 +14,7 @@ import { HealthIcon } from "@codestream/webview/src/components/HealthIcon";
 import { HostApi } from "@codestream/webview/webview-api";
 import { PaneNodeName } from "../src/components/Pane";
 import { useDidMount, useInterval } from "../utilities/hooks";
-import { ALERT_SEVERITY_COLORS } from "./CodeError/index";
+import { ALERT_SEVERITY_COLORS } from "./CodeError/CodeError.Types";
 import Icon from "./Icon";
 import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
 import { ObservabilityAlertViolations } from "./ObservabilityAlertViolations";
