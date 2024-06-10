@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { logError } from "../logger";
 import { useRequestType } from "../utilities/hooks";
 import { mapOrder } from "../utils";
-import { ALERT_SEVERITY_SORTING_ORDER } from "./CodeError/index";
+import { ALERT_SEVERITY_SORTING_ORDER } from "./CodeError/CodeError.Types";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
 import { ErrorRow } from "./ErrorRow";

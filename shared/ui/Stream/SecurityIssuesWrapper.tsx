@@ -30,7 +30,7 @@ import { useAppSelector, useAppDispatch } from "../utilities/hooks";
 import { CodeStreamState } from "@codestream/webview/store";
 import { setPreferences } from "../store/preferences/actions";
 import { Meta, MetaDescription, MetaSection, MinimumWidthCard } from "./Codemark/BaseCodemark";
-import { DataLabel, DataRow, DataValue } from "./CodeError";
+import { DataLabel, DataRow, DataValue } from "./CodeError/CodeError.Types";
 import { CardBody } from "../src/components/Card";
 
 interface Props {
