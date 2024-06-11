@@ -162,8 +162,8 @@ export const fetchErrorGroupDiscussion = createAppAsyncThunk(
 				entityGuid: entityGuid,
 			});
 
-			if (results.error) {
-				throw new Error(results.error.error.message);
+			if (results.NrError) {
+				throw new Error(results.NrError.error.message);
 			}
 
 			return {
@@ -586,6 +586,6 @@ export const doGetObservabilityErrors = createAppAsyncThunk(
 export const addAndEnhanceCodeError = createAppAsyncThunk(
 	"codeErrors/enhance",
 	async (codeError: CSCodeError, { dispatch }) => {
-		await dispatch(addCodeErrors([codeError]));
+		dispatch(addCodeErrors([codeError]));
 	}
 );

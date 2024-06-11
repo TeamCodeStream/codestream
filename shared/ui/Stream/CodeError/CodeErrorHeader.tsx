@@ -376,133 +376,125 @@ export const CodeErrorHeader = (props: CodeErrorHeaderProps) => {
 				>
 					<div
 						style={{
-							display: "flex",
-							flexWrap: "wrap",
-							justifyContent: "space-between",
+							paddingTop: "2px",
+							whiteSpace: "nowrap",
+							overflow: "hidden",
+							textOverflow: "ellipsis",
+							marginBottom: "10px",
 						}}
 					>
-						<div
-							style={{
-								paddingTop: "2px",
-								whiteSpace: "nowrap",
-								overflow: "hidden",
-								textOverflow: "ellipsis",
-								marginBottom: "10px",
-							}}
-						>
-							<HealthIcon
-								color={ALERT_SEVERITY_COLORS[props.errorGroup?.entityAlertingSeverity || ""]}
-							/>
+						<HealthIcon
+							color={ALERT_SEVERITY_COLORS[props.errorGroup?.entityAlertingSeverity || ""]}
+						/>
 
-							<ApmServiceTitle>
-								<Tooltip title="Open Entity on New Relic" placement="bottom" delay={1}>
-									<span style={{ opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25" }}>
-										<>
-											{props.errorGroup && (
-												<>
-													<Link
-														onClick={e => {
-															handleEntityLinkClick(e, props.errorGroup?.entityUrl);
-														}}
-													>
-														<span className="subtle">{props.errorGroup.entityName}</span>{" "}
-														<Icon name="link-external" className="open-external"></Icon>
-													</Link>
-												</>
-											)}
-										</>
-									</span>
-								</Tooltip>
-							</ApmServiceTitle>
-						</div>
-
-						<div style={{ marginLeft: "auto", alignItems: "center", whiteSpace: "nowrap" }}>
-							<DropdownButton
-								title="Assignee"
-								items={items}
-								variant="secondary"
-								size="compact"
-								noChevronDown={!errorGroupHasNoAssignee()}
-							>
-								<div
-									style={{
-										display: "inline-block",
-										opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25",
-									}}
-								>
+						<ApmServiceTitle>
+							<Tooltip title="Open Entity on New Relic" placement="bottom" delay={1}>
+								<span style={{ opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25" }}>
 									<>
 										{props.errorGroup && (
 											<>
-												{isAssigneeChanging ? (
-													<Icon name="sync" className="spin" />
-												) : (
-													<>
-														{errorGroupHasNoAssignee() ? (
-															<Icon name="person" />
-														) : (
-															<Headshot
-																size={16}
-																display="inline-block"
-																className="no-right-margin"
-																person={{
-																	fullName: props.errorGroup.assignee?.name,
-																	email: props.errorGroup.assignee?.email,
-																}}
-															/>
-														)}
-													</>
-												)}
+												<Link
+													onClick={e => {
+														handleEntityLinkClick(e, props.errorGroup?.entityUrl);
+													}}
+												>
+													<span className="subtle">{props.errorGroup.entityName}</span>{" "}
+													<Icon name="link-external" className="open-external"></Icon>
+												</Link>
 											</>
 										)}
 									</>
-								</div>
-							</DropdownButton>
+								</span>
+							</Tooltip>
+						</ApmServiceTitle>
+					</div>
 
-							{states && (
+					<div style={{ marginLeft: "auto", alignItems: "center", whiteSpace: "nowrap" }}>
+						<DropdownButton
+							title="Assignee"
+							items={items}
+							variant="secondary"
+							size="compact"
+							noChevronDown={!errorGroupHasNoAssignee()}
+						>
+							<div
+								style={{
+									display: "inline-block",
+									opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25",
+								}}
+							>
+								<>
+									{props.errorGroup && (
+										<>
+											{isAssigneeChanging ? (
+												<Icon name="sync" className="spin" />
+											) : (
+												<>
+													{errorGroupHasNoAssignee() ? (
+														<Icon name="person" />
+													) : (
+														<Headshot
+															size={16}
+															display="inline-block"
+															className="no-right-margin"
+															person={{
+																fullName: props.errorGroup.assignee?.name,
+																email: props.errorGroup.assignee?.email,
+															}}
+														/>
+													)}
+												</>
+											)}
+										</>
+									)}
+								</>
+							</div>
+						</DropdownButton>
+
+						{states && (
+							<>
+								<div style={{ display: "inline-block", width: "5px" }} />
+
+								<DropdownButton
+									items={states}
+									selectedKey={props.errorGroup?.state || "UNKNOWN"}
+									isLoading={isStateChanging}
+									variant="secondary"
+									size="compact"
+									onButtonClicked={_e => {}}
+									wrap
+								>
+									<div
+										style={{
+											display: "inline-block",
+											opacity: resolutionDropdownOptionsWrapperOpacity(),
+										}}
+									>
+										{STATES_TO_DISPLAY_STRINGS[props.errorGroup?.state || "UNKNOWN"]}
+									</div>
+								</DropdownButton>
+							</>
+						)}
+
+						<>
+							{props.codeError && (
 								<>
 									<div style={{ display: "inline-block", width: "5px" }} />
-
-									<DropdownButton
-										items={states}
-										selectedKey={props.errorGroup?.state || "UNKNOWN"}
-										isLoading={isStateChanging}
-										variant="secondary"
-										size="compact"
-										onButtonClicked={_e => {}}
-										wrap
+									<div
+										style={{
+											display: "inline-block",
+											opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25",
+										}}
 									>
-										<div
-											style={{
-												display: "inline-block",
-												opacity: resolutionDropdownOptionsWrapperOpacity(),
-											}}
-										>
-											{STATES_TO_DISPLAY_STRINGS[props.errorGroup?.state || "UNKNOWN"]}
-										</div>
-									</DropdownButton>
+										<CodeErrorMenu
+											codeError={props.codeError}
+											errorGroup={props.errorGroup}
+											isCollapsed={props.isCollapsed}
+										/>
+									</div>
 								</>
 							)}
-
-							<>
-								{props.codeError && (
-									<>
-										<div style={{ display: "inline-block", width: "5px" }} />
-										<div
-											style={{
-												display: "inline-block",
-												opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25",
-											}}
-										>
-											<CodeErrorMenu
-												codeError={props.codeError}
-												errorGroup={props.errorGroup}
-												isCollapsed={props.isCollapsed}
-											/>
-										</div>
-									</>
-								)}
-							</>
-						</div>
+						</>
 					</div>
 				</div>
 			)}

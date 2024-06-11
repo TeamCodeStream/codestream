@@ -1,7 +1,9 @@
-import { NewRelicErrorGroup, ResolveStackTraceResponse } from "@codestream/protocols/agent";
+import {
+	NewRelicErrorGroup,
+	ResolveStackTraceResponse,
+} from "@codestream/protocols/agent";
 import { CSCodeError, CSUser } from "@codestream/protocols/api";
 import styled from "styled-components";
-import { Discussion } from "@codestream/webview/store/types";
 
 export interface CodeErrorProps {
 	id?: string;
@@ -165,11 +167,6 @@ export const STATES_TO_DISPLAY_STRINGS = {
 	RESOLVED: "Resolved",
 	IGNORED: "Ignored",
 	UNRESOLVED: "Unresolved",
-};
-
-export const InitialDiscussion: Discussion = {
-	threadId: "",
-	comments: [],
 };
 
 export type CopyMethodState = "NOT_STARTED" | "IN_PROGRESS" | "DONE" | "FAILED";

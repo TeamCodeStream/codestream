@@ -353,7 +353,7 @@ export class CollaborationTeamProvider {
 				error: ex,
 			});
 
-			return { error: mapNRErrorResponse(ex) };
+			return { NrError: mapNRErrorResponse(ex) };
 		}
 	}
 }

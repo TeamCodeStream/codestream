@@ -1458,7 +1458,7 @@ export interface GetErrorInboxCommentsRequest {
 export interface GetErrorInboxCommentsResponse {
 	threadId?: string;
 	comments?: CollaborationComment[];
-	error?: NRErrorResponse;
+	NrError?: NRErrorResponse;
 }
 
 export const GetErrorInboxCommentsRequestType = new RequestType<
