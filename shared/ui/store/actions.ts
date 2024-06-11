@@ -121,6 +121,7 @@ export const bootstrap = (data?: SignedInBootstrapData) => async (dispatch, getS
 	dispatch(preferencesActions.setPreferences(data.preferences));
 
 	dispatch(bootstrapEssentials(data));
+	dispatch(contextActions.setCurrentServiceSearchEntity(undefined));
 
 	const { context } = getState();
 

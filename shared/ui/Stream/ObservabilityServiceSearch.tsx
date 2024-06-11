@@ -119,12 +119,12 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 	};
 
 	const fetchErrors = async () => {
-		if (entityAccount && entityAccount.type) {
+		if (entityAccount && entityAccount.entityType) {
 			setLoadingErrors(true);
 			const response = await HostApi.instance.send(GetObservabilityErrorsWithoutReposRequestType, {
 				accountId: entityAccount.accountId,
 				entityGuid: entityAccount.entityGuid,
-				entityType: entityAccount.type,
+				entityType: entityAccount.entityType,
 				timeWindow: derivedState.recentErrorsTimeWindow,
 			});
 			setLoadingErrors(false);
