@@ -24,6 +24,7 @@ import {
 } from "@codestream/protocols/agent";
 import { useDidMount } from "../utilities/hooks";
 import { isEmpty as _isEmpty } from "lodash-es";
+import { CodeErrorTimeWindow } from "@codestream/protocols/api";
 
 interface Props {
 	anomalyDetectionSupported: boolean;
@@ -63,9 +64,16 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 	const [loadingEntityAccount, setLoadingEntityAccount] = useState<boolean>(false);
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
+		const timeWindow =
+			state.preferences.codeErrorTimeWindow &&
+			Object.values(CodeErrorTimeWindow).includes(state.preferences.codeErrorTimeWindow)
+				? state.preferences.codeErrorTimeWindow
+				: CodeErrorTimeWindow.ThreeDays;
+
 		return {
 			currentServiceSearchEntity: state.context.currentServiceSearchEntity,
-			recentErrorsTimeWindow: state.preferences.codeErrorTimeWindow || "",
+
+			recentErrorsTimeWindow: timeWindow,
 		};
 	});
 
@@ -125,7 +133,7 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 				accountId: entityAccount.accountId,
 				entityGuid: entityAccount.entityGuid,
 				entityType: entityAccount.entityType,
-				timeWindow: derivedState.recentErrorsTimeWindow,
+				timeWindow: derivedState?.recentErrorsTimeWindow,
 			});
 			setLoadingErrors(false);
 
@@ -224,14 +232,13 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 					collapsed={false}
 					showChildIconOnCollapse={true}
 					actionsVisibleIfOpen={true}
-					customPadding="2px 10px 2px 19px"
+					customPadding="2px 10px 2px 4px"
 					noChevron={true}
 				></PaneNodeName>
 
 				<EntityAssociator
 					isSidebarView={true}
 					onSuccess={async e => {
-						console.warn(e);
 						setExpandedEntityCallback(e.entityGuid);
 						dispatch(setCurrentServiceSearchEntity(e.entityGuid));
 						fetchEntityAccount(e.entityGuid);
