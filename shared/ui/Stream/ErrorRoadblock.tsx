@@ -32,6 +32,7 @@ export const ErrorRoadblock = props => {
 	const [entityAccount, setEntityAccount] = useState<EntityAccount | undefined>(undefined);
 
 	const onSubmit = async (event: React.SyntheticEvent) => {
+		event.preventDefault();
 		dispatch(closeModal());
 	};
 
@@ -53,7 +54,7 @@ export const ErrorRoadblock = props => {
 	};
 
 	return (
-		<Dialog title="Cannot open Error" onClose={() => dispatch(closeModal())}>
+		<Dialog title="Cannot Open Error" onClose={() => dispatch(closeModal())}>
 			{!loadingEntityAccount && entityAccount && (
 				<form className="standard-form">
 					<fieldset className="form-body" style={{ width: "18em", padding: "20px 0" }}>
