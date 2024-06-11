@@ -196,7 +196,7 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 			{props.title && <h3>{props.title}</h3>}
 			{props.label && <p style={{ marginTop: 0 }}>{props.label}</p>}
 			{warningOrErrors && <WarningBox items={warningOrErrors} />}
-			<div ref={elementRef} style={{ marginBottom: "10px" }}>
+			<div ref={elementRef} style={{ marginBottom: props.isServiceSearch ? "0px" : "10px" }}>
 				<DropdownWithSearch
 					id="input-entity-autocomplete"
 					name="entity-autocomplete"

@@ -72,7 +72,6 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 
 		return {
 			currentServiceSearchEntity: state.context.currentServiceSearchEntity,
-
 			recentErrorsTimeWindow: timeWindow,
 		};
 	});
@@ -133,7 +132,7 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 				accountId: entityAccount.accountId,
 				entityGuid: entityAccount.entityGuid,
 				entityType: entityAccount.entityType,
-				timeWindow: derivedState?.recentErrorsTimeWindow,
+				timeWindow: derivedState.recentErrorsTimeWindow,
 			});
 			setLoadingErrors(false);
 
