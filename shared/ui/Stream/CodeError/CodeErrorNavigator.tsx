@@ -38,7 +38,6 @@ import { getSidebarLocation } from "../../store/editorContext/reducer";
 import KeystrokeDispatcher from "../../utilities/keystroke-dispatcher";
 import { markItemRead, setUserPreference } from "../actions";
 import { Description, ExpandedAuthor } from "./CodeError.Types";
-import { CodeError } from "./CodeError";
 import { CodeErrorHeader } from "./CodeErrorHeader";
 import { RepositoryAssociator } from "./RepositoryAssociator";
 import { BigTitle, Header, Meta } from "../Codemark/BaseCodemark";
@@ -51,6 +50,8 @@ import { isEmpty as _isEmpty } from "lodash";
 import { isSha } from "@codestream/webview/utilities/strings";
 import { parseId } from "@codestream/webview/utilities/newRelic";
 import { confirmPopup } from "@codestream/webview/Stream/Confirm";
+import { NotificationBox } from "../NotificationBox";
+import { CodeError } from "./CodeError";
 
 const NavHeader = styled.div`
 	// flex-grow: 0;
@@ -869,6 +870,7 @@ export function CodeErrorNavigator(props: Props) {
 									errorGroup={derivedState.errorGroup!}
 									stackFrameClickDisabled={!!repoError}
 									stackTraceTip={stackTraceTip}
+									parsedStackTrace={parsedStack}
 								/>
 							</StyledCodeError>
 						</div>
