@@ -1,26 +1,15 @@
-import {
-	NewRelicErrorGroup,
-	ResolveStackTraceResponse,
-} from "@codestream/protocols/agent";
+import { NewRelicErrorGroup, ResolveStackTraceResponse } from "@codestream/protocols/agent";
 import { CSCodeError, CSUser } from "@codestream/protocols/api";
 import styled from "styled-components";
 
 export interface CodeErrorProps {
-	id?: string;
-	codeError?: CSCodeError;
-	errorGroup?: NewRelicErrorGroup;
-	stackFrameClickDisabled?: boolean;
-	stackTraceTip?: any;
-}
-
-export interface BaseCodeErrorProps {
 	codeError: CSCodeError;
 	errorGroup: NewRelicErrorGroup;
 
-	parsedStack?: ResolveStackTraceResponse;
+	parsedStackTrace?: ResolveStackTraceResponse;
+
 	stackFrameClickDisabled?: boolean;
 	stackTraceTip?: any;
-
 	isCollapsed?: boolean;
 	readOnly?: boolean;
 }
