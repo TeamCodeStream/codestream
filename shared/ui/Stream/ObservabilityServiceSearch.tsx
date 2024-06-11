@@ -212,7 +212,7 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 								style={{
 									fontSize: "11px",
 									fontWeight: "bold",
-									margin: "1px 2px 0px 0px",
+									margin: "1px 2px 0px 2px",
 								}}
 							>
 								SERVICE SEARCH
