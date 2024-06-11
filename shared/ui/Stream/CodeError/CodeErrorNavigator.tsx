@@ -478,7 +478,7 @@ export function CodeErrorNavigator(props: Props) {
 
 			if (errorGroupResult && repoId) {
 				if (derivedState.currentCodeErrorGuid) {
-					dispatch(
+					await dispatch(
 						addAndEnhanceCodeError({
 							accountId: errorGroupResult.accountId,
 							// these don't matter
