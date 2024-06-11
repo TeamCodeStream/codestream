@@ -21,6 +21,7 @@ interface Props {
 	errorInboxError?: string;
 	domain?: string;
 	isServiceSearch?: boolean;
+	hasRepoAssociated?: boolean;
 }
 
 export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
@@ -90,7 +91,7 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 										customPadding={"0 10px 0 50px"}
 										isLoading={isLoadingErrorGroupGuid === indexedErrorGroupGuid}
 										onClick={async e => {
-											if (props.isServiceSearch) {
+											if (props.isServiceSearch && !props.hasRepoAssociated) {
 												popup(WebviewModals.ErrorRoadblock);
 											} else {
 												try {

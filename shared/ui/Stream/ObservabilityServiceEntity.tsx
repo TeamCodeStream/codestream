@@ -273,6 +273,7 @@ export const ObservabilityServiceEntity = React.memo((props: Props) => {
 															errorMsg={observabilityErrorsError}
 															domain={ea?.domain}
 															isServiceSearch={true}
+															hasRepoAssociated={!_isEmpty(ea.repoEntities)}
 														/>
 													</>
 												)}
