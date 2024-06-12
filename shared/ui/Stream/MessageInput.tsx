@@ -1287,47 +1287,6 @@ export const MessageInput = (props: MessageInputProps) => {
 						{emojiOpen && (
 							<EmojiPicker addEmoji={addEmoji} target={emojiMenuTarget} autoFocus={true} />
 						)}
-						{derivedState.attachFilesEnabled && props.setAttachments && (
-							<Tooltip
-								title={
-									<div style={{ maxWidth: "150px" }}>
-										Attach files by dragging &amp; dropping, selecting, or pasting them.
-									</div>
-								}
-								placement="topRight"
-								align={{ offset: [20, 0] }}
-								delay={1}
-								trigger={["hover"]}
-							>
-								<span className="icon-wrapper">
-									<input
-										type="file"
-										id="attachment"
-										name="attachment"
-										data-testid="file-attach-icon"
-										multiple
-										title=""
-										onChange={handleChangeFiles}
-										style={{
-											top: 0,
-											left: 0,
-											width: "16px",
-											height: "16px",
-											position: "absolute",
-											opacity: 0,
-											zIndex: 5,
-										}}
-									/>
-									<label htmlFor="attachment">
-										<Icon
-											key="paperclip"
-											name="paperclip"
-											className={cx("attach", { hover: attachOpen })}
-										/>
-									</label>
-								</span>
-							</Tooltip>
-						)}
 						{props.relatedCodemarkIds && derivedState.codemarks.length > 0 && (
 							<Icon
 								key="codestream"
