@@ -188,6 +188,7 @@ export function CodeErrorNavigator(props: Props) {
 	const [multiRepoDetectedError, setMultiRepoDetectedError] = useState<
 		{ title: string; description: string } | undefined
 	>(undefined);
+	const [repoNotification, setRepoNotification] = useState<WarningOrError | undefined>(undefined);
 	const [repoWarning, setRepoWarning] = useState<WarningOrError | undefined>(undefined);
 	const [repoError, setRepoError] = useState<string | undefined>(undefined);
 	const { errorGroup } = derivedState;
@@ -511,6 +512,7 @@ export function CodeErrorNavigator(props: Props) {
 				setParsedStack(stackInfo);
 				setRepoError(stackInfo.error);
 				setRepoWarning(stackInfo.warning);
+				setRepoNotification(stackInfo.notification);
 			}
 
 			setIsResolved(true);
@@ -559,6 +561,19 @@ export function CodeErrorNavigator(props: Props) {
 		return true;
 	};
 
+	const tryBuildNotification = () => {
+		if (derivedState.demoMode || derivedState.errorsDemoMode.enabled) return null;
+
+		const items: WarningOrError[] = [];
+		if (repoNotification) {
+			items.push(repoNotification);
+		}
+
+		if (!items.length) return null;
+
+		return <NotificationBox items={items} />;
+	};
+
 	const tryBuildWarningsOrErrors = () => {
 		if (derivedState.demoMode || derivedState.errorsDemoMode.enabled) return null;
 
@@ -587,7 +602,7 @@ export function CodeErrorNavigator(props: Props) {
 			event => {
 				if (event.key === "Escape" && event.target.id !== "input-div") exit();
 			},
-			{ source: "CodeErrorNav.tsx", level: -1 }
+			{ source: "CodeErrorNavigator.tsx", level: -1 }
 		);
 
 		return () => {
@@ -862,6 +877,7 @@ export function CodeErrorNavigator(props: Props) {
 								width: "100%",
 							}}
 						>
+							{tryBuildNotification()}
 							{tryBuildWarningsOrErrors()}
 
 							<StyledCodeError className={hoverButton == "stacktrace" ? "pulse" : ""}>
