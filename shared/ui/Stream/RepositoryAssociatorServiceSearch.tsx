@@ -63,13 +63,13 @@ export const formatRepoResponse = (response, repos) => {
 		name: string;
 		value: string;
 	}[] = [];
-	for (const repo of response.repositories) {
+	response.repositories.forEach(repo => {
 		if (repo.remotes) {
-			for (const remote of repo.remotes) {
+			repo.remotes.forEach(remote => {
 				const id = repo.id || "";
 				const remoteUrl = remote.rawUrl;
 				if (remoteUrl && id) {
-					const name = repos[id] ? repos[id].name : "repo";
+					const name = repos[id]?.name || repo.name || "repo";
 					const label = `${name} (${remoteUrl})`;
 					results.push({
 						...repo,
@@ -80,9 +80,9 @@ export const formatRepoResponse = (response, repos) => {
 						value: name,
 					});
 				}
-			}
+			});
 		}
-	}
+	});
 
 	return results;
 };
