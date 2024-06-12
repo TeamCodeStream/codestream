@@ -63,9 +63,9 @@ export const formatRepoResponse = (response, repos) => {
 		name: string;
 		value: string;
 	}[] = [];
-	response.repositories.forEach(repo => {
+	for (const repo of response.repositories) {
 		if (repo.remotes) {
-			repo.remotes.forEach(remote => {
+			for (const remote of repo.remotes) {
 				const id = repo.id || "";
 				const remoteUrl = remote.rawUrl;
 				if (remoteUrl && id) {
@@ -80,9 +80,9 @@ export const formatRepoResponse = (response, repos) => {
 						value: name,
 					});
 				}
-			});
+			}
 		}
-	});
+	}
 
 	return results;
 };
