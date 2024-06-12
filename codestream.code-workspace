@@ -1,27 +1,39 @@
 {
 	"folders": [
 		{
-			"path": "./vscode"
+			"name": ".github",
+			"path": ".github"
 		},
 		{
-			"path": "./shared/agent"
+			"name": "vscode",
+			"path": "vscode"
 		},
 		{
+			"name": "agent",
+			"path": "shared/agent"
+		},
+		{
+			"name": "jb",
 			"path": "jb"
 		},
 		{
+			"name": "vs",
 			"path": "vs"
 		},
 		{
-			"path": "./shared/util"
+			"name": "util",
+			"path": "shared/util"
 		},
 		{
+			"name": "build",
 			"path": "shared/build"
 		},
 		{
+			"name": "ui",
 			"path": "shared/ui"
 		},
 		{
+			"name": "build",
 			"path": "build"
 		}
 	],

@@ -42,6 +42,7 @@ import {
 } from "./CodeError.Types";
 import { Loading } from "@codestream/webview/Container/Loading";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
+import { CSStackTraceLine } from "../../../util/src/protocol/agent/api.protocol.models";
 
 export const CodeError = (props: CodeErrorProps) => {
 	const dispatch = useAppDispatch();
@@ -61,22 +62,17 @@ export const CodeError = (props: CodeErrorProps) => {
 		};
 	}, shallowEqual);
 
-	// const allStackTraces = props.codeError.stackTraces;
-	// const firstStackTrace = allStackTraces
-	// 	? allStackTraces[0]
-	// 		? allStackTraces[0]
-	// 		: undefined
-	// 	: undefined;
-
 	const {
 		lines: stackTraceLines,
 		text: stackTraceText,
 		repoId,
 		sha,
-	} = { ...props.parsedStackTrace?.parsedStackInfo };
+	} = { ...props.codeError?.stackTraces[0] };
 	const { accountId, entityGuid, guid: errorGroupGuid } = { ...props.errorGroup };
 
-	const [error, setError] = useState<string>();
+	const [discussionError, setDiscussionError] = useState<string>();
+	const [stackTraceError, setStackTraceError] = useState<string>();
+
 	const [discussion, setDiscussion] = useState<Discussion | undefined>(undefined);
 	const [discussionIsLoading, setDiscussionIsLoading] = useState<boolean>(false);
 	const [currentNrAiFile, setCurrentNrAiFile] = useState<string | undefined>(undefined);
@@ -87,14 +83,13 @@ export const CodeError = (props: CodeErrorProps) => {
 	});
 
 	useEffect(() => {
-		const stackTraceLinesHaveBeenResolved =
-			stackTraceLines?.filter(_ => _.hasOwnProperty("resolved")).length === stackTraceLines?.length;
+		const stackTraceHasUserLines = stackTraceLines?.some(_ => _.resolved);
 
-		if (stackTraceLinesHaveBeenResolved) {
+		if (stackTraceHasUserLines && !selectedLineIndex) {
 			initializeStackTrace();
 			scrollToStackTrace();
 		}
-	}, [stackTraceLines]);
+	}, [{ ...Object.values(stackTraceLines) }]);
 
 	const initializeStackTrace = () => {
 		if (!stackTraceLines) {
@@ -102,42 +97,81 @@ export const CodeError = (props: CodeErrorProps) => {
 		}
 
 		try {
+			let foundNrAiLine: CSStackTraceLine | undefined = undefined;
+			let foundNrAiLineIndex: number | undefined = undefined;
+			let foundLineIndex: number | undefined = undefined;
+
 			let lineIndex = 0;
 			const lineCount = stackTraceLines.length || 0;
 
-			while (lineIndex < lineCount && !currentNrAiFile && !selectedLineIndex) {
+			while (lineIndex < lineCount) {
 				const line = stackTraceLines[lineIndex];
 
-				// find first available method to copy
-				if (
-					!currentNrAiFile &&
-					line.method &&
-					line.resolved &&
-					line.method !== "<unknown>" &&
-					line.fileFullPath !== "<anonymous>"
-				) {
-					if (line.fileFullPath && !currentNrAiFile) {
-						dispatch(copySymbolFromIde({ stackLine: line, repoId }));
-						setCurrentNrAiFile(line.fileFullPath);
-					}
+				// skip lines that are not resolved
+				if (!line.resolved) {
+					lineIndex++;
+					continue;
 				}
 
-				// find the first available stack line to actually jump to
-				if (!selectedLineIndex && line.resolved) {
-					dispatch(
-						jumpToStackLine({
-							lineIndex: lineIndex,
-							stackLine: line,
-							repoId: repoId!,
-							ref: sha,
-						})
-					);
+				// find a method we can copy for AI usage
+				if (
+					line.method &&
+					line.method !== "<unknown>" &&
+					line.fileFullPath &&
+					line.fileFullPath !== "<anonymous>"
+				) {
+					foundNrAiLine = line;
+					foundNrAiLineIndex = lineIndex;
+					break;
+				}
+
+				// find a line we can jump to in the IDE
+				if (!foundLineIndex) {
+					foundLineIndex = lineIndex;
+					break;
 				}
 
 				lineIndex++;
 			}
+
+			// we found what we need for NRAI, so use it for everything
+			if (foundNrAiLine && foundNrAiLineIndex) {
+				setCurrentNrAiFile(foundNrAiLine.fileFullPath);
+				setSelectedLineIndex(foundNrAiLineIndex);
+
+				dispatch(
+					copySymbolFromIde({
+						stackLine: foundNrAiLine,
+						repoId,
+					})
+				).then(() => {
+					dispatch(
+						jumpToStackLine({
+							lineIndex: foundNrAiLineIndex!,
+							stackLine: foundNrAiLine!,
+							repoId: repoId!,
+						})
+					);
+				});
+				return;
+			}
+
+			// we didn't find a method we can copy for AI usage, so just jump to the first line we can
+			if (foundLineIndex) {
+				setSelectedLineIndex(foundLineIndex);
+				dispatch(
+					jumpToStackLine({
+						lineIndex: foundLineIndex!,
+						stackLine: stackTraceLines[foundLineIndex!],
+						repoId: repoId!,
+						ref: sha,
+					})
+				);
+
+				return;
+			}
 		} catch (ex) {
-			handleError("An error occurred while attempting to process the stack trace.", ex);
+			handleStackTraceError("An error occurred while attempting to process the stack trace.", ex);
 		}
 	};
 
@@ -152,12 +186,6 @@ export const CodeError = (props: CodeErrorProps) => {
 
 	const showGrok = useMemo(() => {
 		const result = derivedState.grokNraiCapability || derivedState.grokFeatureEnabled;
-		console.debug(
-			"grokStates",
-			derivedState.grokNraiCapability,
-			derivedState.grokFeatureEnabled,
-			result
-		);
 		return result;
 	}, [derivedState.grokNraiCapability, derivedState.grokFeatureEnabled]);
 
@@ -174,7 +202,11 @@ export const CodeError = (props: CodeErrorProps) => {
 		return repo.name;
 	}, [derivedState.repos, repoId]);
 
-	const handleError = (message: string, params?: { error?: Error; nrError?: NRErrorResponse }) => {
+	const logError = (
+		errorHandler: Function,
+		message: string,
+		params?: { error?: Error; nrError?: NRErrorResponse }
+	) => {
 		if (params && params.error) {
 			console.error(params.error.message, params.error);
 		} else if (params && params.nrError) {
@@ -183,7 +215,21 @@ export const CodeError = (props: CodeErrorProps) => {
 			console.error(message);
 		}
 
-		setError(message);
+		errorHandler(message);
+	};
+
+	const handleDiscussionError = (
+		message: string,
+		params?: { error?: Error; nrError?: NRErrorResponse }
+	) => {
+		logError(setDiscussionError, message, params);
+	};
+
+	const handleStackTraceError = (
+		message: string,
+		params?: { error?: Error; nrError?: NRErrorResponse }
+	) => {
+		logError(setStackTraceError, message, params);
 	};
 
 	useEffect(() => {
@@ -202,14 +248,15 @@ export const CodeError = (props: CodeErrorProps) => {
 				entityGuid: entityGuid!,
 			};
 
-			delete payload.NRAI;
-
 			const response = await HostApi.instance.send(GetErrorInboxCommentsRequestType, payload);
 
 			if (response.NrError) {
-				handleError("An error occurred while attempting to load this error's discussion.", {
-					nrError: response.NrError,
-				});
+				handleDiscussionError(
+					"An error occurred while attempting to load this error's discussion.",
+					{
+						nrError: response.NrError,
+					}
+				);
 			} else {
 				setDiscussion({
 					threadId: response.threadId!,
@@ -217,7 +264,7 @@ export const CodeError = (props: CodeErrorProps) => {
 				});
 			}
 		} catch (ex) {
-			handleError("An error occurred while attempting to load this error's discussion.", {
+			handleDiscussionError("An error occurred while attempting to load this error's discussion.", {
 				error: ex,
 			});
 		} finally {
@@ -288,6 +335,7 @@ export const CodeError = (props: CodeErrorProps) => {
 	// 		}
 	// 	}
 	// };
+
 	const renderLogsIcon = () => {
 		if (!derivedState.traceId) {
 			return null;
@@ -322,83 +370,92 @@ export const CodeError = (props: CodeErrorProps) => {
 
 	const renderStackTraceLines = () => {
 		return (
-			<MetaSection>
-				<Meta id="stack-trace">
-					<MetaLabel>Stack Trace</MetaLabel>
-					<TourTip placement="bottom">
-						<ClickLines tabIndex={0} className="code">
-							{(stackTraceLines || []).map((line, i) => {
-								if (!line || !line.fileFullPath) return null;
+			<>
+				{stackTraceError && (
+					<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
+						<h4>{stackTraceError}</h4>
+					</div>
+				)}
 
-								const className = i === selectedLineIndex ? "monospace li-active" : "monospace";
-								const mline = line.fileFullPath.replace(/\s\s\s\s+/g, "     ");
-								return !line.resolved || props.stackFrameClickDisabled ? (
-									<Tooltip key={"tooltipline-" + i} title={line.error} placement="bottom" delay={1}>
-										<DisabledClickLine key={"disabled-line" + i} className="monospace">
-											<span>
-												<span style={{ opacity: ".6" }}>{line.fullMethod}</span>({mline}:
-												<strong>{line.line}</strong>
-												{line.column ? `:${line.column}` : null})
-											</span>
-										</DisabledClickLine>
-									</Tooltip>
-								) : (
-									<ClickLine
-										key={"click-line" + i}
-										className={className}
-										onClick={e => onClickStackLine(e, i)}
-									>
-										<span>
-											<span style={{ opacity: ".6" }}>{line.method}</span>({mline}:
-											<strong>{line.line}</strong>
-											{line.column ? `:${line.column}` : null})
-										</span>
-									</ClickLine>
-								);
-							})}
-						</ClickLines>
-					</TourTip>
-				</Meta>
-				{/*
-                    TODO COLLAB-ERRORS: Reactions to a comment
-                    {props.post && (
-                        <div>
-                            <Reactions className="reactions no-pad-left" post={props.post} />
-                        </div>
-                    )}
-                    {!props.collapsed && props.post && <Attachments post={props.post as CSPost} />} */}
-			</MetaSection>
+				{!stackTraceError && (
+					<MetaSection>
+						<Meta id="stack-trace">
+							<MetaLabel>Stack Trace</MetaLabel>
+							<TourTip placement="bottom">
+								<ClickLines tabIndex={0} className="code">
+									{(stackTraceLines || []).map((line, i) => {
+										if (!line || !line.fileFullPath) return null;
+
+										const className = i === selectedLineIndex ? "monospace li-active" : "monospace";
+										const mline = line.fileFullPath.replace(/\s\s\s\s+/g, "     ");
+										return !line.resolved || props.stackFrameClickDisabled ? (
+											<Tooltip
+												key={"tooltipline-" + i}
+												title={line.error}
+												placement="bottom"
+												delay={1}
+											>
+												<DisabledClickLine key={"disabled-line" + i} className="monospace">
+													<span>
+														<span style={{ opacity: ".6" }}>{line.fullMethod}</span>({mline}:
+														<strong>{line.line}</strong>
+														{line.column ? `:${line.column}` : null})
+													</span>
+												</DisabledClickLine>
+											</Tooltip>
+										) : (
+											<ClickLine
+												key={"click-line" + i}
+												className={className}
+												onClick={e => onClickStackLine(e, i)}
+											>
+												<span>
+													<span style={{ opacity: ".6" }}>{line.method}</span>({mline}:
+													<strong>{line.line}</strong>
+													{line.column ? `:${line.column}` : null})
+												</span>
+											</ClickLine>
+										);
+									})}
+								</ClickLines>
+							</TourTip>
+						</Meta>
+					</MetaSection>
+				)}
+			</>
 		);
 	};
 
 	const renderStackTraceText = () => {
 		return (
-			<MetaSection>
-				<Meta id="stack-trace">
-					<MetaLabel>Stack Trace</MetaLabel>
-					<TourTip placement="bottom">
-						<ClickLines id="stack-trace" className="code" tabIndex={0}>
-							{stackTraceText!.split("\n").map((line: string, i) => {
-								if (!line) return null;
-								const mline = line.replace(/\s\s\s\s+/g, "     ");
-								return (
-									<DisabledClickLine key={"disabled-line" + i} className="monospace">
-										<span style={{ opacity: ".75" }}>{mline}</span>
-									</DisabledClickLine>
-								);
-							})}
-						</ClickLines>
-					</TourTip>
-				</Meta>
-				{/*
-                    TODO COLLAB-ERRORS: Reactions to a comment
-                    {props.post && (
-                        <div>
-                            <Reactions className="reactions no-pad-left" post={props.post} />
-                        </div>
-                    )}
-                    {!props.collapsed && props.post && <Attachments post={props.post as CSPost} />} */}
-			</MetaSection>
+			<>
+				{stackTraceError && (
+					<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
+						<h4>{stackTraceError}</h4>
+					</div>
+				)}
+
+				{!stackTraceError && (
+					<MetaSection>
+						<Meta id="stack-trace">
+							<MetaLabel>Stack Trace</MetaLabel>
+							<TourTip placement="bottom">
+								<ClickLines id="stack-trace" className="code" tabIndex={0}>
+									{stackTraceText!.split("\n").map((line: string, i) => {
+										if (!line) return null;
+										const mline = line.replace(/\s\s\s\s+/g, "     ");
+										return (
+											<DisabledClickLine key={"disabled-line" + i} className="monospace">
+												<span style={{ opacity: ".75" }}>{mline}</span>
+											</DisabledClickLine>
+										);
+									})}
+								</ClickLines>
+							</TourTip>
+						</Meta>
+					</MetaSection>
+				)}
+			</>
 		);
 	};
 
@@ -408,52 +465,59 @@ export const CodeError = (props: CodeErrorProps) => {
 		}
 
 		return (
-			<CardFooter
-				className={"grok-not-loading" + " replies-to-review"}
-				style={{ borderTop: "none", marginTop: 0 }}
-			>
-				{!discussion && discussionIsLoading && (
-					<DiscussionLoadingSkeleton></DiscussionLoadingSkeleton>
+			<>
+				{discussionError && (
+					<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
+						<h4>{discussionError}</h4>
+					</div>
 				)}
 
-				{discussion && !discussionIsLoading && (
-					<>
-						{<MetaLabel>Discussion</MetaLabel>}
+				<CardFooter
+					className={"grok-not-loading" + " replies-to-review"}
+					style={{ borderTop: "none", marginTop: 0 }}
+				>
+					{!discussion && discussionIsLoading && (
+						<DiscussionLoadingSkeleton></DiscussionLoadingSkeleton>
+					)}
 
-						<DiscussionThread
-							discussion={discussion}
-							file={currentNrAiFile}
-							functionToEdit={derivedState.functionToEdit}
-							isLoading={discussionIsLoading}
-							reloadDiscussion={loadDiscussion}
-						/>
+					{discussion && !discussionIsLoading && (
+						<>
+							{<MetaLabel>Discussion</MetaLabel>}
 
-						<ComposeWrapper>
-							<CommentInput
-								threadId={discussion.threadId}
-								codeError={props.codeError}
-								showGrok={showGrok}
+							<DiscussionThread
+								discussion={discussion}
+								file={currentNrAiFile}
+								functionToEdit={derivedState.functionToEdit}
 								isLoading={discussionIsLoading}
 								reloadDiscussion={loadDiscussion}
 							/>
-						</ComposeWrapper>
-					</>
-				)}
-			</CardFooter>
+
+							<ComposeWrapper>
+								<CommentInput
+									threadId={discussion.threadId}
+									codeError={props.codeError}
+									showGrok={showGrok}
+									isLoading={discussionIsLoading}
+									reloadDiscussion={loadDiscussion}
+								/>
+							</ComposeWrapper>
+						</>
+					)}
+				</CardFooter>
+			</>
 		);
 	};
 
 	return (
 		<>
-			{!props.codeError ||
-				(!props.errorGroup && (
-					<DelayedRender>
-						<Loading />
-					</DelayedRender>
-				))}
+			{(!props.codeError || !props.errorGroup) && (
+				<DelayedRender>
+					<Loading />
+				</DelayedRender>
+			)}
 
 			<MinimumWidthCard {...getCardProps(props)} noCard={!props.isCollapsed}>
-				{!error && props.codeError?.text && (
+				{props.codeError?.text && (
 					<Message
 						data-testid="code-error-text"
 						style={{
@@ -464,56 +528,48 @@ export const CodeError = (props: CodeErrorProps) => {
 					</Message>
 				)}
 
-				{!error && (
-					<div
-						style={{
-							minHeight: props.errorGroup ? "18px" : "initial",
-							opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25",
-						}}
-					>
-						{props.errorGroup &&
-							props.errorGroup.attributes &&
-							Object.keys(props.errorGroup.attributes).map(key => {
-								const value: { type: string; value: any } = props.errorGroup.attributes![key];
-								return (
-									<DataRow>
-										<DataLabel>{key}:</DataLabel>
-										<DataValue>
-											{value.type === "timestamp" && (
-												<Timestamp className="no-padding" time={value.value as number} />
-											)}
-											{value.type !== "timestamp" && <>{value.value}</>}
-										</DataValue>
-									</DataRow>
-								);
-							})}
+				<div
+					style={{
+						minHeight: props.errorGroup ? "18px" : "initial",
+						opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25",
+					}}
+				>
+					{props.errorGroup &&
+						props.errorGroup.attributes &&
+						Object.keys(props.errorGroup.attributes).map(key => {
+							const value: { type: string; value: any } = props.errorGroup.attributes![key];
+							return (
+								<DataRow>
+									<DataLabel>{key}:</DataLabel>
+									<DataValue>
+										{value.type === "timestamp" && (
+											<Timestamp className="no-padding" time={value.value as number} />
+										)}
+										{value.type !== "timestamp" && <>{value.value}</>}
+									</DataValue>
+								</DataRow>
+							);
+						})}
 
-						{repoName && (
-							<DataRow data-testid="code-error-repo">
-								<DataLabel>Repo:</DataLabel>
-								<DataValue>{repoName}</DataValue>
-							</DataRow>
-						)}
+					{repoName && (
+						<DataRow data-testid="code-error-repo">
+							<DataLabel>Repo:</DataLabel>
+							<DataValue>{repoName}</DataValue>
+						</DataRow>
+					)}
 
-						{sha && (
-							<DataRow data-testid="code-error-ref">
-								<DataLabel>Build:</DataLabel>
-								<DataValue>{sha?.substring(0, 7)}</DataValue>
-							</DataRow>
-						)}
-					</div>
-				)}
+					{sha && (
+						<DataRow data-testid="code-error-ref">
+							<DataLabel>Build:</DataLabel>
+							<DataValue>{sha?.substring(0, 7)}</DataValue>
+						</DataRow>
+					)}
+				</div>
 
-				{!error && stackTraceLines && renderStackTraceLines()}
-				{!error && !stackTraceLines && stackTraceText && renderStackTraceText()}
-				{!error && renderLogsIcon()}
-				{!error && renderFooter()}
-
-				{error && (
-					<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
-						<h4>{error}</h4>
-					</div>
-				)}
+				{stackTraceLines && renderStackTraceLines()}
+				{!stackTraceLines && stackTraceText && renderStackTraceText()}
+				{renderLogsIcon()}
+				{renderFooter()}
 			</MinimumWidthCard>
 		</>
 	);
