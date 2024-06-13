@@ -162,8 +162,8 @@ export const fetchErrorGroupDiscussion = createAppAsyncThunk(
 				entityGuid: entityGuid,
 			});
 
-			if (results.NrError) {
-				throw new Error(results.NrError.error.message);
+			if (results.nrError) {
+				throw new Error(results.nrError.error.message);
 			}
 
 			return {

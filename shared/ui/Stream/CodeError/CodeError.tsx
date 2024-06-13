@@ -1,6 +1,8 @@
 import {
 	GetErrorInboxCommentsRequest,
 	GetErrorInboxCommentsRequestType,
+	InitiateNrAiRequest,
+	InitiateNrAiRequestType,
 	NRErrorResponse,
 } from "@codestream/protocols/agent";
 import React, { useEffect, useMemo, useState } from "react";
@@ -233,10 +235,44 @@ export const CodeError = (props: CodeErrorProps) => {
 	};
 
 	useEffect(() => {
-		if (accountId && entityGuid && errorGroupGuid) {
-			loadDiscussion();
+		if (!accountId || !entityGuid || !errorGroupGuid) {
+			return;
 		}
+
+		loadDiscussion().then(() => {
+			initiateNrAi();
+		});
 	}, [accountId, entityGuid, errorGroupGuid]);
+
+	const initiateNrAi = async () => {
+		// discussion is no good
+		if (!discussion || !discussion.threadId || discussion.comments.length > 0) {
+			return;
+		}
+
+		// grok no good
+		if (!showGrok || derivedState.functionToEditFailed || !derivedState.functionToEdit) {
+			return;
+		}
+
+		const initiateNrAiPayload: InitiateNrAiRequest = {
+			codeBlock: derivedState.functionToEdit.codeBlock,
+			fileUri: derivedState.functionToEdit.uri,
+			permalink: repoName!,
+			repo: repoName!,
+			sha: sha!,
+			threadId: discussion.threadId,
+		};
+
+		// send the payload to the agent
+		const response = await HostApi.instance.send(InitiateNrAiRequestType, initiateNrAiPayload);
+
+		if (response.nrError) {
+			handleDiscussionError("An error occurred while attempting to initiate NRAI.", {
+				nrError: response.nrError,
+			});
+		}
+	};
 
 	const loadDiscussion = async () => {
 		try {
@@ -250,11 +286,11 @@ export const CodeError = (props: CodeErrorProps) => {
 
 			const response = await HostApi.instance.send(GetErrorInboxCommentsRequestType, payload);
 
-			if (response.NrError) {
+			if (response.nrError) {
 				handleDiscussionError(
 					"An error occurred while attempting to load this error's discussion.",
 					{
-						nrError: response.NrError,
+						nrError: response.nrError,
 					}
 				);
 			} else {
