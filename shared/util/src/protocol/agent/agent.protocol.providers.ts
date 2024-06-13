@@ -1435,6 +1435,27 @@ export interface CollaborationComment {
 	};
 }
 
+export interface InitiateNrAiRequest {
+	fileUri: string;
+	codeBlock: string;
+	permalink: string;
+	repo: string;
+	sha: string;
+
+	threadId: string;
+}
+
+export interface InitiateNrAiResponse {
+	nrError?: NRErrorResponse;
+}
+
+export const InitiateNrAiRequestType = new RequestType<
+	InitiateNrAiRequest,
+	InitiateNrAiResponse,
+	void,
+	void
+>("codestream/newrelic/collaboration/initiateNrAi");
+
 export interface GetErrorInboxCommentsRequest {
 	accountId: number;
 	errorGroupGuid: string;
@@ -1456,7 +1477,7 @@ export interface GetErrorInboxCommentsRequest {
 export interface GetErrorInboxCommentsResponse {
 	threadId?: string;
 	comments?: CollaborationComment[];
-	NrError?: NRErrorResponse;
+	nrError?: NRErrorResponse;
 }
 
 export const GetErrorInboxCommentsRequestType = new RequestType<
@@ -1473,7 +1494,7 @@ export interface CreateCollaborationCommentRequest {
 
 export interface CreateCollaborationCommentResponse {
 	commentId?: string;
-	error?: NRErrorResponse;
+	nrError?: NRErrorResponse;
 }
 
 export const CreateCollaborationCommentRequestType = new RequestType<
@@ -1489,7 +1510,7 @@ export interface DeleteCollaborationThreadRequest {
 
 export interface DeleteCollaborationThreadResponse {
 	threadId?: string;
-	error?: NRErrorResponse;
+	nrError?: NRErrorResponse;
 }
 
 export const DeleteCollaborationThreadRequestType = new RequestType<
@@ -1505,7 +1526,7 @@ export interface DeleteCollaborationCommentRequest {
 
 export interface DeleteCollaborationCommentResponse {
 	commentId?: string;
-	error?: NRErrorResponse;
+	nrError?: NRErrorResponse;
 }
 
 export const DeleteCollaborationCommentRequestType = new RequestType<
@@ -1522,7 +1543,7 @@ export interface UpdateCollaborationCommentRequest {
 
 export interface UpdateCollaborationCommentResponse {
 	commentId?: string;
-	error?: NRErrorResponse;
+	nrError?: NRErrorResponse;
 }
 
 export const UpdateCollaborationCommentRequestType = new RequestType<

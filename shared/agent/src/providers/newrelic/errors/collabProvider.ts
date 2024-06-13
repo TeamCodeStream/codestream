@@ -12,6 +12,9 @@ import {
 	GetErrorInboxCommentsRequest,
 	GetErrorInboxCommentsRequestType,
 	GetErrorInboxCommentsResponse,
+	InitiateNrAiRequest,
+	InitiateNrAiRequestType,
+	InitiateNrAiResponse,
 	UpdateCollaborationCommentRequest,
 	UpdateCollaborationCommentRequestType,
 	UpdateCollaborationCommentResponse,
@@ -62,7 +65,7 @@ export class CollaborationTeamProvider {
 				error: ex,
 			});
 
-			return { error: mapNRErrorResponse(ex) };
+			return { nrError: mapNRErrorResponse(ex) };
 		}
 	}
 
@@ -94,7 +97,7 @@ export class CollaborationTeamProvider {
 				error: ex,
 			});
 
-			return { error: mapNRErrorResponse(ex) };
+			return { nrError: mapNRErrorResponse(ex) };
 		}
 	}
 
@@ -126,7 +129,7 @@ export class CollaborationTeamProvider {
 				error: ex,
 			});
 
-			return { error: mapNRErrorResponse(ex) };
+			return { nrError: mapNRErrorResponse(ex) };
 		}
 	}
 
@@ -165,6 +168,138 @@ export class CollaborationTeamProvider {
 			throw ex;
 		}
 	}
+
+	@lspHandler(InitiateNrAiRequestType)
+	@log()
+	async initializeNrAi(request: InitiateNrAiRequest): Promise<InitiateNrAiResponse> {
+		try {
+			const codeMarkId = await this.createCodeMark({
+				codeBlock: request.codeBlock,
+				fileUri: request.fileUri,
+				permalink: request.permalink,
+				repo: request.repo,
+				sha: request.sha,
+			});
+
+			const initiateNrAiQuery = `
+				mutation {
+					createGrokInitiatedConversation(
+					threadId: ${request.threadId}
+					prompt: ""
+					contextMetadata: {
+					}
+					assistant: ""
+					assistantConfig: {}
+					
+				}`;
+
+			return {};
+		} catch (ex) {
+			ContextLogger.warn("GetErrorInboxComments failure", {
+				request,
+				error: ex,
+			});
+
+			return { nrError: mapNRErrorResponse(ex) };
+		}
+	}
+
+	@lspHandler(GetErrorInboxCommentsRequestType)
+	@log()
+	async GetErrorInboxComments(
+		request: GetErrorInboxCommentsRequest
+	): Promise<GetErrorInboxCommentsResponse> {
+		try {
+			const { accountId, errorGroupGuid, entityGuid } = { ...request };
+
+			const bootstrapResponse = await this.bootstrapCollaborationDiscussionForError(
+				accountId,
+				errorGroupGuid,
+				entityGuid
+			);
+
+			const commentsQuery = `
+				{
+					actor {
+						collaboration {
+							commentsByThreadId(threadId: "${bootstrapResponse.threadId}") {
+								entities {
+									body
+									deactivated
+									id
+									systemMessageType
+									createdAt
+									creator {
+										email
+										name
+										userId
+									}
+								}
+							}
+						}
+					}
+				}`;
+
+			const response = await this.graphqlClient.query<CommentsByThreadIdResponse>(commentsQuery);
+
+			const comments = response.actor.collaboration.commentsByThreadId.entities
+				.filter(e => !e.systemMessageType)
+				.filter(e => e.deactivated === false)
+				.filter(e => e.creator.userId != 0)
+				.sort((e1, e2) => e1.createdAt - e2.createdAt)
+				.map(e => {
+					return e;
+				});
+
+			return {
+				threadId: bootstrapResponse.threadId,
+				comments,
+			};
+		} catch (ex) {
+			ContextLogger.warn("GetErrorInboxComments failure", {
+				request,
+				error: ex,
+			});
+
+			return { nrError: mapNRErrorResponse(ex) };
+		}
+	}
+
+	private async createCodeMark(request: {
+		codeBlock: string;
+		fileUri: string;
+		permalink: string;
+		repo: string;
+		sha: string;
+	}): Promise<string> {
+		try {
+			const createCodeMarkQuery = `
+				mutation {
+					collaborationCreateCodeMark(
+						code: "${request.codeBlock}"
+						file: "${request.fileUri}"
+						permalink: "${request.permalink}"
+						repo: "${request.repo}"
+						sha: "${request.sha}") {
+						id
+					}
+				}`;
+
+			const createCodeMarkResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
+				createCodeMarkQuery
+			);
+
+			return createCodeMarkResponse.collaborationCreateCodeMark.id;
+		} catch (ex) {
+			ContextLogger.warn("createCodeMark failure", {
+				request,
+				error: ex,
+			});
+
+			throw ex;
+		}
+	}
+
 	/**
 	 * This is called as part of the bootstrapping method, as a thread must exist to add comments, but a user doesn't
 	 * need to be concerned with that aspect of it, so we'll just always create one on their behalf if need be.
@@ -293,67 +428,6 @@ export class CollaborationTeamProvider {
 			});
 
 			throw ex;
-		}
-	}
-
-	@lspHandler(GetErrorInboxCommentsRequestType)
-	@log()
-	async GetErrorInboxComments(
-		request: GetErrorInboxCommentsRequest
-	): Promise<GetErrorInboxCommentsResponse> {
-		try {
-			const { accountId, errorGroupGuid, entityGuid } = { ...request };
-
-			const bootstrapResponse = await this.bootstrapCollaborationDiscussionForError(
-				accountId,
-				errorGroupGuid,
-				entityGuid
-			);
-
-			const commentsQuery = `
-				{
-					actor {
-						collaboration {
-							commentsByThreadId(threadId: "${bootstrapResponse.threadId}") {
-								entities {
-									body
-									deactivated
-									id
-									systemMessageType
-									createdAt
-									creator {
-										email
-										name
-										userId
-									}
-								}
-							}
-						}
-					}
-				}`;
-
-			const response = await this.graphqlClient.query<CommentsByThreadIdResponse>(commentsQuery);
-
-			const comments = response.actor.collaboration.commentsByThreadId.entities
-				.filter(e => !e.systemMessageType)
-				.filter(e => e.deactivated === false)
-				.filter(e => e.creator.userId != 0)
-				.sort((e1, e2) => e1.createdAt - e2.createdAt)
-				.map(e => {
-					return e;
-				});
-
-			return {
-				threadId: bootstrapResponse.threadId,
-				comments,
-			};
-		} catch (ex) {
-			ContextLogger.warn("GetErrorInboxComments failure", {
-				request,
-				error: ex,
-			});
-
-			return { NrError: mapNRErrorResponse(ex) };
 		}
 	}
 }
