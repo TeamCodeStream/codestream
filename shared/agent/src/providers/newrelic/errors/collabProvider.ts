@@ -210,12 +210,14 @@ export class CollaborationTeamProvider {
 		request: GetErrorInboxCommentsRequest
 	): Promise<GetErrorInboxCommentsResponse> {
 		try {
-			const { accountId, errorGroupGuid, entityGuid } = { ...request };
+			const { accountId, errorGroupGuid, entityGuid, entityDomain, entityType } = { ...request };
 
 			const bootstrapResponse = await this.bootstrapCollaborationDiscussionForError(
 				accountId,
 				errorGroupGuid,
-				entityGuid
+				entityGuid,
+				entityDomain,
+				entityType
 			);
 
 			const commentsQuery = `
@@ -325,8 +327,8 @@ export class CollaborationTeamProvider {
 			const updateThreadStatusQuery = `
 				mutation {
 					collaborationUpdateThreadStatus(
-						id: ${createThreadResponse.collaborationCreateThread.id},
-						status: "OPEN"
+						id: "${createThreadResponse.collaborationCreateThread.id}"
+						status: OPEN
 					) {
 						id
 					}
@@ -357,14 +359,16 @@ export class CollaborationTeamProvider {
 	private async bootstrapCollaborationDiscussionForError(
 		accountId: number,
 		errorGroupGuid: string,
-		entityGuid: string
+		entityGuid: string,
+		entityDomain: string,
+		entityType: string
 	): Promise<BootStrapResponse> {
 		try {
 			const contextId = await generateHash({
 				accountId: accountId,
 				entityGuid: entityGuid,
 				nerdletId: "errors-inbox.error-group-details",
-				pageId: [errorGroupGuid, "WORKLOAD"],
+				pageId: [errorGroupGuid, `${entityDomain}-${entityType}`.toLocaleUpperCase()],
 			});
 
 			const createContextQuery = `

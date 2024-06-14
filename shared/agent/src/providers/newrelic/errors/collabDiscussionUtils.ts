@@ -13,7 +13,7 @@ function formatHashAsUuid(hash: string): string {
 	].join("-");
 }
 
-function canonicalize(key: string, value: any): any {
+function canonicalize(key: any, value: any): Object {
 	if (value === null || typeof value !== "object" || Array.isArray(value)) {
 		return value;
 	}

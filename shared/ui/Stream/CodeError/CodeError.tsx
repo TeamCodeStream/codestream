@@ -45,14 +45,18 @@ import {
 import { Loading } from "@codestream/webview/Container/Loading";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { CSStackTraceLine } from "../../../util/src/protocol/agent/api.protocol.models";
+import { parseId } from "@codestream/webview/utilities/newRelic";
 
 export const CodeError = (props: CodeErrorProps) => {
 	const dispatch = useAppDispatch();
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const currentCodeErrorData = state.context.currentCodeErrorData;
+		const parsed = parseId(currentCodeErrorData?.entityGuid!);
 
 		return {
+			entityDomain: currentCodeErrorData?.domain,
+			entityType: parsed?.type,
 			traceId: currentCodeErrorData?.traceId,
 			functionToEdit: state.codeErrors.functionToEdit,
 			functionToEditFailed: state.codeErrors.functionToEditFailed,
@@ -282,6 +286,8 @@ export const CodeError = (props: CodeErrorProps) => {
 				accountId: accountId!,
 				errorGroupGuid: errorGroupGuid!,
 				entityGuid: entityGuid!,
+				entityDomain: derivedState.entityDomain!,
+				entityType: derivedState.entityType!,
 			};
 
 			const response = await HostApi.instance.send(GetErrorInboxCommentsRequestType, payload);
