@@ -14,7 +14,6 @@ import {
 	addAndEnhanceCodeError,
 	api,
 	fetchErrorGroup,
-	fetchErrorGroupDiscussion,
 	fetchNewRelicErrorGroup,
 	resolveStackTrace,
 	setErrorGroup,
@@ -328,14 +327,6 @@ export function CodeErrorNavigator(props: Props) {
 				});
 				return;
 			}
-
-			await dispatch(
-				fetchErrorGroupDiscussion({
-					accountId: accountIdToUse!,
-					errorGroupGuid: errorGroupGuidToUse,
-					entityGuid: entityIdToUse!,
-				})
-			);
 
 			let repoId: string | undefined = undefined;
 			let stackInfo: ResolveStackTraceResponse | undefined = undefined;

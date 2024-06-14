@@ -1462,18 +1462,8 @@ export interface GetErrorInboxCommentsRequest {
 	accountId: number;
 	errorGroupGuid: string;
 	entityGuid: string;
-
-	// getting the comments has the (intended) side effect of bootstrapping
-	// the entire conversation tree, and as such, we may need to intiate
-	// NRAI for that first comment in the thread.
-	NRAI?: {
-		nrAIEnabled?: boolean;
-		file?: string;
-		code?: string;
-		permalink?: string;
-		repo?: string;
-		sha?: string;
-	};
+	entityType: string;
+	entityDomain: string;
 }
 
 export interface GetErrorInboxCommentsResponse {
