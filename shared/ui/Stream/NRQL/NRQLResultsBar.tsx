@@ -45,12 +45,15 @@ export const NRQLResultsBar = (props: Props) => {
 	const _results = renameKeyToName(props.results);
 
 	// find the first key that has a value that's a number, fallback to count
-	const keyName =
+	let keyName =
 		(_results?.length
-			? Object.keys(_results[0]).find(key => {
-					return typeof _results[0][key] === "number";
-			  })
+			? Object.keys(_results[0]).find(key => typeof _results[0][key] === "number")
 			: "count") || "count";
+
+	// In the case of uniqueCount, default keyname to count
+	if (keyName && keyName.includes("uniqueCount")) {
+		keyName = "count";
+	}
 
 	const results = normalizeDataToCount(_results);
 	const isCountValidNumber = checkForValidCountValue(results);
