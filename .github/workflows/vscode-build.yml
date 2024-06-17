@@ -2,14 +2,46 @@ name: 'VSCode Build'
   
 on:
   workflow_dispatch:
- 
+  push:
+    branches:
+      - develop
+      - master
+    paths:
+      - 'vscode/**'
+      - 'shared/**'
+      - 'util/**'
+      - 'build/**'
+      - 'agent/**'
+      - '.github/workflows/vscode-build.yml'
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches:
+      - develop
+      - master
+    paths:
+      - 'vscode/**'
+      - 'shared/**'
+      - 'util/**'
+      - 'build/**'
+      - 'agent/**'
+      - '.github/workflows/vscode-build.yml'
+
 jobs:
-  VSCode-Build:     
+  VSCode:     
     runs-on: ubuntu-latest
+
+    permissions: write-all
 
     steps:
     - uses: actions/checkout@v4
-    
+    - uses: hrishikesh-kadam/setup-lcov@v1
+
+    - name: Read package.json
+      id: package_version  
+      uses: zvonimirsun/read-package-version-actions@v2
+      with: 
+        path: ./vscode
+      
     - name: Setup Node.js environment
       uses: actions/setup-node@v4.0.2
       with:
@@ -17,56 +49,116 @@ jobs:
 
     - name: NPM Install
       run: |
-        cd vscode
-        npm install --no-save
+        cd ./shared/util
+        npm install --no-save --ignore-scripts
+        cd ../build
+        npm install --no-save --ignore-scripts
+        cd ../ui
+        npm install --no-save --ignore-scripts
+        cd ../agent
+        npm install --no-save --ignore-scripts
+        cd ../../vscode
+        npm install --no-save --ignore-scripts
         
-    - name: Compile & Verify VSCode
-      run: |
-        cd ./vscode
-        npm run verify:compile
-
-    - name: Compile & Verify Agent
-      run: |
-        cd ./shared/agent
-        npm run verify:compile
-        
-    - name: Compile & Verify Webviews
+    - name: Compile & Verify
       run: |
         cd ./shared/ui
+        npm run verify:compile  
+        cd ../agent
+        npm run verify:compile
+        cd ../../vscode
         npm run verify:compile
 
-    - name: Test VSCode
+    - name: Run Tests
+      id: test_run
       run: |
-        cd vscode
-        npm run vscode:test
-
-    - name: Test Agent
-      run: |
-        cd ./shared/agent
-        npm run test:unit
-
-    - name: Test UI
-      run: |
-        cd ./shared/agent
+        cd ./shared/build
+        npm run test:ci
+        cd ../util
+        npm run test:ci
+        cd ../agent
+        npm run test:ci:unit
+        cd ../ui
+        npm run test:ci
+        cd ../../vscode
         npm run test:ci
 
-    - name: Build Agent
+    - name: Test Report
+      uses: dorny/test-reporter@v1
+      if: steps.test_run.conclusion == 'success' || steps.test_run.conclusion == 'failure'
+      with:
+        name: Test Reports
+        path: '**/junit.xml'
+        reporter: jest-junit
+
+    - name: Share/Agent Code Coverage Report
+      uses: kefasjw/lcov-pull-request-report@v1
+      if: steps.test_run.conclusion == 'success'
+      with:
+        lcov-file: shared/agent/coverage/lcov.info
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: shared/agent
+        changed-files-minimum-coverage: 0
+        comment-title: Agent Code Coverage Report
+
+    - name: Shared/UI Code Coverage Report
+      uses: kefasjw/lcov-pull-request-report@v1
+      if: steps.test_run.conclusion == 'success'
+      with:
+        lcov-file: shared/ui/coverage/lcov.info
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: shared/ui
+        changed-files-minimum-coverage: 0
+        comment-title: Shared/UI Code Coverage Report
+
+    - name: Shared/Util Code Coverage Report
+      uses: kefasjw/lcov-pull-request-report@v1
+      if: steps.test_run.conclusion == 'success'
+      with:
+        lcov-file: shared/util/coverage/lcov.info
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: shared/util
+        changed-files-minimum-coverage: 0
+        comment-title: Shared/Util Code Coverage Report
+
+    - name: Shared/Build Code Coverage Report
+      uses: kefasjw/lcov-pull-request-report@v1
+      if: steps.test_run.conclusion == 'success'
+      with:
+        lcov-file: shared/build/coverage/lcov.info
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: shared/build
+        changed-files-minimum-coverage: 0
+        comment-title: Shared/Build Code Coverage Report
+
+    #   There are no tests that result in coverage being reported, so this action will fail when it
+    #   tries to parse the lcov.info file.  We should add tests that result in coverage being reported!
+
+    # - name: VSCode Code Coverage Report
+    #   uses: kefasjw/lcov-pull-request-report@v1
+    #   if: steps.test_run.conclusion == 'success'
+    #   with:
+    #     lcov-file: vscode/coverage/lcov.info
+    #     github-token: ${{ secrets.GITHUB_TOKEN }}
+    #     working-directory: vscode
+    #     changed-files-minimum-coverage: 0
+    #     comment-title: VSCode Code Coverage Report
+        
+    - name: Build Assets
       run: |
         cd ./shared/agent
         npm run build
-
-    - name: Build VSCode
-      run: |
-        cd ./vscode
-        npm run build        
+        cd ../../vscode
+        npm run build
         
     - name: Pack It Up
       run: |
         cd ./vscode
         npm run pack
+        mv codestream-*.vsix codestream-${{ steps.package_version.outputs.version }}-${{ github.run_number }}.vsix
 
-    - name: Upload a Build Artifact
+    - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4.3.3
       with:
+        name: vscode-codestream-${{ steps.package_version.outputs.version }}-${{ github.run_number }}
         path: ./vscode/codestream-*.vsix
-    

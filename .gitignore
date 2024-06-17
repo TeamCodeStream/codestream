@@ -16,3 +16,6 @@ shared/agent/newrelic_agent.log
 
 
 **/node_modules/
+
+**/junit.xml
+**/coverage/
