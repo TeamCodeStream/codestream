@@ -56,6 +56,10 @@ export const NRQLResultsArea = (props: Props) => {
 
 	const queryIsMultiSelect = isMultiSelect(props.results);
 
+	// this is similar to FacetLineLegend from line charts, but I like the somewhat
+	// redundant code here because stylistically these can differ, and its also
+	// easier to keep the setState callback functions contained within a single functional
+	// component
 	const MultiSelectAreaLegend = ({
 		payload,
 	}: {
