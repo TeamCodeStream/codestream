@@ -507,7 +507,7 @@ export class NrNRQLProvider {
 			);
 
 			if (dataKeys.length > 1) {
-				return { selected: "json", enabled: ["json"] };
+				return { selected: "line", enabled: ["json", "line", "area"] };
 			}
 			// complex timeseries data
 			if (Array.isArray(results[0][dataKeys[0]])) {
