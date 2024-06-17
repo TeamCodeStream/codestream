@@ -18,6 +18,7 @@ import {
 	fillNullValues,
 	getUniqueDataKeyAndFacetValues,
 	formatXAxisTime,
+	isMultiSelect,
 } from "./utils";
 import { EventTypeTooltip } from "./EventTypeTooltip";
 import { EventTypeLegend } from "./EventTypeLegend";
@@ -90,13 +91,7 @@ export const NRQLResultsLine: React.FC<NRQLResultsLineProps> = ({
 		setActiveIndex(undefined);
 	};
 
-	let isMultiSelect = false;
-	for (let obj of results) {
-		if (Object.keys(obj).length > 3) {
-			isMultiSelect = true;
-			break;
-		}
-	}
+	const queryIsMultiSelect = isMultiSelect(results);
 
 	const FacetLineLegend = ({ payload }: { payload?: { dataKey: string; color: string }[] }) => {
 		return (
@@ -153,7 +148,7 @@ export const NRQLResultsLine: React.FC<NRQLResultsLineProps> = ({
 	return (
 		<div style={{ marginLeft: `-${LEFT_MARGIN_ADJUST_VALUE}px` }} className="histogram-chart">
 			<div style={{ height: height, overflowY: "auto", overflowX: "hidden" }}>
-				{_isEmpty(facet) && !isMultiSelect && (
+				{_isEmpty(facet) && !queryIsMultiSelect && (
 					<ResponsiveContainer width="100%" height={500} debounce={1}>
 						{/* Non-facet, single line chart */}
 						<LineChart
@@ -181,7 +176,7 @@ export const NRQLResultsLine: React.FC<NRQLResultsLineProps> = ({
 						</LineChart>
 					</ResponsiveContainer>
 				)}
-				{_isEmpty(facet) && isMultiSelect && (
+				{_isEmpty(facet) && queryIsMultiSelect && (
 					<ResponsiveContainer width="100%" height={500} debounce={1}>
 						{/* Non-facet, single line chart */}
 						<LineChart

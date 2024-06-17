@@ -133,3 +133,14 @@ export const fillNullValues = array => {
 		Object.keys(obj).some(key => key !== "endTimeSeconds" && obj[key] !== undefined)
 	);
 };
+
+export const isMultiSelect = array => {
+	let isMultiSelect = false;
+	for (let obj of array) {
+		if (Object.keys(obj).length > 3) {
+			isMultiSelect = true;
+			break;
+		}
+	}
+	return isMultiSelect;
+};
