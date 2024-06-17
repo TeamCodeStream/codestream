@@ -164,10 +164,7 @@ describe("getResultsType", () => {
 			],
 			{ timeSeries: true } as any
 		);
-		expect(result).toStrictEqual({
-			selected: "json",
-			enabled: ["json"],
-		});
+		expect(result).toStrictEqual({ selected: "line", enabled: ["json", "line", "area"] });
 	});
 
 	it("is line (timeseries)", () => {
