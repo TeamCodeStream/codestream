@@ -22,7 +22,7 @@ import {
 	MetaSection,
 	MinimumWidthCard,
 } from "../Codemark/BaseCodemark";
-import Icon from "../Icon";
+import { Icon } from "../Icon";
 import { DiscussionThread } from "../Discussions/DiscussionThread";
 import Timestamp from "../Timestamp";
 import Tooltip from "../Tooltip";
@@ -52,7 +52,7 @@ export const CodeError = (props: CodeErrorProps) => {
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const currentCodeErrorData = state.context.currentCodeErrorData;
-		const parsed = parseId(currentCodeErrorData?.entityGuid!);
+		const parsed = parseId(currentCodeErrorData?.entityGuid);
 
 		return {
 			entityDomain: currentCodeErrorData?.domain,
@@ -349,18 +349,18 @@ export const CodeError = (props: CodeErrorProps) => {
 		}
 	};
 
+	// TODO: implement keyboard navigation for stack trace lines
 	// const handleKeyDown = event => {
-	// 	if (parsedStack?.resolvedStackInfo?.lines) {
+	// 	if (!stackTraceLines || !stackTraceLines.length || !selectedLineIndex) {
 	// 		return;
 	// 	}
-	// 	const lines = props.parsedStack?.resolvedStackInfo?.lines;
-	// 	if (!lines) return;
-	// 	let nextLine = currentSelectedLine;
+
+	// 	let nextLine = selectedLineIndex;
 	// 	if (event.key === "ArrowUp" || event.which === 38) {
 	// 		event.stopPropagation();
-	// 		while (currentSelectedLine >= 0) {
+	// 		while (selectedLineIndex >= 0) {
 	// 			nextLine--;
-	// 			if (!lines[nextLine].error) {
+	// 			if (!stackTraceLines[nextLine].error) {
 	// 				onClickStackLine(event, nextLine);
 	// 				return;
 	// 			}
@@ -368,9 +368,9 @@ export const CodeError = (props: CodeErrorProps) => {
 	// 	}
 	// 	if (event.key === "ArrowDown" || event.which === 40) {
 	// 		event.stopPropagation();
-	// 		while (currentSelectedLine <= lines.length) {
+	// 		while (selectedLineIndex <= stackTraceLines.length) {
 	// 			nextLine++;
-	// 			if (!lines[nextLine].error) {
+	// 			if (!stackTraceLines[nextLine].error) {
 	// 				onClickStackLine(event, nextLine);
 	// 				return;
 	// 			}

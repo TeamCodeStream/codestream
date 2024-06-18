@@ -1630,27 +1630,27 @@ class CodemarkForm extends React.Component<Props, State> {
 		return (
 			<MessageInput
 				onKeypress={() => this.setState({ touchedText: true })}
-				teamProvider={this.props.teamProvider}
-				isDirectMessage={this.props.channel.type === StreamType.Direct}
+				//teamProvider={this.props.teamProvider}
+				//isDirectMessage={this.props.channel.type === StreamType.Direct}
 				text={text}
 				placeholder={placeholder}
 				multiCompose
 				onChange={this.handleChange}
-				withTags={!this.props.textEditorUriHasPullRequestContext}
-				toggleTag={this.handleToggleTag}
-				toggleCodemark={this.handleToggleCodemark}
-				shouldShowRelatableCodemark={codemark =>
-					this.props.editingCodemark ? codemark.id !== this.props.editingCodemark.id : true
-				}
+				//withTags={!this.props.textEditorUriHasPullRequestContext}
+				//toggleTag={this.handleToggleTag}
+				//toggleCodemark={this.handleToggleCodemark}
+				// shouldShowRelatableCodemark={codemark =>
+				// 	this.props.editingCodemark ? codemark.id !== this.props.editingCodemark.id : true
+				// }
 				onSubmit={
 					this.props.currentPullRequestId
 						? this.handlePullRequestKeyboardSubmit
 						: this.handleClickSubmit
 				}
-				selectedTags={this.state.selectedTags}
-				relatedCodemarkIds={
-					this.props.textEditorUriHasPullRequestContext ? undefined : this.state.relatedCodemarkIds
-				}
+				//selectedTags={this.state.selectedTags}
+				// relatedCodemarkIds={
+				// 	this.props.textEditorUriHasPullRequestContext ? undefined : this.state.relatedCodemarkIds
+				// }
 				setIsPreviewing={isPreviewing => this.setState({ isPreviewing })}
 				renderCodeBlock={this.renderCodeBlock}
 				renderCodeBlocks={this.renderCodeBlocks}

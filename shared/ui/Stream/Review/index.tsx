@@ -82,7 +82,6 @@ import Menu from "../Menu";
 import { MessageInput, AttachmentField } from "../MessageInput";
 import { PRErrorBox } from "../PullRequestComponents";
 import { AddReactionIcon, Reactions } from "../Reactions";
-import { ReviewForm } from "../ReviewForm";
 import { SharingModal } from "../SharingModal";
 import Tag from "../Tag";
 import Timestamp from "../Timestamp";
@@ -1315,12 +1314,12 @@ const ReviewForReview = (props: PropsWithReview) => {
 					)}
 					{InputContainer && props.isAmending && (
 						<InputContainer>
-							<ReviewForm
+							{/* <ReviewForm
 								isEditing
 								isAmending
 								editingReview={review}
 								onClose={() => props.setIsAmending && props.setIsAmending(false)}
-							/>
+							/> */}
 							{/* spacer div that allows this to scroll all the way to the top.
 							 * note that it's not 100vh so that at least *some* content is always visible */}
 							<div style={{ height: "80vh" }} />
@@ -1340,11 +1339,12 @@ const ReviewForReview = (props: PropsWithReview) => {
 		);
 	if (isEditing && !props.isAmending) {
 		return (
-			<ReviewForm
-				isEditing={isEditing}
-				onClose={() => setIsEditing(false)}
-				editingReview={props.review}
-			/>
+			<></>
+			// <ReviewForm
+			// 	isEditing={isEditing}
+			// 	onClose={() => setIsEditing(false)}
+			// 	editingReview={props.review}
+			// />
 		);
 	} else {
 		return (
