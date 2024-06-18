@@ -297,11 +297,11 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				{ label: "-" },
 				{ label: "Sign Out", action: () => dispatch(logout()) },
 			],
+		},
+		{
+			label: "Notifications",
+			action: () => dispatch(openModal(WebviewModals.Notifications)),
 		}
-		// {
-		// 	label: "Notifications",
-		// 	action: () => dispatch(openModal(WebviewModals.Notifications)),
-		// }
 	);
 
 	menuItems.push(
