@@ -1,4 +1,6 @@
-import { openErrorGroup } from "@codestream/webview/store/codeErrors/thunks";
+import {
+	openErrorGroup,
+} from "@codestream/webview/store/codeErrors/thunks";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { isEmpty as _isEmpty } from "lodash-es";
 import React, { useEffect, useState } from "react";
@@ -20,6 +22,7 @@ import { setUserPreference } from "./actions";
 import styled from "styled-components";
 import { openModal } from "../store/context/actions";
 import { WebviewModals } from "@codestream/protocols/webview";
+import { parseId } from "../utilities/newRelic";
 
 interface Props {
 	observabilityErrors: ObservabilityRepoError[];
@@ -44,6 +47,8 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 				? state.preferences.codeErrorTimeWindow
 				: CodeErrorTimeWindow.ThreeDays;
 		return {
+			accountId: parseId(state.context.currentEntityGuid!)?.accountId!,
+			currentEntityGuid: state.context.currentEntityGuid!,
 			sessionStart: state.context.sessionStart,
 			timeWindow,
 			errorsDemoMode: state.codeErrors.demoMode.enabled,
@@ -165,6 +170,9 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 																	stackSourceMap: response?.stackSourceMap,
 																	domain: props?.domain,
 																	traceId: err.traceId,
+                                                                    																entityGuid: derivedState.currentEntityGuid,
+																accountId: derivedState.accountId,
+																errorGroupGuid: err.errorGroupGuid,
 																},
 															})
 														);
@@ -173,6 +181,7 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 													} finally {
 														setIsLoadingErrorGroupGuid("");
 													}
+
 												}
 											}}
 										/>

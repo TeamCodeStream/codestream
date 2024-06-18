@@ -8,7 +8,12 @@ import {
 	RiskSeverity,
 	ThirdPartyProviders,
 } from "./agent.protocol";
-import { CSEligibleJoinCompany, CSPossibleAuthDomain, CSReviewCheckpoint, ObjectInfo } from "./api.protocol";
+import {
+	CSEligibleJoinCompany,
+	CSPossibleAuthDomain,
+	CSReviewCheckpoint,
+	ObjectInfo,
+} from "./api.protocol";
 
 /* NOTE: there can be dynamic panel names that begin with configure-provider- or configure-enterprise- */
 export enum WebviewPanels {
@@ -367,18 +372,15 @@ export interface CSCodeError {
 	// an array of people who have resolved the code error
 	resolvedBy?: CSCodeErrorResolutions;
 	teamId?: string;
-	streamId?: string;
-	postId?: string;
 	fileStreamIds?: string[];
 	status?: CSCodeErrorStatus;
 	numReplies: number;
 	lastActivityAt: number;
-	followerIds?: string[];
 	codeAuthorIds?: string[];
 	permalink?: string;
 	resolvedAt?: number;
 	objectType?: "errorGroup";
-	objectInfo: ObjectInfo
+	objectInfo: ObjectInfo;
 	accountId?: number;
 	traceId?: string;
 }

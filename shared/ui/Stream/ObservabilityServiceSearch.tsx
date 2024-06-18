@@ -8,7 +8,7 @@ import { setCurrentServiceSearchEntity } from "../store/context/actions";
 import { CodeStreamState } from "../store";
 import { ObservabilityServiceEntity } from "./ObservabilityServiceEntity";
 import { HostApi } from "../webview-api";
-import { ALERT_SEVERITY_COLORS } from "./CodeError/index";
+import { ALERT_SEVERITY_COLORS } from "./CodeError/CodeError.Types";
 import {
 	EntityAccount,
 	GetObservabilityEntityByGuidRequestType,

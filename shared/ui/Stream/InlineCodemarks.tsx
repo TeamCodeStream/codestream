@@ -44,7 +44,7 @@ import {
 } from "../store/context/actions";
 import { closeAllPanels } from "@codestream/webview/store/context/thunks";
 import { PostEntryPoint } from "../store/context/types";
-import { addDocumentMarker, fetchDocumentMarkers } from "../store/documentMarkers/actions";
+import { addDocumentMarker } from "../store/documentMarkers/actions";
 import { DocumentMarkersActionsType } from "../store/documentMarkers/types";
 import { changeSelection, setEditorContext } from "../store/editorContext/actions";
 import {
@@ -69,11 +69,10 @@ import {
 	uriToFilePath,
 } from "../utils";
 import { HostApi } from "../webview-api";
-import { createPostAndCodemark, setUserPreference } from "./actions";
+import { setUserPreference } from "./actions";
 import { SetUserPreferenceRequest } from "./actions.types";
-import { CodeErrorNav } from "./CodeErrorNav";
+import { CodeErrorNavigator } from "./CodeError/CodeErrorNavigator";
 import Codemark from "./Codemark";
-import { CodemarkForm } from "./CodemarkForm";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import Feedback from "./Feedback";
 import Icon from "./Icon";
@@ -133,9 +132,6 @@ interface Props {
 	setEditorContext: (
 		...args: Parameters<typeof setEditorContext>
 	) => ReturnType<typeof setEditorContext>;
-	fetchDocumentMarkers: (
-		...args: Parameters<typeof fetchDocumentMarkers>
-	) => ReturnType<ReturnType<typeof fetchDocumentMarkers>>;
 	postAction(...args: any[]): any;
 	setCodemarksFileViewStyle: (
 		...args: Parameters<typeof setCodemarksFileViewStyle>
@@ -154,7 +150,6 @@ interface Props {
 	closeAllModals: Function;
 	closeAllPanels: Function;
 	closePrDetailModal: Function;
-	createPostAndCodemark: (...args: Parameters<typeof createPostAndCodemark>) => any;
 	addDocumentMarker: Function;
 	changeSelection: Function;
 	composeCodemarkActive: CodemarkType | undefined;
@@ -224,7 +219,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		this.disposables.push(
 			HostApi.instance.on(DidChangeDocumentMarkersNotificationType, ({ textDocument }) => {
 				if (this.props.textEditorUri === textDocument.uri) {
-					this.props.fetchDocumentMarkers(textDocument.uri);
+					//this.props.fetchDocumentMarkers(textDocument.uri);
 				}
 			}),
 			{
@@ -446,7 +441,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const scmError = getFileScmError(scmInfo);
 		this.setState({ problem: scmError });
 
-		await this.props.fetchDocumentMarkers(textEditorUri);
+		//await this.props.fetchDocumentMarkers(textEditorUri);
 		this.setState(state => (state.isLoading ? { isLoading: false } : null));
 		if (scmError && renderErrorCallback !== undefined) {
 			renderErrorCallback(mapFileScmErrorForTelemetry(scmError));
@@ -859,24 +854,23 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	}
 
 	renderCodemarkForm() {
-		if (this.props.composeCodemarkActive == undefined) return null;
-
-		return (
-			// <ContainerAtEditorSelection>
-			<CodemarkForm
-				commentType={this.props.composeCodemarkActive}
-				defaultText={this.props.newPostDefaultText}
-				streamId={this.props.currentStreamId!}
-				onSubmit={this.submitCodemark}
-				onClickClose={this.closeCodemarkForm}
-				collapsed={false}
-				positionAtLocation={true}
-				multiLocation={this.state.multiLocationCodemarkForm}
-				setMultiLocation={this.setMultiLocation}
-				error={this.state.codemarkFormError}
-			/>
-			// </ContainerAtEditorSelection>
-		);
+		// if (this.props.composeCodemarkActive == undefined) return null;
+		// return (
+		// 	// <ContainerAtEditorSelection>
+		// 	// <CodemarkForm
+		// 	// 	commentType={this.props.composeCodemarkActive}
+		// 	// 	defaultText={this.props.newPostDefaultText}
+		// 	// 	streamId={this.props.currentStreamId!}
+		// 	// 	onSubmit={this.submitCodemark}
+		// 	// 	onClickClose={this.closeCodemarkForm}
+		// 	// 	collapsed={false}
+		// 	// 	positionAtLocation={true}
+		// 	// 	multiLocation={this.state.multiLocationCodemarkForm}
+		// 	// 	setMultiLocation={this.setMultiLocation}
+		// 	// 	error={this.state.codemarkFormError}
+		// 	// />
+		// 	// </ContainerAtEditorSelection>
+		// );
 	}
 
 	setMultiLocation = value => {
@@ -952,10 +946,10 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						.join(" ");
 				}
 
-				retVal = await this.props.createPostAndCodemark(
-					attributes,
-					this.currentPostEntryPoint || newPostEntryPoint || "Spatial View"
-				);
+				// retVal = await this.props.createPostAndCodemark(
+				// 	attributes,
+				// 	this.currentPostEntryPoint || newPostEntryPoint || "Spatial View"
+				// );
 			} catch (error) {
 				// if the error was specific to the sharing step, just continue
 				// https://trello.com/c/ZoSRHGVi/3171-bug-submitting-a-codemark-while-in-review-mode-stays-on-the-codemark-compose-form#comment-5e6199467d3fb86590a942ac
@@ -971,7 +965,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			}
 
 			// now get the new document markers
-			await this.props.fetchDocumentMarkers(this.props.textEditorUri!);
+			//await this.props.fetchDocumentMarkers(this.props.textEditorUri!);
 
 			if (docMarker) {
 				batch(() => {
@@ -1211,7 +1205,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					{currentReviewId ? (
 						<ReviewNav reviewId={currentReviewId} composeOpen={composeOpen} />
 					) : currentCodeErrorGuid ? (
-						<CodeErrorNav composeOpen={composeOpen} />
+						<CodeErrorNavigator composeOpen={composeOpen} />
 					) : currentPullRequestId ? (
 						currentPullRequestProviderId === "github*com" ||
 						currentPullRequestProviderId === "github/enterprise" ? (
@@ -1450,14 +1444,12 @@ const mapStateToProps = (state: CodeStreamState) => {
 
 export default connect(mapStateToProps, {
 	setUserPreference,
-	fetchDocumentMarkers,
 	setCodemarksFileViewStyle,
 	setComposeCodemarkActive,
 	setCodemarksShowArchived,
 	setCurrentCodemark,
 	repositionCodemark,
 	setEditorContext,
-	createPostAndCodemark,
 	addDocumentMarker,
 	changeSelection,
 	setNewPostEntry,

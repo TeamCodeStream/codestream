@@ -25,30 +25,32 @@ import { HostApi } from "@codestream/webview/webview-api";
 import React, { useEffect, useState } from "react";
 import { shallowEqual, useSelector } from "react-redux";
 import styled from "styled-components";
-import { DelayedRender } from "../Container/DelayedRender";
-import { logError, logWarning } from "../logger";
-import { Button } from "../src/components/Button";
-import { LoadingMessage } from "../src/components/LoadingMessage";
-import { TourTip } from "../src/components/TourTip";
-import { CodeStreamState } from "../store";
-import { isFeatureEnabled } from "../store/apiVersioning/reducer";
-import { getCodeError, getErrorGroup } from "../store/codeErrors/reducer";
-import { getSidebarLocation } from "../store/editorContext/reducer";
-import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
-import { markItemRead, setUserPreference } from "./actions";
-import { BaseCodeErrorHeader, CodeError, Description, ExpandedAuthor } from "./CodeError";
-import { RepositoryAssociator } from "./CodeError/RepositoryAssociator";
-import { BigTitle, Header, Meta } from "./Codemark/BaseCodemark";
-import Dismissable from "./Dismissable";
-import { Icon } from "./Icon";
-import { ClearModal, Step, Subtext, Tip } from "./ReviewNav";
-import { ScrollBox } from "./ScrollBox";
-import { WarningBox } from "./WarningBox";
-import { NotificationBox } from "./NotificationBox";
+import { DelayedRender } from "../../Container/DelayedRender";
+import { logError, logWarning } from "../../logger";
+import { Button } from "../../src/components/Button";
+import { LoadingMessage } from "../../src/components/LoadingMessage";
+import { TourTip } from "../../src/components/TourTip";
+import { CodeStreamState } from "../../store";
+import { isFeatureEnabled } from "../../store/apiVersioning/reducer";
+import { getCodeError, getErrorGroup } from "../../store/codeErrors/reducer";
+import { getSidebarLocation } from "../../store/editorContext/reducer";
+import KeystrokeDispatcher from "../../utilities/keystroke-dispatcher";
+import { markItemRead, setUserPreference } from "../actions";
+import { Description, ExpandedAuthor } from "./CodeError.Types";
+import { CodeErrorHeader } from "./CodeErrorHeader";
+import { RepositoryAssociator } from "./RepositoryAssociator";
+import { BigTitle, Header, Meta } from "../Codemark/BaseCodemark";
+import Dismissable from "../Dismissable";
+import { Icon } from "../Icon";
+import { ClearModal, Step, Subtext, Tip } from "../ReviewNav";
+import { ScrollBox } from "../ScrollBox";
+import { WarningBox } from "../WarningBox";
 import { isEmpty as _isEmpty } from "lodash";
 import { isSha } from "@codestream/webview/utilities/strings";
 import { parseId } from "@codestream/webview/utilities/newRelic";
 import { confirmPopup } from "@codestream/webview/Stream/Confirm";
+import { NotificationBox } from "../NotificationBox";
+import { CodeError } from "./CodeError";
 
 const NavHeader = styled.div`
 	// flex-grow: 0;
@@ -143,15 +145,17 @@ export type Props = React.PropsWithChildren<{ composeOpen: boolean }>;
  * @param {Props} props
  * @return {*}
  */
-export function CodeErrorNav(props: Props) {
+export function CodeErrorNavigator(props: Props) {
 	const dispatch = useAppDispatch();
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const codeError = state.context.currentCodeErrorGuid
 			? getCodeError(state.codeErrors, state.context.currentCodeErrorGuid)
 			: undefined;
 		const errorGroup = getErrorGroup(state.codeErrors, codeError);
+		const discussion = state.codeErrors.discussion;
 
 		const result = {
+			codeErrorDiscussion: discussion,
 			demoMode: state.preferences.demoMode,
 			errorsDemoMode: state.codeErrors.demoMode,
 			codeErrorStateBootstrapped: state.codeErrors.bootstrapped,
@@ -183,9 +187,9 @@ export function CodeErrorNav(props: Props) {
 	const [multiRepoDetectedError, setMultiRepoDetectedError] = useState<
 		{ title: string; description: string } | undefined
 	>(undefined);
+	const [repoNotification, setRepoNotification] = useState<WarningOrError | undefined>(undefined);
 	const [repoWarning, setRepoWarning] = useState<WarningOrError | undefined>(undefined);
 	const [repoError, setRepoError] = useState<string | undefined>(undefined);
-	const [repoNotification, setRepoNotification] = useState<WarningOrError | undefined>(undefined);
 	const { errorGroup } = derivedState;
 	const [isResolved, setIsResolved] = useState(false);
 	const [parsedStack, setParsedStack] = useState<ResolveStackTraceResponse | undefined>(undefined);
@@ -249,7 +253,12 @@ export function CodeErrorNav(props: Props) {
 		}
 
 		setIsLoading(true);
-		dispatch(fetchErrorGroup({ codeError: derivedState.codeError }));
+		dispatch(
+			fetchErrorGroup({
+				codeError: derivedState.codeError,
+				entityGuid: derivedState.currentEntityGuid,
+			})
+		);
 	}, [derivedState.codeError, errorGroup]);
 
 	const onConnected = async (newRemote?: string) => {
@@ -261,6 +270,7 @@ export function CodeErrorNav(props: Props) {
 		let refToUse: string | undefined;
 		const entityIdToUse =
 			derivedState.codeError?.objectInfo?.entityId ?? derivedState.currentEntityGuid;
+		const accountIdToUse = parseId(entityIdToUse!)?.accountId;
 
 		if (!errorGroupGuidToUse) {
 			console.error("missing error group guid");
@@ -461,14 +471,12 @@ export function CodeErrorNav(props: Props) {
 
 			if (errorGroupResult && repoId) {
 				if (derivedState.currentCodeErrorGuid) {
-					dispatch(
+					await dispatch(
 						addAndEnhanceCodeError({
 							accountId: errorGroupResult.accountId,
-							postId: undefined,
 							// these don't matter
 							assignees: [],
 							teamId: undefined,
-							streamId: undefined,
 							fileStreamIds: [],
 							status: "open",
 							numReplies: 0,
@@ -544,6 +552,19 @@ export function CodeErrorNav(props: Props) {
 		return true;
 	};
 
+	const tryBuildNotification = () => {
+		if (derivedState.demoMode || derivedState.errorsDemoMode.enabled) return null;
+
+		const items: WarningOrError[] = [];
+		if (repoNotification) {
+			items.push(repoNotification);
+		}
+
+		if (!items.length) return null;
+
+		return <NotificationBox items={items} />;
+	};
+
 	const tryBuildWarningsOrErrors = () => {
 		if (derivedState.demoMode || derivedState.errorsDemoMode.enabled) return null;
 
@@ -560,19 +581,6 @@ export function CodeErrorNav(props: Props) {
 		return <WarningBox items={items} />;
 	};
 
-	const tryBuildNotification = () => {
-		if (derivedState.demoMode || derivedState.errorsDemoMode.enabled) return null;
-
-		const items: WarningOrError[] = [];
-		if (repoNotification) {
-			items.push(repoNotification);
-		}
-
-		if (!items.length) return null;
-
-		return <NotificationBox items={items} />;
-	};
-
 	useDidMount(() => {
 		// clear nrai states
 		dispatch(resetNrAi());
@@ -585,7 +593,7 @@ export function CodeErrorNav(props: Props) {
 			event => {
 				if (event.key === "Escape" && event.target.id !== "input-div") exit();
 			},
-			{ source: "CodeErrorNav.tsx", level: -1 }
+			{ source: "CodeErrorNavigator.tsx", level: -1 }
 		);
 
 		return () => {
@@ -824,16 +832,6 @@ export function CodeErrorNav(props: Props) {
 					width: "100%",
 				}}
 			>
-				{/* <div
-					style={{
-						width: "1px",
-						height: "16px",
-						background: "var(--base-border-color)",
-						display: "inline-block",
-						margin: "0 10px 0 0",
-						flexGrow: 0
-					}}
-				/> */}
 				<div
 					className={hoverButton === "resolution" ? "pulse" : ""}
 					style={{ marginLeft: "auto", marginRight: "13px", whiteSpace: "nowrap", flexGrow: 0 }}
@@ -850,14 +848,15 @@ export function CodeErrorNav(props: Props) {
 					</TourTip>
 				</div>
 			</div>
+
 			<NavHeader id="nav-header">
-				<BaseCodeErrorHeader
+				<CodeErrorHeader
 					codeError={derivedState.codeError!}
-					errorGroup={errorGroup}
-					collapsed={false}
-					setIsEditing={setIsEditing}
-				></BaseCodeErrorHeader>
+					errorGroup={derivedState.errorGroup!}
+					isCollapsed={false}
+				></CodeErrorHeader>
 			</NavHeader>
+
 			{props.composeOpen ? null : (
 				<div className="scroll-container">
 					<ScrollBox>
@@ -874,11 +873,11 @@ export function CodeErrorNav(props: Props) {
 
 							<StyledCodeError className={hoverButton == "stacktrace" ? "pulse" : ""}>
 								<CodeError
-									parsedStack={parsedStack}
 									codeError={derivedState.codeError!}
-									errorGroup={errorGroup}
+									errorGroup={derivedState.errorGroup!}
 									stackFrameClickDisabled={!!repoError}
 									stackTraceTip={stackTraceTip}
+									parsedStackTrace={parsedStack}
 								/>
 							</StyledCodeError>
 						</div>

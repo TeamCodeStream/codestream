@@ -71,7 +71,7 @@ export const store = configureStore({
 		codeErrors: reduceCodeErrors,
 		dynamicLogging: reduceDynamicLogging,
 		nrCapabilities: reduceNrCapabilities,
-		anomalyData: reduceAnomalyData
+		anomalyData: reduceAnomalyData,
 	},
 	middleware: getDefaultMiddleware => getDefaultMiddleware().concat(middleware),
 	enhancers: [batchedSubscribe(debounceToAnimationFrame((notify: Function) => notify()))],

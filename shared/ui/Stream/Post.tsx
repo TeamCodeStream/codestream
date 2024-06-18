@@ -22,7 +22,7 @@ import {
 } from "../store/users/reducer";
 import { escapeHtml, replaceHtml, safe } from "../utils";
 import { HostApi } from "../webview-api";
-import { cancelPost, editPost, retryPost, setCodemarkStatus } from "./actions";
+import { editPost } from "./actions";
 import { Attachments } from "./Attachments";
 import Button from "./Button";
 import CodemarkActions from "./CodemarkActions";
@@ -35,8 +35,6 @@ import { MarkdownText } from "./MarkdownText";
 import { Marker } from "./Marker";
 import Menu from "./Menu";
 import { AddReactionIcon, Reactions } from "./Reactions";
-import RetrySpinner from "./RetrySpinner";
-import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
 import {
 	useAppDispatch,
@@ -219,13 +217,13 @@ export function Post(props: PostProps) {
 		showCode();
 	};
 
-	const resubmit = () => {
-		if (derivedState?.post?.id) dispatch(retryPost(derivedState.post?.id));
-	};
+	// const resubmit = () => {
+	// 	if (derivedState?.post?.id) dispatch(retryPost(derivedState.post?.id));
+	// };
 
-	const cancel = () => {
-		if (derivedState?.post?.id) dispatch(cancelPost(derivedState.post?.id));
-	};
+	// const cancel = () => {
+	// 	if (derivedState?.post?.id) dispatch(cancelPost(derivedState.post?.id));
+	// };
 
 	function getWarningMessage() {
 		switch (warning) {
@@ -493,7 +491,7 @@ export function Post(props: PostProps) {
 	const closeIssue = () => {
 		const { codemark } = derivedState;
 		if (codemark) {
-			dispatch(setCodemarkStatus(codemark.id, "closed"));
+			//dispatch(setCodemarkStatus(codemark.id, "closed"));
 			submitReply("/me closed this issue");
 		}
 	};
@@ -501,7 +499,7 @@ export function Post(props: PostProps) {
 	const openIssue = () => {
 		const { codemark } = derivedState;
 		if (codemark) {
-			dispatch(setCodemarkStatus(codemark.id, "open"));
+			//dispatch(setCodemarkStatus(codemark.id, "open"));
 			submitReply("/me reopened this issue");
 		}
 	};
@@ -767,11 +765,11 @@ export function Post(props: PostProps) {
 				</ProfileLink>
 				{author?.username}
 				{renderEmote(post)}
-				{isPending(post) && post.error ? (
+				{/* {isPending(post) && post.error ? (
 					<RetrySpinner callback={resubmit} cancel={cancel} />
 				) : (
 					<Timestamp relative time={post.createdAt} edited={post.hasBeenEdited} />
-				)}
+				)} */}
 				{codemark && codemark.color && <div className={`label-indicator ${color}-background`} />}
 			</div>
 			{derivedState.post?.parentPostId &&

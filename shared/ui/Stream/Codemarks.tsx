@@ -15,7 +15,6 @@ import { CSMarker } from "@codestream/protocols/api";
 
 import { WebviewPanels } from "@codestream/protocols/api";
 import { NewCodemarkNotificationType } from "../ipc/webview.protocol";
-import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 import { ComponentUpdateEmitter, isNotOnDisk, uriToFilePath } from "../utils";
 import { HostApi } from "../webview-api";
 import Icon from "./Icon";
@@ -103,9 +102,6 @@ interface DispatchProps {
 	setEditorContext: (
 		...args: Parameters<typeof setEditorContext>
 	) => ReturnType<typeof setEditorContext>;
-	fetchDocumentMarkers: (
-		...args: Parameters<typeof fetchDocumentMarkers>
-	) => ReturnType<ReturnType<typeof fetchDocumentMarkers>>;
 	setCurrentCodemark: (
 		...args: Parameters<typeof setCurrentCodemark>
 	) => ReturnType<typeof setCurrentCodemark>;
@@ -155,7 +151,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 		this.disposables.push(
 			HostApi.instance.on(DidChangeDocumentMarkersNotificationType, ({ textDocument }) => {
 				if (this.props.textEditorUri === textDocument.uri) {
-					this.props.fetchDocumentMarkers(textDocument.uri);
+					//this.props.fetchDocumentMarkers(textDocument.uri);
 				}
 			}),
 			HostApi.instance.on(NewCodemarkNotificationType, e => {
@@ -270,7 +266,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			scmError = getFileScmError(scmInfo);
 			this.setState({ problem: scmError });
 		}
-		await this.props.fetchDocumentMarkers(textEditorUri);
+		//await this.props.fetchDocumentMarkers(textEditorUri);
 		this.setState(state => (state.isLoading ? { isLoading: false } : null));
 		if (scmError && renderErrorCallback !== undefined) {
 			renderErrorCallback(mapFileScmErrorForTelemetry(scmError));
@@ -887,7 +883,6 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 };
 export default withSearchableItems(
 	connect(mapStateToProps, {
-		fetchDocumentMarkers,
 		openPanel,
 		setCurrentCodemark,
 		setEditorContext,

@@ -16,15 +16,8 @@ import { setCurrentCodemark } from "../store/context/actions";
 import { getTeamProvider } from "../store/teams/reducer";
 import { findMentionedUserIds, getTeamMembers } from "../store/users/reducer";
 import { localStore } from "../utilities/storage";
-import { replaceHtml } from "../utils";
 import { HostApi } from "../webview-api";
-import {
-	createPost,
-	markItemRead,
-	setCodemarkPinned,
-	setCodemarkStatus,
-	setUserPreference,
-} from "./actions";
+import { markItemRead, setUserPreference } from "./actions";
 import { SetUserPreferenceRequest } from "./actions.types";
 import CodemarkActions from "./CodemarkActions";
 import { DropdownButton } from "./DropdownButton";
@@ -60,16 +53,9 @@ interface Props {
 	defaultResolveAction: "resolve" | "archive";
 
 	onSubmitPost?: any;
-	createPost(...args: Parameters<typeof createPost>): ReturnType<ReturnType<typeof createPost>>;
 	markItemRead(
 		...args: Parameters<typeof markItemRead>
 	): ReturnType<ReturnType<typeof markItemRead>>;
-	setCodemarkStatus(
-		...args: Parameters<typeof setCodemarkStatus>
-	): ReturnType<ReturnType<typeof setCodemarkStatus>>;
-	setCodemarkPinned(
-		...args: Parameters<typeof setCodemarkPinned>
-	): ReturnType<ReturnType<typeof setCodemarkPinned>>;
 	setCurrentCodemark: Function;
 	postAction?(...args: any[]): any;
 	setUserPreference?: (request: SetUserPreferenceRequest) => void;
@@ -118,7 +104,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 	handleClickPost() {}
 
 	submitReply = async () => {
-		const { codemark, createPost, markItemRead } = this.props;
+		const { codemark, markItemRead } = this.props;
 		const { text, formatCode, attachments } = this.state;
 		const mentionedUserIds = findMentionedUserIds(this.props.teammates, text);
 		const threadId = codemark ? codemark.postId : "";
@@ -130,19 +116,19 @@ export class CodemarkDetails extends React.Component<Props, State> {
 
 		let replyText = formatCode ? "```" + text + "```" : text;
 		await markItemRead(codemark.id, codemark.numReplies + 1);
-		await createPost(codemark.streamId, threadId, replaceHtml(replyText)!, null, mentionedUserIds, {
-			entryPoint: "Codemark",
-			files: attachments,
-		});
+		// await createPost(codemark.streamId, threadId, replaceHtml(replyText)!, null, mentionedUserIds, {
+		// 	entryPoint: "Codemark",
+		// 	files: attachments,
+		// });
 	};
 
 	resolveCodemark = async (type: "resolve" | "archive") => {
 		const { codemark, post } = this.props;
 		const { text = "" } = this.state;
 		await this.submitReply();
-		await this.props.setCodemarkStatus(this.props.codemark.id, "closed");
+		//await this.props.setCodemarkStatus(this.props.codemark.id, "closed");
 		if (type === "archive") {
-			await this.props.setCodemarkPinned(this.props.codemark, false);
+			//await this.props.setCodemarkPinned(this.props.codemark, false);
 		}
 		if (this.props.setUserPreference) {
 			this.props.setUserPreference({ prefPath: ["defaultResolveAction"], value: type });
@@ -374,10 +360,7 @@ const mapStateToProps = (state: CodeStreamState, props: { codemark: CodemarkPlus
 };
 
 export default connect(mapStateToProps, {
-	createPost,
 	markItemRead,
-	setCodemarkStatus,
-	setCodemarkPinned,
 	setUserPreference,
 	setCurrentCodemark,
 })(CodemarkDetails);

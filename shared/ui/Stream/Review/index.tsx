@@ -46,7 +46,6 @@ import { getReview } from "@codestream/webview/store/reviews/reducer";
 import { deleteReview, fetchReview } from "@codestream/webview/store/reviews/thunks";
 import {
 	currentUserIsAdminSelector,
-	findMentionedUserIds,
 	getTeamMates,
 	getTeamTagsHash,
 } from "@codestream/webview/store/users/reducer";
@@ -54,7 +53,6 @@ import { useAppDispatch, useDidMount } from "@codestream/webview/utilities/hooks
 import { capitalize, emptyArray, mapFilter, replaceHtml } from "@codestream/webview/utils";
 import { HostApi } from "@codestream/webview/webview-api";
 import { getPost } from "../../store/posts/reducer";
-import { createPost, markItemRead, setCodemarkStatus, setReviewStatus } from "../actions";
 import { Attachments } from "../Attachments";
 import Button from "../Button";
 import {
@@ -82,10 +80,8 @@ import { LocateRepoButton } from "../LocateRepoButton";
 import { MarkdownText } from "../MarkdownText";
 import Menu from "../Menu";
 import { MessageInput, AttachmentField } from "../MessageInput";
-import { RepliesToPost } from "../Posts/RepliesToPost";
 import { PRErrorBox } from "../PullRequestComponents";
 import { AddReactionIcon, Reactions } from "../Reactions";
-import { ReviewForm } from "../ReviewForm";
 import { SharingModal } from "../SharingModal";
 import Tag from "../Tag";
 import Timestamp from "../Timestamp";
@@ -316,55 +312,55 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 
 	const permalinkRef = React.useRef<HTMLTextAreaElement>(null);
 
-	const approve = () => {
-		if (props.changeRequests && props.changeRequests!.find(r => r.status !== "closed"))
-			confirmPopup({
-				title: "Are you sure?",
-				message: "This review has open change requests.",
-				centered: true,
-				buttons: [
-					{ label: "Cancel", className: "control-button" },
-					{
-						label: "Approve Anyway",
-						className: "success",
-						wait: true,
-						action: () => {
-							dispatch(setReviewStatus(props.review.id, "approved"));
-						},
-					},
-				],
-			});
-		else dispatch(setReviewStatus(props.review.id, "approved"));
-	};
+	// const approve = () => {
+	// 	if (props.changeRequests && props.changeRequests!.find(r => r.status !== "closed"))
+	// 		confirmPopup({
+	// 			title: "Are you sure?",
+	// 			message: "This review has open change requests.",
+	// 			centered: true,
+	// 			buttons: [
+	// 				{ label: "Cancel", className: "control-button" },
+	// 				{
+	// 					label: "Approve Anyway",
+	// 					className: "success",
+	// 					wait: true,
+	// 					action: () => {
+	// 						dispatch(setReviewStatus(props.review.id, "approved"));
+	// 					},
+	// 				},
+	// 			],
+	// 		});
+	// 	else dispatch(setReviewStatus(props.review.id, "approved"));
+	// };
 
-	const reject = () => dispatch(setReviewStatus(props.review.id, "rejected"));
+	// const reject = () => dispatch(setReviewStatus(props.review.id, "rejected"));
 
-	const reopen = () => dispatch(setReviewStatus(props.review.id, "open"));
+	// const reopen = () => dispatch(setReviewStatus(props.review.id, "open"));
 
 	const startReview = () => dispatch(setCurrentReview(props.review.id));
 
-	const approveItem = { icon: <Icon name="thumbsup" />, label: "Approve", action: approve };
-	const unapproveItem = {
-		icon: <Icon name="diff-removed" />,
-		label: "Withdraw Approval",
-		action: reopen,
-	};
+	// const approveItem = { icon: <Icon name="thumbsup" />, label: "Approve", action: approve };
+	// const unapproveItem = {
+	// 	icon: <Icon name="diff-removed" />,
+	// 	label: "Withdraw Approval",
+	// 	action: reopen,
+	// };
 	const reviewItem = {
 		icon: <Icon name="review" />,
 		label: "View Changes",
 		action: startReview,
 	};
-	const rejectItem = { icon: <Icon name="sync" />, label: "Request Changes", action: reject };
-	const reopenItem = { icon: <Icon name="reopen" />, label: "Reopen", action: reopen };
-	const amendItem = {
-		label: "Amend Review (add code)",
-		key: "amend",
-		icon: <Icon name="plus" />,
-		action: () => {
-			if (props.review.status !== "open") reopen();
-			setIsAmending && setIsAmending(true);
-		},
-	};
+	// const rejectItem = { icon: <Icon name="sync" />, label: "Request Changes", action: reject };
+	// const reopenItem = { icon: <Icon name="reopen" />, label: "Reopen", action: reopen };
+	// const amendItem = {
+	// 	label: "Amend Review (add code)",
+	// 	key: "amend",
+	// 	icon: <Icon name="plus" />,
+	// 	action: () => {
+	// 		if (props.review.status !== "open") reopen();
+	// 		setIsAmending && setIsAmending(true);
+	// 	},
+	// };
 
 	const menuItems = React.useMemo(() => {
 		const items: any[] = [
@@ -441,27 +437,27 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 			items.unshift({ label: "-" });
 			switch (review.status) {
 				case "open": {
-					const approval = approvedBy[derivedState.currentUserId] ? unapproveItem : approveItem;
-					items.unshift(reviewItem, approval, rejectItem);
+					// const approval = approvedBy[derivedState.currentUserId] ? unapproveItem : approveItem;
+					// items.unshift(reviewItem, approval, rejectItem);
 					break;
 				}
 				case "approved":
-					{
-						if (!hasPullRequest) {
-							items.unshift(reopenItem);
-						}
-					}
+					// {
+					// 	if (!hasPullRequest) {
+					// 		items.unshift(reopenItem);
+					// 	}
+					// }
 					break;
 				case "rejected":
-					{
-						if (!hasPullRequest) {
-							items.unshift(reopenItem);
-						}
-					}
+					// {
+					// 	if (!hasPullRequest) {
+					// 		items.unshift(reopenItem);
+					// 	}
+					// }
 					break;
 			}
 			if (!hasPullRequest && derivedState.currentUserId === creatorId) {
-				items.unshift(amendItem);
+				//items.unshift(amendItem);
 			}
 		}
 
@@ -841,7 +837,7 @@ const BaseReview = (props: BaseReviewProps) => {
 												name={codemark.id}
 												checked={codemark.status === CodemarkStatus.Closed}
 												onChange={value => {
-													dispatch(setCodemarkStatus(codemark.id, value ? "closed" : "open"));
+													//dispatch(setCodemarkStatus(codemark.id, value ? "closed" : "open"));
 												}}
 												onClickLabel={() => dispatch(setCurrentCodemark(codemark.id))}
 											>
@@ -1059,7 +1055,7 @@ const ReplyInput = (props: {
 		if (text.length === 0) return;
 
 		setIsLoading(true);
-		dispatch(markItemRead(props.reviewId, props.numReplies + 1));
+		//dispatch(markItemRead(props.reviewId, props.numReplies + 1));
 		if (isChangeRequest) {
 			await dispatch(
 				createCodemark({
@@ -1077,19 +1073,19 @@ const ReplyInput = (props: {
 				})
 			);
 		} else {
-			await dispatch(
-				createPost(
-					props.streamId,
-					props.parentPostId,
-					replaceHtml(text)!,
-					null,
-					findMentionedUserIds(teamMates, text),
-					{
-						entryPoint: "Review",
-						files: attachments,
-					}
-				)
-			);
+			// await dispatch(
+			// 	createPost(
+			// 		props.streamId,
+			// 		props.parentPostId,
+			// 		replaceHtml(text)!,
+			// 		null,
+			// 		findMentionedUserIds(teamMates, text),
+			// 		{
+			// 			entryPoint: "Review",
+			// 			files: attachments,
+			// 		}
+			// 	)
+			// );
 			setIsChangeRequest(false);
 		}
 		setIsLoading(false);
@@ -1300,12 +1296,12 @@ const ReviewForReview = (props: PropsWithReview) => {
 			return (
 				<Footer className="replies-to-review" style={{ borderTop: "none", marginTop: 0 }}>
 					{derivedState.replies.length > 0 && <MetaLabel>Activity</MetaLabel>}
-					<RepliesToPost
+					{/* <RepliesToPost
 						streamId={props.review.streamId}
 						parentPostId={props.review.postId}
 						itemId={props.review.id}
 						numReplies={props.review.numReplies}
-					/>
+					/> */}
 					{InputContainer && !props.isAmending && (
 						<InputContainer>
 							<ReplyInput
@@ -1318,12 +1314,12 @@ const ReviewForReview = (props: PropsWithReview) => {
 					)}
 					{InputContainer && props.isAmending && (
 						<InputContainer>
-							<ReviewForm
+							{/* <ReviewForm
 								isEditing
 								isAmending
 								editingReview={review}
 								onClose={() => props.setIsAmending && props.setIsAmending(false)}
-							/>
+							/> */}
 							{/* spacer div that allows this to scroll all the way to the top.
 							 * note that it's not 100vh so that at least *some* content is always visible */}
 							<div style={{ height: "80vh" }} />
@@ -1343,11 +1339,12 @@ const ReviewForReview = (props: PropsWithReview) => {
 		);
 	if (isEditing && !props.isAmending) {
 		return (
-			<ReviewForm
-				isEditing={isEditing}
-				onClose={() => setIsEditing(false)}
-				editingReview={props.review}
-			/>
+			<></>
+			// <ReviewForm
+			// 	isEditing={isEditing}
+			// 	onClose={() => setIsEditing(false)}
+			// 	editingReview={props.review}
+			// />
 		);
 	} else {
 		return (

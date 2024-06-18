@@ -2,9 +2,6 @@ import {
 	ClaimCodeErrorRequest,
 	ClaimCodeErrorRequestType,
 	ClaimCodeErrorResponse,
-	CreateShareableCodeErrorRequest,
-	CreateShareableCodeErrorRequestType,
-	CreateShareableCodeErrorResponse,
 	ExecuteThirdPartyTypedType,
 	FetchPostRepliesRequest,
 	FetchPostRepliesRequestType,
@@ -32,13 +29,6 @@ import { CodeErrorsApi } from "@codestream/webview/store/codeErrors/api/CodeErro
 import { HostApi } from "@codestream/webview/webview-api";
 
 class CodeErrorsApiImpl implements CodeErrorsApi {
-	async createShareableCodeError(
-		request: CreateShareableCodeErrorRequest
-	): Promise<CreateShareableCodeErrorResponse> {
-		const result = await HostApi.instance.send(CreateShareableCodeErrorRequestType, request);
-		return result;
-	}
-
 	async fetchPostReplies({
 		streamId,
 		postId,

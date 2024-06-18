@@ -5,9 +5,8 @@ import {
 } from "@codestream/protocols/agent";
 import { logError } from "@codestream/webview/logger";
 import { CodeStreamState } from "@codestream/webview/store";
-import { NewCodemarkAttributes } from "@codestream/webview/store/codemarks/actions";
 import { getCodemark } from "@codestream/webview/store/codemarks/reducer";
-import { deleteCodemark, editCodemark } from "@codestream/webview/store/codemarks/thunks";
+import { deleteCodemark } from "@codestream/webview/store/codemarks/thunks";
 import { setCurrentCodemark } from "@codestream/webview/store/context/actions";
 import { getPost } from "@codestream/webview/store/posts/reducer";
 import { getTeamTagsHash } from "@codestream/webview/store/users/reducer";
@@ -17,7 +16,6 @@ import { HostApi } from "@codestream/webview/webview-api";
 import React from "react";
 import { shallowEqual, useSelector } from "react-redux";
 import styled from "styled-components";
-import { CodemarkForm } from "../CodemarkForm";
 import { confirmPopup } from "../Confirm";
 import { PROVIDER_MAPPINGS } from "../CrossPostIssueControls/types";
 import Icon from "../Icon";
@@ -210,7 +208,7 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 		return (
 			// this could be a <Card/> but the form padding needs to be removed
 			<div className="editing-codemark-container">
-				<CodemarkForm
+				{/* <CodemarkForm
 					isEditing
 					editingCodemark={codemark}
 					commentType={codemark.type}
@@ -240,7 +238,7 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 					onClickClose={() => setIsEditing(false)}
 					streamId={codemark.streamId}
 					collapsed={false}
-				/>
+				/> */}
 			</div>
 		);
 	}

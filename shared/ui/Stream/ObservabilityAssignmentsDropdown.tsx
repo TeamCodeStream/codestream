@@ -14,6 +14,7 @@ import {
 } from "@codestream/protocols/agent";
 import { openModal } from "../store/context/actions";
 import { WebviewModals } from "@codestream/protocols/webview";
+import { parseId } from "../utilities/newRelic";
 
 interface Props {
 	observabilityAssignments?: ObservabilityErrorCore[];
@@ -27,7 +28,9 @@ interface Props {
 export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 	const dispatch = useAppDispatch();
 	const derivedState = useAppSelector((state: CodeStreamState) => {
+		const accountId = parseId(state.context.currentEntityGuid!)?.accountId;
 		return {
+			accountId,
 			sessionStart: state.context.sessionStart,
 		};
 	}, shallowEqual);
@@ -114,6 +117,10 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 																	remote: _?.remote || undefined,
 																	stackSourceMap: response?.stackSourceMap,
 																	domain: props.domain,
+																accountId: derivedState.accountId,
+																entityGuid: props.entityGuid,
+																errorGroupGuid: _.errorGroupGuid,
+                                                                    
 																},
 															})
 														);
@@ -124,6 +131,7 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 													console.error(ex);
 												} finally {
 													setIsLoadingErrorGroupGuid("");
+
 												}
 											}
 										}}

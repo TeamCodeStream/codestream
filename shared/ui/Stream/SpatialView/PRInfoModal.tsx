@@ -2,7 +2,6 @@ import { ThirdPartyProviderConfig } from "@codestream/protocols/agent";
 import { BoxedContent } from "@codestream/webview/src/components/BoxedContent";
 import { CSText } from "@codestream/webview/src/components/CSText";
 import { CodeStreamState } from "@codestream/webview/store";
-import { fetchDocumentMarkers } from "@codestream/webview/store/documentMarkers/actions";
 import { connectProvider } from "@codestream/webview/store/providers/actions";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { mapFilter } from "@codestream/webview/utils";
@@ -57,7 +56,7 @@ export const PRInfoModal = (props: { onClose: () => void }) => {
 									dispatch(openPanel(`configure-enterprise-${provider.name}-${provider.id}-true`));
 								} else {
 									await dispatch(connectProvider(provider.id, "PR Toggle"));
-									if (textEditorUri) dispatch(fetchDocumentMarkers(textEditorUri));
+									// if (textEditorUri) dispatch(fetchDocumentMarkers(textEditorUri));
 									props.onClose();
 								}
 							}}

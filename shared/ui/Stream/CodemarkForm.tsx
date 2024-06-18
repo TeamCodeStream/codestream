@@ -32,7 +32,6 @@ import { connect } from "react-redux";
 import Select from "react-select";
 import { Range } from "vscode-languageserver-types";
 
-import { upgradePendingCodeError } from "@codestream/webview/store/codeErrors/thunks";
 import { EditorSelection } from "@codestream/webview/ipc/webview.protocol.common";
 import {
 	EditorHighlightRangeRequestType,
@@ -75,13 +74,7 @@ import {
 	safe,
 } from "../utils";
 import { HostApi } from "../webview-api";
-import {
-	createPostAndCodemark,
-	markItemRead,
-	openModal,
-	openPanel,
-	setUserPreference,
-} from "./actions";
+import { markItemRead, openModal, openPanel, setUserPreference } from "./actions";
 import { SetUserPreferenceRequest } from "./actions.types";
 import { getDocumentFromMarker } from "./api-functions";
 import Button from "./Button";
@@ -119,10 +112,7 @@ export const CrossPostIssueContext = React.createContext<ICrossPostIssueContext>
 interface Props extends ConnectedProps {
 	streamId: string;
 	collapseForm?: Function;
-	onSubmit: (
-		attributes: NewCodemarkAttributes,
-		event?: React.SyntheticEvent
-	) => Promise<void> | ReturnType<typeof createPostAndCodemark>;
+	onSubmit: (attributes: NewCodemarkAttributes, event?: React.SyntheticEvent) => Promise<void>;
 	onClickClose(e?: SyntheticEvent): void;
 	openCodemarkForm?(type: string): void;
 	slackInfo?: {};
@@ -148,10 +138,6 @@ interface Props extends ConnectedProps {
 	markItemRead(
 		...args: Parameters<typeof markItemRead>
 	): ReturnType<ReturnType<typeof markItemRead>>;
-	upgradePendingCodeError(
-		codeErrorId: string,
-		source: "Comment" | "Status Change" | "Assignee Change"
-	);
 }
 
 interface ConnectedProps {
@@ -898,24 +884,6 @@ class CodemarkForm extends React.Component<Props, State> {
 			}
 		}
 
-		if (this.props.currentCodeErrorGuid) {
-			try {
-				const codeErrorResponse = await this.props.upgradePendingCodeError(
-					this.props.currentCodeErrorGuid,
-					"Comment"
-				);
-				if (codeErrorResponse.wasPending) {
-					// if this codeError was pending, we know that we just created one, use the codeError
-					// that was created
-					parentPostId = codeErrorResponse.codeError.postId;
-				}
-
-				//this.props.markItemRead(review.id, review.numReplies + 1);
-			} catch (error) {
-				// FIXME what do we do if we don't find the code error?
-			}
-		}
-
 		try {
 			const baseAttributes = {
 				codeBlocks,
@@ -945,12 +913,12 @@ class CodemarkForm extends React.Component<Props, State> {
 				// will just kind of disappear.  similarly, if you prior panel was *not* spatial view
 				// the form will just disappear. in these cases, we want to show the user where the
 				// codemark ends up -- the actiivty feed and spatial view
-				if (
-					retVal &&
-					((codeBlocks.length == 0 && this.props.activePanel !== WebviewPanels.Activity) ||
-						this.props.activePanel !== WebviewPanels.CodemarksForFile)
-				)
-					this.showConfirmationForCodemarkLocation(type, codeBlocks.length);
+				// if (
+				// 	retVal &&
+				// 	((codeBlocks.length == 0 && this.props.activePanel !== WebviewPanels.Activity) ||
+				// 		this.props.activePanel !== WebviewPanels.CodemarksForFile)
+				// )
+				// 	this.showConfirmationForCodemarkLocation(type, codeBlocks.length);
 			} else {
 				await this.props.onSubmit({ ...baseAttributes, streamId: selectedChannelId! }, event);
 				this.props.setCurrentStream(selectedChannelId);
@@ -1662,27 +1630,27 @@ class CodemarkForm extends React.Component<Props, State> {
 		return (
 			<MessageInput
 				onKeypress={() => this.setState({ touchedText: true })}
-				teamProvider={this.props.teamProvider}
-				isDirectMessage={this.props.channel.type === StreamType.Direct}
+				//teamProvider={this.props.teamProvider}
+				//isDirectMessage={this.props.channel.type === StreamType.Direct}
 				text={text}
 				placeholder={placeholder}
 				multiCompose
 				onChange={this.handleChange}
-				withTags={!this.props.textEditorUriHasPullRequestContext}
-				toggleTag={this.handleToggleTag}
-				toggleCodemark={this.handleToggleCodemark}
-				shouldShowRelatableCodemark={codemark =>
-					this.props.editingCodemark ? codemark.id !== this.props.editingCodemark.id : true
-				}
+				//withTags={!this.props.textEditorUriHasPullRequestContext}
+				//toggleTag={this.handleToggleTag}
+				//toggleCodemark={this.handleToggleCodemark}
+				// shouldShowRelatableCodemark={codemark =>
+				// 	this.props.editingCodemark ? codemark.id !== this.props.editingCodemark.id : true
+				// }
 				onSubmit={
 					this.props.currentPullRequestId
 						? this.handlePullRequestKeyboardSubmit
 						: this.handleClickSubmit
 				}
-				selectedTags={this.state.selectedTags}
-				relatedCodemarkIds={
-					this.props.textEditorUriHasPullRequestContext ? undefined : this.state.relatedCodemarkIds
-				}
+				//selectedTags={this.state.selectedTags}
+				// relatedCodemarkIds={
+				// 	this.props.textEditorUriHasPullRequestContext ? undefined : this.state.relatedCodemarkIds
+				// }
 				setIsPreviewing={isPreviewing => this.setState({ isPreviewing })}
 				renderCodeBlock={this.renderCodeBlock}
 				renderCodeBlocks={this.renderCodeBlocks}
@@ -2735,7 +2703,6 @@ const ConnectedCodemarkForm = connect(mapStateToProps, {
 	openModal,
 	markItemRead,
 	setUserPreference,
-	upgradePendingCodeError,
 	getPullRequestConversationsFromProvider,
 	setCurrentPullRequestNeedsRefresh,
 	setCurrentStream,

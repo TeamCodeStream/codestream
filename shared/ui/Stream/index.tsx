@@ -18,7 +18,6 @@ import { PostsState } from "@codestream/webview/store/posts/types";
 import {
 	closeModal,
 	closePanel,
-	createPostAndCodemark,
 	markPostUnread,
 	openPanel,
 	setUserPreference,
@@ -69,7 +68,6 @@ import { ChangePhoneNumber } from "./ChangePhoneNumber";
 import { ChangeTeamName } from "./ChangeTeamName";
 import { ChangeUsername } from "./ChangeUsername";
 import { ChangeWorksOn } from "./ChangeWorksOn";
-import { CodemarkForm } from "./CodemarkForm";
 import { CodemarkView } from "./CodemarkView";
 import { ErrorRoadblock } from "./ErrorRoadblock";
 import ConfigureAzureDevOpsPanel from "./ConfigureAzureDevOpsPanel";
@@ -100,7 +98,7 @@ import { OnboardNewRelic } from "./OnboardNewRelic";
 import { PixieDynamicLoggingPanel } from "./PixieDynamicLogging/PixieDynamicLoggingPanel";
 import { ProfilePanel } from "./ProfilePanel";
 import { PRProviderErrorBanner } from "./PRProviderErrorBanner";
-import { ReviewForm } from "./ReviewForm";
+//import { ReviewForm } from "./ReviewForm";
 import { CLMSettings } from "./CLMSettings";
 import { Sidebar } from "./Sidebar";
 import { PRInfoModal } from "./SpatialView/PRInfoModal";
@@ -114,7 +112,6 @@ interface DispatchProps {
 	clearDynamicLogging: Function;
 	closeModal: Function;
 	closePanel: Function;
-	createPostAndCodemark: Function;
 	markPostUnread: Function;
 	openPanel: typeof openPanel;
 	setCurrentCodemark: typeof setCurrentCodemark;
@@ -524,7 +521,7 @@ export class SimpleStream extends PureComponent<Props> {
 							{activePanel === WebviewPanels.PRInfo && (
 								<PRInfoModal onClose={() => this.props.closePanel()} />
 							)}
-							{activePanel === WebviewPanels.NewComment && (
+							{/* {activePanel === WebviewPanels.NewComment && (
 								<CodemarkForm
 									commentType="comment"
 									streamId={this.props.postStreamId}
@@ -535,8 +532,8 @@ export class SimpleStream extends PureComponent<Props> {
 									multiLocation={true}
 									dontAutoSelectLine={true}
 								/>
-							)}
-							{activePanel === WebviewPanels.NewIssue && (
+							)} */}
+							{/* {activePanel === WebviewPanels.NewIssue && (
 								<CodemarkForm
 									commentType="issue"
 									streamId={this.props.postStreamId}
@@ -547,7 +544,7 @@ export class SimpleStream extends PureComponent<Props> {
 									multiLocation={true}
 									dontAutoSelectLine={true}
 								/>
-							)}
+							)} */}
 							{activePanel === WebviewPanels.CodeError && (
 								<>
 									<DelayedRender>
@@ -556,7 +553,7 @@ export class SimpleStream extends PureComponent<Props> {
 								</>
 							)}
 							{activePanel === WebviewPanels.Flow && <FlowPanel />}
-							{activePanel === WebviewPanels.NewReview && <ReviewForm />}
+							{/* {activePanel === WebviewPanels.NewReview && <ReviewForm />} */}
 							{activePanel === WebviewPanels.PixieDynamicLogging && <PixieDynamicLoggingPanel />}
 							{activePanel === WebviewPanels.MethodLevelTelemetry && <MethodLevelTelemetryPanel />}
 							{activePanel === WebviewPanels.TransactionSpan && <TransactionSpanPanel />}
@@ -761,10 +758,10 @@ export class SimpleStream extends PureComponent<Props> {
 			const state = this.context.store.getState();
 			const newPostEntryPoint =
 				state && state.context ? state.context.newPostEntryPoint : undefined;
-			retVal = await this.props.createPostAndCodemark(
-				attributes,
-				newPostEntryPoint || "Global Nav"
-			);
+			// retVal = await this.props.createPostAndCodemark(
+			// 	attributes,
+			// 	newPostEntryPoint || "Global Nav"
+			// );
 			this.props.closePanel();
 		} finally {
 			this.props.setNewPostEntry(undefined);
@@ -836,7 +833,6 @@ export default connect(mapStateToProps, {
 	clearDynamicLogging,
 	closeModal,
 	closePanel,
-	createPostAndCodemark,
 	markPostUnread,
 	openPanel,
 	setCurrentCodemark,

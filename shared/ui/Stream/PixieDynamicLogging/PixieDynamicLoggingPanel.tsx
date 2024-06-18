@@ -11,8 +11,6 @@ import {
 	pixieDynamicLoggingCancel,
 } from "@codestream/webview/store/dynamicLogging/actions";
 import { isConnected } from "@codestream/webview/store/providers/reducer";
-import { ConditionalNewRelic } from "@codestream/webview/Stream/CodeError/ConditionalComponent";
-import ConfigureNewRelic from "@codestream/webview/Stream/ConfigureNewRelic";
 import { Accounts } from "@codestream/webview/Stream/PixieDynamicLogging/Accounts";
 import { Clusters } from "@codestream/webview/Stream/PixieDynamicLogging/Clusters";
 import { Namespaces } from "@codestream/webview/Stream/PixieDynamicLogging/Namespaces";
@@ -102,79 +100,47 @@ export const PixieDynamicLoggingPanel = () => {
 	return (
 		<Dialog wide noPadding onClose={() => dispatch(closePanel())}>
 			<PanelHeader title="Dynamic Logging Using Pixie"></PanelHeader>
-			<ConditionalNewRelic
-				connected={
-					<>
-						<div style={{ padding: "0 20px 20px 20px" }}>
-							<DropdownWrapper>
-								<label>Account:</label>
-								<Accounts onSelect={setAndSaveAccount} value={account} />
-							</DropdownWrapper>
-							{account && (
-								<DropdownWrapper>
-									<label>Cluster:</label>
-									<Clusters account={account} onSelect={setAndSaveCluster} value={cluster} />
-								</DropdownWrapper>
-							)}
-							{cluster && (
-								<DropdownWrapper>
-									<label>Namespace:</label>
-									<Namespaces
-										account={account}
-										cluster={cluster}
-										onSelect={setAndSaveNamespace}
-										value={namespace}
-									/>
-								</DropdownWrapper>
-							)}
-							{namespace && (
-								<DropdownWrapper>
-									<label>Pod:</label>
-									<Pods
-										account={account}
-										cluster={cluster}
-										namespace={namespace}
-										onSelect={setAndSavePod}
-										value={pod}
-									/>
-								</DropdownWrapper>
-							)}
-						</div>
-						{account && cluster && pod && (
-							<PixieDynamicLogging account={account} cluster={cluster} pod={pod} />
-						)}
-					</>
-				}
-				disconnected={
-					<Dialog narrow title="">
-						<div className="embedded-panel">
-							<ConfigureNewRelic
-								headerChildren={
-									<>
-										<div className="panel-header" style={{ background: "none" }}>
-											<span className="panel-title">Connect to New Relic</span>
-										</div>
-										<div style={{ textAlign: "center" }}>
-											Working with Pixie requires a connection to your New Relic account. If you
-											don't have one, get a teammate to invite you.
-										</div>
-									</>
-								}
-								disablePostConnectOnboarding={true}
-								showSignupUrl={false}
-								providerId={"newrelic*com"}
-								onClose={e => {
-									// setOpenConnectionModal(false);
-								}}
-								onSubmited={async e => {
-									// setOpenConnectionModal(false);
-								}}
-								originLocation={"Pixie Logging"}
+
+			<>
+				<div style={{ padding: "0 20px 20px 20px" }}>
+					<DropdownWrapper>
+						<label>Account:</label>
+						<Accounts onSelect={setAndSaveAccount} value={account} />
+					</DropdownWrapper>
+					{account && (
+						<DropdownWrapper>
+							<label>Cluster:</label>
+							<Clusters account={account} onSelect={setAndSaveCluster} value={cluster} />
+						</DropdownWrapper>
+					)}
+					{cluster && (
+						<DropdownWrapper>
+							<label>Namespace:</label>
+							<Namespaces
+								account={account}
+								cluster={cluster}
+								onSelect={setAndSaveNamespace}
+								value={namespace}
 							/>
-						</div>
-					</Dialog>
-				}
-			/>
+						</DropdownWrapper>
+					)}
+					{namespace && (
+						<DropdownWrapper>
+							<label>Pod:</label>
+							<Pods
+								account={account}
+								cluster={cluster}
+								namespace={namespace}
+								onSelect={setAndSavePod}
+								value={pod}
+							/>
+						</DropdownWrapper>
+					)}
+				</div>
+				{account && cluster && pod && (
+					<PixieDynamicLogging account={account} cluster={cluster} pod={pod} />
+				)}
+			</>
 		</Dialog>
 	);
 };

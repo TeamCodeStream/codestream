@@ -1424,6 +1424,127 @@ export const GetObservabilityErrorsWithoutReposRequestType = new RequestType<
 	void
 >("codestream/newrelic/errorsWithoutRepos");
 
+export interface CollaborationComment {
+	body: string;
+	id: string;
+	systemMessageType: string;
+	creator: {
+		email: string;
+		name: string;
+		userId: number;
+	};
+}
+
+export interface InitiateNrAiRequest {
+	entityGuid: string;
+	errorGroupGuid: string;
+
+	fileUri: string;
+	codeBlock: string;
+	permalink: string;
+	repo: string;
+	sha: string;
+
+	threadId: string;
+}
+
+export interface InitiateNrAiResponse {
+	nrError?: NRErrorResponse;
+}
+
+export const InitiateNrAiRequestType = new RequestType<
+	InitiateNrAiRequest,
+	InitiateNrAiResponse,
+	void,
+	void
+>("codestream/newrelic/collaboration/initiateNrAi");
+
+export interface GetErrorInboxCommentsRequest {
+	errorGroupGuid: string;
+	entityGuid: string;
+}
+
+export interface GetErrorInboxCommentsResponse {
+	threadId?: string;
+	comments?: CollaborationComment[];
+	nrError?: NRErrorResponse;
+}
+
+export const GetErrorInboxCommentsRequestType = new RequestType<
+	GetErrorInboxCommentsRequest,
+	GetErrorInboxCommentsResponse,
+	void,
+	void
+>("codestream/newrelic/collaboration/getErrorComments");
+
+export interface CreateCollaborationCommentRequest {
+	errorGroupGuid: string;
+	entityGuid: string;
+	threadId: string;
+	body: string;
+}
+
+export interface CreateCollaborationCommentResponse {
+	commentId?: string;
+	nrError?: NRErrorResponse;
+}
+
+export const CreateCollaborationCommentRequestType = new RequestType<
+	CreateCollaborationCommentRequest,
+	CreateCollaborationCommentResponse,
+	void,
+	void
+>("codestream/newrelic/collaboration/createComment");
+
+export interface DeleteCollaborationThreadRequest {
+	threadId: string;
+}
+
+export interface DeleteCollaborationThreadResponse {
+	threadId?: string;
+	nrError?: NRErrorResponse;
+}
+
+export const DeleteCollaborationThreadRequestType = new RequestType<
+	DeleteCollaborationThreadRequest,
+	DeleteCollaborationThreadResponse,
+	void,
+	void
+>("codestream/newrelic/collaboration/deleteThread");
+
+export interface DeleteCollaborationCommentRequest {
+	commentId: string;
+}
+
+export interface DeleteCollaborationCommentResponse {
+	commentId?: string;
+	nrError?: NRErrorResponse;
+}
+
+export const DeleteCollaborationCommentRequestType = new RequestType<
+	DeleteCollaborationCommentRequest,
+	DeleteCollaborationCommentResponse,
+	void,
+	void
+>("codestream/newrelic/collaboration/deleteComment");
+
+export interface UpdateCollaborationCommentRequest {
+	commentId: string;
+	body: string;
+}
+
+export interface UpdateCollaborationCommentResponse {
+	commentId?: string;
+	nrError?: NRErrorResponse;
+}
+
+export const UpdateCollaborationCommentRequestType = new RequestType<
+	UpdateCollaborationCommentRequest,
+	UpdateCollaborationCommentResponse,
+	void,
+	void
+>("codestream/newrelic/collaboration/updateComment");
+
 export interface GetObservabilityAnomaliesRequest {
 	entityGuid: string;
 	sinceDaysAgo: number;
@@ -2960,3 +3081,20 @@ export type ApplyPatchResponse = {
 export const ApplyPatchType = new RequestType<ApplyPatchRequest, ApplyPatchResponse, void, void>(
 	"codestream/newrelic/applyPatch"
 );
+
+export type UserSearchRequest = {
+	query?: string;
+	nextCursor?: string;
+};
+
+export type UserSearchResponse = {
+	users: NewRelicUser[];
+	nextCursor?: string;
+};
+
+export const UserSearchRequestType = new RequestType<
+	UserSearchRequest,
+	UserSearchResponse,
+	void,
+	void
+>("codestream/newrelic/userSearch");

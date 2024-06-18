@@ -11,7 +11,7 @@ import { HostApi } from "@codestream/webview/webview-api";
 import { CodeStreamState } from "../store";
 import { getReview } from "../store/reviews/reducer";
 import { MinimumWidthCard, Meta, BigTitle, Header } from "./Codemark/BaseCodemark";
-import { markItemRead, setReviewStatus } from "./actions";
+import { markItemRead } from "./actions";
 import { ReviewCloseDiffRequestType } from "../ipc/host.protocol.review";
 import Icon from "./Icon";
 import { confirmPopup } from "./Confirm";
@@ -22,7 +22,6 @@ import { TourTip } from "../src/components/TourTip";
 import { Modal } from "./Modal";
 import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
 import { getReviewChangeRequests } from "../store/codemarks/reducer";
-import { ReviewForm } from "./ReviewForm";
 import { openPanel } from "../store/context/actions";
 import { WebviewPanels } from "@codestream/protocols/api";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
@@ -298,7 +297,7 @@ export function ReviewNav(props: Props) {
 						className: "success",
 						wait: true,
 						action: () => {
-							dispatch(setReviewStatus(review!.id, "approved"));
+							//dispatch(setReviewStatus(review!.id, "approved"));
 							showReview();
 						},
 					},
@@ -306,7 +305,7 @@ export function ReviewNav(props: Props) {
 			});
 		} else {
 			setIsApproving(true);
-			await dispatch(setReviewStatus(review!.id, "approved"));
+			//await dispatch(setReviewStatus(review!.id, "approved"));
 			showReview();
 			setIsApproving(false);
 		}
@@ -329,12 +328,12 @@ export function ReviewNav(props: Props) {
 	};
 
 	const rejectConfirm = () => {
-		dispatch(setReviewStatus(review!.id, "rejected"));
+		//dispatch(setReviewStatus(review!.id, "rejected"));
 		showReview();
 	};
 
 	const reopen = () => {
-		dispatch(setReviewStatus(review!.id, "open"));
+		//dispatch(setReviewStatus(review!.id, "open"));
 	};
 
 	const amend = () => {
@@ -570,12 +569,13 @@ export function ReviewNav(props: Props) {
 
 	if (isEditing) {
 		return (
-			<ReviewForm
-				isEditing
-				editingReview={review}
-				existingSharedTo={derivedState.post?.sharedTo}
-				onClose={() => setIsEditing(false)}
-			/>
+			<></>
+			// <ReviewForm
+			// 	isEditing
+			// 	editingReview={review}
+			// 	existingSharedTo={derivedState.post?.sharedTo}
+			// 	onClose={() => setIsEditing(false)}
+			// />
 		);
 	}
 

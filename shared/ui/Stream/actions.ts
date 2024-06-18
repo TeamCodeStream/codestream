@@ -1,24 +1,16 @@
 import {
 	ArchiveStreamRequestType,
 	CloseStreamRequestType,
-	CodemarkPlus,
 	CreateChannelStreamRequestType,
 	CreateChannelStreamResponse,
 	CreateDirectStreamRequestType,
 	CreateDirectStreamResponse,
-	CreatePostRequestType,
-	CreatePostResponse,
-	CreatePostWithMarkerRequestType,
-	CreateShareableCodeErrorRequest,
-	CreateShareableCodeErrorResponse,
 	CreateTeamTagRequestType,
 	CreateThirdPartyPostRequestType,
-	CrossPostIssueValues,
 	DeleteTeamTagRequestType,
 	EditPostRequestType,
 	FetchPostsRequestType,
 	FetchUsersRequestType,
-	GetPostRequestType,
 	InviteUserRequestType,
 	JoinStreamRequestType,
 	LeaveStreamRequestType,
@@ -29,40 +21,21 @@ import {
 	OpenStreamRequestType,
 	ReactToPostRequestType,
 	RenameStreamRequestType,
-	SetCodemarkPinnedRequestType,
 	SetStreamPurposeRequestType,
 	SharePostViaServerRequestType,
 	UnarchiveStreamRequestType,
-	UpdateCodemarkRequestType,
-	UpdatePostSharingDataRequestType,
 	UpdatePreferencesRequestType,
-	UpdateReviewRequestType,
 	UpdateStatusRequestType,
 	UpdateStreamMembershipRequestType,
 	UpdateTeamTagRequestType,
 } from "@codestream/protocols/agent";
-import {
-	Attachment,
-	CSPost,
-	CSReviewStatus,
-	ShareTarget,
-	StreamType,
-} from "@codestream/protocols/api";
-import { get, isEqual, pick } from "lodash-es";
-import React from "react";
+import { CSPost, CSReviewStatus, StreamType } from "@codestream/protocols/api";
+import { get, isEqual } from "lodash-es";
 
-import { createCodeError } from "@codestream/webview/store/codeErrors/thunks";
-import { createCodemark } from "@codestream/webview/store/codemarks/thunks";
 import { createAppAsyncThunk } from "@codestream/webview/store/helper";
-import { createReview } from "@codestream/webview/store/reviews/thunks";
 import { logError } from "../logger";
 import { CodeStreamState } from "../store";
-import {
-	isLegacyNewCodemarkAttributes,
-	NewCodemarkAttributes,
-	saveCodemarks,
-	updateCodemarks,
-} from "../store/codemarks/actions";
+import { saveCodemarks } from "../store/codemarks/actions";
 import * as contextActions from "../store/context/actions";
 import {
 	closeModal,
@@ -76,21 +49,13 @@ import {
 	setCodemarkTagFilter,
 	setCodemarkTypeFilter,
 } from "../store/context/actions";
-import { PostEntryPoint } from "../store/context/types";
-import { getFileScmError } from "../store/editorContext/reducer";
-import { middlewareInjector } from "../store/middleware-injector";
 import * as postsActions from "../store/posts/actions";
-import { PostsActionsType } from "../store/posts/types";
 import { updatePreferences } from "../store/preferences/actions";
-import { NewReviewAttributes, updateReviews } from "../store/reviews/actions";
 import * as streamActions from "../store/streams/actions";
 import { updateTeam } from "../store/teams/actions";
 import { addUsers, updateUser } from "../store/users/actions";
-import { findMentionedUserIds, getTeamMembers } from "../store/users/reducer";
-import { isNotOnDisk, uriToFilePath, uuid } from "../utils";
 import { HostApi } from "../webview-api";
 import { SetUserPreferenceRequest } from "./actions.types";
-import { confirmPopup } from "./Confirm";
 import { setPostThreadsLoading } from "../store/posts/actions";
 import { codeErrorsApi } from "@codestream/webview/store/codeErrors/api/apiResolver";
 
@@ -131,416 +96,9 @@ export const markItemRead = (itemId: string, numReplies: number) => () => {
 		);
 };
 
-export const createPostAndCodemark =
-	(attributes: NewCodemarkAttributes, entryPoint?: PostEntryPoint) =>
-	async (dispatch, getState: () => CodeStreamState) => {
-		const { codeBlocks } = attributes;
-		let markers: any = [];
-		let warning;
-		let remotes: string[] = [];
-
-		codeBlocks.forEach(codeBlock => {
-			let marker: any = {
-				code: codeBlock.contents,
-				range: codeBlock.range,
-				documentId: { uri: codeBlock.uri },
-			};
-
-			if (codeBlock.scm) {
-				marker.file = codeBlock.scm.file;
-				marker.source = codeBlock.scm;
-				if (codeBlock.scm.remotes && codeBlock.scm.remotes.length) {
-					remotes = remotes.concat(codeBlock.scm.remotes.map(_ => _.url));
-				}
-			}
-			markers.push(marker);
-
-			if (isNotOnDisk(codeBlock.uri)) {
-				warning = {
-					title: "Unsaved File",
-					message:
-						"Your teammates won't be able to see the codemark when viewing this file unless you save the file first.",
-				};
-			} else {
-				switch (getFileScmError(codeBlock)) {
-					case "NoRepo": {
-						warning = {
-							title: "Missing Git Info",
-							message: `This repo doesn’t appear to be tracked by Git. Your teammates won’t be able to see the codemark when viewing this source file.\n\n${uriToFilePath(
-								codeBlock.uri
-							)}`,
-						};
-						break;
-					}
-					case "NoRemotes": {
-						warning = {
-							title: "No Remote URL",
-							message:
-								"This repo doesn’t have a remote URL configured. Your teammates won’t be able to see the codemark when viewing this source file.",
-						};
-						break;
-					}
-					case "NoGit": {
-						warning = {
-							title: "Git could not be located",
-							message:
-								"CodeStream was unable to find the `git` command. Make sure it's installed and configured properly.",
-						};
-						break;
-					}
-					default: {
-					}
-				}
-			}
-		});
-
-		if (warning) {
-			try {
-				await new Promise((resolve, reject) => {
-					return confirmPopup({
-						title: warning.title,
-						message: () =>
-							React.createElement("span", undefined, [
-								React.createElement("div", { style: { overflow: "auto" } }, warning.message),
-								React.createElement(
-									"a",
-									{
-										href: "https://docs.newrelic.com/docs/codestream/troubleshooting/git-issues/",
-									},
-									"Learn more"
-								),
-							]),
-						centered: true,
-						buttons: [
-							{
-								label: "Post Anyway",
-								action: resolve,
-							},
-							{ label: "Cancel", action: reject },
-						],
-					});
-				});
-			} catch (error) {
-				return;
-			}
-		}
-		if (remotes && remotes.length && remotes.length > 1) {
-			remotes = Array.from(new Set(remotes));
-		}
-
-		if (isLegacyNewCodemarkAttributes(attributes)) {
-			return dispatch(
-				createPost(
-					attributes.streamId,
-					undefined,
-					attributes.text,
-					{
-						...pick(
-							attributes,
-							"title",
-							"text",
-							"streamId",
-							"type",
-							"assignees",
-							"tags",
-							"relatedCodemarkIds"
-						),
-						markers,
-						textEditorUris: attributes.codeBlocks.map(_ => {
-							return { uri: _.uri };
-						}),
-					},
-					findMentionedUserIds(getTeamMembers(getState()), attributes.text || ""),
-					{
-						crossPostIssueValues: attributes.crossPostIssueValues,
-						entryPoint: entryPoint,
-					}
-				)
-			);
-		} else {
-			return dispatch(
-				createCodemark({
-					...attributes,
-					textDocuments: attributes.codeBlocks.map(_ => {
-						return { uri: _.uri };
-					}),
-					entryPoint: entryPoint,
-					remotes: remotes,
-					mentionedUserIds: findMentionedUserIds(
-						getTeamMembers(getState()),
-						attributes.text || ""
-					).concat(attributes.assignees),
-				})
-			);
-		}
-	};
-
-export const createPostAndReview =
-	(attributes: NewReviewAttributes, entryPoint?: PostEntryPoint) =>
-	async (dispatch, getState: () => CodeStreamState) => {
-		return dispatch(
-			createReview({
-				...attributes,
-				entryPoint: entryPoint,
-				mentionedUserIds: findMentionedUserIds(
-					getTeamMembers(getState()),
-					attributes.text || ""
-				).concat(attributes.reviewers),
-			})
-		);
-	};
-
-export const createPostAndCodeError =
-	(request: CreateShareableCodeErrorRequest, entryPoint?: PostEntryPoint) =>
-	async (dispatch, getState: () => CodeStreamState): Promise<CreateShareableCodeErrorResponse> => {
-		return dispatch(
-			createCodeError({
-				...request,
-				entryPoint: entryPoint,
-			})
-		);
-	};
-
-export type CreatePostExtras = {
-	analyze?: boolean;
-	codeBlock?: string;
-	files?: Attachment[];
-	entryPoint?: string;
-	reviewCheckpoint?: number;
-	crossPostIssueValues?: CrossPostIssueValues;
-};
-
-export const createPost =
-	(
-		streamId: string,
-		parentPostId: string | undefined,
-		text: string,
-		codemark?: any,
-		mentions?: string[],
-		extra: CreatePostExtras = {}
-	) =>
-	async (dispatch, getState: () => CodeStreamState) => {
-		const { session, context, posts } = getState();
-		const pendingId = uuid();
-
-		// no need for pending post when creating a codemark
-		if (!codemark) {
-			dispatch(
-				postsActions.addPendingPost({
-					id: pendingId,
-					streamId,
-					parentPostId,
-					text,
-					codemark,
-					creatorId: session.userId!,
-					createdAt: new Date().getTime(),
-					pending: true,
-					files: extra.files,
-				})
-			);
-		}
-
-		const filteredPosts: any = [];
-		const injectedMiddleware = middlewareInjector.inject(
-			PostsActionsType.Add,
-			(payload: CSPost[]) => {
-				return payload.filter(post => {
-					// third party post objects don't have a version property
-					if (post.version == undefined) {
-						if (post.creatorId === session.userId && post.streamId === streamId) {
-							filteredPosts.push(post);
-							return false;
-						}
-					} else {
-						if (
-							post.version <= 1 &&
-							post.creatorId === session.userId &&
-							post.streamId === streamId
-						) {
-							filteredPosts.push(post);
-							return false;
-						}
-					}
-
-					return true;
-				});
-			}
-		);
-
-		try {
-			let responsePromise: Promise<CreatePostResponse>;
-			if (codemark) {
-				responsePromise = HostApi.instance.send(CreatePostWithMarkerRequestType, {
-					streamId,
-					text: codemark.text,
-					textDocuments: codemark.textEditorUris,
-					markers: codemark.markers,
-					title: codemark.title,
-					type: codemark.type,
-					assignees: codemark.assignees,
-					mentionedUserIds: mentions,
-					entryPoint: extra.entryPoint || context.newPostEntryPoint,
-					parentPostId,
-					tags: codemark.tags,
-					relatedCodemarkIds: codemark.relatedCodemarkIds,
-					reviewCheckpoint: extra.reviewCheckpoint,
-					crossPostIssueValues: extra.crossPostIssueValues
-						? {
-								...extra.crossPostIssueValues,
-								externalProvider: extra.crossPostIssueValues.issueProvider.name,
-								externalProviderHost: extra.crossPostIssueValues.issueProvider.host,
-								externalAssignees: extra.crossPostIssueValues.assignees,
-						  }
-						: undefined,
-				});
-			} else {
-				responsePromise = HostApi.instance.send(CreatePostRequestType, {
-					streamId,
-					text,
-					parentPostId,
-					mentionedUserIds: mentions,
-					entryPoint: extra.entryPoint,
-					reviewCheckpoint: extra.reviewCheckpoint,
-					files: extra.files,
-					codeBlock: extra.codeBlock,
-					analyze: extra.analyze === true,
-				});
-			}
-			const response = await responsePromise;
-
-			const getTopLevelSharedTo = (
-				postId: string | undefined
-			): { sharedTo?: ShareTarget[]; parentText?: string } => {
-				if (!postId) return {};
-				const post = posts.byStream[streamId][postId];
-				if (post.parentPostId) {
-					return {
-						...getTopLevelSharedTo(post.parentPostId),
-						parentText: post.text,
-					};
-				}
-				if (post.sharedTo) return { sharedTo: post.sharedTo };
-				return {};
-			};
-
-			if (response) {
-				const { sharedTo, parentText } = getTopLevelSharedTo(parentPostId);
-				if (sharedTo) {
-					for (const target of sharedTo) {
-						try {
-							const { post, ts, permalink } = await HostApi.instance.send(
-								CreateThirdPartyPostRequestType,
-								{
-									providerId: target.providerId,
-									channelId: target.channelId,
-									providerTeamId: target.teamId,
-									parentPostId: target.postId,
-									parentText: parentText,
-									text: text,
-									codemark: response.codemark,
-									mentionedUserIds: mentions,
-									files: extra.files,
-								}
-							);
-							if (ts) {
-								await HostApi.instance.send(UpdatePostSharingDataRequestType, {
-									postId: response.post.id,
-									sharedTo: [
-										{
-											createdAt: post.createdAt,
-											providerId: target.providerId,
-											teamId: target.teamId,
-											teamName: target.teamName,
-											channelId: target.channelId,
-											channelName: target.channelName,
-											postId: ts,
-											url: permalink || "",
-										},
-									],
-								});
-							}
-						} catch (error) {
-							try {
-								await HostApi.instance.send(SharePostViaServerRequestType, {
-									postId: response.post.id,
-									providerId: target.providerId,
-								});
-							} catch (error2) {
-								logError("Error sharing a post", { message: error2.toString() });
-							}
-						}
-					}
-				}
-			}
-
-			if (response.codemark) {
-				dispatch(saveCodemarks([response.codemark]));
-			}
-			response.streams &&
-				response.streams.forEach(stream => dispatch(streamActions.updateStream(stream)));
-			return dispatch(postsActions.resolvePendingPost(pendingId, response.post));
-		} catch (error) {
-			if ((error.message as string).includes("No document could be found for Uri")) {
-				logError("Error creating a post - No document could be found for uri", {
-					message: error.message,
-				});
-				await new Promise(resolve =>
-					confirmPopup({
-						title: "This codemark can't be created.",
-						message:
-							"CodeStream is is unable to determine which file this is. Please close the file, reopen it, and try again.",
-						buttons: [{ label: "Ok", action: resolve, wait: true }],
-						centered: true,
-					})
-				);
-			} else {
-				logError("Error creating a post", { message: error.toString() });
-			}
-			return dispatch(postsActions.failPendingPost(pendingId));
-		} finally {
-			injectedMiddleware.dispose();
-			// just to be sure no posts get missed
-			if (filteredPosts.length > 0) dispatch(postsActions.savePosts(filteredPosts));
-		}
-	};
-
-export const retryPost = (pendingId: string) => async (dispatch, getState) => {
-	const { posts } = getState();
-	const pendingPost = posts.pending.find(post => post.id === pendingId);
-	if (pendingPost) {
-		const { post } = await HostApi.instance.send(CreatePostRequestType, pendingPost);
-		return dispatch(postsActions.resolvePendingPost(pendingId, post));
-		// if it fails then what?
-	} else {
-		// what happened to the pending post?
-	}
-};
-
-export const cancelPost = postsActions.cancelPendingPost;
-
-export const createSystemPost =
-	(streamId: string, parentPostId: string, text: string, seqNum: number | string) =>
-	async (dispatch, getState) => {
-		const { context } = getState();
-		const pendingId = uuid();
-
-		const post = {
-			id: pendingId,
-			teamId: context.currentTeamId,
-			timestamp: new Date().getTime(),
-			createdAt: new Date().getTime(),
-			creatorId: "codestream",
-			parentPostId: parentPostId,
-			streamId,
-			seqNum,
-			text,
-			numReplies: 0,
-			hasBeenEdited: false,
-			modifiedAt: new Date().getTime(),
-		};
-
-		dispatch(postsActions.savePosts([post]));
-	};
+export const createComment =
+	(text: string, threadId?: string, mentions?: string[]) =>
+	async (dispatch, getState: () => CodeStreamState) => {};
 
 export const editPost =
 	(streamId: string, postId: string, text: string, mentionedUserIds?: string[]) =>
@@ -1006,30 +564,6 @@ const describeIssueStatusChange = (action: IssueStatus) => {
 	}
 };
 
-export const setCodemarkStatus =
-	(codemarkId: string, status: IssueStatus, extraText?: string) => async dispatch => {
-		try {
-			const response = await HostApi.instance.send(UpdateCodemarkRequestType, {
-				codemarkId,
-				status,
-			});
-
-			await dispatch(
-				createPost(
-					response.codemark.streamId,
-					response.codemark.postId,
-					`/me ${describeIssueStatusChange(status)} this codemark ${extraText || ""}`
-				)
-			);
-			dispatch(markItemRead(response.codemark.id, response.codemark.numReplies + 1));
-
-			return dispatch(updateCodemarks([response.codemark]));
-		} catch (error) {
-			logError(error, { detail: `failed to change codemark status`, codemarkId });
-			return undefined;
-		}
-	};
-
 const describePinnedChange = (value: boolean) => {
 	switch (value) {
 		case true:
@@ -1038,29 +572,6 @@ const describePinnedChange = (value: boolean) => {
 			return "archived";
 	}
 };
-
-export const setCodemarkPinned =
-	(codemark: CodemarkPlus, value: boolean, extraText?: string) => async dispatch => {
-		try {
-			const response = await HostApi.instance.send(SetCodemarkPinnedRequestType, {
-				codemarkId: codemark.id,
-				value,
-			});
-
-			await dispatch(
-				createPost(
-					codemark.streamId,
-					codemark.postId,
-					`/me ${describePinnedChange(value)} this codemark ${extraText || ""}`
-				)
-			);
-
-			return dispatch(updateCodemarks([response.codemark]));
-		} catch (error) {
-			logError(error, { detail: `failed to change codemark pinned`, codemarkId: codemark.id });
-			return undefined;
-		}
-	};
 
 const describeStatusChange = (action: CSReviewStatus) => {
 	switch (action) {
@@ -1082,56 +593,6 @@ const toStatusTelemetryNames = (status: CSReviewStatus) => {
 	if (status === "rejected") return "Rejected";
 	if (status === "open") return "Reopened";
 	return undefined;
-};
-
-export const setReviewStatus = (reviewId: string, status: CSReviewStatus) => async dispatch => {
-	try {
-		const response = await HostApi.instance.send(UpdateReviewRequestType, {
-			id: reviewId,
-			status,
-		});
-
-		await dispatch(
-			createPost(
-				response.review.streamId,
-				response.review.postId,
-				`/me ${describeStatusChange(status)} this feedback request`
-			)
-		);
-		// try {
-		// 	HostApi.instance.track("Review State Updated", {
-		// 		"Review ID": reviewId,
-		// 		"Review State": toStatusTelemetryNames(status),
-		// 	});
-		// } catch (err) {
-		// 	logError(`failed to track review status change: ${err}`, { reviewId, status });
-		// }
-		dispatch(markItemRead(response.review.id, response.review.numReplies + 1));
-
-		const message = `_${describeStatusChange(status)} this feedback request_`;
-
-		const { post } = await HostApi.instance.send(GetPostRequestType, {
-			postId: response.review.postId,
-			streamId: response.review.streamId,
-		});
-		if (post && post.sharedTo && post.sharedTo.length > 0) {
-			for (const target of post.sharedTo) {
-				if (target.providerId === "slack*com") continue;
-				await HostApi.instance.send(CreateThirdPartyPostRequestType, {
-					providerId: target.providerId,
-					channelId: target.channelId,
-					providerTeamId: target.teamId,
-					parentPostId: target.postId,
-					text: message,
-				});
-			}
-		}
-
-		return dispatch(updateReviews([response.review]));
-	} catch (error) {
-		logError(error, { detail: `failed to change review status`, reviewId });
-		return undefined;
-	}
 };
 
 export const updateTeamTag =
