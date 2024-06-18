@@ -142,9 +142,14 @@ export const Notifications = props => {
 											</Radio>
 										</RadioGroup>
 										{derivedState.repoFollowingType === "MANUAL" && (
-											<>
+											<div style={{ marginTop: "6px" }}>
 												{/* @TODO: map through repos here */}
-												<div style={{ display: "flex", justifyContent: "space-between" }}>
+												<div
+													style={{
+														display: "flex",
+														justifyContent: "space-between",
+													}}
+												>
 													<div>
 														<Icon name="repo" /> Repo Foo
 													</div>
@@ -152,7 +157,7 @@ export const Notifications = props => {
 														<Icon style={{ marginRight: "4px" }} className="clickable" name="x" />
 													</div>
 												</div>
-											</>
+											</div>
 										)}
 										<div
 											style={{ fontSize: "larger", margin: "15px 0px 10px 0px" }}
@@ -170,7 +175,7 @@ export const Notifications = props => {
 												All services with the following tag:value pairs
 											</Radio>
 											{derivedState.serviceNotifyType === "TAGVALUE" && (
-												<div style={{ marginBottom: "12px" }}>
+												<div style={{ paddingLeft: "28px", marginBottom: "12x" }}>
 													<TextInput
 														name="tagvalue"
 														autoFocus
@@ -190,7 +195,7 @@ export const Notifications = props => {
 												All services with the following string in the name
 											</Radio>
 											{derivedState.serviceNotifyType === "STRINGNAME" && (
-												<div style={{ marginBottom: "12px" }}>
+												<div style={{ paddingLeft: "28px", marginBottom: "12x" }}>
 													<TextInput
 														name="stringname"
 														autoFocus
@@ -208,7 +213,7 @@ export const Notifications = props => {
 											)}
 											<Radio value={"ACCOUNTID"}>All services in the following account IDs</Radio>
 											{derivedState.serviceNotifyType === "ACCOUNTID" && (
-												<div style={{ marginBottom: "12x" }}>
+												<div style={{ paddingLeft: "28px", marginBottom: "12x" }}>
 													<TextInput
 														name="accountid"
 														autoFocus
