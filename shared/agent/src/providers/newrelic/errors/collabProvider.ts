@@ -23,12 +23,13 @@ import { log } from "../../../system/decorators/log";
 import { lsp, lspHandler } from "../../../system/decorators/lsp";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 import { generateHash } from "./collabDiscussionUtils";
-import { mapNRErrorResponse } from "../utils";
+import { mapNRErrorResponse, parseId } from "../utils";
 import {
 	CommentsByThreadIdResponse,
 	ThreadsByContextIdResponse,
 	BootStrapResponse,
 	BaseCollaborationResponse,
+	CollaborationContext,
 } from "./collaboration.types";
 
 @lsp
@@ -37,6 +38,12 @@ export class CollaborationTeamProvider {
 		this.graphqlClient.addHeader("Nerd-Graph-Unsafe-Experimental-Opt-In", "Collaboration");
 	}
 
+	/**
+	 * For a given comment by its ID, update the body of the comment.
+	 *
+	 * @param {UpdateCollaborationCommentRequest} request
+	 * @returns a promise that includes the comment's ID, which you'll already have.
+	 */
 	@lspHandler(UpdateCollaborationCommentRequestType)
 	@log()
 	async updateCollaborationComment(
@@ -69,6 +76,14 @@ export class CollaborationTeamProvider {
 		}
 	}
 
+	/**
+	 * For a given comment ID, delete the comment.
+	 *
+	 * Note, this doesn't _actually_ delete it, but rather deactivates it.
+	 *
+	 * @param {DeleteCollaborationCommentRequest} request
+	 * @returns a promise that includes the deleted comment's ID, which you'll already have.
+	 */
 	@lspHandler(DeleteCollaborationCommentRequestType)
 	@log()
 	async deleteCollaborationComment(
@@ -101,6 +116,14 @@ export class CollaborationTeamProvider {
 		}
 	}
 
+	/**
+	 * For a given thread ID, delete the thread.
+	 *
+	 * Note, this doesn't _actually_ delete it, but rather deactivates it
+	 *
+	 * @param {DeleteCollaborationThreadRequest} request
+	 * @returns a promise that includes the original thread's ID, which you'll already have.
+	 */
 	@lspHandler(DeleteCollaborationThreadRequestType)
 	@log()
 	async deleteCollaborationThread(
@@ -133,21 +156,37 @@ export class CollaborationTeamProvider {
 		}
 	}
 
+	/**
+	 * Creates a comment on a given thread.
+	 *
+	 * @param {CreateCollaborationCommentRequest} request
+	 * @returns a promise that includes the newly created comment's ID.
+	 */
 	@lspHandler(CreateCollaborationCommentRequestType)
 	@log()
 	async createComment(
 		request: CreateCollaborationCommentRequest
 	): Promise<CreateCollaborationCommentResponse> {
 		try {
-			const { threadId, body } = { ...request };
+			const { threadId, body, errorGroupGuid, entityGuid } = { ...request };
 
-			// TODO :
-			// If threadId is undefined
-			// bootstrap a new thread?
+			const context = await this.generateContext(entityGuid, errorGroupGuid);
 
 			const createCommentQuery = `
 				mutation {
-					collaborationCreateComment(body: "${body}", threadId: "${threadId}") {
+					collaborationCreateComment(
+						body: "${body}",
+						threadId: "${threadId}",
+						contextMetadata: { 
+							accountId: ${context.metaData.accountId},
+							entityGuid: "${context.metaData.entityGuid}",
+							nerdletId: "${context.metaData.nerdletId}",
+							pageId: [
+								"${context.metaData.pageId[0]}",
+								"${context.metaData.pageId[1]}"
+							]
+						}
+					) {
 						id
 					}
 				}`;
@@ -169,55 +208,22 @@ export class CollaborationTeamProvider {
 		}
 	}
 
-	@lspHandler(InitiateNrAiRequestType)
-	@log()
-	async initializeNrAi(request: InitiateNrAiRequest): Promise<InitiateNrAiResponse> {
-		try {
-			const codeMarkId = await this.createCodeMark({
-				codeBlock: request.codeBlock,
-				fileUri: request.fileUri,
-				permalink: request.permalink,
-				repo: request.repo,
-				sha: request.sha,
-			});
-
-			const initiateNrAiQuery = `
-				mutation {
-					createGrokInitiatedConversation(
-					threadId: ${request.threadId}
-					prompt: ""
-					contextMetadata: {
-					}
-					assistant: ""
-					assistantConfig: {}
-					
-				}`;
-
-			return {};
-		} catch (ex) {
-			ContextLogger.warn("GetErrorInboxComments failure", {
-				request,
-				error: ex,
-			});
-
-			return { nrError: mapNRErrorResponse(ex) };
-		}
-	}
-
+	/**
+	 * Primary endpoint for getting comments for a given error group.
+	 * This method will bootstrap the discussion if it doesn't exist, and return the comments.
+	 *
+	 * @param {GetErrorInboxCommentsRequest} request
+	 * @returns a promise that includes the threadId and all the associated comments, in order.
+	 */
 	@lspHandler(GetErrorInboxCommentsRequestType)
 	@log()
 	async GetErrorInboxComments(
 		request: GetErrorInboxCommentsRequest
 	): Promise<GetErrorInboxCommentsResponse> {
 		try {
-			const { accountId, errorGroupGuid, entityGuid, entityDomain, entityType } = { ...request };
-
 			const bootstrapResponse = await this.bootstrapCollaborationDiscussionForError(
-				accountId,
-				errorGroupGuid,
-				entityGuid,
-				entityDomain,
-				entityType
+				request.errorGroupGuid,
+				request.entityGuid
 			);
 
 			const commentsQuery = `
@@ -267,55 +273,32 @@ export class CollaborationTeamProvider {
 		}
 	}
 
-	private async createCodeMark(request: {
-		codeBlock: string;
-		fileUri: string;
-		permalink: string;
-		repo: string;
-		sha: string;
-	}): Promise<string> {
-		try {
-			const createCodeMarkQuery = `
-				mutation {
-					collaborationCreateCodeMark(
-						code: "${request.codeBlock}"
-						file: "${request.fileUri}"
-						permalink: "${request.permalink}"
-						repo: "${request.repo}"
-						sha: "${request.sha}") {
-						id
-					}
-				}`;
-
-			const createCodeMarkResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
-				createCodeMarkQuery
-			);
-
-			return createCodeMarkResponse.collaborationCreateCodeMark.id;
-		} catch (ex) {
-			ContextLogger.warn("createCodeMark failure", {
-				request,
-				error: ex,
-			});
-
-			throw ex;
-		}
-	}
-
 	/**
 	 * This is called as part of the bootstrapping method, as a thread must exist to add comments, but a user doesn't
 	 * need to be concerned with that aspect of it, so we'll just always create one on their behalf if need be.
+	 *
+	 * @param {string} entityGuid
+	 * @param {string} errorGroupGuid
+	 * @returns a promise that includes the threadId of the newly created thread.
 	 */
-	private async createThread(
-		contextId: string,
-		accountId: number,
-		entityGuid: string,
-		errorGroupGuid: string
-	): Promise<string> {
+	private async createThread(entityGuid: string, errorGroupGuid: string): Promise<string> {
 		try {
+			const context = await this.generateContext(entityGuid, errorGroupGuid);
+
 			const createThreadQuery = `
 				mutation {
-					collaborationCreateThread(contextId: "${contextId}") {
+					collaborationCreateThread(
+						contextId: "${context.id}", 
+						contextMetadata: { 
+							accountId: ${context.metaData.accountId}, 
+							entityGuid: "${context.metaData.entityGuid}",
+							nerdletId: "${context.metaData.nerdletId}",
+							pageId: [
+								"${context.metaData.pageId[0]}",
+								"${context.metaData.pageId[1]}"
+							]
+						}
+					) {
 						id
 					}
 				}`;
@@ -341,8 +324,45 @@ export class CollaborationTeamProvider {
 			return updateThreadResponse.collaborationUpdateThreadStatus.id;
 		} catch (ex) {
 			ContextLogger.warn("createThread failure", {
-				contextId,
-				accountId,
+				errorGroupGuid,
+				entityGuid,
+				error: ex,
+			});
+
+			throw ex;
+		}
+	}
+
+	/**
+	 * Most, but not all, mutations require a context to be passed in.
+	 * This method generates that context for a given entityGuid and errorGroupGuid.
+	 *
+	 * @param {string} entityGuid
+	 * @param {string} errorGroupGuid
+	 * @returns a promise that includes the context hash, which is the ID of the context, and the context metadata.
+	 */
+	private async generateContext(
+		entityGuid: string,
+		errorGroupGuid: string
+	): Promise<CollaborationContext> {
+		try {
+			const { accountId, domain, type } = { ...parseId(entityGuid) };
+
+			const contextMetadata = {
+				accountId: accountId!,
+				entityGuid: entityGuid,
+				nerdletId: "errors-inbox.error-group-details",
+				pageId: [errorGroupGuid, `${domain}-${type}`.toLocaleUpperCase()],
+			};
+
+			const contextHash = await generateHash(contextMetadata);
+
+			return {
+				id: contextHash,
+				metaData: contextMetadata,
+			};
+		} catch (ex) {
+			ContextLogger.warn("generateContextMetadata failure", {
 				errorGroupGuid,
 				entityGuid,
 				error: ex,
@@ -355,38 +375,46 @@ export class CollaborationTeamProvider {
 	/**
 	 * When the IDE calls for comments for a given error group, we need to ensure certain criteria are met and exist.
 	 * This method exists and handles all the bootstrapping; use it in between ANY calls to get comments.
+	 *
+	 * @param {string} errorGroupGuid
+	 * @param {string} entityGuid
+	 * @returns a promise that includes the threadId and the context.
 	 */
 	private async bootstrapCollaborationDiscussionForError(
-		accountId: number,
 		errorGroupGuid: string,
-		entityGuid: string,
-		entityDomain: string,
-		entityType: string
+		entityGuid: string
 	): Promise<BootStrapResponse> {
 		try {
-			const contextId = await generateHash({
-				accountId: accountId,
-				entityGuid: entityGuid,
-				nerdletId: "errors-inbox.error-group-details",
-				pageId: [errorGroupGuid, `${entityDomain}-${entityType}`.toLocaleUpperCase()],
-			});
+			const context = await this.generateContext(entityGuid, errorGroupGuid);
 
 			const createContextQuery = `
 				mutation {
-					collaborationCreateContext(id: "${contextId}") {
+					collaborationCreateContext(
+						accountId: ${context.metaData.accountId} 
+						entityGuid: "${entityGuid}" 
+						id: "${context.id}" 
+						contextMetadata: { 
+							accountId: ${context.metaData.accountId} 
+							entityGuid: "${context.metaData.entityGuid}"
+							nerdletId: "${context.metaData.nerdletId}"
+							pageId: [
+								"${context.metaData.pageId[0]}"
+								"${context.metaData.pageId[1]}"
+							]
+						}
+					) {
 						id
 					}
 				}`;
 
-			const createContextResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
-				createContextQuery
-			);
+			// the context Id generated from this matches the hash anyway
+			await this.graphqlClient.mutate<BaseCollaborationResponse>(createContextQuery);
 
 			const getThreadsQuery = `
 				{
 					actor {
 						collaboration {
-							threadsByContextId(contextId: "${contextId}") {
+							threadsByContextId(contextId: "${context.id}") {
 								entities {
 									id
 									latestCommentTime
@@ -411,23 +439,111 @@ export class CollaborationTeamProvider {
 			let mostRecentThreadId = mostRecentThread?.id;
 
 			if (!mostRecentThread) {
-				mostRecentThreadId = await this.createThread(
-					contextId,
-					accountId,
-					entityGuid,
-					errorGroupGuid
-				);
+				mostRecentThreadId = await this.createThread(entityGuid, errorGroupGuid);
 			}
 
 			return {
-				contextId: createContextResponse.collaborationCreateContext.id,
 				threadId: mostRecentThreadId!,
+				context: context,
 			};
 		} catch (ex) {
 			ContextLogger.warn("bootstrapCollaborationDiscussion failure", {
-				accountId,
 				errorGroupGuid,
 				entityGuid,
+				error: ex,
+			});
+
+			throw ex;
+		}
+	}
+
+	/**
+	 * Initializes NRAI for a given thread so that it becomes the first comment
+	 *
+	 * UNTESTED
+	 *
+	 * @param {InitiateNrAiRequest} request
+	 * @returns {Promise<InitiateNrAiResponse>}
+	 */
+	@lspHandler(InitiateNrAiRequestType)
+	@log()
+	async initializeNrAi(request: InitiateNrAiRequest): Promise<InitiateNrAiResponse> {
+		try {
+			const context = await this.generateContext(request.entityGuid, request.errorGroupGuid);
+
+			const codeMarkId = await this.createCodeMark({
+				codeBlock: request.codeBlock,
+				fileUri: request.fileUri,
+				permalink: request.permalink,
+				repo: request.repo,
+				sha: request.sha,
+			});
+
+			const initiateNrAiQuery = `
+				mutation {
+					createGrokInitiatedConversation(
+					threadId: ${request.threadId},
+					prompt: "",
+					contextMetadata: { 
+						accountId: ${context.metaData.accountId},
+						entityGuid: "${context.metaData.entityGuid}",
+						nerdletId: "${context.metaData.nerdletId}",
+						pageId: [
+							"${context.metaData.pageId[0]}",
+							"${context.metaData.pageId[1]}"
+						]
+					},
+					assistant: "",
+					assistantConfig: {}
+				}`;
+
+			return {};
+		} catch (ex) {
+			ContextLogger.warn("GetErrorInboxComments failure", {
+				request,
+				error: ex,
+			});
+
+			return { nrError: mapNRErrorResponse(ex) };
+		}
+	}
+
+	/**
+	 * Creates a codemark for a given code block to be used with NRAI
+	 *
+	 * UNTESTED
+	 *
+	 * @param {CreateCodeMarkRequest} request
+	 * @returns {Promise<string>}
+	 */
+	private async createCodeMark(request: {
+		codeBlock: string;
+		fileUri: string;
+		permalink: string;
+		repo: string;
+		sha: string;
+	}): Promise<string> {
+		try {
+			const createCodeMarkQuery = `
+				mutation {
+					collaborationCreateCodeMark(
+						code: "${request.codeBlock}",
+						file: "${request.fileUri}",
+						permalink: "${request.permalink}",
+						repo: "${request.repo}",
+						sha: "${request.sha}") {
+						id
+					}
+				}`;
+
+			const createCodeMarkResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
+				createCodeMarkQuery
+			);
+
+			return createCodeMarkResponse.collaborationCreateCodeMark.id;
+		} catch (ex) {
+			ContextLogger.warn("createCodeMark failure", {
+				request,
 				error: ex,
 			});
 

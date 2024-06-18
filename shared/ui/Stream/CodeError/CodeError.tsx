@@ -260,6 +260,9 @@ export const CodeError = (props: CodeErrorProps) => {
 		}
 
 		const initiateNrAiPayload: InitiateNrAiRequest = {
+			errorGroupGuid: errorGroupGuid!,
+			entityGuid: entityGuid!,
+
 			codeBlock: derivedState.functionToEdit.codeBlock,
 			fileUri: derivedState.functionToEdit.uri,
 			permalink: repoName!,
@@ -283,11 +286,8 @@ export const CodeError = (props: CodeErrorProps) => {
 			setDiscussionIsLoading(true);
 
 			const payload: GetErrorInboxCommentsRequest = {
-				accountId: accountId!,
 				errorGroupGuid: errorGroupGuid!,
 				entityGuid: entityGuid!,
-				entityDomain: derivedState.entityDomain!,
-				entityType: derivedState.entityType!,
 			};
 
 			const response = await HostApi.instance.send(GetErrorInboxCommentsRequestType, payload);
@@ -536,7 +536,9 @@ export const CodeError = (props: CodeErrorProps) => {
 
 							<ComposeWrapper>
 								<CommentInput
-									threadId={discussion.threadId}
+									threadId={discussion.threadId!}
+									entityGuid={entityGuid}
+									errorGroupGuid={errorGroupGuid}
 									codeError={props.codeError}
 									showGrok={showGrok}
 									isLoading={discussionIsLoading}

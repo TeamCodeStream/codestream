@@ -1438,6 +1438,9 @@ export interface CollaborationComment {
 }
 
 export interface InitiateNrAiRequest {
+	entityGuid: string;
+	errorGroupGuid: string;
+
 	fileUri: string;
 	codeBlock: string;
 	permalink: string;
@@ -1459,11 +1462,8 @@ export const InitiateNrAiRequestType = new RequestType<
 >("codestream/newrelic/collaboration/initiateNrAi");
 
 export interface GetErrorInboxCommentsRequest {
-	accountId: number;
 	errorGroupGuid: string;
 	entityGuid: string;
-	entityType: string;
-	entityDomain: string;
 }
 
 export interface GetErrorInboxCommentsResponse {
@@ -1480,7 +1480,9 @@ export const GetErrorInboxCommentsRequestType = new RequestType<
 >("codestream/newrelic/collaboration/getErrorComments");
 
 export interface CreateCollaborationCommentRequest {
-	threadId?: string;
+	errorGroupGuid: string;
+	entityGuid: string;
+	threadId: string;
 	body: string;
 }
 
