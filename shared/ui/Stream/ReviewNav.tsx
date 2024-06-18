@@ -22,7 +22,6 @@ import { TourTip } from "../src/components/TourTip";
 import { Modal } from "./Modal";
 import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
 import { getReviewChangeRequests } from "../store/codemarks/reducer";
-import { ReviewForm } from "./ReviewForm";
 import { openPanel } from "../store/context/actions";
 import { WebviewPanels } from "@codestream/protocols/api";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
@@ -570,12 +569,13 @@ export function ReviewNav(props: Props) {
 
 	if (isEditing) {
 		return (
-			<ReviewForm
-				isEditing
-				editingReview={review}
-				existingSharedTo={derivedState.post?.sharedTo}
-				onClose={() => setIsEditing(false)}
-			/>
+			<></>
+			// <ReviewForm
+			// 	isEditing
+			// 	editingReview={review}
+			// 	existingSharedTo={derivedState.post?.sharedTo}
+			// 	onClose={() => setIsEditing(false)}
+			// />
 		);
 	}
 

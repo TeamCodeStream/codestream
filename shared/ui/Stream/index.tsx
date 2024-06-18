@@ -68,6 +68,7 @@ import { ChangeTeamName } from "./ChangeTeamName";
 import { ChangeUsername } from "./ChangeUsername";
 import { ChangeWorksOn } from "./ChangeWorksOn";
 import { CodemarkForm } from "./CodemarkForm";
+import { CodemarkView } from "./CodemarkView";
 import { ErrorRoadblock } from "./ErrorRoadblock";
 import ConfigureAzureDevOpsPanel from "./ConfigureAzureDevOpsPanel";
 import ConfigureEnterprisePanel from "./ConfigureEnterprisePanel";
@@ -97,7 +98,7 @@ import { OnboardNewRelic } from "./OnboardNewRelic";
 import { PixieDynamicLoggingPanel } from "./PixieDynamicLogging/PixieDynamicLoggingPanel";
 import { ProfilePanel } from "./ProfilePanel";
 import { PRProviderErrorBanner } from "./PRProviderErrorBanner";
-import { ReviewForm } from "./ReviewForm";
+//import { ReviewForm } from "./ReviewForm";
 import { CLMSettings } from "./CLMSettings";
 import { Sidebar } from "./Sidebar";
 import { PRInfoModal } from "./SpatialView/PRInfoModal";
@@ -551,7 +552,7 @@ export class SimpleStream extends PureComponent<Props> {
 								</>
 							)}
 							{activePanel === WebviewPanels.Flow && <FlowPanel />}
-							{activePanel === WebviewPanels.NewReview && <ReviewForm />}
+							{/* {activePanel === WebviewPanels.NewReview && <ReviewForm />} */}
 							{activePanel === WebviewPanels.PixieDynamicLogging && <PixieDynamicLoggingPanel />}
 							{activePanel === WebviewPanels.MethodLevelTelemetry && <MethodLevelTelemetryPanel />}
 							{activePanel === WebviewPanels.TransactionSpan && <TransactionSpanPanel />}

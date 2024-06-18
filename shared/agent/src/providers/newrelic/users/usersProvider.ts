@@ -1,4 +1,5 @@
 import {
+	NewRelicUser,
 	UserSearchRequest,
 	UserSearchRequestType,
 	UserSearchResponse,
@@ -32,8 +33,18 @@ export class UsersProvider {
 
 		const userSearchResponse = await this.graphqlClient.query(userSearchQuery);
 
+		const users: NewRelicUser[] = userSearchResponse.actor.users.userSearch.users.map(
+			(user: { userId: number; email: string; name: string }) => {
+				return {
+					id: user.userId,
+					email: user.email,
+					name: user.name,
+				};
+			}
+		);
+
 		return {
-			users: userSearchResponse.actor.users.userSearch.users,
+			users: users,
 			nextCursor: userSearchResponse.actor.users.userSearch.nextCursor,
 		};
 	}

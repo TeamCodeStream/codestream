@@ -6,7 +6,10 @@ import { NewRelicId } from "@codestream/protocols/agent";
  * @param strict - When set to true, performs strict validation on the parsed values. Default is false.
  * @returns The parsed NewRelicId object or undefined if parsing fails or the ID-like string is empty.
  */
-export function parseId(idLike: string, strict: boolean = false): NewRelicId | undefined {
+export function parseId(
+	idLike: string | undefined,
+	strict: boolean = false
+): NewRelicId | undefined {
 	try {
 		// KEEP IN SYNC WITH AGENT
 

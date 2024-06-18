@@ -3084,19 +3084,13 @@ export const ApplyPatchType = new RequestType<ApplyPatchRequest, ApplyPatchRespo
 	"codestream/newrelic/applyPatch"
 );
 
-export type UserResult = {
-	email: string;
-	name: string;
-	userId: number;
-};
-
 export type UserSearchRequest = {
-	query: string;
+	query?: string;
 	nextCursor?: string;
 };
 
 export type UserSearchResponse = {
-	users: UserResult[];
+	users: NewRelicUser[];
 	nextCursor?: string;
 };
 
