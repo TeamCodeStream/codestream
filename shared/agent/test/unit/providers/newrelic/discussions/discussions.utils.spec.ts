@@ -1,4 +1,4 @@
-import { generateHash } from "../../../../../src/providers/newrelic/errors/collabDiscussionUtils";
+import { generateHash } from "../../../../../src/providers/newrelic/discussions/discussions.utils";
 
 type HashDataSet = {
 	accountId: number;

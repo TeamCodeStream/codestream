@@ -3083,3 +3083,26 @@ export type ApplyPatchResponse = {
 export const ApplyPatchType = new RequestType<ApplyPatchRequest, ApplyPatchResponse, void, void>(
 	"codestream/newrelic/applyPatch"
 );
+
+export type UserResult = {
+	email: string;
+	name: string;
+	userId: number;
+};
+
+export type UserSearchRequest = {
+	query: string;
+	nextCursor?: string;
+};
+
+export type UserSearchResponse = {
+	users: UserResult[];
+	nextCursor?: string;
+};
+
+export const UserSearchRequestType = new RequestType<
+	UserSearchRequest,
+	UserSearchResponse,
+	void,
+	void
+>("codestream/newrelic/userSearch");

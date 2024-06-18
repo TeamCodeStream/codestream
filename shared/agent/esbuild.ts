@@ -110,7 +110,6 @@ async function installProdDeps(tmpDir: string) {
 			...commonEsbuildOptions(false, args),
 			entryPoints: {
 				agent: "./src/main.ts",
-				"agent-vs-2019": "./src/main-vs-2019.ts",
 			},
 			// The newrelic agent doesn't support bundling.
 			packages: "external",
