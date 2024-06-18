@@ -40,7 +40,7 @@ const PING_INTERVAL = 30000;
 // use this interface to initialize the PubnubConnection class
 export interface PubnubInitializer {
 	subscribeKey: string; // identifies our Pubnub account, comes from pubnubKey returned with the login response from the API
-	authKey: string; // unique Pubnub token provided in the login response
+	broadcasterToken: string; // unique Pubnub token provided in the login response
 	userId: string; // ID of the current user
 	debug?(msg: string, info?: any): void; // for debug messages
 	httpsAgent?: HttpsAgent | HttpsProxyAgent<string>;
@@ -84,7 +84,6 @@ export class PubnubConnection implements BroadcasterConnection {
 			};
 		}
 		this._pubnub = new Pubnub({
-			authKey: options.authKey,
 			uuid: options.userId,
 			subscribeKey: options.subscribeKey,
 			restore: true,
@@ -93,6 +92,7 @@ export class PubnubConnection implements BroadcasterConnection {
 			autoNetworkDetection: true,
 			proxy: proxy,
 		} as Pubnub.PubnubConfig); // TODO @types/pubnub is very broken
+		this._pubnub.setToken(options.broadcasterToken);
 
 		this._messageCallback = options.onMessage;
 		this._statusCallback = options.onStatus;
@@ -106,6 +106,23 @@ export class PubnubConnection implements BroadcasterConnection {
 				this._pubnub!.stop();
 			},
 		};
+	}
+
+	// set a new broadcaster token
+	setToken(token: string) {
+		if (!this._pubnub) return;
+		this._pubnub.setToken(token);
+		const result = this._pubnub.parseToken(token);
+		const channels = Object.keys(result.resources?.channels || {}).filter(channel => {
+			return result.resources!.channels![channel].read;
+		});
+		const expiresAt = result.timestamp * 1000 + result.ttl * 60 * 1000;
+		this._debug(
+			`Did set PubNub token, token expires in ${
+				expiresAt - Date.now()
+			} ms, at ${expiresAt}, authorized channels are:`,
+			channels
+		);
 	}
 
 	// subscribe to the passed channels

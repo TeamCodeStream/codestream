@@ -295,7 +295,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private readonly _middleware: CodeStreamApiMiddleware[] = [];
 	private _pubnubSubscribeKey: string | undefined;
 	private _broadcasterToken: string | undefined;
-	private _socketCluster: { host: string; port: string; ignoreHttps?: boolean } | undefined;
 	private _subscribedMessageTypes: Set<MessageType> | undefined;
 	private _teamId: string | undefined;
 	private _team: CSTeam | undefined;
@@ -590,8 +589,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			response.accessTokenInfo
 		);
 		this._pubnubSubscribeKey = response.pubnubKey;
-		this._broadcasterToken = response.broadcasterToken || response.pubnubToken;
-		this._socketCluster = response.socketCluster;
+		this._broadcasterToken = response.broadcasterV3Token;
 
 		this._teamId = team.id;
 		this._team = team;
@@ -690,7 +688,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 			api: this,
 			httpsAgent,
 			strictSSL: this._strictSSL,
-			socketCluster: this._socketCluster,
 			supportsEcho: session.isOnPrem && (!!session.apiCapabilities.echoes || false),
 		});
 		this._events.onDidReceiveMessage(this.onPubnubMessageReceivedWithBlocking, this);
@@ -835,6 +832,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 					if (me.preferences && JSON.stringify(me.preferences) !== userPreferencesBefore) {
 						this._preferences.update(me.preferences);
 					}
+					if (me.broadcasterV3Token && this._events) {
+						this._events.setBroadcasterToken(me.broadcasterV3Token);
+					}
 				} catch {
 					debugger;
 				}
@@ -843,6 +843,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 		}
 
 		this._onDidReceiveMessage.fire(e as RTMessage);
+	}
+
+	setBroadcasterToken(token: string) {
+		if (this._events) {
+			this._events.setBroadcasterToken(token);
+		}
 	}
 
 	grantBroadcasterChannelAccess(token: string, channel: string): Promise<{}> {

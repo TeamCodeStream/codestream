@@ -961,6 +961,7 @@ export interface CSMe extends CSUser {
 	inMaintenanceMode?: boolean;
 	nrUserInfo?: CSNRUserInfo;
 	accessTokens?: { web: { token: string } };
+	broadcasterV3Token?: string;
 }
 
 export interface CSApiCapability {

@@ -33,10 +33,6 @@ export interface LoginResponse {
 	accessToken: string;
 	pubnubKey: string;
 	broadcasterToken: string;
-	socketCluster?: {
-		host: string;
-		port: string;
-	};
 }
 
 export interface InviteUserRequest {
