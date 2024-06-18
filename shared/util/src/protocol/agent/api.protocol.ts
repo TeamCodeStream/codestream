@@ -128,12 +128,8 @@ export interface CSLoginResponse {
 	accessToken: string;
 	accessTokenInfo?: CSAccessTokenInfo;
 	pubnubKey: string;
-	pubnubToken: string;
 	broadcasterToken?: string;
-	socketCluster?: {
-		host: string;
-		port: string;
-	};
+	broadcasterV3Token: string;
 	teams: CSTeam[];
 	companies: CSCompany[];
 	repos: CSRepository[];
