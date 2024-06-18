@@ -177,9 +177,11 @@ export interface CommentProps {
 }
 
 export type CommentInputProps = {
+	errorGroupGuid: string;
+	entityGuid: string;
 	codeError: CSCodeError;
 	showGrok: boolean;
-	threadId?: string;
+	threadId: string;
 	isLoading?: boolean;
 	reloadDiscussion?: Function;
 };
@@ -198,6 +200,8 @@ export const CommentInput = (props: CommentInputProps) => {
 		if (text.length === 0) return;
 
 		const response = await HostApi.instance.send(CreateCollaborationCommentRequestType, {
+			entityGuid: props.entityGuid,
+			errorGroupGuid: props.errorGroupGuid,
 			threadId: props.threadId,
 			body: text,
 		});

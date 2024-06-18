@@ -3,9 +3,20 @@ export interface BaseCollaborationResponse {
 		id: string;
 	};
 }
+
+export interface CollaborationContext {
+	id: string;
+	metaData: {
+		accountId: number;
+		entityGuid: string;
+		nerdletId: string;
+		pageId: string[];
+	};
+}
+
 export interface BootStrapResponse {
-	contextId: string;
 	threadId: string;
+	context: CollaborationContext;
 }
 
 export interface CommentsByThreadIdResponse {
