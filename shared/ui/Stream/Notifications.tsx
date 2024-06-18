@@ -6,6 +6,9 @@ import { setUserPreference, closeModal } from "./actions";
 import { Dialog } from "../src/components/Dialog";
 import { RadioGroup, Radio } from "../src/components/RadioGroup";
 import Icon from "./Icon";
+import { TextInput } from "../Authentication/TextInput";
+import cx from "classnames";
+import { isEmpty as _isEmpty } from "lodash";
 
 export const Notifications = props => {
 	const dispatch = useAppDispatch();
@@ -41,6 +44,15 @@ export const Notifications = props => {
 	const [serviceNotifyAccountId, setServiceNotifyAccountId] = useState(
 		derivedState.serviceNotifyAccountId
 	);
+	const [tagValueValidity, setTagValueValidity] = useState(false);
+	const [stringValidity, setStringValidity] = useState(false);
+	const [accountIdValidity, setAccountIdValidity] = useState(false);
+
+	const isTagValueValid = (tagValue: string) =>
+		new RegExp("^\\s*\\w+\\s*:\\s*\\w+\\s*(,\\s*\\w+\\s*:\\s*\\w+\\s*)*$").test(tagValue);
+
+	const isAccountIdValid = (accountId: string) =>
+		new RegExp("^(\\d+\\s*,\\s*)*\\d+$").test(accountId);
 
 	const handleChangeNotifyPerformanceIssues = async (value: boolean) => {
 		dispatch(setUserPreference({ prefPath: ["notifyPerformanceIssues"], value }));
@@ -56,22 +68,41 @@ export const Notifications = props => {
 
 	const handleChangeServiceNotifyTagValue = async (value: string) => {
 		setServiceNotifyTagValue(value);
-		// dispatch(setUserPreference({ prefPath: ["serviceNotifyType"], value }));
+		if (isTagValueValid(value)) {
+			setTagValueValidity(true);
+			// dispatch(setUserPreference({ prefPath: ["serviceNotifyTagValue"], value }));
+		} else {
+			setTagValueValidity(false);
+		}
 	};
 
 	const handleChangeServiceNotifyStringName = async (value: string) => {
 		setServiceNotifyStringName(value);
-		// dispatch(setUserPreference({ prefPath: ["serviceNotifyType"], value }));
+		if (!_isEmpty(value)) {
+			setStringValidity(true);
+			// dispatch(setUserPreference({ prefPath: ["serviceNotifyStringName"], value }));
+		} else {
+			setStringValidity(false);
+		}
 	};
 
 	const handleChangeServiceNotifyAccountId = async (value: string) => {
 		setServiceNotifyAccountId(value);
-		// dispatch(setUserPreference({ prefPath: ["serviceNotifyType"], value }));
+		if (isAccountIdValid(value)) {
+			setAccountIdValidity(true);
+			// dispatch(setUserPreference({ prefPath: ["serviceNotifyAccountId"], value }));
+		} else {
+			setAccountIdValidity(false);
+		}
+	};
+
+	const handleSubmit = event => {
+		event.preventDefault();
 	};
 
 	return (
 		<Dialog wide={true} title="Notification Settings" onClose={() => dispatch(closeModal())}>
-			<form className="standard-form vscroll">
+			<form onSubmit={handleSubmit} className="standard-form vscroll">
 				<fieldset className="form-body">
 					<div id="controls">
 						{derivedState.hasDesktopNotifications && (
@@ -82,9 +113,11 @@ export const Notifications = props => {
 										checked={derivedState.notifyPerformanceIssues}
 										onChange={handleChangeNotifyPerformanceIssues}
 									>
-										Notify me about services with performance problems
+										<div style={{ marginLeft: "5px" }}>
+											Notify me about services with performance problems
+										</div>
 									</Checkbox>
-									<div style={{ marginLeft: "25px" }} className="subtle">
+									<div style={{ marginLeft: "30px" }} className="subtle">
 										CodeStream will email you about services associated with the selected
 										repositories that are exhibiting performance problems.
 									</div>
@@ -116,7 +149,7 @@ export const Notifications = props => {
 														<Icon name="repo" /> Repo Foo
 													</div>
 													<div>
-														<Icon className="clickable" name="x" />
+														<Icon style={{ marginRight: "4px" }} className="clickable" name="x" />
 													</div>
 												</div>
 											</>
@@ -138,14 +171,19 @@ export const Notifications = props => {
 											</Radio>
 											{derivedState.serviceNotifyType === "TAGVALUE" && (
 												<div style={{ marginBottom: "12px" }}>
-													<input
-														className="input-text control"
+													<TextInput
+														name="tagvalue"
+														autoFocus
 														value={serviceNotifyTagValue}
-														onChange={event =>
-															handleChangeServiceNotifyTagValue(event.target.value)
-														}
+														onChange={handleChangeServiceNotifyTagValue}
 														placeholder="enviornment: production, enviornment: eu-production"
 													/>
+													<small
+														style={{ paddingLeft: "4px", position: "relative" }}
+														className={cx("explainer", { "error-message": !tagValueValidity })}
+													>
+														Must be a tag value pattern (foo:bar, enviornment:production)
+													</small>
 												</div>
 											)}
 											<Radio value={"STRINGNAME"}>
@@ -153,27 +191,37 @@ export const Notifications = props => {
 											</Radio>
 											{derivedState.serviceNotifyType === "STRINGNAME" && (
 												<div style={{ marginBottom: "12px" }}>
-													<input
-														className="input-text control"
+													<TextInput
+														name="stringname"
+														autoFocus
 														value={serviceNotifyStringName}
-														onChange={event =>
-															handleChangeServiceNotifyStringName(event.target.value)
-														}
+														onChange={handleChangeServiceNotifyStringName}
 														placeholder="(Prod)"
 													/>
+													<small
+														style={{ paddingLeft: "4px", position: "relative" }}
+														className={cx("explainer", { "error-message": !stringValidity })}
+													>
+														Must enter a value
+													</small>
 												</div>
 											)}
 											<Radio value={"ACCOUNTID"}>All services in the following account IDs</Radio>
 											{derivedState.serviceNotifyType === "ACCOUNTID" && (
 												<div style={{ marginBottom: "12x" }}>
-													<input
-														className="input-text control"
+													<TextInput
+														name="accountid"
+														autoFocus
 														value={serviceNotifyAccountId}
-														onChange={event =>
-															handleChangeServiceNotifyAccountId(event.target.value)
-														}
+														onChange={handleChangeServiceNotifyAccountId}
 														placeholder="1606862, 1693888"
 													/>
+													<small
+														style={{ paddingLeft: "4px", position: "relative" }}
+														className={cx("explainer", { "error-message": !accountIdValidity })}
+													>
+														Must be a number, can be seperated by commas (1606862, 1693888)
+													</small>
 												</div>
 											)}
 										</RadioGroup>
