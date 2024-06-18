@@ -22,7 +22,7 @@ import {
 import { log } from "../../../system/decorators/log";
 import { lsp, lspHandler } from "../../../system/decorators/lsp";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
-import { generateHash } from "./collabDiscussionUtils";
+import { generateHash } from "./discussions.utils";
 import { mapNRErrorResponse, parseId } from "../utils";
 import {
 	CommentsByThreadIdResponse,
@@ -30,10 +30,10 @@ import {
 	BootStrapResponse,
 	BaseCollaborationResponse,
 	CollaborationContext,
-} from "./collaboration.types";
+} from "./discussions.types";
 
 @lsp
-export class CollaborationTeamProvider {
+export class DiscussionsProvider {
 	constructor(private graphqlClient: NewRelicGraphqlClient) {
 		this.graphqlClient.addHeader("Nerd-Graph-Unsafe-Experimental-Opt-In", "Collaboration");
 	}
