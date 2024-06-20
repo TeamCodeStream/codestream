@@ -41,7 +41,6 @@ import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks"
 import { HostApi } from "../webview-api";
 import { setUserPreference } from "./actions";
 import { confirmPopup } from "./Confirm";
-import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import Icon from "./Icon";
 import { Link } from "./Link";
 import { PullRequestCommitsTab } from "./PullRequestCommitsTab";
@@ -672,7 +671,6 @@ export const PullRequest = () => {
 			return (
 				<ThemeProvider theme={addViewPreferencesToTheme}>
 					<Root className="panel full-height">
-						<CreateCodemarkIcons narrow onebutton />
 						<PullRequestFileComments
 							pr={pr}
 							setIsLoadingMessage={setIsLoadingMessage}
@@ -689,7 +687,6 @@ export const PullRequest = () => {
 		return (
 			<ThemeProvider theme={addViewPreferencesToTheme}>
 				<Root className="panel full-height">
-					<CreateCodemarkIcons narrow onebutton />
 					{isLoadingMessage && <FloatingLoadingMessage>{isLoadingMessage}</FloatingLoadingMessage>}
 					<PRHeader>
 						{iAmRequested && activeTab == 1 && (

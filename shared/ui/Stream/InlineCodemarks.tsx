@@ -74,7 +74,6 @@ import { SetUserPreferenceRequest } from "./actions.types";
 import { CodeErrorNav } from "./CodeErrorNav";
 import Codemark from "./Codemark";
 import { CodemarkForm } from "./CodemarkForm";
-import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import Feedback from "./Feedback";
 import Icon from "./Icon";
 import { Modal } from "./Modal";
@@ -1239,7 +1238,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					) : (
 						this.renderHeader()
 					)}
-					{(!currentPullRequestId || currentCodeErrorGuid) && <CreateCodemarkIcons />}
 					{this.renderCodemarkForm()}
 					{this.state.showPRInfoModal && (
 						<PRInfoModal onClose={() => this.setState({ showPRInfoModal: false })} />

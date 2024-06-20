@@ -39,7 +39,6 @@ import {
 import { getPreferences } from "../../../store/users/reducer";
 import { HostApi } from "../../../webview-api";
 import CancelButton from "../../CancelButton";
-import { CreateCodemarkIcons } from "../../CreateCodemarkIcons";
 import { DropdownButton } from "../../DropdownButton";
 import Icon from "../../Icon";
 import { Link } from "../../Link";
@@ -697,7 +696,6 @@ export const PullRequest = () => {
 		return (
 			<ThemeProvider theme={addViewPreferencesToTheme}>
 				<PullRequestRoot className="panel full-height">
-					<CreateCodemarkIcons narrow onebutton />
 					<PullRequestFileComments
 						pr={pr}
 						setIsLoadingMessage={setIsLoadingMessage}
@@ -714,7 +712,6 @@ export const PullRequest = () => {
 	return (
 		<ThemeProvider theme={addViewPreferencesToTheme}>
 			<PullRequestRoot className="gitlab" onClick={hijackUserLinks}>
-				<CreateCodemarkIcons narrow onebutton />
 				{isLoadingMessage && <FloatingLoadingMessage>{isLoadingMessage}</FloatingLoadingMessage>}
 				{isEditing && (
 					<EditPullRequest

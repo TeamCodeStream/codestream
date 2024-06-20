@@ -16,7 +16,6 @@ import { Link } from "./Link";
 import { Icon } from "./Icon";
 import { Dialog } from "../src/components/Dialog";
 import { IntegrationButtons, Provider } from "./IntegrationsPanel";
-import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { CenterRow, DialogRow, Dot, Dots, Sep, SkipLink, Step } from "./Onboard";
 import { AddAppMonitoringNodeJS } from "./NewRelicWizards/AddAppMonitoringNodeJS";
@@ -195,7 +194,6 @@ export const OnboardNewRelic = React.memo(function OnboardNewRelic() {
 
 	return (
 		<>
-			{seenCommentingStep && <CreateCodemarkIcons />}
 			<div
 				id="scroll-container"
 				className="onboarding-page"

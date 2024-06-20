@@ -4,7 +4,6 @@ import { CodeStreamState } from "../store";
 import { useAppDispatch, useAppSelector } from "../utilities/hooks";
 
 import { PanelHeader } from "../src/components/PanelHeader";
-import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 
 import CancelButton from "./CancelButton";
 import { closePanel } from "./actions";
@@ -21,7 +20,6 @@ export const ExportPanel = () => {
 
 	return (
 		<div className="panel full-height activity-panel">
-			<CreateCodemarkIcons />
 			<PanelHeader
 				title={
 					<span>

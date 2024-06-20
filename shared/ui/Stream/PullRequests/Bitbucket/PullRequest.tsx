@@ -42,7 +42,6 @@ import { getPreferences } from "../../../store/users/reducer";
 import { useAppDispatch, useAppSelector, useDidMount } from "../../../utilities/hooks";
 import { HostApi } from "../../../webview-api";
 import { confirmPopup } from "../../Confirm";
-import { CreateCodemarkIcons } from "../../CreateCodemarkIcons";
 import {
 	PRAction,
 	PRActionButtons,
@@ -606,7 +605,6 @@ export const PullRequest = () => {
 			return (
 				<ThemeProvider theme={addViewPreferencesToTheme}>
 					<Root className="panel full-height">
-						<CreateCodemarkIcons narrow onebutton />
 						<PullRequestFileComments
 							pr={pr}
 							setIsLoadingMessage={setIsLoadingMessage}
@@ -623,7 +621,6 @@ export const PullRequest = () => {
 		return (
 			<ThemeProvider theme={addViewPreferencesToTheme}>
 				<Root className="bitbucket">
-					<CreateCodemarkIcons narrow onebutton />
 					{isLoadingMessage && <FloatingLoadingMessage>{isLoadingMessage}</FloatingLoadingMessage>}
 					<PRHeader>
 						<PRTitle className={editingTitle ? "editing" : ""}>
