@@ -225,6 +225,7 @@ export const Observability = React.memo((props: Props) => {
 			teamId: team?.id,
 			anomalyData,
 			currentServiceSearchEntity: state.context.currentServiceSearchEntity,
+			repoFollowingType: preferences?.repoFollowingType || "AUTO",
 		};
 	}, shallowEqual);
 
@@ -235,9 +236,6 @@ export const Observability = React.memo((props: Props) => {
 	const [loadingObservabilityErrors, setLoadingObservabilityErrors] = useState<boolean>(false);
 	const [genericError, setGenericError] = useState<string>();
 	const [errorInboxError, setErrorInboxError] = useState<string>();
-	const [loadingAssignmentErrorsClick, setLoadingAssignmentErrorsClick] = useState<{
-		[errorGroupGuid: string]: boolean;
-	}>({});
 	const [loadingAssignments, setLoadingAssignments] = useState<boolean>(false);
 	const [hasEntities, setHasEntities] = useState<boolean>(false);
 	const [repoForEntityAssociator, setRepoForEntityAssociator] = useState<
@@ -1062,8 +1060,11 @@ export const Observability = React.memo((props: Props) => {
 	}, [derivedState.scmInfo]);
 
 	useEffect(() => {
-		const entityAccounts = observabilityRepos.flatMap(or => {
-			return or.entityAccounts;
+		const entityAccounts = observabilityRepos.flatMap(_ => {
+			if (_.entityAccounts && _.entityAccounts.length > 0) {
+				console.warn(_);
+			}
+			return _.entityAccounts;
 		});
 		dispatch(setEntityAccounts(entityAccounts));
 	}, [observabilityRepos]);
@@ -1195,6 +1196,7 @@ export const Observability = React.memo((props: Props) => {
 				return (
 					<>
 						<PaneNode>
+							{/* eric here */}
 							<PaneNodeName
 								data-testid={`observability-repo-id-${repo.repoId}`}
 								title={

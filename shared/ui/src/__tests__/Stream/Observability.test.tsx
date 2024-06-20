@@ -356,6 +356,7 @@ describe("Observability", () => {
 						],
 						repoName: "myrepo",
 						repoRemote: "https://github.com/org/myrepo",
+						repoGuid: "guid123",
 						hasRepoAssociation: true,
 						hasCodeLevelMetricSpanData: true,
 					},

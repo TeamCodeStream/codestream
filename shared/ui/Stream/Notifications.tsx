@@ -70,7 +70,7 @@ export const Notifications = props => {
 		setServiceNotifyTagValue(value);
 		if (isTagValueValid(value)) {
 			setTagValueValidity(true);
-			// dispatch(setUserPreference({ prefPath: ["serviceNotifyTagValue"], value }));
+			dispatch(setUserPreference({ prefPath: ["serviceNotifyTagValue"], value }));
 		} else {
 			setTagValueValidity(false);
 		}
@@ -80,7 +80,7 @@ export const Notifications = props => {
 		setServiceNotifyStringName(value);
 		if (!_isEmpty(value)) {
 			setStringValidity(true);
-			// dispatch(setUserPreference({ prefPath: ["serviceNotifyStringName"], value }));
+			dispatch(setUserPreference({ prefPath: ["serviceNotifyStringName"], value }));
 		} else {
 			setStringValidity(false);
 		}
@@ -90,7 +90,7 @@ export const Notifications = props => {
 		setServiceNotifyAccountId(value);
 		if (isAccountIdValid(value)) {
 			setAccountIdValidity(true);
-			// dispatch(setUserPreference({ prefPath: ["serviceNotifyAccountId"], value }));
+			dispatch(setUserPreference({ prefPath: ["serviceNotifyAccountId"], value }));
 		} else {
 			setAccountIdValidity(false);
 		}
