@@ -1238,7 +1238,6 @@ export const Observability = React.memo((props: Props) => {
 				return (
 					<>
 						<PaneNode>
-							{/* eric here */}
 							<PaneNodeName
 								data-testid={`observability-repo-id-${repo.repoId}`}
 								title={
