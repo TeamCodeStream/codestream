@@ -215,6 +215,7 @@ export class ReposProvider implements Disposable {
 				}
 
 				let firstMatchedRepoGuid = "";
+				let repoNameOnNr = "";
 
 				const uniqueEntities: Entity[] = [];
 				if (applicationAssociations && applicationAssociations.length) {
@@ -256,6 +257,8 @@ export class ReposProvider implements Disposable {
 									}
 								}
 
+								repoNameOnNr = relatedResult.target.entity.name;
+
 								uniqueEntities.push(relatedResult.source.entity);
 							}
 						}
@@ -296,6 +299,7 @@ export class ReposProvider implements Disposable {
 					repoName: folderName,
 					repoRemote: remote,
 					repoGuid: firstMatchedRepoGuid,
+					repoNameOnNr,
 					hasRepoAssociation,
 					hasCodeLevelMetricSpanData: true,
 					entityAccounts: mappedUniqueEntities,

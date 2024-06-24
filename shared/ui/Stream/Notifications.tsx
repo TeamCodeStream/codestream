@@ -2,7 +2,7 @@ import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/ho
 import React, { useState } from "react";
 import { CodeStreamState } from "../store";
 import { Checkbox } from "../src/components/Checkbox";
-import { setUserPreference, closeModal } from "./actions";
+import { setUserPreference, setUserPreferences, closeModal } from "./actions";
 import { Dialog } from "../src/components/Dialog";
 import { RadioGroup, Radio } from "../src/components/RadioGroup";
 import Icon from "./Icon";
@@ -32,6 +32,7 @@ export const Notifications = props => {
 				? state.preferences.serviceNotifyAccountId
 				: "",
 			hasDesktopNotifications,
+			followedReposWithNames: state.preferences?.followedReposWithNames || [],
 		};
 	});
 
@@ -96,6 +97,22 @@ export const Notifications = props => {
 		}
 	};
 
+	const handleUnfollowRepoClick = (repoObject: { guid: string; name: string }) => {
+		const { guid } = repoObject;
+		const isFollowed = derivedState.followedReposWithNames.some(repo => repo.guid === guid);
+		if (isFollowed) {
+			const newFollowedReposWithNames = derivedState.followedReposWithNames.filter(
+				repo => repo.guid !== guid
+			);
+			const guidList = newFollowedReposWithNames.map(repo => repo.guid);
+			dispatch(
+				setUserPreferences([
+					{ prefPath: ["followedReposWithNames"], value: newFollowedReposWithNames },
+					{ prefPath: ["followedRepos"], value: guidList },
+				])
+			);
+		}
+	};
 	const handleSubmit = event => {
 		event.preventDefault();
 	};
@@ -143,20 +160,30 @@ export const Notifications = props => {
 										</RadioGroup>
 										{derivedState.repoFollowingType === "MANUAL" && (
 											<div style={{ marginTop: "6px" }}>
-												{/* @TODO: map through repos here */}
-												<div
-													style={{
-														display: "flex",
-														justifyContent: "space-between",
-													}}
-												>
-													<div>
-														<Icon name="repo" /> Repo Foo
-													</div>
-													<div>
-														<Icon style={{ marginRight: "4px" }} className="clickable" name="x" />
-													</div>
-												</div>
+												{derivedState.followedReposWithNames.map((_, index, array) => {
+													return (
+														<div
+															style={{
+																display: "flex",
+																justifyContent: "space-between",
+																marginBottom: index !== array.length - 1 ? "4px" : "0px",
+															}}
+														>
+															<div>
+																<Icon style={{ marginRight: "2px" }} name="repo" />
+																{_.name}
+															</div>
+															<div>
+																<Icon
+																	style={{ marginRight: "4px" }}
+																	className="clickable"
+																	name="x"
+																	onClick={e => handleUnfollowRepoClick(_)}
+																/>
+															</div>
+														</div>
+													);
+												})}
 											</div>
 										)}
 										<div
