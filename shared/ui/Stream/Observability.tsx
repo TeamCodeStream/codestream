@@ -225,7 +225,7 @@ export const Observability = React.memo((props: Props) => {
 			teamId: team?.id,
 			anomalyData,
 			currentServiceSearchEntity: state.context.currentServiceSearchEntity,
-			repoFollowingType: preferences?.repoFollowingType,
+			repoFollowingType: preferences?.repoFollowingType || "AUTO",
 			followedRepos: preferences?.followedRepos || [],
 			followedReposWithNames: preferences?.followedReposWithNames || [],
 		};

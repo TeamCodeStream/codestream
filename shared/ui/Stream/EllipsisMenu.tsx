@@ -62,6 +62,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		const { environmentHosts, environment, isProductionCloud } = state.configs;
 		const currentHost = environmentHosts?.find(host => host.shortName === environment);
 		const supportsMultiRegion = isFeatureEnabled(state, "multiRegion");
+		const showNotificationsMenu = isFeatureEnabled(state, "showNotificationsMenu");
 
 		let currentCompanyId;
 		for (const key in companies) {
@@ -120,6 +121,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			nrUserId: user?.nrUserId,
 			ide: state.ide,
 			demoMode: state.codeErrors.demoMode,
+			showNotificationsMenu,
 		};
 	}, shallowEqual);
 
@@ -281,28 +283,29 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		{ label: "Sign Out", action: () => handleLogout() },
 	];
 
-	menuItems.push(
-		{
-			label: "Account",
-			action: "account",
-			submenu: [
-				{
-					label: "View Profile",
-					action: () => {
-						dispatch(setProfileUser(derivedState.currentUserId));
-						popup(WebviewModals.Profile);
-					},
+	menuItems.push({
+		label: "Account",
+		action: "account",
+		submenu: [
+			{
+				label: "View Profile",
+				action: () => {
+					dispatch(setProfileUser(derivedState.currentUserId));
+					popup(WebviewModals.Profile);
 				},
-				{ label: "Change Username", action: () => popup(WebviewModals.ChangeUsername) },
-				{ label: "-" },
-				{ label: "Sign Out", action: () => dispatch(logout()) },
-			],
-		},
-		{
+			},
+			{ label: "Change Username", action: () => popup(WebviewModals.ChangeUsername) },
+			{ label: "-" },
+			{ label: "Sign Out", action: () => dispatch(logout()) },
+		],
+	});
+
+	if (derivedState.showNotificationsMenu) {
+		menuItems.push({
 			label: "Notifications",
 			action: () => dispatch(openModal(WebviewModals.Notifications)),
-		}
-	);
+		});
+	}
 
 	menuItems.push(
 		...[
