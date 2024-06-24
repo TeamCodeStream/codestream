@@ -1087,7 +1087,9 @@ export const Observability = React.memo((props: Props) => {
 			);
 		}
 
-		const entityAccounts = observabilityRepos.flatMap(repo => repo.entityAccounts || []);
+		const entityAccounts = observabilityRepos.flatMap(or => {
+			return or.entityAccounts;
+		});
 		dispatch(setEntityAccounts(entityAccounts));
 	}, [observabilityRepos]);
 
