@@ -9,6 +9,8 @@ import Icon from "./Icon";
 import { TextInput } from "../Authentication/TextInput";
 import cx from "classnames";
 import { isEmpty as _isEmpty } from "lodash";
+import { HostApi } from "../webview-api";
+import { useDidMount } from "../utilities/hooks";
 
 export const Notifications = props => {
 	const dispatch = useAppDispatch();
@@ -21,7 +23,7 @@ export const Notifications = props => {
 				: "AUTO",
 			serviceNotifyType: state.preferences.serviceNotifyType
 				? state.preferences.serviceNotifyType
-				: "REPO",
+				: "all",
 			serviceNotifyTagValue: state.preferences.serviceNotifyTagValue
 				? state.preferences.serviceNotifyTagValue
 				: "",
@@ -35,7 +37,6 @@ export const Notifications = props => {
 			followedReposWithNames: state.preferences?.followedReposWithNames || [],
 		};
 	});
-
 	const [serviceNotifyTagValue, setServiceNotifyTagValue] = useState(
 		derivedState.serviceNotifyTagValue
 	);
@@ -48,6 +49,17 @@ export const Notifications = props => {
 	const [tagValueValidity, setTagValueValidity] = useState(false);
 	const [stringValidity, setStringValidity] = useState(false);
 	const [accountIdValidity, setAccountIdValidity] = useState(false);
+	const [originalRepoFollowingType, setOriginalRepoFollowingType] = useState(
+		derivedState.repoFollowingType
+	);
+	const [originalServiceNotificationType, setOriginalServiceNotificationType] = useState(
+		derivedState.serviceNotifyType
+	);
+
+	useDidMount(() => {
+		setOriginalRepoFollowingType(derivedState.repoFollowingType);
+		setOriginalServiceNotificationType(derivedState.serviceNotifyType);
+	});
 
 	const isTagValueValid = (tagValue: string) =>
 		new RegExp("^\\s*\\w+\\s*:\\s*\\w+\\s*(,\\s*\\w+\\s*:\\s*\\w+\\s*)*$").test(tagValue);
@@ -113,12 +125,32 @@ export const Notifications = props => {
 			);
 		}
 	};
+
 	const handleSubmit = event => {
 		event.preventDefault();
 	};
 
+	const handleClose = e => {
+		e.preventDefault();
+
+		if (originalRepoFollowingType !== derivedState.repoFollowingType) {
+			HostApi.instance.track("codestream/notifications/repo_following_option", {
+				meta_data: `old_value: ${originalRepoFollowingType.toLowerCase()}; new_value: ${derivedState.repoFollowingType.toLowerCase()}`,
+				event_type: "change",
+			});
+		}
+		if (originalServiceNotificationType !== derivedState.serviceNotifyType) {
+			HostApi.instance.track("codestream/notifications/service_notification_option", {
+				meta_data: `old_value: ${originalServiceNotificationType}; new_value: ${derivedState.serviceNotifyType}`,
+				event_type: "change",
+			});
+		}
+
+		dispatch(closeModal());
+	};
+
 	return (
-		<Dialog wide={true} title="Notification Settings" onClose={() => dispatch(closeModal())}>
+		<Dialog wide={true} title="Notification Settings" onClose={e => handleClose(e)}>
 			<form onSubmit={handleSubmit} className="standard-form vscroll">
 				<fieldset className="form-body">
 					<div id="controls">
@@ -197,11 +229,9 @@ export const Notifications = props => {
 											selectedValue={derivedState.serviceNotifyType}
 											onChange={value => handleChangeServiceNotifyType(value)}
 										>
-											<Radio value={"REPO"}>All services for each repository</Radio>
-											<Radio value={"TAGVALUE"}>
-												All services with the following tag:value pairs
-											</Radio>
-											{derivedState.serviceNotifyType === "TAGVALUE" && (
+											<Radio value={"all"}>All services for each repository</Radio>
+											<Radio value={"tag"}>All services with the following tag:value pairs</Radio>
+											{derivedState.serviceNotifyType === "tag" && (
 												<div style={{ paddingLeft: "28px", marginBottom: "12x" }}>
 													<TextInput
 														name="tagvalue"
@@ -218,10 +248,10 @@ export const Notifications = props => {
 													</small>
 												</div>
 											)}
-											<Radio value={"STRINGNAME"}>
+											<Radio value={"string"}>
 												All services with the following string in the name
 											</Radio>
-											{derivedState.serviceNotifyType === "STRINGNAME" && (
+											{derivedState.serviceNotifyType === "string" && (
 												<div style={{ paddingLeft: "28px", marginBottom: "12x" }}>
 													<TextInput
 														name="stringname"
@@ -238,8 +268,8 @@ export const Notifications = props => {
 													</small>
 												</div>
 											)}
-											<Radio value={"ACCOUNTID"}>All services in the following account IDs</Radio>
-											{derivedState.serviceNotifyType === "ACCOUNTID" && (
+											<Radio value={"account"}>All services in the following account IDs</Radio>
+											{derivedState.serviceNotifyType === "account" && (
 												<div style={{ paddingLeft: "28px", marginBottom: "12x" }}>
 													<TextInput
 														name="accountid"
