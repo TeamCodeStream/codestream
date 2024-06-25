@@ -59,6 +59,8 @@ describe("Notifications UI", () => {
 				<Notifications />
 			</Provider>
 		);
-		expect(screen.queryByText("Notify me about performance issues")).toBeInTheDocument();
+		expect(
+			screen.queryByText("Notify me about services with performance problems")
+		).toBeInTheDocument();
 	});
 });
