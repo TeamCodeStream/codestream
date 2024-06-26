@@ -2,7 +2,7 @@ import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/ho
 import React, { useState } from "react";
 import { CodeStreamState } from "../store";
 import { Checkbox } from "../src/components/Checkbox";
-import { setUserPreference, setUserPreferences, closeModal } from "./actions";
+import { setUserPreference, closeModal } from "./actions";
 import { Dialog } from "../src/components/Dialog";
 import { RadioGroup, Radio } from "../src/components/RadioGroup";
 import Icon from "./Icon";
@@ -114,7 +114,7 @@ export const Notifications = props => {
 		const isFollowed = derivedState.followedRepos.some(repo => repo.guid === guid);
 		if (isFollowed) {
 			const newFollowedRepos = derivedState.followedRepos.filter(repo => repo.guid !== guid);
-			dispatch(setUserPreferences([{ prefPath: ["followedRepos"], value: newFollowedRepos }]));
+			dispatch(setUserPreference({ prefPath: ["followedRepos"], value: newFollowedRepos }));
 		}
 	};
 

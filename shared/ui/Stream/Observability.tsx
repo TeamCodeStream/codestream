@@ -58,7 +58,7 @@ import {
 	usePrevious,
 } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
-import { openPanel, setUserPreference, setUserPreferences } from "./actions";
+import { openPanel, setUserPreference } from "./actions";
 import { ALERT_SEVERITY_COLORS } from "./CodeError/index";
 import { EntityAssociator } from "./EntityAssociator";
 import Icon from "./Icon";
@@ -1075,7 +1075,7 @@ export const Observability = React.memo((props: Props) => {
 			const uniqueRepos = Array.from(
 				new Map(combinedRepos.map(repo => [repo.guid, repo])).values()
 			);
-			dispatch(setUserPreferences([{ prefPath: ["followedRepos"], value: uniqueRepos }]));
+			dispatch(setUserPreference({ prefPath: ["followedRepos"], value: uniqueRepos }));
 		}
 
 		const entityAccounts = observabilityRepos.flatMap(or => {
@@ -1093,7 +1093,7 @@ export const Observability = React.memo((props: Props) => {
 			const updatedFollowedRepos = [...followedRepos, repoObject].filter(
 				(repo, index, self) => index === self.findIndex(r => r.guid === repo.guid)
 			);
-			dispatch(setUserPreferences([{ prefPath: ["followedRepos"], value: updatedFollowedRepos }]));
+			dispatch(setUserPreference({ prefPath: ["followedRepos"], value: updatedFollowedRepos }));
 		}
 	};
 
