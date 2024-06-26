@@ -1,5 +1,5 @@
 import cx from "classnames";
-import React, { ReactNode, SyntheticEvent, useRef, useState } from "react";
+import React, { useCallback, useEffect, ReactNode, SyntheticEvent, useRef, useState } from "react";
 import { shallowEqual } from "react-redux";
 import { Attachment, CSMe } from "@codestream/protocols/api";
 import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
@@ -8,13 +8,13 @@ import {
 	debounceAndCollectToAnimationFrame,
 	Disposable,
 	replaceHtml,
+	emptyArray,
 } from "../utils";
 import { AtMentionsPopup, Mention } from "./AtMentionsPopup";
 import EmojiPicker from "./EmojiPicker";
 import Button from "./Button";
 import Icon from "./Icon";
 import {
-	NewRelicUser,
 	UploadFileRequest,
 	UploadFileRequestType,
 	UserSearchRequestType,
@@ -26,6 +26,7 @@ import Tooltip from "./Tooltip";
 import { HostApi } from "../webview-api";
 import { useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import { AutoHeightTextArea } from "@codestream/webview/src/components/AutoHeightTextArea";
+import { isEmpty as _isEmpty, debounce as _debounce } from "lodash-es";
 
 const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.json");
 
@@ -81,7 +82,7 @@ export const MessageInput = (props: MessageInputProps) => {
 		};
 	}, shallowEqual);
 
-	const [teammates, setTeammates] = useState<NewRelicUser[]>([]);
+	// const [teammates, setTeammates] = useState<NewRelicUser[]>([]);
 	const textAreaRef = useRef<HTMLTextAreaElement>(null);
 	const disposables: Disposable[] = [];
 	const [emojiOpen, setEmojiOpen] = useState(false);
@@ -285,9 +286,9 @@ export const MessageInput = (props: MessageInputProps) => {
 		if (currentPopup === "emojis") {
 			toInsert = id + ":\u00A0";
 		} else {
-			const user = teammates.find(t => t.id === id);
+			const user = popupItems?.find(t => t.id === id);
 			if (!user) return;
-			toInsert = user.name + "\u00A0";
+			toInsert = user.description + "\u00A0";
 		}
 
 		focus();
@@ -368,40 +369,53 @@ export const MessageInput = (props: MessageInputProps) => {
 	};
 
 	// set up the parameters to pass to the at mention popup
-	function showPopupSelectors(prefix: string, type: PopupType) {
+	async function showPopupSelectors(prefix: string, type: PopupType) {
 		const itemsToShow: Mention[] = [];
 		KeystrokeDispatcher.levelUp();
 
 		const normalizedPrefix = prefix ? prefix.toLowerCase() : prefix;
 
 		if (type === "at-mentions") {
-			for (const person of teammates) {
-				const toMatch = `${person.name}*${person.email}`.toLowerCase();
-				if (toMatch.includes(normalizedPrefix)) {
-					const you = person.id === derivedState.currentNrUserId ? " (you)" : "";
-					let description = person.name || person.email;
-					if (description) {
-						description += you;
-					}
-					if (person.name?.toLowerCase() === "ai") {
-						if (props.suggestGrok) {
-							itemsToShow.unshift({
-								id: person.id?.toString(),
-								headshot: person,
-								identifier: person.name || person.email,
-								description: description,
-							});
-						}
-					} else {
-						itemsToShow.push({
-							id: person.id?.toString(),
-							headshot: person,
-							identifier: person.name || person.email,
-							description: description,
-						});
-					}
-				}
+			if (normalizedPrefix.length > 2) {
+				setPopupPrefix(prefix);
+				// setCurrentPopup(type);
+				// setPopupIndex(0);
 			}
+			// if (normalizedPrefix.length === 3 && !teamFetched) {
+			// 	const fetchedTeam = await getTeammates(normalizedPrefix);
+			// 	setTeam(fetchedTeam);
+			// 	setTeamFetched(true);
+			// }
+
+			// if (normalizedPrefix.length >= 3 && teamFetched) {
+			// 	for (const person of team) {
+			// 		const toMatch = `${person.name}*${person.email}`.toLowerCase();
+			// 		if (toMatch.includes(normalizedPrefix)) {
+			// 			const you = person.id === derivedState.currentNrUserId ? " (you)" : "";
+			// 			let description = person.name || person.email;
+			// 			if (description) {
+			// 				description += you;
+			// 			}
+			// 			if (person.name?.toLowerCase() === "ai") {
+			// 				if (props.suggestGrok) {
+			// 					itemsToShow.unshift({
+			// 						id: person.id?.toString(),
+			// 						headshot: person,
+			// 						identifier: person.name || person.email,
+			// 						description: description,
+			// 					});
+			// 				}
+			// 			} else {
+			// 				itemsToShow.push({
+			// 					id: person.id?.toString(),
+			// 					headshot: person,
+			// 					identifier: person.name || person.email,
+			// 					description: description,
+			// 				});
+			// 			}
+			// 		}
+			// 	}
+			// }
 		} else if (type === "emojis") {
 			if (normalizedPrefix && normalizedPrefix.length > 1) {
 				Object.keys(emojiData).map(emojiId => {
@@ -414,20 +428,53 @@ export const MessageInput = (props: MessageInputProps) => {
 					description: "Matching Emoji. Type 2 or more characters",
 				});
 			}
-		}
+			if (itemsToShow.length === 0) {
+				hidePopup();
+			} else {
+				const selected = itemsToShow[0].id;
 
-		if (itemsToShow.length === 0) {
-			hidePopup();
-		} else {
-			const selected = itemsToShow[0].id;
-
-			setCurrentPopup(type);
-			setPopupPrefix(prefix);
-			setPopupItems(itemsToShow);
-			setPopupIndex(0);
-			setSelectedPopupItem(selected);
+				setCurrentPopup(type);
+				setPopupPrefix(prefix);
+				setPopupItems(itemsToShow);
+				setPopupIndex(0);
+				setSelectedPopupItem(selected);
+			}
 		}
 	}
+
+	const fetchTeammates = async prefix => {
+		HostApi.instance.send(UserSearchRequestType, { query: prefix }).then(response => {
+			const users = response.users.map(user => {
+				return {
+					id: user.id?.toString(),
+					headshot: { email: user.email, name: user.name },
+					description: user.name,
+					identifier: user.email,
+				};
+			});
+
+			const selected = users[0].id;
+
+			setCurrentPopup("at-mentions");
+			setPopupPrefix(prefix);
+			setPopupItems(users);
+			setPopupIndex(0);
+			setSelectedPopupItem(selected);
+		});
+	};
+
+	const debouncedFetchTeammates = useCallback(
+		_debounce(prefix => {
+			fetchTeammates(prefix);
+		}, 500),
+		[]
+	);
+
+	useEffect(() => {
+		if (!_isEmpty(popupPrefix)) {
+			debouncedFetchTeammates(popupPrefix);
+		}
+	}, [popupPrefix, debouncedFetchTeammates]);
 
 	const handleKeyPress = (event: React.KeyboardEvent) => {
 		const newPostText = props.text;
@@ -618,10 +665,6 @@ export const MessageInput = (props: MessageInputProps) => {
 	};
 
 	useDidMount(() => {
-		HostApi.instance.send(UserSearchRequestType, { query: "" }).then(response => {
-			setTeammates(response.users);
-		});
-
 		// so that HTML doesn't get pasted into the input field. without this,
 		// HTML would be rendered as HTML when pasted
 		if (textAreaRef.current) {
@@ -799,6 +842,7 @@ export const MessageInput = (props: MessageInputProps) => {
 					on={currentPopup}
 					childRef={textAreaRef}
 					prefix={popupPrefix}
+					items={popupItems || emptyArray}
 					selected={selectedPopupItem}
 					handleHoverAtMention={handleHoverAtMention}
 					handleSelectAtMention={handleSelectAtMention}
