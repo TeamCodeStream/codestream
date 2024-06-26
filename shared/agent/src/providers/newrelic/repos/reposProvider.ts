@@ -252,7 +252,17 @@ export class ReposProvider implements Disposable {
 								const tagsArray = relatedResult?.target?.entity.tags;
 								if (tagsArray) {
 									const urlEntry = tagsArray.find(entry => entry.key === "url");
-									if (urlEntry?.values?.includes(remote) && !firstMatchedRepoGuid) {
+									if (
+										urlEntry?.values &&
+										remoteUrls.some(url => {
+											if (url) {
+												return urlEntry.values.includes(url);
+											} else {
+												return false;
+											}
+										}) &&
+										!firstMatchedRepoGuid
+									) {
 										firstMatchedRepoGuid = relatedResult.target.entity.guid;
 									}
 								}

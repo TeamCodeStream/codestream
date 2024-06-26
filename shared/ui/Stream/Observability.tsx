@@ -1221,9 +1221,7 @@ export const Observability = React.memo((props: Props) => {
 				const repoIsCollapsed = currentRepoId !== repo.repoId;
 				const isLoadingCurrentRepo =
 					loadingEntities === repo.repoId || (isRefreshing && !repoIsCollapsed);
-				const isNotFollowing =
-					!derivedState.followedRepos.some(repo => repo.guid === repo.repoGuid) &&
-					repo.entityAccounts?.length !== 0;
+				const isNotFollowing = !derivedState.followedRepos.some(_ => _.guid === repo.repoGuid);
 
 				return (
 					<>
@@ -1286,23 +1284,25 @@ export const Observability = React.memo((props: Props) => {
 							>
 								{derivedState.newRelicIsConnected && !repoIsCollapsed ? (
 									<>
-										{derivedState.repoFollowingType === "MANUAL" && isNotFollowing && (
-											<Icon
-												name="plus"
-												title="Follow this Repository"
-												placement="bottom"
-												delay={1}
-												className={cx("clickable", {
-													"icon-override-actions-visible": true,
-												})}
-												style={{ marginRight: "-2px" }}
-												onClick={e => {
-													e.preventDefault();
-													e.stopPropagation();
-													handleClickFollowRepo({ guid: repo.repoGuid, name: repo.repoNameOnNr });
-												}}
-											/>
-										)}
+										{derivedState.repoFollowingType === "MANUAL" &&
+											isNotFollowing &&
+											repo.entityAccounts?.length !== 0 && (
+												<Icon
+													name="plus"
+													title="Follow this Repository"
+													placement="bottom"
+													delay={1}
+													className={cx("clickable", {
+														"icon-override-actions-visible": true,
+													})}
+													style={{ marginRight: "-2px" }}
+													onClick={e => {
+														e.preventDefault();
+														e.stopPropagation();
+														handleClickFollowRepo({ guid: repo.repoGuid, name: repo.repoNameOnNr });
+													}}
+												/>
+											)}
 										<Icon
 											name="refresh"
 											title="Refresh"
