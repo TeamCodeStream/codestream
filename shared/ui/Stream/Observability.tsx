@@ -227,7 +227,6 @@ export const Observability = React.memo((props: Props) => {
 			currentServiceSearchEntity: state.context.currentServiceSearchEntity,
 			repoFollowingType: preferences?.repoFollowingType || "AUTO",
 			followedRepos: preferences?.followedRepos || [],
-			followedReposWithNames: preferences?.followedReposWithNames || [],
 		};
 	}, shallowEqual);
 
@@ -1070,21 +1069,13 @@ export const Observability = React.memo((props: Props) => {
 				});
 			const newRepos = reposWithO11yData.filter(
 				repoO11y =>
-					!derivedState.followedReposWithNames.some(
-						followedRepo => followedRepo.guid === repoO11y.guid
-					)
+					!derivedState.followedRepos.some(followedRepo => followedRepo.guid === repoO11y.guid)
 			);
-			const combinedRepos = [...derivedState.followedReposWithNames, ...newRepos];
+			const combinedRepos = [...derivedState.followedRepos, ...newRepos];
 			const uniqueRepos = Array.from(
 				new Map(combinedRepos.map(repo => [repo.guid, repo])).values()
 			);
-			const guidList = uniqueRepos.map(repo => repo.guid);
-			dispatch(
-				setUserPreferences([
-					{ prefPath: ["followedReposWithNames"], value: uniqueRepos },
-					{ prefPath: ["followedRepos"], value: guidList },
-				])
-			);
+			dispatch(setUserPreferences([{ prefPath: ["followedRepos"], value: uniqueRepos }]));
 		}
 
 		const entityAccounts = observabilityRepos.flatMap(or => {
@@ -1094,21 +1085,15 @@ export const Observability = React.memo((props: Props) => {
 	}, [observabilityRepos]);
 
 	const handleClickFollowRepo = (repoObject: { name: string; guid: string }) => {
-		const { followedReposWithNames } = derivedState;
-		const exists = followedReposWithNames.some(
+		const { followedRepos } = derivedState;
+		const exists = followedRepos.some(
 			(repo: { name: string; guid: string }) => repo.guid === repoObject.guid
 		);
 		if (!exists) {
-			const updatedFollowedRepos = [...followedReposWithNames, repoObject].filter(
+			const updatedFollowedRepos = [...followedRepos, repoObject].filter(
 				(repo, index, self) => index === self.findIndex(r => r.guid === repo.guid)
 			);
-			const guidList = updatedFollowedRepos.map(repo => repo.guid);
-			dispatch(
-				setUserPreferences([
-					{ prefPath: ["followedReposWithNames"], value: updatedFollowedRepos },
-					{ prefPath: ["followedRepos"], value: guidList },
-				])
-			);
+			dispatch(setUserPreferences([{ prefPath: ["followedRepos"], value: updatedFollowedRepos }]));
 		}
 	};
 
@@ -1236,7 +1221,10 @@ export const Observability = React.memo((props: Props) => {
 				const repoIsCollapsed = currentRepoId !== repo.repoId;
 				const isLoadingCurrentRepo =
 					loadingEntities === repo.repoId || (isRefreshing && !repoIsCollapsed);
-				const isNotFollowing = !derivedState.followedRepos.includes(repo.repoGuid);
+				const isNotFollowing =
+					!derivedState.followedRepos.some(repo => repo.guid === repo.repoGuid) &&
+					repo.entityAccounts?.length !== 0;
+
 				return (
 					<>
 						<PaneNode>

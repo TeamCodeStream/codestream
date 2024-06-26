@@ -34,7 +34,7 @@ export const Notifications = props => {
 				? state.preferences.serviceNotifyAccountId
 				: "",
 			hasDesktopNotifications,
-			followedReposWithNames: state.preferences?.followedReposWithNames || [],
+			followedRepos: state.preferences?.followedRepos || [],
 		};
 	});
 	const [serviceNotifyTagValue, setServiceNotifyTagValue] = useState(
@@ -111,18 +111,10 @@ export const Notifications = props => {
 
 	const handleUnfollowRepoClick = (repoObject: { guid: string; name: string }) => {
 		const { guid } = repoObject;
-		const isFollowed = derivedState.followedReposWithNames.some(repo => repo.guid === guid);
+		const isFollowed = derivedState.followedRepos.some(repo => repo.guid === guid);
 		if (isFollowed) {
-			const newFollowedReposWithNames = derivedState.followedReposWithNames.filter(
-				repo => repo.guid !== guid
-			);
-			const guidList = newFollowedReposWithNames.map(repo => repo.guid);
-			dispatch(
-				setUserPreferences([
-					{ prefPath: ["followedReposWithNames"], value: newFollowedReposWithNames },
-					{ prefPath: ["followedRepos"], value: guidList },
-				])
-			);
+			const newFollowedRepos = derivedState.followedRepos.filter(repo => repo.guid !== guid);
+			dispatch(setUserPreferences([{ prefPath: ["followedRepos"], value: newFollowedRepos }]));
 		}
 	};
 
@@ -192,7 +184,7 @@ export const Notifications = props => {
 										</RadioGroup>
 										{derivedState.repoFollowingType === "MANUAL" && (
 											<div style={{ marginTop: "6px" }}>
-												{derivedState.followedReposWithNames.map((_, index, array) => {
+												{derivedState.followedRepos.map((_, index, array) => {
 													return (
 														<div
 															style={{
