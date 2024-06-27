@@ -1,5 +1,5 @@
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { CodeStreamState } from "../store";
 import { Checkbox } from "../src/components/Checkbox";
 import { setUserPreference, closeModal } from "./actions";
@@ -24,6 +24,7 @@ const NotficationSubHeaders = styled.div`
 
 export const Notifications = props => {
 	const dispatch = useAppDispatch();
+	const elementRef = useRef(null);
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const hasDesktopNotifications = state.ide.name === "VSC" || state.ide.name === "JETBRAINS";
 		return {
@@ -65,11 +66,30 @@ export const Notifications = props => {
 	const [originalServiceNotificationType, setOriginalServiceNotificationType] = useState(
 		derivedState.serviceNotifyType
 	);
+	const [formWidth, setFormWidth] = useState(0);
 
 	useDidMount(() => {
 		setOriginalRepoFollowingType(derivedState.repoFollowingType);
 		setOriginalServiceNotificationType(derivedState.serviceNotifyType);
+		setTagValueValidity(isTagValueValid(derivedState.serviceNotifyTagValue));
+		setStringValidity(!_isEmpty(derivedState.serviceNotifyStringName));
+		setAccountIdValidity(isAccountIdValid(derivedState.serviceNotifyAccountId));
 	});
+
+	useEffect(() => {
+		const handleResize = () => {
+			if (elementRef.current) {
+				//@ts-ignore
+				const elementWidth = elementRef.current?.offsetWidth;
+				setFormWidth(elementWidth);
+			}
+		};
+		handleResize();
+		window.addEventListener("resize", handleResize);
+		return () => {
+			window.removeEventListener("resize", handleResize);
+		};
+	}, [elementRef]);
 
 	const isTagValueValid = (tagValue: string) =>
 		new RegExp("^\\s*\\w+\\s*:\\s*\\w+\\s*(,\\s*\\w+\\s*:\\s*\\w+\\s*)*$").test(tagValue);
@@ -153,7 +173,7 @@ export const Notifications = props => {
 
 	return (
 		<Dialog wide={true} title="Notification Settings" onClose={e => handleClose(e)}>
-			<form onSubmit={handleSubmit} className="standard-form vscroll">
+			<form ref={elementRef} onSubmit={handleSubmit} className="standard-form vscroll">
 				<fieldset className="form-body">
 					<div id="controls">
 						{derivedState.hasDesktopNotifications && (
@@ -197,15 +217,23 @@ export const Notifications = props => {
 														<div
 															style={{
 																display: "flex",
-																justifyContent: "space-between",
 																marginBottom: index !== array.length - 1 ? "4px" : "0px",
 															}}
 														>
 															<div>
 																<Icon style={{ marginRight: "2px" }} name="repo" />
+															</div>
+
+															<div
+																style={{
+																	padding: "0px 25px 0px 10px",
+																	wordWrap: "break-word",
+																	width: `${formWidth - 45}px`,
+																}}
+															>
 																{_.name}
 															</div>
-															<div>
+															<div style={{ marginRight: "auto" }}>
 																<Icon
 																	style={{ marginRight: "4px" }}
 																	className="clickable"
