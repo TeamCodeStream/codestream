@@ -136,13 +136,13 @@ export const Notifications = props => {
 		e.preventDefault();
 
 		if (originalRepoFollowingType !== derivedState.repoFollowingType) {
-			HostApi.instance.track("codestream/notifications/repo_following_option", {
+			HostApi.instance.track("codestream/notifications/repo_following_option changed", {
 				meta_data: `old_value: ${originalRepoFollowingType.toLowerCase()}; new_value: ${derivedState.repoFollowingType.toLowerCase()}`,
 				event_type: "change",
 			});
 		}
 		if (originalServiceNotificationType !== derivedState.serviceNotifyType) {
-			HostApi.instance.track("codestream/notifications/service_notification_option", {
+			HostApi.instance.track("codestream/notifications/service_notification_option changed", {
 				meta_data: `old_value: ${originalServiceNotificationType}; new_value: ${derivedState.serviceNotifyType}`,
 				event_type: "change",
 			});
