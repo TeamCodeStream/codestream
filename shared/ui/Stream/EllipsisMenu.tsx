@@ -300,7 +300,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		],
 	});
 
-	if (!derivedState.showNotificationsMenu) {
+	if (derivedState.showNotificationsMenu) {
 		menuItems.push({
 			label: "Notifications",
 			action: () => dispatch(openModal(WebviewModals.Notifications)),
