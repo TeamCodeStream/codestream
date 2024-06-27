@@ -210,42 +210,42 @@ export const Notifications = props => {
 												</div>
 											</Radio>
 										</RadioGroup>
-										{derivedState.repoFollowingType === "MANUAL" && (
-											<div style={{ marginTop: "6px" }}>
-												{derivedState.followedRepos.map((_, index, array) => {
-													return (
+										<div style={{ marginTop: "6px" }}>
+											{derivedState.followedRepos.map((_, index, array) => {
+												return (
+													<div
+														style={{
+															display: "flex",
+															marginBottom: index !== array.length - 1 ? "4px" : "0px",
+														}}
+													>
+														<div>
+															<Icon style={{ marginRight: "2px" }} name="repo" />
+														</div>
+
 														<div
 															style={{
-																display: "flex",
-																marginBottom: index !== array.length - 1 ? "4px" : "0px",
+																padding: "0px 25px 0px 10px",
+																wordWrap: "break-word",
+																width: `${formWidth - 45}px`,
 															}}
 														>
-															<div>
-																<Icon style={{ marginRight: "2px" }} name="repo" />
-															</div>
-
-															<div
-																style={{
-																	padding: "0px 25px 0px 10px",
-																	wordWrap: "break-word",
-																	width: `${formWidth - 45}px`,
-																}}
-															>
-																{_.name}
-															</div>
-															<div style={{ marginRight: "auto" }}>
+															{_.name}
+														</div>
+														<div style={{ marginRight: "auto" }}>
+															{derivedState.repoFollowingType === "MANUAL" && (
 																<Icon
 																	style={{ marginRight: "4px" }}
 																	className="clickable"
 																	name="x"
 																	onClick={e => handleUnfollowRepoClick(_)}
 																/>
-															</div>
+															)}
 														</div>
-													);
-												})}
-											</div>
-										)}
+													</div>
+												);
+											})}
+										</div>
 										<NotficationSubHeaders style={{ margin: "15px 0px 8px 0px" }}>
 											SERVICES YOU WILL BE NOTIFIED ABOUT
 										</NotficationSubHeaders>
