@@ -24,7 +24,7 @@ const NotficationSubHeaders = styled.div`
 
 export const Notifications = props => {
 	const dispatch = useAppDispatch();
-	const elementRef = useRef(null);
+	const elementRef = useRef<HTMLFormElement>(null);
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const hasDesktopNotifications = state.ide.name === "VSC" || state.ide.name === "JETBRAINS";
 		return {
@@ -79,7 +79,6 @@ export const Notifications = props => {
 	useEffect(() => {
 		const handleResize = () => {
 			if (elementRef.current) {
-				//@ts-ignore
 				const elementWidth = elementRef.current?.offsetWidth;
 				setFormWidth(elementWidth);
 			}
