@@ -447,7 +447,7 @@ export const MessageInput = (props: MessageInputProps) => {
 	const debouncedFetchTeammates = useCallback(
 		_debounce(prefix => {
 			fetchTeammates(prefix);
-		}, 500),
+		}, 250),
 		[]
 	);
 
