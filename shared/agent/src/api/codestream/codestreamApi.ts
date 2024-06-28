@@ -294,6 +294,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private _events: BroadcasterEvents | undefined;
 	private readonly _middleware: CodeStreamApiMiddleware[] = [];
 	private _pubnubSubscribeKey: string | undefined;
+	private _pubnubCipherKey: string | undefined;
 	private _broadcasterToken: string | undefined;
 	private _isV3BroadcasterToken: boolean = false;
 	private _subscribedMessageTypes: Set<MessageType> | undefined;
@@ -590,6 +591,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			response.accessTokenInfo
 		);
 		this._pubnubSubscribeKey = response.pubnubKey;
+		this._pubnubCipherKey = response.pubnubCipherKey;
 		if (response.broadcasterV3Token) {
 			this._broadcasterToken = response.broadcasterV3Token;
 			this._isV3BroadcasterToken = true;
@@ -691,6 +693,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		this._events = new BroadcasterEvents({
 			accessToken: tokenHolder.accessToken!,
 			pubnubSubscribeKey: this._pubnubSubscribeKey,
+			pubnubCipherKey: this._pubnubCipherKey,
 			broadcasterToken: this._broadcasterToken!,
 			isV3Token: this._isV3BroadcasterToken,
 			api: this,

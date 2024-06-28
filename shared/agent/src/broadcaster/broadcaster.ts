@@ -52,6 +52,7 @@ export type HistoryFetchCallback = (info: HistoryFetchInfo) => void;
 // use this interface to initialize the Broadcaster class
 export interface BroadcasterInitializer {
 	pubnubSubscribeKey?: string; // identifies our Pubnub account, comes from pubnubKey returned with the login response from the API
+	pubnubCipherKey?: string; // cipher to use for encrypted messages
 	accessToken: string; // access token for api requests
 	broadcasterToken: string; // unique broadcaster token provided in the login response
 	isV3Token?: boolean;
@@ -174,6 +175,7 @@ export class Broadcaster {
 			broadcasterToken: options.broadcasterToken,
 			isV3Token: options.isV3Token,
 			subscribeKey: options.pubnubSubscribeKey!,
+			cipherKey: options.pubnubCipherKey,
 			httpsAgent: this._httpsAgent,
 			onMessage: this.onMessage.bind(this),
 			onStatus: this.onStatus.bind(this),

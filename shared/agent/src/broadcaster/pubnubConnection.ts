@@ -40,6 +40,7 @@ const PING_INTERVAL = 30000;
 // use this interface to initialize the PubnubConnection class
 export interface PubnubInitializer {
 	subscribeKey: string; // identifies our Pubnub account, comes from pubnubKey returned with the login response from the API
+	cipherKey?: string; // cipher used for encryption
 	broadcasterToken: string; // unique Pubnub token provided in the login response
 	isV3Token?: boolean;
 	userId: string; // ID of the current user
@@ -84,7 +85,8 @@ export class PubnubConnection implements BroadcasterConnection {
 				port: options.httpsAgent.proxy.port,
 			};
 		}
-		this._pubnub = new Pubnub({
+
+		const pubnubConfig: Pubnub.PubnubConfig = {
 			uuid: options.userId,
 			subscribeKey: options.subscribeKey,
 			authKey: !options.isV3Token ? options.broadcasterToken : undefined,
@@ -92,8 +94,14 @@ export class PubnubConnection implements BroadcasterConnection {
 			logVerbosity: false,
 			// heartbeatInterval: 30,
 			autoNetworkDetection: true,
-			proxy: proxy,
-		} as Pubnub.PubnubConfig); // TODO @types/pubnub is very broken
+			//proxy: proxy,
+		};
+		if (options.cipherKey) {
+			pubnubConfig.cryptoModule = Pubnub.CryptoModule.aesCbcCryptoModule({
+				cipherKey: options.cipherKey,
+			});
+		}
+		this._pubnub = new Pubnub(pubnubConfig); // TODO @types/pubnub is very broken
 		if (options.isV3Token) {
 			this._pubnub.setToken(options.broadcasterToken);
 		}
