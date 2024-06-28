@@ -483,7 +483,6 @@ export class CodeStreamSession {
 					repos.get(),
 					streams.get(),
 					teams.get(),
-					users.getUnreads({}),
 					users.get(),
 					users.getPreferences(),
 				]);
@@ -493,7 +492,6 @@ export class CodeStreamSession {
 					reposResponse,
 					streamsResponse,
 					teamsResponse,
-					unreadsResponse,
 					usersResponse,
 					preferencesResponse,
 				] = await promise;
@@ -504,7 +502,6 @@ export class CodeStreamSession {
 					repos: reposResponse.repos,
 					streams: streamsResponse.streams,
 					teams: teamsResponse.teams,
-					unreads: unreadsResponse.unreads,
 					users: usersResponse.users,
 					providers: this.providers,
 					apiCapabilities: this.apiCapabilities,
@@ -665,12 +662,6 @@ export class CodeStreamSession {
 				this._onDidChangeTeams.fire(e.data);
 				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.Teams,
-					data: e.data,
-				});
-				break;
-			case MessageType.Unreads:
-				this.agent.sendNotification(DidChangeDataNotificationType, {
-					type: ChangeDataType.Unreads,
 					data: e.data,
 				});
 				break;

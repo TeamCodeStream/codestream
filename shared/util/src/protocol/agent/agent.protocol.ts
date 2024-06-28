@@ -4,7 +4,6 @@ import { InitializeResult, RequestType, WorkspaceFolder } from "vscode-languages
 
 import { LoginResponse } from "./agent.protocol.auth";
 import { CreateCompanyRequest, CreateCompanyResponse } from "./agent.protocol.companies";
-import { Unreads } from "./agent.protocol.notifications";
 import { ThirdPartyProviders } from "./agent.protocol.providers";
 import {
 	CSAccessTokenType,
@@ -238,7 +237,6 @@ export interface BootstrapResponse {
 	teams: CSTeam[];
 	companies: CSCompany[];
 	users: CSUser[];
-	unreads: Unreads;
 	providers: ThirdPartyProviders;
 }
 

@@ -4,7 +4,6 @@ import {
 	CodeStreamEnvironmentInfo,
 	ObservabilityAnomaly,
 	ThirdPartyProviders,
-	Unreads,
 	VersionCompatibility,
 } from "@codestream/protocols/agent";
 import {
@@ -67,7 +66,6 @@ export interface SignedInBootstrapData extends BootstrapInHostResponse {
 	teams: CSTeam[];
 	companies: CSCompany[];
 	users: CSUser[];
-	unreads: Unreads;
 	providers: ThirdPartyProviders;
 }
 

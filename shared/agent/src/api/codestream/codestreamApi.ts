@@ -95,7 +95,6 @@ import {
 	GetReviewResponse,
 	GetStreamRequest,
 	GetTeamRequest,
-	GetUnreadsRequest,
 	GetUserRequest,
 	InviteUserRequest,
 	JoinCompanyRequest,
@@ -132,7 +131,6 @@ import {
 	SharePostViaServerRequest,
 	ThirdPartyProviderSetInfoRequest,
 	UnarchiveStreamRequest,
-	Unreads,
 	UpdateCodeErrorRequest,
 	UpdateCompanyRequest,
 	UpdateCompanyRequestType,
@@ -273,7 +271,6 @@ import {
 } from "../apiProvider";
 import { CodeStreamPreferences } from "../preferences";
 import { BroadcasterEvents } from "./events";
-import { CodeStreamUnreads } from "./unreads";
 import { clearResolvedFlag } from "@codestream/utils/api/codeErrorCleanup";
 import { ResponseError } from "vscode-jsonrpc/lib/messages";
 import { parseId } from "../../providers/newrelic/utils";
@@ -302,7 +299,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private _subscribedMessageTypes: Set<MessageType> | undefined;
 	private _teamId: string | undefined;
 	private _team: CSTeam | undefined;
-	private _unreads: CodeStreamUnreads | undefined;
 	private _userId: string | undefined;
 	private _preferences: CodeStreamPreferences | undefined;
 	private _features: CSApiFeatures | undefined;
@@ -675,11 +671,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 		const { session, users } = SessionContainer.instance();
 		const me = await users.getMe();
-		if (types === undefined || types.includes(MessageType.Unreads)) {
-			this._unreads = new CodeStreamUnreads(this);
-			this._unreads.onDidChange(this.onUnreadsChanged, this);
-			this._unreads.compute(me.lastReads, me.lastReadItems);
-		}
 		if (types === undefined || types.includes(MessageType.Preferences)) {
 			this._preferences = new CodeStreamPreferences(me.preferences);
 			this._preferences.onDidChange(preferences => {
@@ -766,10 +757,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 				e.data = await SessionContainer.instance().posts.resolve(e, { onlyIfNeeded: false });
 				if (e.data == null || e.data.length === 0) return;
 
-				if (this._unreads !== undefined) {
-					this._unreads.update(e.data as CSPost[], oldPosts);
-				}
-
 				await this.fetchAndStoreUnknownAuthors(e.data as CSPost[]);
 
 				break;
@@ -830,12 +817,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 				}
 
 				let me = await usersManager.getMe();
-				const lastReads = {
-					...(this._unreads ? (await this._unreads.get()).lastReads : me.lastReads),
-				};
-				const lastReadItems = {
-					...(this._unreads ? (await this._unreads.get()).lastReadItems : me.lastReadItems),
-				};
 
 				const userPreferencesBefore = JSON.stringify(me.preferences);
 
@@ -848,13 +829,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 				e.data = [me];
 
 				try {
-					if (
-						this._unreads !== undefined &&
-						(!Objects.shallowEquals(lastReads, me.lastReads || {}) ||
-							!Objects.shallowEquals(lastReadItems, me.lastReadItems || {}))
-					) {
-						this._unreads.compute(me.lastReads, me.lastReadItems);
-					}
 					if (!this._preferences) {
 						this._preferences = new CodeStreamPreferences(me.preferences);
 					}
@@ -871,10 +845,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 		this._onDidReceiveMessage.fire(e as RTMessage);
 	}
 
-	private onUnreadsChanged(e: Unreads) {
-		this._onDidReceiveMessage.fire({ type: MessageType.Unreads, data: e });
-	}
-
 	grantBroadcasterChannelAccess(token: string, channel: string): Promise<{}> {
 		return this.put(`/grant/${channel}`, {}, token);
 	}
@@ -882,24 +852,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@log()
 	private getMe() {
 		return this.get<CSGetMeResponse>("/users/me", tokenHolder.accessToken);
-	}
-
-	@log()
-	async getUnreads(request: GetUnreadsRequest) {
-		if (this._unreads === undefined) {
-			return {
-				unreads: {
-					lastReads: {},
-					lastReadItems: {},
-					mentions: {},
-					unreads: {},
-					totalMentions: 0,
-					totalUnreads: 0,
-				},
-			};
-		}
-
-		return { unreads: await this._unreads!.get() };
 	}
 
 	@log()

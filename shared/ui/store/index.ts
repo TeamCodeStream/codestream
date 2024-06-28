@@ -16,7 +16,6 @@ import { reduceServices } from "../store/services/reducer";
 import { reduceSession } from "../store/session/reducer";
 import { reduceStreams } from "../store/streams/reducer";
 import { reduceTeams } from "../store/teams/reducer";
-import { reduceUnreads } from "../store/unreads/reducer";
 import { reduceUsers } from "../store/users/reducer";
 import { reduceVersioning } from "../store/versioning/reducer";
 import { debounceToAnimationFrame } from "../utils";
@@ -61,7 +60,6 @@ export const store = configureStore({
 		session: reduceSession,
 		streams: reduceStreams,
 		teams: reduceTeams,
-		umis: reduceUnreads,
 		users: reduceUsers,
 		services: reduceServices,
 		providers: reduceProviders,
@@ -71,7 +69,7 @@ export const store = configureStore({
 		codeErrors: reduceCodeErrors,
 		dynamicLogging: reduceDynamicLogging,
 		nrCapabilities: reduceNrCapabilities,
-		anomalyData: reduceAnomalyData
+		anomalyData: reduceAnomalyData,
 	},
 	middleware: getDefaultMiddleware => getDefaultMiddleware().concat(middleware),
 	enhancers: [batchedSubscribe(debounceToAnimationFrame((notify: Function) => notify()))],

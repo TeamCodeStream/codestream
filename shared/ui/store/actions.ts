@@ -37,7 +37,6 @@ import { bootstrapServices } from "./services/actions";
 import * as sessionActions from "./session/actions";
 import { bootstrapStreams } from "./streams/actions";
 import { bootstrapTeams } from "./teams/actions";
-import { updateUnreads } from "./unreads/actions";
 import { bootstrapUsers } from "./users/actions";
 import {
 	clearForceRegion,
@@ -115,7 +114,6 @@ export const bootstrap = (data?: SignedInBootstrapData) => async (dispatch, getS
 	// TODO: I think this should be removed and just live with the caps below
 	if (data.capabilities && data.capabilities.services)
 		dispatch(bootstrapServices(data.capabilities.services));
-	dispatch(updateUnreads(data.unreads));
 	dispatch(updateProviders(data.providers));
 	dispatch(editorContextActions.setEditorContext(data.editorContext));
 	dispatch(preferencesActions.setPreferences(data.preferences));

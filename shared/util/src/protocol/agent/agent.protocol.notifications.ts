@@ -184,20 +184,6 @@ export interface TeamsChangedNotification {
 	data: CSTeam[];
 }
 
-export interface Unreads {
-	lastReads: CSLastReads;
-	lastReadItems: CSLastReadItems;
-	mentions: { [streamId: string]: number };
-	unreads: { [streamId: string]: number };
-	totalMentions: number;
-	totalUnreads: number;
-}
-
-export interface UnreadsChangedNotification {
-	type: ChangeDataType.Unreads;
-	data: Unreads;
-}
-
 export interface PreferencesChangedNotification {
 	type: ChangeDataType.Preferences;
 	data: CSMePreferences;
@@ -253,7 +239,6 @@ export type DidChangeDataNotification =
 	| CodeErrorsChangedNotification
 	| StreamsChangedNotification
 	| TeamsChangedNotification
-	| UnreadsChangedNotification
 	| UsersChangedNotification
 	| ProvidersChangedNotification
 	| ApiCapabilitiesChangedNotification

@@ -75,8 +75,6 @@ import {
 	GetStreamResponse,
 	GetTeamRequest,
 	GetTeamResponse,
-	GetUnreadsRequest,
-	GetUnreadsResponse,
 	GetUserRequest,
 	GetUserResponse,
 	InviteUserRequest,
@@ -116,7 +114,6 @@ import {
 	ThirdPartyProviderSetInfoRequest,
 	UnarchiveStreamRequest,
 	UnarchiveStreamResponse,
-	Unreads,
 	UpdateCodeErrorRequest,
 	UpdateCodeErrorResponse,
 	UpdateInvisibleRequest,
@@ -263,11 +260,6 @@ export interface TeamsRTMessage {
 	data: CSTeam[];
 }
 
-export interface UnreadsRTMessage {
-	type: MessageType.Unreads;
-	data: Unreads;
-}
-
 export interface UsersRTMessage {
 	type: MessageType.Users;
 	data: CSUser[];
@@ -303,7 +295,6 @@ export type RTMessage =
 	| CodeErrorsRTMessage
 	| StreamsRTMessage
 	| TeamsRTMessage
-	| UnreadsRTMessage
 	| UsersRTMessage
 	| AsyncErrorRTMessage
 	| GrokStreamRTMessage
@@ -334,7 +325,6 @@ export interface ApiProvider {
 
 	grantBroadcasterChannelAccess(token: string, channel: string): Promise<{}>;
 
-	getUnreads(request: GetUnreadsRequest): Promise<GetUnreadsResponse>;
 	updatePreferences(request: UpdatePreferencesRequest): Promise<UpdatePreferencesResponse>;
 	updateInvisible(request: UpdateInvisibleRequest): Promise<UpdateInvisibleResponse>;
 	updateStatus(request: UpdateStatusRequest): Promise<UpdateStatusResponse>;

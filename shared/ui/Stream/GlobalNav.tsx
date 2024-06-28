@@ -26,7 +26,7 @@ const sum = (total, num) => total + Math.round(num);
 export function GlobalNav() {
 	const dispatch = useAppDispatch();
 	const derivedState = useAppSelector((state: CodeStreamState) => {
-		const { users, umis } = state;
+		const { users } = state;
 		const user = users[state.session.userId!];
 		const eligibleJoinCompanies = user?.eligibleJoinCompanies;
 		let inviteCount: number = 0;
@@ -41,8 +41,6 @@ export function GlobalNav() {
 		return {
 			currentUserId: state.session.userId,
 			activePanel: state.context.panelStack[0],
-			totalUnread: Object.values(umis.unreads).reduce(sum, 0),
-			totalMentions: Object.values(umis.mentions).reduce(sum, 0),
 
 			currentReviewId: state.context.currentReviewId,
 			currentCodeErrorGuid: state.context.currentCodeErrorGuid,
@@ -68,23 +66,11 @@ export function GlobalNav() {
 		activePanel,
 		eligibleJoinCompanies,
 		inviteCount,
-		totalUnread,
-		totalMentions,
 
 		currentReviewId,
 		currentCodeErrorGuid,
 		currentPullRequestId,
 	} = derivedState;
-
-	const umisClass = cx("umis", {
-		mentions: totalMentions > 0,
-		unread: totalMentions == 0 && totalUnread > 0,
-	});
-	const totalUMICount = totalMentions ? (
-		<div className="mentions-badge">{totalMentions > 99 ? "99+" : totalMentions}</div>
-	) : totalUnread ? (
-		<div className="unread-badge">.</div>
-	) : null;
 
 	const toggleEllipsisMenu = event => {
 		setEllipsisMenuOpen(ellipsisMenuOpen ? undefined : event.target.closest("label"));
@@ -241,8 +227,6 @@ export function GlobalNav() {
 		}
 	}, [
 		activePanel,
-		totalUnread,
-		totalMentions,
 
 		derivedState.currentEntityGuid,
 		currentReviewId,

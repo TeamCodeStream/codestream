@@ -122,7 +122,6 @@ import { openPullRequestByUrl } from "./store/providerPullRequests/thunks";
 import { configureProvider, updateProviders } from "./store/providers/actions";
 import { getReview } from "./store/reviews/reducer";
 import { setMaintenanceMode, setSessionTokenStatus } from "./store/session/actions";
-import { updateUnreads } from "./store/unreads/actions";
 import { upgradeRecommended, upgradeRequired } from "./store/versioning/actions";
 import { fetchCodemarks, openPanel } from "./Stream/actions";
 import { moveCursorToLine } from "./Stream/api-functions";
@@ -263,9 +262,6 @@ function listenForEvents(store: StoreType) {
 				break;
 			case ChangeDataType.Preferences:
 				store.dispatch(updatePreferences(data));
-				break;
-			case ChangeDataType.Unreads:
-				store.dispatch(updateUnreads(data));
 				break;
 			case ChangeDataType.Providers:
 				store.dispatch(updateProviders(data));
