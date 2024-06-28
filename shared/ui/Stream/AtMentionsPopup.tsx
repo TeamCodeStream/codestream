@@ -5,8 +5,6 @@ import Headshot from "./Headshot";
 import { Icon } from "./Icon";
 import { ModalContext } from "./ModalContext";
 
-
-
 export interface Mention {
 	id?: string;
 	headshot?: {
@@ -38,21 +36,8 @@ export interface AtMentionsPopupProps {
 export const AtMentionsPopup = (props: React.PropsWithChildren<AtMentionsPopupProps>) => {
 	const [renderTarget] = useState(() => document.createElement("div"));
 	const rootRef = useRef<HTMLDivElement>(null);
-	// const [items, setItems] = useState<Mention[]>([]);
 	const { items } = props;
 	useDidMount(() => {
-		// HostApi.instance.send(UserSearchRequestType, { query: props.prefix }).then(response => {
-		// 	const users = response.users.map((user: NewRelicUser) => {
-		// 		return {
-		// 			id: user.id?.toString(),
-		// 			headshot: { email: user.email, name: user.name },
-		// 			description: user.name,
-		// 			identifier: user.email,
-		// 		};
-		// 	});
-		// 	setItems(users);
-		// });
-
 		const modalRoot = document.getElementById("modal-root");
 		modalRoot!.appendChild(renderTarget);
 		return () => {
@@ -75,34 +60,6 @@ export const AtMentionsPopup = (props: React.PropsWithChildren<AtMentionsPopupPr
 			}
 		}
 	}, [props.on]);
-
-	// const fetchTeammates = async prefix => {
-	// 	HostApi.instance.send(UserSearchRequestType, { query: prefix }).then(response => {
-	// 		const users = response.users.map(user => {
-	// 			return {
-	// 				id: user.id?.toString(),
-	// 				headshot: { email: user.email, name: user.name },
-	// 				description: user.name,
-	// 				identifier: user.email,
-	// 			};
-	// 		});
-
-	// 		setItems(users);
-	// 	});
-	// };
-
-	// const debouncedFetchTeammates = useCallback(
-	// 	_debounce(prefix => {
-	// 		fetchTeammates(prefix);
-	// 	}, 500),
-	// 	[]
-	// );
-
-	// useEffect(() => {
-	// 	if (!_isEmpty(props.prefix)) {
-	// 		debouncedFetchTeammates(props.prefix);
-	// 	}
-	// }, [props.prefix, debouncedFetchTeammates]);
 
 	return (
 		<>

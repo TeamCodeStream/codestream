@@ -208,6 +208,11 @@ export class DiscussionsProvider {
 		}
 	}
 
+	adjustBodyForNrMarkdown(body: string): string {
+		// turn @Eric Jones into <collab... />
+		return "";
+	}
+
 	/**
 	 * Primary endpoint for getting comments for a given error group.
 	 * This method will bootstrap the discussion if it doesn't exist, and return the comments.
@@ -256,7 +261,11 @@ export class DiscussionsProvider {
 				.filter(e => e.creator.userId != 0)
 				.sort((e1, e2) => e1.createdAt - e2.createdAt)
 				.map(e => {
-					return e;
+					const modifiedBody = e.body.replace(
+						/<collab-mention[^>]*data-value="([^"]+)"[^>]*>[^<]*<\/collab-mention>/g,
+						"$1"
+					);
+					return { ...e, body: modifiedBody };
 				});
 
 			return {

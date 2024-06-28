@@ -55,6 +55,7 @@ interface MessageInputProps {
 	placeholder?: string;
 	suggestGrok?: boolean;
 	onChange?(text: string, formatCode: boolean): void;
+	onChangeForNrBody?(text: string): void;
 	onKeypress?(event: React.KeyboardEvent): void;
 	onEmptyUpArrow?(event: React.KeyboardEvent): void;
 	onDismiss?(): void;
@@ -105,7 +106,24 @@ export const MessageInput = (props: MessageInputProps) => {
 			text = text.replace(/```\s*?```/g, "```");
 			text = text.replace(/```(\s*?(<div>|<\/div>)+\s*?)*?```/g, "```");
 		}
+		if (props.onChangeForNrBody) {
+			const nrText = transformMentions(text);
+			props.onChangeForNrBody(nrText);
+		}
+
+		text = text.replace(/@([^|]+)\|\d+\|/g, "@$1");
 		props.onChange(text, formatCode);
+	}
+
+	function transformMentions(input) {
+		return input
+			.replace(
+				/@AI/gi,
+				'<collab-mention data-value=\\"@AI\\" data-type=\\"NR_BOT\\" data-mentionable-item-id=\\"NR_BOT\\">AI</collab-mention>'
+			)
+			.replace(/@([^|]+)\|(\d+)\|/g, (match, p1, p2) => {
+				return `<collab-mention data-value=\\\"@${p1}\\\" data-type=\\\"NR_USER\\\" data-mentionable-item-id=\\\"${p2}\\\">${p1}</collab-mention>`;
+			});
 	}
 
 	// this is asynchronous so callers should provide a callback for code that depends on the completion of this
@@ -288,7 +306,7 @@ export const MessageInput = (props: MessageInputProps) => {
 		} else {
 			const user = popupItems?.find(t => t.id === id);
 			if (!user) return;
-			toInsert = user.description + "\u00A0";
+			toInsert = user.description + `|${id}|` + "\u00A0";
 		}
 
 		focus();
@@ -378,44 +396,7 @@ export const MessageInput = (props: MessageInputProps) => {
 		if (type === "at-mentions") {
 			if (normalizedPrefix.length > 2) {
 				setPopupPrefix(prefix);
-				// setCurrentPopup(type);
-				// setPopupIndex(0);
 			}
-			// if (normalizedPrefix.length === 3 && !teamFetched) {
-			// 	const fetchedTeam = await getTeammates(normalizedPrefix);
-			// 	setTeam(fetchedTeam);
-			// 	setTeamFetched(true);
-			// }
-
-			// if (normalizedPrefix.length >= 3 && teamFetched) {
-			// 	for (const person of team) {
-			// 		const toMatch = `${person.name}*${person.email}`.toLowerCase();
-			// 		if (toMatch.includes(normalizedPrefix)) {
-			// 			const you = person.id === derivedState.currentNrUserId ? " (you)" : "";
-			// 			let description = person.name || person.email;
-			// 			if (description) {
-			// 				description += you;
-			// 			}
-			// 			if (person.name?.toLowerCase() === "ai") {
-			// 				if (props.suggestGrok) {
-			// 					itemsToShow.unshift({
-			// 						id: person.id?.toString(),
-			// 						headshot: person,
-			// 						identifier: person.name || person.email,
-			// 						description: description,
-			// 					});
-			// 				}
-			// 			} else {
-			// 				itemsToShow.push({
-			// 					id: person.id?.toString(),
-			// 					headshot: person,
-			// 					identifier: person.name || person.email,
-			// 					description: description,
-			// 				});
-			// 			}
-			// 		}
-			// 	}
-			// }
 		} else if (type === "emojis") {
 			if (normalizedPrefix && normalizedPrefix.length > 1) {
 				Object.keys(emojiData).map(emojiId => {

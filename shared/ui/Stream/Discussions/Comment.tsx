@@ -188,6 +188,8 @@ export type CommentInputProps = {
 
 export const CommentInput = (props: CommentInputProps) => {
 	const [text, setText] = useState("");
+	const [textForNr, setTextForNr] = useState("");
+
 	const [isAskGrokOpen, setIsAskGrokOpen] = useState(false);
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
@@ -203,7 +205,7 @@ export const CommentInput = (props: CommentInputProps) => {
 			entityGuid: props.entityGuid,
 			errorGroupGuid: props.errorGroupGuid,
 			threadId: props.threadId,
-			body: text,
+			body: textForNr,
 		});
 
 		if (props.reloadDiscussion) {
@@ -219,6 +221,7 @@ export const CommentInput = (props: CommentInputProps) => {
 				text={text}
 				placeholder="Add a comment..."
 				onChange={setText}
+				onChangeForNrBody={setTextForNr}
 				onSubmit={createComment}
 				suggestGrok={props.showGrok}
 			/>
