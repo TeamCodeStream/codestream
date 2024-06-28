@@ -79,7 +79,7 @@
 		"object-sizeof": "1.5.3",
 		"opn": "5.4.0",
 		"patch-package": "8.0.0",
-		"pubnub": "7.4.5",
+		"pubnub": "8.2.4",
 		"sanitize-filename": "1.6.3",
 		"semver": "7.5.2",
 		"set-interval-async": "3.0.3",
