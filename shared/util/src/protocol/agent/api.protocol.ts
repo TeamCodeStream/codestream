@@ -128,6 +128,7 @@ export interface CSLoginResponse {
 	accessToken: string;
 	accessTokenInfo?: CSAccessTokenInfo;
 	pubnubKey: string;
+	pubnubCipherKey?: string;
 	broadcasterToken?: string;
 	broadcasterV3Token: string;
 	teams: CSTeam[];

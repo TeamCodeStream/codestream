@@ -53,6 +53,7 @@ export interface BroadcasterEventsInitializer {
 	isV3Token?: boolean;
 	api: CodeStreamApiProvider;
 	pubnubSubscribeKey?: string;
+	pubnubCipherKey?: string;
 	strictSSL: boolean;
 	httpsAgent?: HttpsAgent | HttpsProxyAgent<string>;
 	supportsEcho?: boolean;
@@ -80,6 +81,7 @@ export class BroadcasterEvents implements Disposable {
 		this._disposable = await this._broadcaster.initialize({
 			accessToken: this._options.accessToken,
 			pubnubSubscribeKey: this._options.pubnubSubscribeKey,
+			pubnubCipherKey: this._options.pubnubCipherKey,
 			broadcasterToken: this._options.broadcasterToken,
 			isV3Token: this._options.isV3Token,
 			userId: this._options.api.userId,
