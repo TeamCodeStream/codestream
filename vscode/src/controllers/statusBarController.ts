@@ -6,12 +6,7 @@ import {
 	StatusBarItem,
 	window
 } from "vscode";
-import {
-	CodeStreamEnvironment,
-	SessionStatus,
-	SessionStatusChangedEvent,
-	UnreadsChangedEvent
-} from "../api/session";
+import { CodeStreamEnvironment, SessionStatus, SessionStatusChangedEvent } from "../api/session";
 import { configuration } from "../configuration";
 import { Container } from "../container";
 
@@ -24,7 +19,6 @@ export class StatusBarController implements Disposable {
 		this._disposable = Disposable.from(
 			configuration.onDidChange(this.onConfigurationChanged, this),
 			Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
-			Container.session.onDidChangeUnreads(this.onUnreadsChanged, this),
 			Container.agent.onDidSetEnvironment(() => {
 				this.updateStatusBar(Container.session.status);
 			})
@@ -53,7 +47,6 @@ export class StatusBarController implements Disposable {
 			if (cfg.showInStatusBar) {
 				this._enabledDisposable = Disposable.from(
 					Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
-					Container.session.onDidChangeUnreads(this.onUnreadsChanged, this),
 
 					this.updateStatusBar(Container.session.status)
 				);
@@ -61,17 +54,9 @@ export class StatusBarController implements Disposable {
 		}
 	}
 
-	private onUnreadsChanged(e: UnreadsChangedEvent) {
-		this.updateStatusBar(e.session.status, e.unreads());
-	}
-
 	private async onSessionStatusChanged(e: SessionStatusChangedEvent) {
 		const status = e.getStatus();
-		if (status === SessionStatus.SignedIn) {
-			this.updateStatusBar(status, e.unreads);
-		} else {
-			this.updateStatusBar(status);
-		}
+		this.updateStatusBar(status);
 	}
 
 	async clear() {
@@ -84,10 +69,7 @@ export class StatusBarController implements Disposable {
 		this.updateStatusBar(Container.session.status);
 	}
 
-	private updateStatusBar(
-		status: SessionStatus,
-		unreads: { totalMentions: number; totalUnreads: number } = { totalMentions: 0, totalUnreads: 0 }
-	) {
+	private updateStatusBar(status: SessionStatus) {
 		if (this._statusBarItem === undefined) {
 			const rightAlign = Container.config.showInStatusBar === "right";
 			this._statusBarItem = window.createStatusBarItem(
@@ -139,20 +121,6 @@ export class StatusBarController implements Disposable {
 				if (!Container.session.hasSingleCompany()) {
 					label += ` - ${Container.session.company.name}`;
 				}
-				if (unreads.totalMentions > 0) {
-					label += ` (${unreads.totalMentions})`;
-					tooltip += `\nYou have ${unreads.totalMentions} unread mention${
-						unreads.totalMentions === 1 ? "" : "s"
-					}`;
-				} else if (unreads.totalUnreads > 0) {
-					label += " \u00a0\u2022";
-					tooltip += "\nYou have unread messages";
-				}
-
-				// const unreadsOnly = unreads.totalUnreads - unreads.totalMentions;
-				// if (unreadsOnly > 0) {
-				// 	tooltip += `\n${unreadsOnly} unread message${unreadsOnly === 1 ? "" : "s"}`;
-				// }
 
 				this._statusBarItem.text = ` $(comment-discussion) ${env}${label} `;
 				this._statusBarItem.command = "codestream.toggle";

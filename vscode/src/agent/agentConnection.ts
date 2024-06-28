@@ -114,7 +114,6 @@ import {
 	GetReviewRequestType,
 	GetStreamRequestType,
 	GetTeamRequestType,
-	GetUnreadsRequestType,
 	GetUserRequestType,
 	InviteUserRequestType,
 	JoinStreamRequestType,
@@ -995,10 +994,6 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		updateUser(user: UpdateUserRequest) {
 			return this._connection.sendRequest(UpdateUserRequestType, user);
-		}
-
-		unreads() {
-			return this._connection.sendRequest(GetUnreadsRequestType, {});
 		}
 
 		preferences() {
