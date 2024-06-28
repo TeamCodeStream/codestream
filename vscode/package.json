@@ -358,5 +358,8 @@
 			"eslint-filtered-fix --rule 'unused-imports/no-unused-imports' --rule 'unused-imports/no-unused-vars'"
 		],
 		"src/*.{js,jsx,ts,tsx}": "eslint"
+	},
+	"overrides": {
+		"braces": "3.0.3"
 	}
 }
