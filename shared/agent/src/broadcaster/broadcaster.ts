@@ -16,7 +16,7 @@ export interface BroadcasterConnection {
 	reconnect(): void;
 	confirmSubscriptions(channels: string[]): Promise<string[] | boolean>;
 	fetchHistory(options: BroadcasterHistoryInput): Promise<BroadcasterHistoryOutput>;
-	setToken(token: string): void;
+	setV3Token(token: string): void;
 }
 
 export interface BroadcasterHistoryInput {
@@ -54,6 +54,7 @@ export interface BroadcasterInitializer {
 	pubnubSubscribeKey?: string; // identifies our Pubnub account, comes from pubnubKey returned with the login response from the API
 	accessToken: string; // access token for api requests
 	broadcasterToken: string; // unique broadcaster token provided in the login response
+	isV3Token?: boolean;
 	userId: string; // ID of the current user
 	strictSSL: boolean; // whether to enforce strict SSL (no self-signed certs)
 	lastMessageReceivedAt?: number; // should persist across sessions, interruptions in service will retrieve messages since this time
@@ -171,6 +172,7 @@ export class Broadcaster {
 		await pubnubConnection.initialize({
 			userId: options.userId,
 			broadcasterToken: options.broadcasterToken,
+			isV3Token: options.isV3Token,
 			subscribeKey: options.pubnubSubscribeKey!,
 			httpsAgent: this._httpsAgent,
 			onMessage: this.onMessage.bind(this),
@@ -197,10 +199,10 @@ export class Broadcaster {
 		};
 	}
 
-	// set a new broadcaster token
-	setToken(token: string) {
+	// set a new (V3) broadcaster token
+	setV3Token(token: string) {
 		if (this._broadcasterConnection) {
-			this._broadcasterConnection.setToken(token);
+			this._broadcasterConnection.setV3Token(token);
 		}
 	}
 

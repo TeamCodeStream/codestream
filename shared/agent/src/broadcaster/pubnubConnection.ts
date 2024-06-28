@@ -41,6 +41,7 @@ const PING_INTERVAL = 30000;
 export interface PubnubInitializer {
 	subscribeKey: string; // identifies our Pubnub account, comes from pubnubKey returned with the login response from the API
 	broadcasterToken: string; // unique Pubnub token provided in the login response
+	isV3Token?: boolean;
 	userId: string; // ID of the current user
 	debug?(msg: string, info?: any): void; // for debug messages
 	httpsAgent?: HttpsAgent | HttpsProxyAgent<string>;
@@ -86,13 +87,16 @@ export class PubnubConnection implements BroadcasterConnection {
 		this._pubnub = new Pubnub({
 			uuid: options.userId,
 			subscribeKey: options.subscribeKey,
+			authKey: !options.isV3Token ? options.broadcasterToken : undefined,
 			restore: true,
 			logVerbosity: false,
 			// heartbeatInterval: 30,
 			autoNetworkDetection: true,
 			proxy: proxy,
 		} as Pubnub.PubnubConfig); // TODO @types/pubnub is very broken
-		this._pubnub.setToken(options.broadcasterToken);
+		if (options.isV3Token) {
+			this._pubnub.setToken(options.broadcasterToken);
+		}
 
 		this._messageCallback = options.onMessage;
 		this._statusCallback = options.onStatus;
@@ -108,8 +112,8 @@ export class PubnubConnection implements BroadcasterConnection {
 		};
 	}
 
-	// set a new broadcaster token
-	setToken(token: string) {
+	// set a new (V3) broadcaster token
+	setV3Token(token: string) {
 		if (!this._pubnub) return;
 		this._pubnub.setToken(token);
 		const result = this._pubnub.parseToken(token);

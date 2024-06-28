@@ -50,6 +50,7 @@ const messageToType: {
 export interface BroadcasterEventsInitializer {
 	accessToken: string;
 	broadcasterToken: string;
+	isV3Token?: boolean;
 	api: CodeStreamApiProvider;
 	pubnubSubscribeKey?: string;
 	strictSSL: boolean;
@@ -80,6 +81,7 @@ export class BroadcasterEvents implements Disposable {
 			accessToken: this._options.accessToken,
 			pubnubSubscribeKey: this._options.pubnubSubscribeKey,
 			broadcasterToken: this._options.broadcasterToken,
+			isV3Token: this._options.isV3Token,
 			userId: this._options.api.userId,
 			strictSSL: this._options.strictSSL,
 			debug: this.debug.bind(this),
@@ -109,9 +111,9 @@ export class BroadcasterEvents implements Disposable {
 		return this._disposable;
 	}
 
-	setBroadcasterToken(token: string) {
+	setV3BroadcasterToken(token: string) {
 		if (this._broadcaster) {
-			this._broadcaster.setToken(token);
+			this._broadcaster.setV3Token(token);
 		}
 	}
 
