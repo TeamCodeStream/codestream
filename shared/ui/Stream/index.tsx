@@ -86,6 +86,7 @@ import { FinishReview } from "./FinishReview";
 import { FlowPanel } from "./Flow";
 import { GettingStarted } from "./GettingStarted";
 import { GlobalNav } from "./GlobalNav";
+import InlineCodemarks from "./InlineCodemarks";
 import { Invite } from "./Invite";
 import { Keybindings } from "./Keybindings";
 import { MethodLevelTelemetryPanel } from "./MethodLevelTelemetry/MethodLevelTelemetryPanel";
@@ -494,6 +495,9 @@ export class SimpleStream extends PureComponent<Props> {
 							</Keybindings>
 						)}
 					</Modal>
+				)}
+				{activePanel === WebviewPanels.CodemarksForFile && (
+					<InlineCodemarks activePanel={activePanel} postAction={this.postAction} />
 				)}
 				{!activeModal &&
 					// these are all panels that have been retired, or are
