@@ -295,6 +295,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private readonly _middleware: CodeStreamApiMiddleware[] = [];
 	private _pubnubSubscribeKey: string | undefined;
 	private _broadcasterToken: string | undefined;
+	private _isV3BroadcasterToken: boolean = false;
 	private _subscribedMessageTypes: Set<MessageType> | undefined;
 	private _teamId: string | undefined;
 	private _team: CSTeam | undefined;
@@ -589,7 +590,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 			response.accessTokenInfo
 		);
 		this._pubnubSubscribeKey = response.pubnubKey;
-		this._broadcasterToken = response.broadcasterV3Token;
+		if (response.broadcasterV3Token) {
+			this._broadcasterToken = response.broadcasterV3Token;
+			this._isV3BroadcasterToken = true;
+		} else {
+			this._broadcasterToken = response.broadcasterToken;
+		}
 
 		this._teamId = team.id;
 		this._team = team;
@@ -681,10 +687,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 			this._httpsAgent instanceof HttpsAgent || this._httpsAgent instanceof HttpsProxyAgent
 				? this._httpsAgent
 				: undefined;
+		Logger.log(`Invoking broadcaster with ${this._isV3BroadcasterToken ? "V3" : "V2"} token`);
 		this._events = new BroadcasterEvents({
 			accessToken: tokenHolder.accessToken!,
 			pubnubSubscribeKey: this._pubnubSubscribeKey,
 			broadcasterToken: this._broadcasterToken!,
+			isV3Token: this._isV3BroadcasterToken,
 			api: this,
 			httpsAgent,
 			strictSSL: this._strictSSL,
@@ -833,7 +841,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 						this._preferences.update(me.preferences);
 					}
 					if (me.broadcasterV3Token && this._events) {
-						this._events.setBroadcasterToken(me.broadcasterV3Token);
+						this._events.setV3BroadcasterToken(me.broadcasterV3Token);
 					}
 				} catch {
 					debugger;
@@ -843,12 +851,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 		}
 
 		this._onDidReceiveMessage.fire(e as RTMessage);
-	}
-
-	setBroadcasterToken(token: string) {
-		if (this._events) {
-			this._events.setBroadcasterToken(token);
-		}
 	}
 
 	grantBroadcasterChannelAccess(token: string, channel: string): Promise<{}> {
