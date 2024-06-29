@@ -1449,6 +1449,7 @@ export interface InitiateNrAiRequest {
 }
 
 export interface InitiateNrAiResponse {
+	commentId?: string;
 	nrError?: NRErrorResponse;
 }
 

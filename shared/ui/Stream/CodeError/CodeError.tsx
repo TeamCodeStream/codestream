@@ -81,6 +81,7 @@ export const CodeError = (props: CodeErrorProps) => {
 
 	const [discussion, setDiscussion] = useState<Discussion | undefined>(undefined);
 	const [discussionIsLoading, setDiscussionIsLoading] = useState<boolean>(false);
+	const [NRAILoading, setNRAILoading] = useState<boolean>(false);
 	const [currentNrAiFile, setCurrentNrAiFile] = useState<string | undefined>(undefined);
 	const [selectedLineIndex, setSelectedLineIndex] = useState<number | undefined>(undefined);
 
@@ -243,12 +244,10 @@ export const CodeError = (props: CodeErrorProps) => {
 			return;
 		}
 
-		loadDiscussion().then(() => {
-			initiateNrAi();
-		});
+		loadDiscussion();
 	}, [accountId, entityGuid, errorGroupGuid]);
 
-	const initiateNrAi = async () => {
+	useEffect(() => {
 		// discussion is no good
 		if (!discussion || !discussion.threadId || discussion.comments.length > 0) {
 			return;
@@ -259,16 +258,34 @@ export const CodeError = (props: CodeErrorProps) => {
 			return;
 		}
 
+		// must have repo information to initialize NRAI
+		if (!repoName || !sha) {
+			return;
+		}
+
+		initializeNrAiAnalysis();
+	}, [
+		discussion,
+		derivedState.functionToEdit,
+		derivedState.functionToEditFailed,
+		showGrok,
+		repoName,
+		sha,
+	]);
+
+	const initializeNrAiAnalysis = async () => {
+		setNRAILoading(true);
+
 		const initiateNrAiPayload: InitiateNrAiRequest = {
 			errorGroupGuid: errorGroupGuid!,
 			entityGuid: entityGuid!,
+			threadId: discussion!.threadId,
 
-			codeBlock: derivedState.functionToEdit.codeBlock,
-			fileUri: derivedState.functionToEdit.uri,
+			codeBlock: derivedState!.functionToEdit!.codeBlock,
+			fileUri: derivedState!.functionToEdit!.uri,
 			permalink: repoName!,
 			repo: repoName!,
 			sha: sha!,
-			threadId: discussion.threadId,
 		};
 
 		// send the payload to the agent
@@ -279,6 +296,8 @@ export const CodeError = (props: CodeErrorProps) => {
 				nrError: response.nrError,
 			});
 		}
+
+		setNRAILoading(false);
 	};
 
 	const loadDiscussion = async () => {

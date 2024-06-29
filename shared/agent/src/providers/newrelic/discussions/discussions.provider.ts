@@ -35,7 +35,7 @@ import {
 @lsp
 export class DiscussionsProvider {
 	constructor(private graphqlClient: NewRelicGraphqlClient) {
-		this.graphqlClient.addHeader("Nerd-Graph-Unsafe-Experimental-Opt-In", "Collaboration");
+		this.graphqlClient.addHeader("Nerd-Graph-Unsafe-Experimental-Opt-In", "Collaboration,Grok");
 	}
 
 	/**
@@ -371,7 +371,7 @@ export class DiscussionsProvider {
 				metaData: contextMetadata,
 			};
 		} catch (ex) {
-			ContextLogger.warn("generateContextMetadata failure", {
+			ContextLogger.warn("generateContext failure", {
 				errorGroupGuid,
 				entityGuid,
 				error: ex,
@@ -490,25 +490,32 @@ export class DiscussionsProvider {
 
 			const initiateNrAiQuery = `
 				mutation {
-					createGrokInitiatedConversation(
-					threadId: ${request.threadId},
-					prompt: "",
-					contextMetadata: { 
-						accountId: ${context.metaData.accountId},
-						entityGuid: "${context.metaData.entityGuid}",
-						nerdletId: "${context.metaData.nerdletId}",
-						pageId: [
-							"${context.metaData.pageId[0]}",
-							"${context.metaData.pageId[1]}"
-						]
-					},
-					assistant: "",
-					assistantConfig: {}
+					grokCreateGrokInitiatedConversation(
+						threadId: ${request.threadId},
+						prompt: "As a coding expert I am helpful and very knowledgeable about how to fix errors in code. I will be given errors, stack traces, and code snippets to analyze and fix. Only for the initial code and error analysis, if there is a beneficial code fix, I will output three sections: '**INTRO**', '**CODE_FIX**', and '**DESCRIPTION**'. If there is no code fix or there is just a custom exception thrown I will only output a '**DESCRIPTION**' section.\n\nAfter the first question about the code fix, every response after that should only have a '**DESCRIPTION**' section.\n\nThe output for each section should be markdown formatted.",
+						contextMetadata: { 
+							accountId: ${context.metaData.accountId},
+							entityGuid: "${context.metaData.entityGuid}",
+							nerdletId: "${context.metaData.nerdletId}",
+							codemarkId: "${codeMarkId}",
+							pageId: [
+								"${context.metaData.pageId[0]}",
+								"${context.metaData.pageId[1]}"
+							]
+						}
+					) 
+					{
+						id
+					}
 				}`;
 
-			return {};
+			const initiateNrAiResponse = await this.graphqlClient.query<BaseCollaborationResponse>(
+				initiateNrAiQuery
+			);
+
+			return { commentId: initiateNrAiResponse.grokCreateGrokInitiatedConversation.id };
 		} catch (ex) {
-			ContextLogger.warn("GetErrorInboxComments failure", {
+			ContextLogger.warn("initializeNrAi failure", {
 				request,
 				error: ex,
 			});
@@ -536,10 +543,10 @@ export class DiscussionsProvider {
 			const createCodeMarkQuery = `
 				mutation {
 					collaborationCreateCodeMark(
-						code: "${request.codeBlock}",
-						file: "${request.fileUri}",
-						permalink: "${request.permalink}",
-						repo: "${request.repo}",
+						code: "${request.codeBlock}"
+						file: "${request.fileUri}"
+						permalink: "${request.permalink}"
+						repo: "${request.repo}"
 						sha: "${request.sha}") {
 						id
 					}
