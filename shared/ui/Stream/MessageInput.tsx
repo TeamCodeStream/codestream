@@ -107,12 +107,11 @@ export const MessageInput = (props: MessageInputProps) => {
 			text = text.replace(/```(\s*?(<div>|<\/div>)+\s*?)*?```/g, "```");
 		}
 		if (props.onChangeForNrBody) {
-			// let nrText = escapeSpecialCharacters(text);
 			let nrText = transformMentions(text);
 			props.onChangeForNrBody(nrText);
 		}
 
-		text = text.replace(/@([^|]+)\|\d+\|/g, "@$1");
+		text = text.replace(/@([^|]+)\|(\d+|\w+)\|/g, "@$1");
 		props.onChange(text, formatCode);
 	}
 
@@ -128,10 +127,6 @@ export const MessageInput = (props: MessageInputProps) => {
 				return `${p1}<collab-mention data-value=\\\"@${p3}\\\" data-type=\\\"NR_USER\\\" data-mentionable-item-id=\\\"${p4}\\\">${p3}</collab-mention>${p5}`;
 			});
 	}
-
-	// function escapeSpecialCharacters(input) {
-	// 	return input.replace(/\\/g, "\\\\");
-	// }
 
 	// this is asynchronous so callers should provide a callback for code that depends on the completion of this
 	const focus = debounceAndCollectToAnimationFrame((...cbs: Function[]) => {
@@ -313,7 +308,11 @@ export const MessageInput = (props: MessageInputProps) => {
 		} else {
 			const user = popupItems?.find(t => t.id === id);
 			if (!user) return;
-			toInsert = user.description + `|${id}|` + "\u00A0";
+			if (user.id && user?.id?.toLowerCase() === "ai") {
+				toInsert = user.description + "\u00A0";
+			} else {
+				toInsert = user.description + `|${id}|` + "\u00A0";
+			}
 		}
 
 		focus();
@@ -401,7 +400,7 @@ export const MessageInput = (props: MessageInputProps) => {
 		const normalizedPrefix = prefix ? prefix.toLowerCase() : prefix;
 
 		if (type === "at-mentions") {
-			if (normalizedPrefix.length > 2) {
+			if (normalizedPrefix.length > 2 || normalizedPrefix === "ai") {
 				setPopupPrefix(prefix);
 			}
 		} else if (type === "emojis") {
@@ -460,7 +459,22 @@ export const MessageInput = (props: MessageInputProps) => {
 
 	useEffect(() => {
 		if (!_isEmpty(popupPrefix)) {
-			debouncedFetchTeammates(popupPrefix);
+			if (popupPrefix === "ai") {
+				setCurrentPopup("at-mentions");
+				setPopupPrefix(popupPrefix);
+				setPopupItems([
+					{
+						id: "AI",
+						headshot: { name: "AI" },
+						description: "AI",
+						identifier: "AI",
+					},
+				]);
+				setPopupIndex(0);
+				setSelectedPopupItem("AI");
+			} else {
+				debouncedFetchTeammates(popupPrefix);
+			}
 		}
 	}, [popupPrefix, debouncedFetchTeammates]);
 
