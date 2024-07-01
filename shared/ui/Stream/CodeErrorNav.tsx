@@ -322,109 +322,109 @@ export function CodeErrorNav(props: Props) {
 			let stackInfo: ResolveStackTraceResponse | undefined = undefined;
 			let targetRemote;
 			const hasStackTrace = errorGroupResult?.errorGroup?.hasStackTrace;
-			if (!hasStackTrace) {
-				setIsResolved(true);
-				setRepoWarning({ message: "There is no stack trace associated with this error." });
-			} else {
-				if (errorGroupResult?.errorGroup?.entity?.relationship?.error?.message != null) {
-					const title = "Repository Relationship Error";
-					const description = errorGroupResult.errorGroup.entity.relationship.error.message!;
+			if (errorGroupResult?.errorGroup?.entity?.relationship?.error?.message != null) {
+				const title = "Repository Relationship Error";
+				const description = errorGroupResult.errorGroup.entity.relationship.error.message!;
+				setError({
+					title,
+					description,
+				});
+				logError(`${title}, description: ${description}`, {
+					errorGroupGuid: errorGroupGuidToUse,
+					occurrenceId: occurrenceIdToUse,
+					entityGuid: entityIdToUse,
+					timestamp: codeErrorData?.timestamp,
+				});
+				return;
+			}
+
+			targetRemote = newRemote ?? remote;
+			const entityName = errorGroup?.entityName || "selected";
+
+			if (multipleRepos && !targetRemote) {
+				setMultiRepoDetectedError({
+					title: "Select a Repository",
+					description: `The ${entityName} service is associated with multiple repositories. Please select one to continue.`,
+				});
+				return;
+			}
+
+			// Set target remote if entity is associated with one repo
+			if (errorGroupResult?.errorGroup?.entity?.relatedRepos?.length === 1 && !multipleRepos) {
+				targetRemote = errorGroupResult?.errorGroup?.entity?.relatedRepos[0]?.url!;
+			} else if (
+				// Attempt to set remote from codeError object as long as we know there is a repo associated
+				codeErrorData?.remote &&
+				!_isEmpty(codeErrorData?.relatedRepos)
+			) {
+				targetRemote = codeErrorData?.remote;
+			}
+
+			// Kick off repo association screen
+			if (!targetRemote) {
+				setRepoAssociationError({
+					title: "Which Repository?",
+					description: `Select the repository that the ${entityName} service is associated with so that we can take you to the code. If the repository doesn't appear in the list, open it in your IDE.`,
+				});
+
+				return;
+			}
+
+			if (targetRemote) {
+				// we have a remote, try to find a repo.
+				const normalizationResponse = await HostApi.instance.send(NormalizeUrlRequestType, {
+					url: targetRemote,
+				});
+				if (!normalizationResponse || !normalizationResponse.normalizedUrl) {
+					const title = "Error";
+					const description = `Could not find a matching repo for the remote ${targetRemote}`;
 					setError({
-						title,
-						description,
+						title: "Error",
+						description: `Could not find a matching repo for the remote ${targetRemote}`,
 					});
 					logError(`${title}, description: ${description}`, {
 						errorGroupGuid: errorGroupGuidToUse,
 						occurrenceId: occurrenceIdToUse,
 						entityGuid: entityIdToUse,
+						targetRemote,
 						timestamp: codeErrorData?.timestamp,
 					});
 					return;
 				}
 
-				targetRemote = newRemote ?? remote;
-				const entityName = errorGroup?.entityName || "selected";
+				const reposResponse = await HostApi.instance.send(MatchReposRequestType, {
+					repos: [
+						{
+							remotes: [normalizationResponse.normalizedUrl],
+							knownCommitHashes: refToUse && isSha(refToUse) ? [refToUse] : [],
+						},
+					],
+				});
 
-				if (multipleRepos && !targetRemote) {
-					setMultiRepoDetectedError({
-						title: "Select a Repository",
-						description: `The ${entityName} service is associated with multiple repositories. Please select one to continue.`,
+				if (reposResponse?.repos?.length === 0) {
+					const title = "Repo Not Found";
+					const description = `Please open the following repository: ${targetRemote}`;
+					setError({
+						title: "Repo Not Found",
+						description: `Please open the following repository: ${targetRemote}`,
 					});
-					return;
-				}
-
-				// Set target remote if entity is associated with one repo
-				if (errorGroupResult?.errorGroup?.entity?.relatedRepos?.length === 1 && !multipleRepos) {
-					targetRemote = errorGroupResult?.errorGroup?.entity?.relatedRepos[0]?.url!;
-				} else if (
-					// Attempt to set remote from codeError object as long as we know there is a repo associated
-					codeErrorData?.remote &&
-					!_isEmpty(codeErrorData?.relatedRepos)
-				) {
-					targetRemote = codeErrorData?.remote;
-				}
-
-				// Kick off repo association screen
-				if (!targetRemote) {
-					setRepoAssociationError({
-						title: "Which Repository?",
-						description: `Select the repository that the ${entityName} service is associated with so that we can take you to the code. If the repository doesn't appear in the list, open it in your IDE.`,
+					logError(`${title}, description: ${description}`, {
+						errorGroupGuid: errorGroupGuidToUse,
+						occurrenceId: occurrenceIdToUse,
+						entityGuid: entityIdToUse,
+						targetRemote,
+						timestamp: codeErrorData?.timestamp,
 					});
 
 					return;
 				}
+				repoId = reposResponse.repos[0].id;
+			}
 
-				if (targetRemote) {
-					// we have a remote, try to find a repo.
-					const normalizationResponse = await HostApi.instance.send(NormalizeUrlRequestType, {
-						url: targetRemote,
-					});
-					if (!normalizationResponse || !normalizationResponse.normalizedUrl) {
-						const title = "Error";
-						const description = `Could not find a matching repo for the remote ${targetRemote}`;
-						setError({
-							title: "Error",
-							description: `Could not find a matching repo for the remote ${targetRemote}`,
-						});
-						logError(`${title}, description: ${description}`, {
-							errorGroupGuid: errorGroupGuidToUse,
-							occurrenceId: occurrenceIdToUse,
-							entityGuid: entityIdToUse,
-							targetRemote,
-							timestamp: codeErrorData?.timestamp,
-						});
-						return;
-					}
-
-					const reposResponse = await HostApi.instance.send(MatchReposRequestType, {
-						repos: [
-							{
-								remotes: [normalizationResponse.normalizedUrl],
-								knownCommitHashes: refToUse && isSha(refToUse) ? [refToUse] : [],
-							},
-						],
-					});
-
-					if (reposResponse?.repos?.length === 0) {
-						const title = "Repo Not Found";
-						const description = `Please open the following repository: ${targetRemote}`;
-						setError({
-							title: "Repo Not Found",
-							description: `Please open the following repository: ${targetRemote}`,
-						});
-						logError(`${title}, description: ${description}`, {
-							errorGroupGuid: errorGroupGuidToUse,
-							occurrenceId: occurrenceIdToUse,
-							entityGuid: entityIdToUse,
-							targetRemote,
-							timestamp: codeErrorData?.timestamp,
-						});
-
-						return;
-					}
-					repoId = reposResponse.repos[0].id;
-				}
-
+			if (!hasStackTrace) {
+				setIsResolved(true);
+				setRepoWarning({ message: "There is no stack trace associated with this error." });
+			} else {
 				// YUCK
 				const stack =
 					errorGroupResult?.errorGroup?.errorTrace?.stackTrace?.map(_ => _.formatted) ?? [];
