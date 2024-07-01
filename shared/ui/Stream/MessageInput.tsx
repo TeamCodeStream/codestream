@@ -107,7 +107,8 @@ export const MessageInput = (props: MessageInputProps) => {
 			text = text.replace(/```(\s*?(<div>|<\/div>)+\s*?)*?```/g, "```");
 		}
 		if (props.onChangeForNrBody) {
-			const nrText = transformMentions(text);
+			// let nrText = escapeSpecialCharacters(text);
+			let nrText = transformMentions(text);
 			props.onChangeForNrBody(nrText);
 		}
 
@@ -115,16 +116,22 @@ export const MessageInput = (props: MessageInputProps) => {
 		props.onChange(text, formatCode);
 	}
 
+	// Turns an at-mention string like @eric into the appropriate nr friendly custom tag with an accountId
+	// There is a special case for AI
 	function transformMentions(input) {
 		return input
 			.replace(
-				/@AI/gi,
-				'<collab-mention data-value=\\"@AI\\" data-type=\\"NR_BOT\\" data-mentionable-item-id=\\"NR_BOT\\">AI</collab-mention>'
+				/(\s|^)(@AI)(\s|$)/gi,
+				'$1<collab-mention data-value=\\"@AI\\" data-type=\\"NR_BOT\\" data-mentionable-item-id=\\"NR_BOT\\">AI</collab-mention>$3'
 			)
-			.replace(/@([^|]+)\|(\d+)\|/g, (match, p1, p2) => {
-				return `<collab-mention data-value=\\\"@${p1}\\\" data-type=\\\"NR_USER\\\" data-mentionable-item-id=\\\"${p2}\\\">${p1}</collab-mention>`;
+			.replace(/(\s|^)(@([^|]+)\|(\d+)\|)(\s|$)/g, (match, p1, p2, p3, p4, p5) => {
+				return `${p1}<collab-mention data-value=\\\"@${p3}\\\" data-type=\\\"NR_USER\\\" data-mentionable-item-id=\\\"${p4}\\\">${p3}</collab-mention>${p5}`;
 			});
 	}
+
+	// function escapeSpecialCharacters(input) {
+	// 	return input.replace(/\\/g, "\\\\");
+	// }
 
 	// this is asynchronous so callers should provide a callback for code that depends on the completion of this
 	const focus = debounceAndCollectToAnimationFrame((...cbs: Function[]) => {
