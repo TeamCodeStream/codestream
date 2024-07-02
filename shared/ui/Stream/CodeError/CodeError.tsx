@@ -196,7 +196,7 @@ export const CodeError = (props: CodeErrorProps) => {
 		return result;
 	}, [derivedState.grokNraiCapability, derivedState.grokFeatureEnabled]);
 
-	const repoName = useMemo(() => {
+	const repoInfo = useMemo(() => {
 		if (!derivedState.repos || !repoId) {
 			return undefined;
 		}
@@ -206,7 +206,10 @@ export const CodeError = (props: CodeErrorProps) => {
 			return undefined;
 		}
 
-		return repo.name;
+		return {
+			name: repo.name,
+			url: repo.remotes[0].normalizedUrl,
+		};
 	}, [derivedState.repos, repoId]);
 
 	const logError = (
@@ -249,7 +252,8 @@ export const CodeError = (props: CodeErrorProps) => {
 
 	useEffect(() => {
 		// discussion is no good
-		if (!discussion || !discussion.threadId || discussion.comments.length > 0) {
+		if (!discussion || !discussion.threadId) {
+			//} || discussion.comments.length > 0) {
 			return;
 		}
 
@@ -259,7 +263,7 @@ export const CodeError = (props: CodeErrorProps) => {
 		}
 
 		// must have repo information to initialize NRAI
-		if (!repoName || !sha) {
+		if (!repoInfo?.name || !repoInfo.url || !sha) {
 			return;
 		}
 
@@ -269,7 +273,8 @@ export const CodeError = (props: CodeErrorProps) => {
 		derivedState.functionToEdit,
 		derivedState.functionToEditFailed,
 		showGrok,
-		repoName,
+		repoInfo?.name,
+		repoInfo?.url,
 		sha,
 	]);
 
@@ -283,8 +288,8 @@ export const CodeError = (props: CodeErrorProps) => {
 
 			codeBlock: derivedState!.functionToEdit!.codeBlock,
 			fileUri: derivedState!.functionToEdit!.uri,
-			permalink: repoName!,
-			repo: repoName!,
+			permalink: `https://${repoInfo?.url!}`,
+			repo: `https://${repoInfo?.url!}`,
 			sha: sha!,
 		};
 
@@ -614,10 +619,10 @@ export const CodeError = (props: CodeErrorProps) => {
 							);
 						})}
 
-					{repoName && (
+					{repoInfo && (
 						<DataRow data-testid="code-error-repo">
 							<DataLabel>Repo:</DataLabel>
-							<DataValue>{repoName}</DataValue>
+							<DataValue>{repoInfo.name}</DataValue>
 						</DataRow>
 					)}
 

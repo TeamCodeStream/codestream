@@ -54,7 +54,7 @@ export class DiscussionsProvider {
 
 			const updateCommentQuery = `
 				mutation {
-					collaborationUpdateComment(id: "${commentId}", body: "${body}") {
+					collaborationUpdateComment(id: "${commentId}" body: "${body}") {
 						id
 					}
 				}`;
@@ -175,14 +175,14 @@ export class DiscussionsProvider {
 			const createCommentQuery = `
 				mutation {
 					collaborationCreateComment(
-						body: "${body}",
-						threadId: "${threadId}",
+						body: "${body}"
+						threadId: "${threadId}"
 						contextMetadata: { 
-							accountId: ${context.metaData.accountId},
-							entityGuid: "${context.metaData.entityGuid}",
-							nerdletId: "${context.metaData.nerdletId}",
+							accountId: ${context.metaData.accountId}
+							entityGuid: "${context.metaData.entityGuid}"
+							nerdletId: "${context.metaData.nerdletId}"
 							pageId: [
-								"${context.metaData.pageId[0]}",
+								"${context.metaData.pageId[0]}"
 								"${context.metaData.pageId[1]}"
 							]
 						}
@@ -299,9 +299,9 @@ export class DiscussionsProvider {
 					collaborationCreateThread(
 						contextId: "${context.id}", 
 						contextMetadata: { 
-							accountId: ${context.metaData.accountId}, 
-							entityGuid: "${context.metaData.entityGuid}",
-							nerdletId: "${context.metaData.nerdletId}",
+							accountId: ${context.metaData.accountId}
+							entityGuid: "${context.metaData.entityGuid}"
+							nerdletId: "${context.metaData.nerdletId}"
 							pageId: [
 								"${context.metaData.pageId[0]}",
 								"${context.metaData.pageId[1]}"
@@ -491,13 +491,13 @@ export class DiscussionsProvider {
 			const initiateNrAiQuery = `
 				mutation {
 					grokCreateGrokInitiatedConversation(
-						threadId: ${request.threadId},
-						prompt: "As a coding expert I am helpful and very knowledgeable about how to fix errors in code. I will be given errors, stack traces, and code snippets to analyze and fix. Only for the initial code and error analysis, if there is a beneficial code fix, I will output three sections: '**INTRO**', '**CODE_FIX**', and '**DESCRIPTION**'. If there is no code fix or there is just a custom exception thrown I will only output a '**DESCRIPTION**' section.\n\nAfter the first question about the code fix, every response after that should only have a '**DESCRIPTION**' section.\n\nThe output for each section should be markdown formatted.",
+						threadId: "${request.threadId}"
+						prompt: "As a coding expert I am helpful and very knowledgeable about how to fix errors in code. I will be given errors, stack traces, and code snippets to analyze and fix. Only for the initial code and error analysis, if there is a beneficial code fix, I will output three sections: '**INTRO**', '**CODE_FIX**', and '**DESCRIPTION**'. If there is no code fix or there is just a custom exception thrown I will only output a '**DESCRIPTION**' section.\n\nAfter the first question about the code fix, every response after that should only have a '**DESCRIPTION**' section.\n\nThe output for each section should be markdown formatted."
 						contextMetadata: { 
-							accountId: ${context.metaData.accountId},
-							entityGuid: "${context.metaData.entityGuid}",
-							nerdletId: "${context.metaData.nerdletId}",
-							codemarkId: "${codeMarkId}",
+							accountId: ${context.metaData.accountId}
+							entityGuid: "${context.metaData.entityGuid}"
+							nerdletId: "${context.metaData.nerdletId}"
+							codemarkId: "${codeMarkId}"
 							pageId: [
 								"${context.metaData.pageId[0]}",
 								"${context.metaData.pageId[1]}"
@@ -509,7 +509,7 @@ export class DiscussionsProvider {
 					}
 				}`;
 
-			const initiateNrAiResponse = await this.graphqlClient.query<BaseCollaborationResponse>(
+			const initiateNrAiResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
 				initiateNrAiQuery
 			);
 
@@ -547,7 +547,9 @@ export class DiscussionsProvider {
 						file: "${request.fileUri}"
 						permalink: "${request.permalink}"
 						repo: "${request.repo}"
-						sha: "${request.sha}") {
+						sha: "${request.sha}"
+					) 
+					{
 						id
 					}
 				}`;
