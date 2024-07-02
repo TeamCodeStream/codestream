@@ -26,6 +26,7 @@ export const NRQLEditor = React.forwardRef(
 			isReadonly?: boolean;
 			// if true, editor will fallback to a simple <textarea>
 			useSimpleEditor?: boolean;
+			accountId?: number;
 		},
 		ref
 	) => {
