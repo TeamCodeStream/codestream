@@ -1,12 +1,11 @@
 // Provide the Broadcaster class, which encapsulates communications with a swappable broadcaster service
-// (eg. Pubnub, SocketCluster) to receive messages in real-time
+// (i.e. Pubnub) to receive messages in real-time
 "use strict";
 import { Agent as HttpsAgent } from "https";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
 import { ApiProvider } from "../api/apiProvider";
 import { PubnubConnection } from "./pubnubConnection";
-import { SocketClusterConnection } from "./socketClusterConnection";
 
 export interface BroadcasterConnectionOptions {}
 
@@ -17,6 +16,7 @@ export interface BroadcasterConnection {
 	reconnect(): void;
 	confirmSubscriptions(channels: string[]): Promise<string[] | boolean>;
 	fetchHistory(options: BroadcasterHistoryInput): Promise<BroadcasterHistoryOutput>;
+	setV3Token(token: string): void;
 }
 
 export interface BroadcasterHistoryInput {
@@ -52,19 +52,16 @@ export type HistoryFetchCallback = (info: HistoryFetchInfo) => void;
 // use this interface to initialize the Broadcaster class
 export interface BroadcasterInitializer {
 	pubnubSubscribeKey?: string; // identifies our Pubnub account, comes from pubnubKey returned with the login response from the API
+	pubnubCipherKey?: string; // cipher to use for encrypted messages
 	accessToken: string; // access token for api requests
-	authKey: string; // unique broadcaster token provided in the login response
+	broadcasterToken: string; // unique broadcaster token provided in the login response
+	isV3Token?: boolean;
 	userId: string; // ID of the current user
 	strictSSL: boolean; // whether to enforce strict SSL (no self-signed certs)
 	lastMessageReceivedAt?: number; // should persist across sessions, interruptions in service will retrieve messages since this time
 	testMode?: boolean; // whether we emit test-mode statuses, not normally used in production
 	debug?(msg: string, info?: any): void; // for debug messages
 	httpsAgent?: HttpsAgent | HttpsProxyAgent<string>;
-	socketCluster?: {
-		host: string;
-		port: string;
-		ignoreHttps?: boolean;
-	};
 }
 
 // the BroadcasterConnection instance will emit a status through onStatusChange(), for some
@@ -172,34 +169,21 @@ export class Broadcaster {
 		}
 		this._debug(`Broadcaster initializing...`);
 
-		if (options.socketCluster) {
-			const socketClusterConnection = new SocketClusterConnection();
-			await socketClusterConnection.initialize({
-				host: options.socketCluster.host,
-				port: options.socketCluster.port,
-				ignoreHttps: options.socketCluster.ignoreHttps,
-				authKey: options.authKey,
-				userId: options.userId,
-				strictSSL: options.strictSSL,
-				onMessage: this.onMessage.bind(this),
-				onStatus: this.onStatus.bind(this),
-				debug: this._debug,
-			});
-			this._broadcasterConnection = socketClusterConnection;
-		} else {
-			const pubnubConnection = new PubnubConnection();
-			await pubnubConnection.initialize({
-				authKey: options.authKey,
-				userId: options.userId,
-				subscribeKey: options.pubnubSubscribeKey!,
-				httpsAgent: this._httpsAgent,
-				onMessage: this.onMessage.bind(this),
-				onStatus: this.onStatus.bind(this),
-				onFetchHistory: this.onFetchHistory.bind(this),
-				debug: this._debug,
-			});
-			this._broadcasterConnection = pubnubConnection;
-		}
+		const pubnubConnection = new PubnubConnection();
+		await pubnubConnection.initialize({
+			userId: options.userId,
+			broadcasterToken: options.broadcasterToken,
+			isV3Token: options.isV3Token,
+			subscribeKey: options.pubnubSubscribeKey!,
+			cipherKey: options.pubnubCipherKey,
+			httpsAgent: this._httpsAgent,
+			onMessage: this.onMessage.bind(this),
+			onStatus: this.onStatus.bind(this),
+			onFetchHistory: this.onFetchHistory.bind(this),
+			debug: this._debug,
+		});
+		this._broadcasterConnection = pubnubConnection;
+
 		this._lastMessageReceivedAt = options.lastMessageReceivedAt || 0;
 		this._testMode = options.testMode || false;
 		this._aborted = false;
@@ -215,6 +199,13 @@ export class Broadcaster {
 				}
 			},
 		};
+	}
+
+	// set a new (V3) broadcaster token
+	setV3Token(token: string) {
+		if (this._broadcasterConnection) {
+			this._broadcasterConnection.setV3Token(token);
+		}
 	}
 
 	// subscribe to the passed channels

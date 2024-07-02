@@ -50,13 +50,10 @@ const messageToType: {
 export interface BroadcasterEventsInitializer {
 	accessToken: string;
 	broadcasterToken: string;
+	isV3Token?: boolean;
 	api: CodeStreamApiProvider;
 	pubnubSubscribeKey?: string;
-	socketCluster?: {
-		host: string;
-		port: string;
-		ignoreHttps?: boolean;
-	};
+	pubnubCipherKey?: string;
 	strictSSL: boolean;
 	httpsAgent?: HttpsAgent | HttpsProxyAgent<string>;
 	supportsEcho?: boolean;
@@ -84,8 +81,9 @@ export class BroadcasterEvents implements Disposable {
 		this._disposable = await this._broadcaster.initialize({
 			accessToken: this._options.accessToken,
 			pubnubSubscribeKey: this._options.pubnubSubscribeKey,
-			socketCluster: this._options.socketCluster,
-			authKey: this._options.broadcasterToken,
+			pubnubCipherKey: this._options.pubnubCipherKey,
+			broadcasterToken: this._options.broadcasterToken,
+			isV3Token: this._options.isV3Token,
 			userId: this._options.api.userId,
 			strictSSL: this._options.strictSSL,
 			debug: this.debug.bind(this),
@@ -113,6 +111,12 @@ export class BroadcasterEvents implements Disposable {
 		this._broadcaster.subscribe(channels);
 
 		return this._disposable;
+	}
+
+	setV3BroadcasterToken(token: string) {
+		if (this._broadcaster) {
+			this._broadcaster.setV3Token(token);
+		}
 	}
 
 	dispose() {

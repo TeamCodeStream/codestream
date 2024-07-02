@@ -40,7 +40,9 @@ const PING_INTERVAL = 30000;
 // use this interface to initialize the PubnubConnection class
 export interface PubnubInitializer {
 	subscribeKey: string; // identifies our Pubnub account, comes from pubnubKey returned with the login response from the API
-	authKey: string; // unique Pubnub token provided in the login response
+	cipherKey?: string; // cipher used for encryption
+	broadcasterToken: string; // unique Pubnub token provided in the login response
+	isV3Token?: boolean;
 	userId: string; // ID of the current user
 	debug?(msg: string, info?: any): void; // for debug messages
 	httpsAgent?: HttpsAgent | HttpsProxyAgent<string>;
@@ -83,16 +85,28 @@ export class PubnubConnection implements BroadcasterConnection {
 				port: options.httpsAgent.proxy.port,
 			};
 		}
-		this._pubnub = new Pubnub({
-			authKey: options.authKey,
+
+		const pubnubConfig: Pubnub.PubnubConfig = {
 			uuid: options.userId,
 			subscribeKey: options.subscribeKey,
+			authKey: !options.isV3Token ? options.broadcasterToken : undefined,
 			restore: true,
 			logVerbosity: false,
 			// heartbeatInterval: 30,
 			autoNetworkDetection: true,
-			proxy: proxy,
-		} as Pubnub.PubnubConfig); // TODO @types/pubnub is very broken
+			//proxy: proxy,
+		};
+		if (options.cipherKey) {
+			pubnubConfig.cryptoModule = Pubnub.CryptoModule.aesCbcCryptoModule({
+				cipherKey: options.cipherKey,
+			});
+		}
+		this._pubnub = new Pubnub(pubnubConfig); // TODO @types/pubnub is very broken
+		if (options.isV3Token) {
+			this._pubnub.setToken(options.broadcasterToken);
+		}
+		if (options.cipherKey) {
+		}
 
 		this._messageCallback = options.onMessage;
 		this._statusCallback = options.onStatus;
@@ -106,6 +120,23 @@ export class PubnubConnection implements BroadcasterConnection {
 				this._pubnub!.stop();
 			},
 		};
+	}
+
+	// set a new (V3) broadcaster token
+	setV3Token(token: string) {
+		if (!this._pubnub) return;
+		this._pubnub.setToken(token);
+		const result = this._pubnub.parseToken(token);
+		const channels = Object.keys(result.resources?.channels || {}).filter(channel => {
+			return result.resources!.channels![channel].read;
+		});
+		const expiresAt = result.timestamp * 1000 + result.ttl * 60 * 1000;
+		this._debug(
+			`Did set PubNub token, token expires in ${
+				expiresAt - Date.now()
+			} ms, at ${expiresAt}, authorized channels are:`,
+			channels
+		);
 	}
 
 	// subscribe to the passed channels
