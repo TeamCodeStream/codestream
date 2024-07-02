@@ -4,14 +4,17 @@ export interface BaseCollaborationResponse {
 	};
 }
 
+export interface CollaborationContextMetadata {
+	accountId: number;
+	entityGuid: string;
+	nerdletId: string;
+	pageId: string[];
+	codeMarkId?: string;
+}
+
 export interface CollaborationContext {
 	id: string;
-	metaData: {
-		accountId: number;
-		entityGuid: string;
-		nerdletId: string;
-		pageId: string[];
-	};
+	metaData: CollaborationContextMetadata;
 }
 
 export interface BootStrapResponse {

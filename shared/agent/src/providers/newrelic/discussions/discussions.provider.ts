@@ -30,6 +30,7 @@ import {
 	BootStrapResponse,
 	BaseCollaborationResponse,
 	CollaborationContext,
+	CollaborationContextMetadata,
 } from "./discussions.types";
 
 @lsp
@@ -53,14 +54,18 @@ export class DiscussionsProvider {
 			const { commentId, body } = { ...request };
 
 			const updateCommentQuery = `
-				mutation {
-					collaborationUpdateComment(id: "${commentId}" body: "${body}") {
+				mutation($commentId: ID!, $body: String!) {
+					collaborationUpdateComment(id: $commendId body: $body) {
 						id
 					}
 				}`;
 
 			const updateCommentResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
-				updateCommentQuery
+				updateCommentQuery,
+				{
+					commentId,
+					body,
+				}
 			);
 
 			return {
@@ -93,14 +98,17 @@ export class DiscussionsProvider {
 			const commentId = request.commentId;
 
 			const deleteCommentQuery = `
-				mutation {
-					collaborationDeactivateComment(id: "${commentId}") {
+				mutation($commentId: ID!) {
+					collaborationDeactivateComment(id: $commentId) {
 						id
 					}
 				}`;
 
 			const deleteCommentResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
-				deleteCommentQuery
+				deleteCommentQuery,
+				{
+					commentId,
+				}
 			);
 
 			return {
@@ -133,14 +141,17 @@ export class DiscussionsProvider {
 			const threadId = request.threadId;
 
 			const deleteThreadQuery = `
-				mutation {
-					collaborationDeactivateThread(id: "${threadId}") {
+				mutation($threadId: ID!) {
+					collaborationDeactivateThread(id: $threadId) {
 						id
 					}
 				}`;
 
 			const deleteThreadResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
-				deleteThreadQuery
+				deleteThreadQuery,
+				{
+					threadId,
+				}
 			);
 
 			return {
@@ -173,26 +184,23 @@ export class DiscussionsProvider {
 			const context = await this.generateContext(entityGuid, errorGroupGuid);
 
 			const createCommentQuery = `
-				mutation {
+				mutation($body: String!, $threadId: ID!, $context: GrokRawContextMetadata!) {
 					collaborationCreateComment(
-						body: "${body}"
-						threadId: "${threadId}"
-						contextMetadata: { 
-							accountId: ${context.metaData.accountId}
-							entityGuid: "${context.metaData.entityGuid}"
-							nerdletId: "${context.metaData.nerdletId}"
-							pageId: [
-								"${context.metaData.pageId[0]}"
-								"${context.metaData.pageId[1]}"
-							]
-						}
+						body: $body
+						threadId: $threadId
+						contextMetadata: $context
 					) {
 						id
 					}
 				}`;
 
 			const createCommentResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
-				createCommentQuery
+				createCommentQuery,
+				{
+					body,
+					threadId,
+					context: context.metaData,
+				}
 			);
 
 			return {
@@ -232,10 +240,10 @@ export class DiscussionsProvider {
 			);
 
 			const commentsQuery = `
-				{
+				query($threadId: ID!) {
 					actor {
 						collaboration {
-							commentsByThreadId(threadId: "${bootstrapResponse.threadId}") {
+							commentsByThreadId(threadId: $threadId) {
 								entities {
 									body
 									deactivated
@@ -253,7 +261,9 @@ export class DiscussionsProvider {
 					}
 				}`;
 
-			const response = await this.graphqlClient.query<CommentsByThreadIdResponse>(commentsQuery);
+			const response = await this.graphqlClient.query<CommentsByThreadIdResponse>(commentsQuery, {
+				threadId: bootstrapResponse.threadId,
+			});
 
 			const comments = response.actor.collaboration.commentsByThreadId.entities
 				.filter(e => !e.systemMessageType)
@@ -295,31 +305,27 @@ export class DiscussionsProvider {
 			const context = await this.generateContext(entityGuid, errorGroupGuid);
 
 			const createThreadQuery = `
-				mutation {
+				mutation($contextId: ID!, $contextMetadata: GrokRawContextMetadata!) {
 					collaborationCreateThread(
-						contextId: "${context.id}", 
-						contextMetadata: { 
-							accountId: ${context.metaData.accountId}
-							entityGuid: "${context.metaData.entityGuid}"
-							nerdletId: "${context.metaData.nerdletId}"
-							pageId: [
-								"${context.metaData.pageId[0]}",
-								"${context.metaData.pageId[1]}"
-							]
-						}
+						contextId: $contextId, 
+						contextMetadata: $contextMetadata
 					) {
 						id
 					}
 				}`;
 
 			const createThreadResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
-				createThreadQuery
+				createThreadQuery,
+				{
+					contextId: context.id,
+					contextMetadata: context.metaData,
+				}
 			);
 
 			const updateThreadStatusQuery = `
-				mutation {
+				mutation($threadId: ID!) {
 					collaborationUpdateThreadStatus(
-						id: "${createThreadResponse.collaborationCreateThread.id}"
+						id: $threadId
 						status: OPEN
 					) {
 						id
@@ -327,7 +333,10 @@ export class DiscussionsProvider {
 				}`;
 
 			const updateThreadResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
-				updateThreadStatusQuery
+				updateThreadStatusQuery,
+				{
+					threadId: createThreadResponse.collaborationCreateThread.id,
+				}
 			);
 
 			return updateThreadResponse.collaborationUpdateThreadStatus.id;
@@ -352,12 +361,13 @@ export class DiscussionsProvider {
 	 */
 	private async generateContext(
 		entityGuid: string,
-		errorGroupGuid: string
+		errorGroupGuid: string,
+		codeMarkId?: string
 	): Promise<CollaborationContext> {
 		try {
 			const { accountId, domain, type } = { ...parseId(entityGuid) };
 
-			const contextMetadata = {
+			const contextMetadata: CollaborationContextMetadata = {
 				accountId: accountId!,
 				entityGuid: entityGuid,
 				nerdletId: "errors-inbox.error-group-details",
@@ -365,6 +375,11 @@ export class DiscussionsProvider {
 			};
 
 			const contextHash = await generateHash(contextMetadata);
+
+			// hash doesn't include codeMarkId, so we only need to add it to the metadata
+			if (codeMarkId) {
+				contextMetadata["codeMarkId"] = codeMarkId;
+			}
 
 			return {
 				id: contextHash,
@@ -397,33 +412,30 @@ export class DiscussionsProvider {
 			const context = await this.generateContext(entityGuid, errorGroupGuid);
 
 			const createContextQuery = `
-				mutation {
+				mutation($accountId: Int!, $entityGuid: EntityGuid!, $contextId: ID!, $contextMetadata: CollaborationRawContextMetadata!) {
 					collaborationCreateContext(
-						accountId: ${context.metaData.accountId} 
-						entityGuid: "${entityGuid}" 
-						id: "${context.id}" 
-						contextMetadata: { 
-							accountId: ${context.metaData.accountId} 
-							entityGuid: "${context.metaData.entityGuid}"
-							nerdletId: "${context.metaData.nerdletId}"
-							pageId: [
-								"${context.metaData.pageId[0]}"
-								"${context.metaData.pageId[1]}"
-							]
-						}
+						accountId: $accountId
+						entityGuid: $entityGuid
+						id: $contextId
+						contextMetadata: $contextMetadata
 					) {
 						id
 					}
 				}`;
 
 			// the context Id generated from this matches the hash anyway
-			await this.graphqlClient.mutate<BaseCollaborationResponse>(createContextQuery);
+			await this.graphqlClient.mutate<BaseCollaborationResponse>(createContextQuery, {
+				accountId: context.metaData.accountId,
+				entityGuid: context.metaData.entityGuid,
+				contextId: context.id,
+				contextMetadata: context.metaData,
+			});
 
 			const getThreadsQuery = `
-				{
+				query($contextId: ID!){
 					actor {
 						collaboration {
-							threadsByContextId(contextId: "${context.id}") {
+							threadsByContextId(contextId: $contextId) {
 								entities {
 									id
 									latestCommentTime
@@ -436,7 +448,10 @@ export class DiscussionsProvider {
 				}`;
 
 			const getThreadsResponse = await this.graphqlClient.query<ThreadsByContextIdResponse>(
-				getThreadsQuery
+				getThreadsQuery,
+				{
+					contextId: context.id,
+				}
 			);
 
 			const mostRecentThread =
@@ -469,8 +484,6 @@ export class DiscussionsProvider {
 	/**
 	 * Initializes NRAI for a given thread so that it becomes the first comment
 	 *
-	 * UNTESTED
-	 *
 	 * @param {InitiateNrAiRequest} request
 	 * @returns {Promise<InitiateNrAiResponse>}
 	 */
@@ -478,8 +491,6 @@ export class DiscussionsProvider {
 	@log()
 	async initializeNrAi(request: InitiateNrAiRequest): Promise<InitiateNrAiResponse> {
 		try {
-			const context = await this.generateContext(request.entityGuid, request.errorGroupGuid);
-
 			const codeMarkId = await this.createCodeMark({
 				codeBlock: request.codeBlock,
 				fileUri: request.fileUri,
@@ -488,21 +499,18 @@ export class DiscussionsProvider {
 				sha: request.sha,
 			});
 
+			const context = await this.generateContext(
+				request.entityGuid,
+				request.errorGroupGuid,
+				codeMarkId
+			);
+
 			const initiateNrAiQuery = `
-				mutation {
+				mutation($threadId: ID!, $prompt:String!, $context: GrokRawContextMetadata!) {
 					grokCreateGrokInitiatedConversation(
-						threadId: "${request.threadId}"
-						prompt: "As a coding expert I am helpful and very knowledgeable about how to fix errors in code. I will be given errors, stack traces, and code snippets to analyze and fix. Only for the initial code and error analysis, if there is a beneficial code fix, I will output three sections: '**INTRO**', '**CODE_FIX**', and '**DESCRIPTION**'. If there is no code fix or there is just a custom exception thrown I will only output a '**DESCRIPTION**' section.\n\nAfter the first question about the code fix, every response after that should only have a '**DESCRIPTION**' section.\n\nThe output for each section should be markdown formatted."
-						contextMetadata: { 
-							accountId: ${context.metaData.accountId}
-							entityGuid: "${context.metaData.entityGuid}"
-							nerdletId: "${context.metaData.nerdletId}"
-							codemarkId: "${codeMarkId}"
-							pageId: [
-								"${context.metaData.pageId[0]}",
-								"${context.metaData.pageId[1]}"
-							]
-						}
+						threadId: $threadId
+						prompt: $prompt 
+						context: $context
 					) 
 					{
 						id
@@ -510,7 +518,13 @@ export class DiscussionsProvider {
 				}`;
 
 			const initiateNrAiResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
-				initiateNrAiQuery
+				initiateNrAiQuery,
+				{
+					threadId: request.threadId,
+					prompt:
+						"As a coding expert I am helpful and very knowledgeable about how to fix errors in code. I will be given errors, stack traces, and code snippets to analyze and fix. Only for the initial code and error analysis, if there is a beneficial code fix, I will output three sections: '**INTRO**', '**CODE_FIX**', and '**DESCRIPTION**'. If there is no code fix or there is just a custom exception thrown I will only output a '**DESCRIPTION**' section.\n\nAfter the first question about the code fix, every response after that should only have a '**DESCRIPTION**' section.\n\nThe output for each section should be markdown formatted.",
+					context: context,
+				}
 			);
 
 			return { commentId: initiateNrAiResponse.grokCreateGrokInitiatedConversation.id };
@@ -527,8 +541,6 @@ export class DiscussionsProvider {
 	/**
 	 * Creates a codemark for a given code block to be used with NRAI
 	 *
-	 * UNTESTED
-	 *
 	 * @param {CreateCodeMarkRequest} request
 	 * @returns {Promise<string>}
 	 */
@@ -541,13 +553,13 @@ export class DiscussionsProvider {
 	}): Promise<string> {
 		try {
 			const createCodeMarkQuery = `
-				mutation {
+				mutation($code:String!, $file:String!, $permalink:String!, $repo:String!, $sha:String!) {
 					collaborationCreateCodeMark(
-						code: "${request.codeBlock}"
-						file: "${request.fileUri}"
-						permalink: "${request.permalink}"
-						repo: "${request.repo}"
-						sha: "${request.sha}"
+						code: $code
+						file: $file
+						permalink: $permalink
+						repo: $repo
+						sha: $sha
 					) 
 					{
 						id
@@ -555,7 +567,14 @@ export class DiscussionsProvider {
 				}`;
 
 			const createCodeMarkResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
-				createCodeMarkQuery
+				createCodeMarkQuery,
+				{
+					code: request.codeBlock,
+					file: request.fileUri,
+					permalink: request.permalink,
+					repo: request.repo,
+					sha: request.sha,
+				}
 			);
 
 			return createCodeMarkResponse.collaborationCreateCodeMark.id;

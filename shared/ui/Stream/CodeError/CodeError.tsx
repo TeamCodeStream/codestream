@@ -252,8 +252,7 @@ export const CodeError = (props: CodeErrorProps) => {
 
 	useEffect(() => {
 		// discussion is no good
-		if (!discussion || !discussion.threadId) {
-			//} || discussion.comments.length > 0) {
+		if (!discussion || !discussion.threadId || discussion.comments.length > 0) {
 			return;
 		}
 
