@@ -1,11 +1,11 @@
 import React, { useContext, useRef } from "react";
-import { NRQLResult } from "@codestream/protocols/agent";
+import { NRQLResult, GetNRQLResponse } from "@codestream/protocols/agent";
 import { MonacoEditor } from "./MonacoEditor";
 import { isDarkTheme } from "@codestream/webview/src/themes";
 import { ThemeContext } from "styled-components";
 
 interface Props {
-	results: NRQLResult[];
+	results: NRQLResult[] | GetNRQLResponse[];
 }
 
 export const NRQLResultsJSON = (props: Props) => {
