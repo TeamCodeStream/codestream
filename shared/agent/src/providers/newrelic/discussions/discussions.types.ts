@@ -57,3 +57,25 @@ export interface ThreadsByContextIdResponse {
 		};
 	};
 }
+
+export interface GrokMessage {
+	messageId: string;
+
+	messages?: {
+		card?: string;
+		content?: string;
+		role?: string;
+	}[];
+}
+
+export interface GrokMessagesByIds {
+	actor: {
+		collaboration: {
+			grokMessagesByIds: {
+				card?: string;
+				content?: string;
+				role?: string;
+			}[];
+		};
+	};
+}

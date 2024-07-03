@@ -31,10 +31,17 @@ import {
 	BaseCollaborationResponse,
 	CollaborationContext,
 	CollaborationContextMetadata,
+	GrokMessage,
+	GrokMessagesByIds,
 } from "./discussions.types";
 
 @lsp
 export class DiscussionsProvider {
+	private userMentionRegExp =
+		/<collab-mention data-type="NR_USER" [^>]*data-value="([^"]+)"[^>]*>[^<]*<\/collab-mention>/gim;
+	private grokMentionRegExp =
+		/<collab-mention data-type="GROK_RESPONSE" data-mentionable-item-id="(?<messageId>[^"]+)"\/>/gim;
+
 	constructor(private graphqlClient: NewRelicGraphqlClient) {
 		this.graphqlClient.addHeader("Nerd-Graph-Unsafe-Experimental-Opt-In", "Collaboration,Grok");
 	}
@@ -265,18 +272,41 @@ export class DiscussionsProvider {
 				threadId: bootstrapResponse.threadId,
 			});
 
-			const comments = response.actor.collaboration.commentsByThreadId.entities
+			const commentEntities = response.actor.collaboration.commentsByThreadId.entities
 				.filter(e => !e.systemMessageType)
 				.filter(e => e.deactivated === false)
-				.filter(e => e.creator.userId != 0)
 				.sort((e1, e2) => e1.createdAt - e2.createdAt)
 				.map(e => {
-					const modifiedBody = e.body.replace(
-						/<collab-mention[^>]*data-value="([^"]+)"[^>]*>[^<]*<\/collab-mention>/g,
-						"$1"
-					);
-					return { ...e, body: modifiedBody };
+					if (this.userMentionRegExp.test(e.body)) {
+						const modifiedBody = e.body.replace(this.userMentionRegExp, "$1");
+
+						e.body = modifiedBody;
+					}
+
+					return { ...e };
 				});
+
+			for (const commentEntity of commentEntities) {
+				const grokMatch = this.grokMentionRegExp.exec(commentEntity.body);
+
+				if (!grokMatch) {
+					continue;
+				}
+
+				const grokCommentId = grokMatch[1];
+				const grokMessagesForId = await this.getGrokMessages(grokCommentId);
+
+				commentEntity.body =
+					grokMessagesForId.messages
+						?.map(m => {
+							return `${m.content}`;
+						})
+						.join("\n\n") ?? "";
+				commentEntity.creator.name = "NRAI";
+				commentEntity.creator.userId = -1;
+			}
+
+			const comments = commentEntities.filter(e => e.creator.userId != 0);
 
 			return {
 				threadId: bootstrapResponse.threadId,
@@ -289,6 +319,42 @@ export class DiscussionsProvider {
 			});
 
 			return { nrError: mapNRErrorResponse(ex) };
+		}
+	}
+
+	private async getGrokMessages(grokMessageId: string): Promise<GrokMessage> {
+		try {
+			const getGrokMessagesQuery = `
+				query($grokMessageIds: [ID]!){
+					actor {
+						collaboration {
+							grokMessagesByIds(ids: $grokMessageIds) {
+								card
+								content
+								role
+							}
+						}
+					}
+				}`;
+
+			const getGrokMessagesResponse = await this.graphqlClient.query<GrokMessagesByIds>(
+				getGrokMessagesQuery,
+				{
+					grokMessageIds: [grokMessageId],
+				}
+			);
+
+			return {
+				messageId: grokMessageId,
+				messages: getGrokMessagesResponse.actor.collaboration.grokMessagesByIds,
+			};
+		} catch (ex) {
+			ContextLogger.warn("getGrokMessages failure", {
+				grokMessageId,
+				error: ex,
+			});
+
+			throw ex;
 		}
 	}
 
