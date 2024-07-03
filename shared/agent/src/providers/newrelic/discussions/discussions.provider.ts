@@ -9,6 +9,7 @@ import {
 	DeleteCollaborationThreadRequest,
 	DeleteCollaborationThreadRequestType,
 	DeleteCollaborationThreadResponse,
+	GetCollaborationWebsocketInfoRequestType,
 	GetErrorInboxCommentsRequest,
 	GetErrorInboxCommentsRequestType,
 	GetErrorInboxCommentsResponse,
@@ -18,7 +19,7 @@ import {
 	UpdateCollaborationCommentRequest,
 	UpdateCollaborationCommentRequestType,
 	UpdateCollaborationCommentResponse,
-} from "../../../../../util/src/protocol/agent/agent.protocol.providers";
+} from "@codestream/protocols/agent";
 import { log } from "../../../system/decorators/log";
 import { lsp, lspHandler } from "../../../system/decorators/lsp";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
@@ -30,9 +31,11 @@ import {
 	BootStrapResponse,
 	BaseCollaborationResponse,
 	CollaborationContext,
-	CollaborationContextMetadata,
 	GrokMessage,
 	GrokMessagesByIds,
+	CollaborationContextMetadata,
+	WebsocketInfoResponse,
+	WebsocketConnectUrl,
 } from "./discussions.types";
 
 @lsp
@@ -43,8 +46,42 @@ export class DiscussionsProvider {
 	private grokMentionRegExp =
 		/<collab-mention data-type="GROK_RESPONSE" data-mentionable-item-id="(?<messageId>[^"]+)"\/>/gim;
 
+	private websocketInfo: WebsocketConnectUrl | undefined = undefined;
+
 	constructor(private graphqlClient: NewRelicGraphqlClient) {
 		this.graphqlClient.addHeader("Nerd-Graph-Unsafe-Experimental-Opt-In", "Collaboration,Grok");
+		this.getWebsocketInfo();
+	}
+
+	@lspHandler(GetCollaborationWebsocketInfoRequestType)
+	@log()
+	public async getWebsocketInfo(): Promise<WebsocketConnectUrl | undefined> {
+		if (this.websocketInfo) {
+			return this.websocketInfo;
+		}
+		const wsQuery = `{
+			actor {
+				collaboration {
+					webSocketConnectUrl {
+						NRConnectionId
+						url
+					}
+				}
+			}
+		}`;
+		try {
+			const response = await this.graphqlClient.query<WebsocketInfoResponse>(wsQuery);
+			if (response?.actor?.collaboration?.webSocketConnectUrl?.url) {
+				this.websocketInfo = response.actor.collaboration.webSocketConnectUrl;
+				ContextLogger.debug("getWebsocketInfo success", this.websocketInfo);
+				return this.websocketInfo;
+			} else {
+				ContextLogger.warn("getWebsocketInfo failed to get websocket url", response);
+			}
+		} catch (e) {
+			ContextLogger.warn("getWebsocketInfo error", e);
+		}
+		return undefined;
 	}
 
 	/**

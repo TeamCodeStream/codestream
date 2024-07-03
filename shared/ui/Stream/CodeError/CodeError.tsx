@@ -44,8 +44,18 @@ import {
 } from "./CodeError.Types";
 import { Loading } from "@codestream/webview/Container/Loading";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
-import { CSStackTraceLine } from "../../../util/src/protocol/agent/api.protocol.models";
+import { CSStackTraceLine } from "@codestream/protocols/api";
 import { parseId } from "@codestream/webview/utilities/newRelic";
+import { SocketClient } from "@codestream/webview/Stream/CodeError/socks/SockClient";
+
+let sockClient: SocketClient | undefined;
+
+async function initWebsockets() {
+	if (!sockClient) {
+		sockClient = new SocketClient();
+		await sockClient.connect();
+	}
+}
 
 export const CodeError = (props: CodeErrorProps) => {
 	const dispatch = useAppDispatch();
@@ -87,6 +97,7 @@ export const CodeError = (props: CodeErrorProps) => {
 
 	useDidMount(() => {
 		dispatch(getNrCapability("nrai"));
+		initWebsockets();
 	});
 
 	useEffect(() => {

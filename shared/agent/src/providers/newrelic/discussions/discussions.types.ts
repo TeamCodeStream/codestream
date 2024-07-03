@@ -79,3 +79,16 @@ export interface GrokMessagesByIds {
 		};
 	};
 }
+
+export interface WebsocketConnectUrl {
+	NRConnectionId: string;
+	url: string;
+}
+
+export interface WebsocketInfoResponse {
+	actor: {
+		collaboration: {
+			webSocketConnectUrl: WebsocketConnectUrl;
+		};
+	};
+}
