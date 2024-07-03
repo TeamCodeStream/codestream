@@ -67,8 +67,6 @@ import { ChangePhoneNumber } from "./ChangePhoneNumber";
 import { ChangeTeamName } from "./ChangeTeamName";
 import { ChangeUsername } from "./ChangeUsername";
 import { ChangeWorksOn } from "./ChangeWorksOn";
-import { CodemarkForm } from "./CodemarkForm";
-import { CodemarkView } from "./CodemarkView";
 import { ErrorRoadblock } from "./ErrorRoadblock";
 import ConfigureAzureDevOpsPanel from "./ConfigureAzureDevOpsPanel";
 import ConfigureEnterprisePanel from "./ConfigureEnterprisePanel";

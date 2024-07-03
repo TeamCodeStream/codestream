@@ -73,8 +73,6 @@ import { setUserPreference } from "./actions";
 import { SetUserPreferenceRequest } from "./actions.types";
 import { CodeErrorNavigator } from "./CodeError/CodeErrorNavigator";
 import Codemark from "./Codemark";
-import { CodemarkForm } from "./CodemarkForm";
-import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import Feedback from "./Feedback";
 import Icon from "./Icon";
 import { Modal } from "./Modal";
