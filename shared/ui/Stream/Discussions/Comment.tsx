@@ -10,7 +10,6 @@ import { useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks
 import { escapeHtml, replaceHtml } from "@codestream/webview/utils";
 import React, { forwardRef, Ref, useState } from "react";
 import styled from "styled-components";
-import { KebabIcon } from "../Codemark/BaseCodemark";
 import Icon from "../Icon";
 import { MarkdownText } from "../MarkdownText";
 import { MessageInput } from "../MessageInput";
@@ -21,14 +20,11 @@ import { AskGrok } from "../NRAI/AskGrok";
 import Tooltip from "../Tooltip";
 import { ButtonRow } from "@codestream/webview/src/components/Dialog";
 import { Button } from "@codestream/webview/src/components/Button";
-import { confirmPopup } from "../Confirm";
 import { MenuItem } from "@codestream/webview/src/components/controls/InlineMenu";
 import {
 	currentNrUserIdSelector,
 	currentUserIsAdminSelector,
 } from "@codestream/webview/store/users/reducer";
-import Menu from "../Menu";
-import { ProfileLink } from "@codestream/webview/src/components/ProfileLink";
 import { HostApi } from "@codestream/webview/webview-api";
 
 const AuthorInfo = styled.div`
@@ -322,37 +318,44 @@ export const Comment = forwardRef((props: CommentProps, ref: Ref<HTMLDivElement>
 	};
 	const menuItems: MenuItem[] = [];
 
-	if (props.comment.creator.userId === currentNrUserId || currentUserIsAdmin) {
-		menuItems.push({
-			label: "Edit",
-			key: "edit",
-			action: () => setIsEditing(true),
-		});
-	}
-	if (props.comment.creator.userId === currentNrUserId || currentUserIsAdmin) {
-		menuItems.push({
-			label: "Delete",
-			key: "delete",
-			action: () => {
-				confirmPopup({
-					title: "Are you sure?",
-					message: "Deleting a comment cannot be undone.",
-					centered: true,
-					buttons: [
-						{ label: "Go Back", className: "control-button" },
-						{
-							label: "Delete Comment",
-							className: "delete",
-							wait: true,
-							action: async () => {
-								await deleteComment();
-							},
-						},
-					],
-				});
-			},
-		});
-	}
+	// Need to line up user IDs.
+	// currentUserIsAdmin is not a good check for this as it doesn't seem to match NR1 expectations.
+	//
+	// if (props.comment.creator.userId === currentNrUserId || currentUserIsAdmin) {
+	// 	menuItems.push({
+	// 		label: "Edit",
+	// 		key: "edit",
+	// 		action: () => setIsEditing(true),
+	// 	});
+	// }
+
+	// Need to line up user IDs.
+	// currentUserIsAdmin is not a good check for this as it doesn't seem to match NR1 expectations.
+	//
+	// if (props.comment.creator.userId === currentNrUserId || currentUserIsAdmin) {
+	// 	menuItems.push({
+	// 		label: "Delete",
+	// 		key: "delete",
+	// 		action: () => {
+	// 			confirmPopup({
+	// 				title: "Are you sure?",
+	// 				message: "Deleting a comment cannot be undone.",
+	// 				centered: true,
+	// 				buttons: [
+	// 					{ label: "Go Back", className: "control-button" },
+	// 					{
+	// 						label: "Delete Comment",
+	// 						className: "delete",
+	// 						wait: true,
+	// 						action: async () => {
+	// 							await deleteComment();
+	// 						},
+	// 					},
+	// 				],
+	// 			});
+	// 		},
+	// 	});
+	// }
 
 	const [menuState, setMenuState] = React.useState<{
 		open: boolean;
@@ -367,14 +370,15 @@ export const Comment = forwardRef((props: CommentProps, ref: Ref<HTMLDivElement>
 	return (
 		<Root ref={ref}>
 			<CommentBody>
+				<div className="bar-left-parent" />
 				<AuthorInfo style={{ fontWeight: 700 }}>
-					{derivedState?.author && (
+					{/* {derivedState?.author && (
 						<ProfileLink id={derivedState.author.id || ""}>
 							<Headshot size={20} person={derivedState.author} />{" "}
 						</ProfileLink>
-					)}
+					)} */}
 					<span className="reply-author">{props.comment.creator.name}</span>
-					<div style={{ marginLeft: "auto", whiteSpace: "nowrap" }}>
+					{/* <div style={{ marginLeft: "auto", whiteSpace: "nowrap" }}>
 						{menuState.open && (
 							<Menu
 								target={menuState.target}
@@ -397,7 +401,7 @@ export const Comment = forwardRef((props: CommentProps, ref: Ref<HTMLDivElement>
 						>
 							<Icon name="kebab-vertical" className="clickable" />
 						</KebabIcon>
-					</div>
+					</div> */}
 				</AuthorInfo>
 
 				{isEditing && (
@@ -443,7 +447,7 @@ export const Comment = forwardRef((props: CommentProps, ref: Ref<HTMLDivElement>
 					<MarkdownContent className="reply-content-container">
 						<MarkdownText
 							text={postText}
-							includeCodeBlockCopy={props.comment.creator.name === "AI"}
+							includeCodeBlockCopy={props.comment.creator.name === "NRAI"}
 							className="reply-markdown-content"
 						/>
 					</MarkdownContent>

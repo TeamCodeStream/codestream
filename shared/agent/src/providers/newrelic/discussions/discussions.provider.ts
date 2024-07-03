@@ -37,6 +37,7 @@ import {
 
 @lsp
 export class DiscussionsProvider {
+	// relies on the properties of the collab-mention tag being in the right order...
 	private userMentionRegExp =
 		/<collab-mention data-type="NR_USER" [^>]*data-value="([^"]+)"[^>]*>[^<]*<\/collab-mention>/gim;
 	private grokMentionRegExp =
@@ -191,7 +192,7 @@ export class DiscussionsProvider {
 			const context = await this.generateContext(entityGuid, errorGroupGuid);
 
 			const createCommentQuery = `
-				mutation($body: String!, $threadId: ID!, $context: GrokRawContextMetadata!) {
+				mutation($body: String!, $threadId: ID!, $context: CollaborationRawContextMetadata!) {
 					collaborationCreateComment(
 						body: $body
 						threadId: $threadId
@@ -286,6 +287,7 @@ export class DiscussionsProvider {
 					return { ...e };
 				});
 
+			// parse all comments to find grok mentions and replace them with the actual grok messages
 			for (const commentEntity of commentEntities) {
 				const grokMatch = this.grokMentionRegExp.exec(commentEntity.body);
 
@@ -314,6 +316,72 @@ export class DiscussionsProvider {
 			};
 		} catch (ex) {
 			ContextLogger.warn("GetErrorInboxComments failure", {
+				request,
+				error: ex,
+			});
+
+			return { nrError: mapNRErrorResponse(ex) };
+		}
+	}
+
+	/**
+	 * Initializes NRAI for a given thread so that it becomes the first comment
+	 *
+	 * @param {InitiateNrAiRequest} request
+	 * @returns a promise that includes the ID for the grok message
+	 */
+	@lspHandler(InitiateNrAiRequestType)
+	@log()
+	async initializeNrAi(request: InitiateNrAiRequest): Promise<InitiateNrAiResponse> {
+		try {
+			const codeMarkId = await this.createCodeMark({
+				codeBlock: request.codeBlock,
+				fileUri: request.fileUri,
+				permalink: request.permalink,
+				repo: request.repo,
+				sha: request.sha,
+			});
+
+			const context = await this.generateContext(
+				request.entityGuid,
+				request.errorGroupGuid,
+				codeMarkId
+			);
+
+			const initiateNrAiQuery = `
+				mutation($threadId: ID!, $prompt:String!, $context: GrokRawContextMetadata!) {
+					grokCreateGrokInitiatedConversation(
+						threadId: $threadId
+						prompt: $prompt 
+						context: $context
+					) 
+					{
+						id
+					}
+				}`;
+
+			let prompt =
+				"As a coding expert I am helpful and very knowledgeable about how to fix errors in code. I will be given errors, stack traces, and code snippets to analyze and fix. Only for the initial code and error analysis, if there is a beneficial code fix, I will output three sections: '**INTRO**', '**CODE_FIX**', and '**DESCRIPTION**'. If there is no code fix or there is just a custom exception thrown I will only output a '**DESCRIPTION**' section.\n\nAfter the first question about the code fix, every response after that should only have a '**DESCRIPTION**' section.\n\nThe output for each section should be markdown formatted.";
+
+			if (request.language) {
+				prompt += `\n\n\ncoding language: ${request.language}`;
+			}
+
+			prompt += `\n\nAnalyze this stack trace:\n\`\`\`\n${request.errorText}\n${request.stackTrace}\n\`\`\``;
+			prompt += `\n\nAnd fix the following code, but only if a fix is truly needed:\n\`\`\`\n${request.codeBlock}\n\`\`\``;
+
+			const initiateNrAiResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
+				initiateNrAiQuery,
+				{
+					threadId: request.threadId,
+					prompt: prompt,
+					context: context,
+				}
+			);
+
+			return { commentId: initiateNrAiResponse.grokCreateGrokInitiatedConversation.id };
+		} catch (ex) {
+			ContextLogger.warn("initializeNrAi failure", {
 				request,
 				error: ex,
 			});
@@ -548,67 +616,10 @@ export class DiscussionsProvider {
 	}
 
 	/**
-	 * Initializes NRAI for a given thread so that it becomes the first comment
-	 *
-	 * @param {InitiateNrAiRequest} request
-	 * @returns {Promise<InitiateNrAiResponse>}
-	 */
-	@lspHandler(InitiateNrAiRequestType)
-	@log()
-	async initializeNrAi(request: InitiateNrAiRequest): Promise<InitiateNrAiResponse> {
-		try {
-			const codeMarkId = await this.createCodeMark({
-				codeBlock: request.codeBlock,
-				fileUri: request.fileUri,
-				permalink: request.permalink,
-				repo: request.repo,
-				sha: request.sha,
-			});
-
-			const context = await this.generateContext(
-				request.entityGuid,
-				request.errorGroupGuid,
-				codeMarkId
-			);
-
-			const initiateNrAiQuery = `
-				mutation($threadId: ID!, $prompt:String!, $context: GrokRawContextMetadata!) {
-					grokCreateGrokInitiatedConversation(
-						threadId: $threadId
-						prompt: $prompt 
-						context: $context
-					) 
-					{
-						id
-					}
-				}`;
-
-			const initiateNrAiResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
-				initiateNrAiQuery,
-				{
-					threadId: request.threadId,
-					prompt:
-						"As a coding expert I am helpful and very knowledgeable about how to fix errors in code. I will be given errors, stack traces, and code snippets to analyze and fix. Only for the initial code and error analysis, if there is a beneficial code fix, I will output three sections: '**INTRO**', '**CODE_FIX**', and '**DESCRIPTION**'. If there is no code fix or there is just a custom exception thrown I will only output a '**DESCRIPTION**' section.\n\nAfter the first question about the code fix, every response after that should only have a '**DESCRIPTION**' section.\n\nThe output for each section should be markdown formatted.",
-					context: context,
-				}
-			);
-
-			return { commentId: initiateNrAiResponse.grokCreateGrokInitiatedConversation.id };
-		} catch (ex) {
-			ContextLogger.warn("initializeNrAi failure", {
-				request,
-				error: ex,
-			});
-
-			return { nrError: mapNRErrorResponse(ex) };
-		}
-	}
-
-	/**
 	 * Creates a codemark for a given code block to be used with NRAI
 	 *
 	 * @param {CreateCodeMarkRequest} request
-	 * @returns {Promise<string>}
+	 * @returns a promise that resolves to the codeMarkId that was created
 	 */
 	private async createCodeMark(request: {
 		codeBlock: string;

@@ -286,6 +286,9 @@ export const CodeError = (props: CodeErrorProps) => {
 			threadId: discussion!.threadId,
 
 			codeBlock: derivedState!.functionToEdit!.codeBlock,
+			stackTrace: stackTraceLines.join("\n"),
+			errorText: `${props.codeError.title} ${props.codeError?.text}`,
+			language: derivedState!.functionToEdit!.language,
 			fileUri: derivedState!.functionToEdit!.uri,
 			permalink: `https://${repoInfo?.url!}`,
 			repo: `https://${repoInfo?.url!}`,

@@ -3,7 +3,6 @@ import { shallowEqual } from "react-redux";
 import { CodeStreamState } from "@codestream/webview/store";
 import { currentUserIsAdminSelector } from "@codestream/webview/store/users/reducer";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
-import { confirmPopup } from "../Confirm";
 import { DropdownButton, DropdownButtonItems } from "../DropdownButton";
 import Icon from "../Icon";
 import Menu from "../Menu";
@@ -46,6 +45,7 @@ export const CodeErrorMenu = (props: CodeErrorMenuProps) => {
 		// 		},
 		// 	});
 		// }
+
 		if (props.codeError?.permalink) {
 			items.push({
 				label: "Copy Link",
@@ -57,32 +57,33 @@ export const CodeErrorMenu = (props: CodeErrorMenuProps) => {
 			});
 		}
 
-		if (isAdmin) {
-			items.push({
-				label: "Delete All Comments",
-				icon: <Icon name="trash" />,
-				key: "deleteAll-permalink",
-				action: () => {
-					confirmPopup({
-						title: "Are you sure?",
-						message:
-							"This will delete all comments in this conversation. Deleting a comment cannot be undone.",
-						centered: true,
-						buttons: [
-							{ label: "Go Back", className: "control-button" },
-							{
-								label: "Delete Comments",
-								className: "delete",
-								wait: true,
-								action: async () => {
-									//await deleteThread();
-								},
-							},
-						],
-					});
-				},
-			});
-		}
+		// Our 'isAdmin' flag doesn't seem to match what NR1 is expecting, so it doesn't work
+		// if (isAdmin) {
+		// 	items.push({
+		// 		label: "Delete All Comments",
+		// 		icon: <Icon name="trash" />,
+		// 		key: "deleteAll-permalink",
+		// 		action: () => {
+		// 			confirmPopup({
+		// 				title: "Are you sure?",
+		// 				message:
+		// 					"This will delete all comments in this conversation. Deleting a comment cannot be undone.",
+		// 				centered: true,
+		// 				buttons: [
+		// 					{ label: "Go Back", className: "control-button" },
+		// 					{
+		// 						label: "Delete Comments",
+		// 						className: "delete",
+		// 						wait: true,
+		// 						action: async () => {
+		// 							//await deleteThread();
+		// 						},
+		// 					},
+		// 				],
+		// 			});
+		// 		},
+		// 	});
+		// }
 
 		return items;
 	}, []);
@@ -103,17 +104,19 @@ export const CodeErrorMenu = (props: CodeErrorMenuProps) => {
 
 	return (
 		<>
-			<DropdownButton
-				items={menuItems}
-				selectedKey={props.errorGroup?.state || "UNKNOWN"}
-				isLoading={isLoading}
-				variant="secondary"
-				size="compact"
-				noChevronDown
-				wrap
-			>
-				<Icon loading={isLoading} name="kebab-horizontal" />
-			</DropdownButton>
+			{menuItems.length > 0 && (
+				<DropdownButton
+					items={menuItems}
+					selectedKey={props.errorGroup?.state || "UNKNOWN"}
+					isLoading={isLoading}
+					variant="secondary"
+					size="compact"
+					noChevronDown
+					wrap
+				>
+					<Icon loading={isLoading} name="kebab-horizontal" />
+				</DropdownButton>
+			)}
 			<textarea
 				readOnly
 				key="permalink-offscreen"
@@ -121,7 +124,7 @@ export const CodeErrorMenu = (props: CodeErrorMenuProps) => {
 				value={props.codeError?.permalink}
 				style={{ position: "absolute", left: "-9999px" }}
 			/>
-			{menuState.open && (
+			{menuItems.length > 0 && menuState.open && (
 				<Menu
 					target={menuState.target}
 					action={() => setMenuState({ open: false })}
