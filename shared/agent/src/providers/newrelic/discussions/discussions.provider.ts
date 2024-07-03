@@ -305,7 +305,7 @@ export class DiscussionsProvider {
 			const context = await this.generateContext(entityGuid, errorGroupGuid);
 
 			const createThreadQuery = `
-				mutation($contextId: ID!, $contextMetadata: GrokRawContextMetadata!) {
+				mutation($contextId: ID!, $contextMetadata: CollaborationRawContextMetadata!) {
 					collaborationCreateThread(
 						contextId: $contextId, 
 						contextMetadata: $contextMetadata
