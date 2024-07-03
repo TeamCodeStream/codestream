@@ -131,6 +131,10 @@ export class NrNRQLProvider {
 		return aliasRegex.test(query);
 	}
 
+	replaceDoubleQuotesWithSingle(query: string): string {
+		return query.replace(/"/g, "'");
+	}
+
 	/**
 	 * Removes comments from the end of a string, unless it has been single-quoted
 	 * 
@@ -159,7 +163,8 @@ export class NrNRQLProvider {
 	}
 
 	transformQuery(nrql: string) {
-		let query = this.removeNrqlComments(nrql);
+		let query = this.replaceDoubleQuotesWithSingle(nrql);
+		query = this.removeNrqlComments(query);
 		query = escapeNrql(query);
 		query = query.replace(/[\n\r]/g, " ").trim();
 		return query;

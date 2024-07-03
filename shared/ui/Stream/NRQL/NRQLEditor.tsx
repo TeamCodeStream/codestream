@@ -157,6 +157,7 @@ export const NRQLEditor = React.forwardRef(
 						token: "string",
 						foreground: "#6cb505",
 					},
+					{ token: "string.escape.invalid", foreground: "#ff0000" },
 					{ token: "comment.nrql", foreground: "#8a939a" },
 				],
 				colors: {},
@@ -168,6 +169,13 @@ export const NRQLEditor = React.forwardRef(
 					{ open: "{", close: "}" },
 					{ open: "[", close: "]" },
 					{ open: "(", close: ")" },
+					{ open: '"', close: '"' },
+				],
+				surroundingPairs: [
+					{ open: "(", close: ")" },
+					{ open: "[", close: "]" },
+					{ open: "{", close: "}" },
+					{ open: '"', close: '"' },
 				],
 				comments: {
 					lineComment: "--",
@@ -204,12 +212,20 @@ export const NRQLEditor = React.forwardRef(
 							"support.function.nrql",
 						],
 						[/'.*?'/, "string"],
+						// Double-quoted string
+						[/"([^"\\]|\\.)*$/, "string.invalid"], // Non-terminated string
+						[/"/, { token: "string.quote", next: "@string" }],
 					],
 					comment: [
 						[/[^*/]+/, "comment"],
 						[/\/\*/, "comment", "@push"],
 						[/\*\//, "comment", "@pop"],
 						[/./, "comment"],
+					],
+					string: [
+						[/[^\\"]+/, "string"],
+						[/\\./, "string.escape.invalid"],
+						[/"/, { token: "string.quote", next: "@pop" }],
 					],
 				},
 			});
