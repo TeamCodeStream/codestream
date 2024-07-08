@@ -24,6 +24,10 @@ interface Props {
 	height: number | string;
 }
 
+interface CellValueAsObject {
+	[key: string | number]: any;
+}
+
 export const NRQLResultsTable = (props: Props) => {
 	// [columnIndex, rowIndex]]
 	const [showCopyIcon, setShowCopyIcon] = useState<[number, number][]>([]);
@@ -58,6 +62,10 @@ export const NRQLResultsTable = (props: Props) => {
 			}
 		} else if (typeof cellValue === "string") {
 			value = cellValue;
+		} else if (typeof cellValue === "object" && cellValue !== null) {
+			let keys = Object.keys(cellValue);
+			let variableKey = parseInt(keys[0], 10);
+			value = String(cellValue[variableKey]);
 		} else {
 			value = String(cellValue);
 		}

@@ -522,7 +522,16 @@ export class NrNRQLProvider {
 			return { selected: "line", enabled: ["table", "json", "line", "area"] };
 		}
 		if (isFacet) {
-			return { selected: "bar", enabled: ["bar", "json", "pie", "table"] };
+			const dataKeys = Object.keys(results[0] || {}).filter(
+				_ => _ !== "facet" && _ !== metadata.facet
+			);
+
+			// Doesn't make sense to have multiple dataKeys for pie or bar charts
+			if (dataKeys.length > 1) {
+				return { selected: "table", enabled: ["table", "json"] };
+			} else {
+				return { selected: "bar", enabled: ["bar", "json", "pie", "table"] };
+			}
 		}
 		return { selected: "table", enabled: ["table", "json"] };
 	}

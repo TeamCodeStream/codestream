@@ -74,7 +74,7 @@ export const NRQLResultsPie = (props: Props) => {
 							<span className="dot" style={{ color: entry.color, marginRight: "6px" }}>
 								●
 							</span>
-							<span>{entry?.value}</span>
+							<span style={{ wordBreak: "break-all", marginRight: "6px" }}>{entry?.value}</span>
 						</div>
 						<div title={k}>{entry.payload.value}</div>
 					</div>
