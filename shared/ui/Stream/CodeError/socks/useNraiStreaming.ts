@@ -2,6 +2,7 @@ import { SocketClient } from "@codestream/webview/Stream/CodeError/socks/SockCli
 import { useAppDispatch, useDidMount } from "@codestream/webview/utilities/hooks";
 import {
 	appendStreamingResponse,
+	CommentMsg,
 	StreamingResponseMsg,
 } from "@codestream/webview/store/discussions/discussionsSlice";
 
@@ -17,6 +18,7 @@ async function initWebsockets(handler: (data: StreamingResponseMsg) => void) {
 			},
 			"codestream-non-nerdpack"
 		);
+		sockClient.onEvent({ eventName: "COMMENT", handler }, "codestream-non-nerdpack");
 		await sockClient.init();
 	}
 }
@@ -24,7 +26,7 @@ async function initWebsockets(handler: (data: StreamingResponseMsg) => void) {
 export default function useNraiStreaming() {
 	const dispatch = useAppDispatch();
 
-	const handler = async (data: StreamingResponseMsg) => {
+	const handler = async (data: StreamingResponseMsg | CommentMsg) => {
 		// console.log("GROKSTREAM hook", data);
 		dispatch(appendStreamingResponse(data));
 	};

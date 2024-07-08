@@ -114,27 +114,31 @@ export const discussionSlice = createSlice({
 				}
 			}
 		},
-		appendStreamingResponse: (state, action: PayloadAction<StreamingResponseMsg>) => {
+		appendStreamingResponse: (state, action: PayloadAction<StreamingResponseMsg | CommentMsg>) => {
+			// TODO race condition if we receive a CommentMsg for a completely different thread before the StreamingResponseMsg
 			if (!state.activeDiscussion) return;
-			console.debug("*** appendStreamingResponse", action.payload.content);
 			// Lookup streamingPosts by threadId (conversation_id)
-			const threadId = action.payload.conversation_id;
-			const recombinedStream = state.streamingPosts[threadId] ?? {
+			const threadId = isCommentMsg(action.payload)
+				? action.payload.meta.threadId
+				: action.payload.conversation_id;
+			const commentId = isCommentMsg(action.payload)
+				? action.payload.id
+				: action.payload.meta.reply_to_comment_id;
+			const recombinedStream: RecombinedStream = state.streamingPosts[threadId] ?? {
 				items: [],
 				receivedDoneEvent: false,
 				content: "",
+				threadId,
 			};
 			// recombinedStream gets updated in place
 			advanceRecombinedStream(recombinedStream, action.payload);
 			state.streamingPosts[threadId] = recombinedStream;
 			// Find the matching comment in the activeDiscussion and update its parts
-			let comment = state.activeDiscussion.comments.find(
-				comment => comment.id === action.payload.meta.reply_to_comment_id
-			);
+			let comment = state.activeDiscussion.comments.find(comment => comment.id === commentId);
 			if (!comment) {
 				// add new comment
 				comment = {
-					id: action.payload.meta.reply_to_comment_id,
+					id: commentId,
 					createdAt: Date.now().toString(),
 					deactivated: false,
 					creator: {

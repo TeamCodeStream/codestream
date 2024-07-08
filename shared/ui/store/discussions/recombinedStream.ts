@@ -9,6 +9,7 @@ export const NRAI_TIMEOUT = 2 * 60 * 1000; // 2 minutes
 
 export type RecombinedStream = {
 	items: StreamingResponseMsg[];
+	threadId: string;
 	content: string;
 	parts?: PostParts;
 	receivedDoneEvent: boolean;
@@ -60,8 +61,15 @@ export function advanceRecombinedStream(
 		(a, b) =>
 			(a?.sequence_id ?? Number.MAX_SAFE_INTEGER) - (b?.sequence_id ?? Number.MAX_SAFE_INTEGER)
 	);
-	recombinedStream.receivedDoneEvent =
-		isCommentMsg(payload) && payload.meta.action === "comment.created";
+	if (isCommentMsg(payload)) {
+		const receivedDoneEvent =
+			payload.meta.action === "comment.created" &&
+			payload.meta.threadId === recombinedStream.threadId;
+		if (receivedDoneEvent) {
+			console.debug(`advanceRecombinedStream receivedDoneEvent ${receivedDoneEvent}`);
+			recombinedStream.receivedDoneEvent = receivedDoneEvent;
+		}
+	}
 	const start =
 		recombinedStream.lastContentIndex !== undefined ? recombinedStream.lastContentIndex + 1 : 0;
 	for (let i = start; i < recombinedStream.items.length; i++) {
