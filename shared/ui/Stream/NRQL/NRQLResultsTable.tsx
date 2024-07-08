@@ -24,10 +24,6 @@ interface Props {
 	height: number | string;
 }
 
-interface CellValueAsObject {
-	[key: string | number]: any;
-}
-
 export const NRQLResultsTable = (props: Props) => {
 	// [columnIndex, rowIndex]]
 	const [showCopyIcon, setShowCopyIcon] = useState<[number, number][]>([]);
