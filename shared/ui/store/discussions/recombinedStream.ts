@@ -1,10 +1,14 @@
-import { GrokStreamEvent } from "@codestream/webview/store/posts/types";
 import { PostParts } from "@codestream/protocols/api";
+import {
+	CommentMsg,
+	isCommentMsg,
+	StreamingResponseMsg,
+} from "@codestream/webview/store/discussions/discussionsSlice";
 
 export const NRAI_TIMEOUT = 2 * 60 * 1000; // 2 minutes
 
 export type RecombinedStream = {
-	items: GrokStreamEvent[];
+	items: StreamingResponseMsg[];
 	content: string;
 	parts?: PostParts;
 	receivedDoneEvent: boolean;
@@ -46,19 +50,23 @@ export function extractParts(content: string): PostParts {
 
 export function advanceRecombinedStream(
 	recombinedStream: RecombinedStream,
-	payload: GrokStreamEvent[]
+	payload: StreamingResponseMsg | CommentMsg
 ) {
 	recombinedStream.lastMessageReceivedAt = Date.now();
-	recombinedStream.items = recombinedStream.items.concat(payload);
+	if (!isCommentMsg(payload)) {
+		recombinedStream.items = recombinedStream.items.concat(payload);
+	}
 	recombinedStream.items.sort(
-		(a, b) => (a?.sequence ?? Number.MAX_SAFE_INTEGER) - (b?.sequence ?? Number.MAX_SAFE_INTEGER)
+		(a, b) =>
+			(a?.sequence_id ?? Number.MAX_SAFE_INTEGER) - (b?.sequence_id ?? Number.MAX_SAFE_INTEGER)
 	);
-	recombinedStream.receivedDoneEvent = payload.find(it => it.done) !== undefined;
+	recombinedStream.receivedDoneEvent =
+		isCommentMsg(payload) && payload.meta.action === "comment.created";
 	const start =
 		recombinedStream.lastContentIndex !== undefined ? recombinedStream.lastContentIndex + 1 : 0;
 	for (let i = start; i < recombinedStream.items.length; i++) {
 		const item = recombinedStream.items[i];
-		if (item.sequence !== i) {
+		if (item.sequence_id !== i) {
 			return;
 		}
 		if (item.content) {
@@ -72,15 +80,14 @@ export function advanceRecombinedStream(
 // A stream is done if it has a done event and there are no gaps in the sequence and it is not timed out
 export function isNrAiStreamDone(stream: RecombinedStream) {
 	if (stream.lastMessageReceivedAt && Date.now() - stream.lastMessageReceivedAt > NRAI_TIMEOUT) {
-		console.warn("Grok stream timed out");
+		console.warn("NRAI stream timed out");
 		return true;
 	}
 	for (let i = 0; i < stream.items.length; i++) {
 		const item = stream.items[i];
-		if (item.sequence !== i) {
+		if (item.sequence_id !== i) {
 			return false;
 		}
 	}
-	const lastItem = stream.items[stream.items.length - 1];
-	return lastItem && lastItem.done;
+	return stream.receivedDoneEvent;
 }

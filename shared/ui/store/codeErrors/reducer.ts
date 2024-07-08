@@ -81,9 +81,9 @@ export function reduceCodeErrors(
 		case CodeErrorsActionsTypes.SetFunctionToEditFailed: {
 			return { ...state, functionToEditFailed: action.payload };
 		}
-		case CodeErrorsActionsTypes.SetGrokError: {
-			return { ...state, grokError: action.payload };
-		}
+		// case CodeErrorsActionsTypes.SetGrokError: {
+		// 	return { ...state, grokError: action.payload };
+		// }
 		case CodeErrorsActionsTypes.SetGrokRepliesLength: {
 			return { ...state, grokRepliesLength: action.payload };
 		}

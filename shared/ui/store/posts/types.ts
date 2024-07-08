@@ -1,6 +1,6 @@
 import { CodemarkPlus, PostPlus } from "@codestream/protocols/agent";
 import { Index } from "@codestream/utils/types";
-import { RecombinedStream } from "@codestream/webview/store/posts/recombinedStream";
+import { RecombinedStream } from "@codestream/webview/store/discussions/recombinedStream";
 
 export interface PendingPost
 	extends Pick<

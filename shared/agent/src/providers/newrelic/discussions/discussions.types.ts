@@ -31,7 +31,7 @@ export interface CommentsByThreadIdResponse {
 					deactivated: boolean;
 					id: string;
 					systemMessageType: string;
-					createdAt: number;
+					createdAt: string;
 					creator: {
 						email: string;
 						name: string;

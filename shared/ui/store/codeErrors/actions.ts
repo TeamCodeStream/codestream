@@ -1,8 +1,4 @@
-import {
-	CSAsyncGrokError,
-	DeleteCodeErrorRequestType,
-	NewRelicErrorGroup,
-} from "@codestream/protocols/agent";
+import { DeleteCodeErrorRequestType, NewRelicErrorGroup } from "@codestream/protocols/agent";
 import { CSCodeError } from "@codestream/protocols/api";
 import { logError } from "@codestream/webview/logger";
 import { HostApi } from "@codestream/webview/webview-api";
@@ -32,8 +28,8 @@ export const setFunctionToEdit = (functionToEdit: FunctionToEdit | undefined) =>
 export const setFunctionToEditFailed = (value: boolean) =>
 	action(CodeErrorsActionsTypes.SetFunctionToEditFailed, value);
 
-export const setGrokError = (grokError: CSAsyncGrokError | undefined) =>
-	action(CodeErrorsActionsTypes.SetGrokError, grokError);
+// export const setGrokError = (grokError: CSAsyncGrokError | undefined) =>
+// 	action(CodeErrorsActionsTypes.SetGrokError, grokError);
 
 export const setDemoMode = (enabled: boolean) =>
 	action(CodeErrorsActionsTypes.SetDemoMode, enabled);

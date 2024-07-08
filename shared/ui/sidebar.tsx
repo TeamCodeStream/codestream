@@ -25,7 +25,6 @@ import {
 	VerifyConnectivityResponse,
 	GetObservabilityErrorGroupMetadataRequestType,
 	GetObservabilityErrorGroupMetadataResponse,
-	CSAsyncGrokError,
 	DidChangeSessionTokenStatusNotificationType,
 	GetReposScmResponse,
 } from "@codestream/protocols/agent";
@@ -37,12 +36,7 @@ import { Range } from "vscode-languageserver-types";
 
 import { logError, logWarning } from "@codestream/webview/logger";
 import { setBootstrapped } from "@codestream/webview/store/bootstrapped/actions";
-import {
-	handleGrokChonk,
-	handleGrokError,
-	openErrorGroup,
-	resolveStackTraceLine,
-} from "@codestream/webview/store/codeErrors/thunks";
+import { openErrorGroup, resolveStackTraceLine } from "@codestream/webview/store/codeErrors/thunks";
 import { updateConfigs } from "@codestream/webview/store/configs/slice";
 import { fetchReview } from "@codestream/webview/store/reviews/thunks";
 import { switchToTeam } from "@codestream/webview/store/session/thunks";
@@ -269,14 +263,14 @@ function listenForEvents(store: StoreType) {
 			case ChangeDataType.ApiCapabilities:
 				store.dispatch(apiCapabilitiesUpdated(data));
 				break;
-			case ChangeDataType.AsyncError:
-				// Only 1 error type right now
-				store.dispatch(handleGrokError(data[0] as CSAsyncGrokError));
-				break;
-			case ChangeDataType.GrokStream:
-				// console.log("GrokStream", data);
-				store.dispatch(handleGrokChonk(data));
-				break;
+			// case ChangeDataType.AsyncError:
+			// 	// Only 1 error type right now
+			// 	store.dispatch(handleGrokError(data[0] as CSAsyncGrokError));
+			// 	break;
+			// case ChangeDataType.GrokStream:
+			// 	// console.log("GrokStream", data);
+			// 	store.dispatch(handleGrokChonk(data));
+			// 	break;
 			default:
 				store.dispatch({ type: `ADD_${type.toUpperCase()}`, payload: data });
 		}

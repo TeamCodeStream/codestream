@@ -204,7 +204,7 @@ export class SocketClient {
 		const { action } = payload.meta;
 		const { type } = payload;
 
-		console.debug("INCOMING SOCKET MESSAGE", action, payload);
+		// console.debug("INCOMING SOCKET MESSAGE", action, payload);
 
 		if (isEmpty(this.executionMap)) {
 			return;
@@ -213,7 +213,10 @@ export class SocketClient {
 		each(this.executionMap, execution => {
 			const { eventName } = execution;
 
-			if (type === GROKSTREAM_MESSAGE && eventName === GROKSTREAM_MESSAGE) {
+			if (
+				(type === GROKSTREAM_MESSAGE && eventName === GROKSTREAM_MESSAGE) ||
+				(type === "COMMENT" && eventName === "COMMENT")
+			) {
 				this.executeHandler(execution, payload);
 				return;
 			}

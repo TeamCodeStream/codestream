@@ -1,6 +1,6 @@
-import { CollaborationComment } from "@codestream/protocols/agent";
+import { CSCollaborationComment } from "@codestream/webview/store/discussions/discussionsSlice";
 
 export type Discussion = {
-	comments: CollaborationComment[];
+	comments: CSCollaborationComment[];
 	threadId: string;
 };

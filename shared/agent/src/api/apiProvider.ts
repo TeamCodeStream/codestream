@@ -21,8 +21,6 @@ import {
 	CreateExternalPostRequest,
 	CreatePostRequest,
 	CreatePostResponse,
-	CSAsyncError,
-	CSGrokStream,
 	DeclineInviteRequest,
 	DeclineInviteResponse,
 	DeleteCodeErrorRequest,
@@ -235,16 +233,6 @@ export interface CodeErrorsRTMessage {
 	data: CSCodeError[];
 }
 
-export interface AsyncErrorRTMessage {
-	type: MessageType.AsyncError;
-	data: CSAsyncError[];
-}
-
-export interface GrokStreamRTMessage {
-	type: MessageType.GrokStream;
-	data: CSGrokStream[];
-}
-
 export interface AnomalyDataRTMessage {
 	type: MessageType.AnomalyData;
 	data: any;
@@ -296,8 +284,6 @@ export type RTMessage =
 	| StreamsRTMessage
 	| TeamsRTMessage
 	| UsersRTMessage
-	| AsyncErrorRTMessage
-	| GrokStreamRTMessage
 	| AnomalyDataRTMessage
 	| EchoMessage;
 

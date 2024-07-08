@@ -639,18 +639,6 @@ export class CodeStreamSession {
 					data: e.data,
 				});
 				break;
-			case MessageType.AsyncError:
-				this.agent.sendNotification(DidChangeDataNotificationType, {
-					type: ChangeDataType.AsyncError,
-					data: e.data,
-				});
-				break;
-			case MessageType.GrokStream:
-				this.agent.sendNotification(DidChangeDataNotificationType, {
-					type: ChangeDataType.GrokStream,
-					data: e.data,
-				});
-				break;
 			case MessageType.Streams:
 				this._onDidChangeStreams.fire(e.data);
 				this.agent.sendNotification(DidChangeDataNotificationType, {

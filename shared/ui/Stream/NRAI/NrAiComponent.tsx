@@ -1,12 +1,9 @@
 import React, { useCallback, useContext, useMemo } from "react";
-import { NewRelicErrorGroup, PostPlus } from "@codestream/protocols/agent";
+import { NewRelicErrorGroup } from "@codestream/protocols/agent";
 import { MarkdownText } from "@codestream/webview/Stream/MarkdownText";
 import styled, { ThemeContext } from "styled-components";
 import { Button } from "@codestream/webview/src/components/Button";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
-import { isGrokStreamLoading } from "@codestream/webview/store/posts/reducer";
-import { isPending } from "@codestream/webview/store/posts/types";
-import { NrAiFeedback } from "./NrAiFeedback";
 import { replaceSymbol } from "@codestream/webview/store/codeErrors/thunks";
 import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
 import { NrAiCodeBlockLoading, NrAiLoading } from "./NrAiLoading";
@@ -14,10 +11,12 @@ import { DiffEditor, useMonaco } from "@monaco-editor/react";
 import { isDarkTheme } from "@codestream/webview/src/themes";
 import { HostApi } from "@codestream/webview/webview-api";
 import { URI } from "vscode-uri";
-import { setApplyFixCallback } from "@codestream/webview/store/codeErrors/api/apiResolver";
-import { CodeStreamState } from "@codestream/webview/store";
 import { MarkdownContent } from "../Discussions/Comment";
 import { normalizeCodeMarkdown } from "./patchHelper";
+import {
+	CSCollaborationComment,
+	isNraiStreamLoading,
+} from "@codestream/webview/store/discussions/discussionsSlice";
 
 export const DiffSection = styled.div`
 	margin: 10px 0;
@@ -31,10 +30,10 @@ export const ButtonRow = styled.div`
 `;
 
 export type NrAiComponentProps = {
-	post: PostPlus;
-	postText: string;
+	post: CSCollaborationComment;
+	// postText: string;
 	errorGroup: NewRelicErrorGroup;
-	codeErrorId?: string;
+	// codeErrorId?: string;
 	functionToEdit?: FunctionToEdit;
 	file?: string;
 };
@@ -50,8 +49,8 @@ function Markdown(props: { text: string }) {
 export function NrAiComponent(props: NrAiComponentProps) {
 	const dispatch = useAppDispatch();
 	const monaco = useMonaco();
-	const isGrokLoading = useAppSelector(isGrokStreamLoading);
-	const demoMode = useAppSelector((state: CodeStreamState) => state.codeErrors.demoMode);
+	const isStreamLoading = useAppSelector(isNraiStreamLoading);
+	// const demoMode = useAppSelector((state: CodeStreamState) => state.codeErrors.demoMode);
 	const hasIntro = useMemo(
 		() => props.post.parts?.intro && props.post.parts.intro.length > 0,
 		[props.post.parts?.intro]
@@ -61,31 +60,31 @@ export function NrAiComponent(props: NrAiComponentProps) {
 		[props.post.parts?.description]
 	);
 	const showGrokLoader = useMemo(
-		() => !hasIntro && !hasDescription && isGrokLoading,
-		[isGrokLoading, hasIntro, hasDescription]
+		() => !hasIntro && !hasDescription && isStreamLoading,
+		[isStreamLoading, hasIntro, hasDescription]
 	);
 	const showCodeBlockLoader = useMemo(
-		() => !props.post.parts?.description && isGrokLoading,
-		[isGrokLoading, props.post.parts?.description]
+		() => !props.post.parts?.description && isStreamLoading,
+		[isStreamLoading, props.post.parts?.description]
 	);
 	const showApplyFix = useMemo(
-		() => !!props.post.parts?.codeFix && !isGrokLoading,
-		[props.post.parts?.codeFix, isGrokLoading]
+		() => !!props.post.parts?.codeFix && !isStreamLoading,
+		[props.post.parts?.codeFix, isStreamLoading]
 	);
 	const themeContext = useContext(ThemeContext);
 	const isTheThemeDark = useMemo(() => {
 		return isDarkTheme(themeContext);
 	}, [themeContext]);
 
-	const showFeedback = useMemo(() => {
-		return (
-			!isGrokLoading &&
-			!isPending(props.post) &&
-			props.codeErrorId &&
-			props.post.forGrok &&
-			props.post.parts?.description
-		);
-	}, [props.post.forGrok, isGrokLoading, props.codeErrorId, props.post.parts?.description]);
+	// const showFeedback = useMemo(() => {
+	// 	return (
+	// 		!isGrokLoading &&
+	// 		!isPending(props.post) &&
+	// 		props.codeErrorId &&
+	// 		props.post.forGrok &&
+	// 		props.post.parts?.description
+	// 	);
+	// }, [props.post.forGrok, isGrokLoading, props.codeErrorId, props.post.parts?.description]);
 
 	const parts = props.post.parts;
 
@@ -124,19 +123,18 @@ export function NrAiComponent(props: NrAiComponentProps) {
 		}
 	}, [normalizedCodeFix, props.errorGroup, props.file, props.functionToEdit]);
 
-	useMemo(() => {
-		if (demoMode.enabled) {
-			setApplyFixCallback(applyFix);
-		}
-	}, [applyFix]);
+	// useMemo(() => {
+	// 	if (demoMode.enabled) {
+	// 		setApplyFixCallback(applyFix);
+	// 	}
+	// }, [applyFix]);
 
 	const linesChanged = useMemo(() => {
 		if (monaco && monaco.editor.getDiffEditors().length > 0) {
 			const lineChanges = monaco.editor.getDiffEditors()[0].getLineChanges();
-			// console.log(`*** lineChanges: ${lineChanges?.length}`);
 			return lineChanges?.length ?? 0;
 		}
-		return 0;
+		return undefined;
 	}, [monaco?.editor.getDiffEditors()]);
 
 	return (
@@ -148,7 +146,7 @@ export function NrAiComponent(props: NrAiComponentProps) {
 				props.file &&
 				props.functionToEdit?.codeBlock &&
 				normalizedCodeFix && (
-					<DiffSection hidden={linesChanged === 0}>
+					<DiffSection>
 						<DiffEditor
 							original={props.functionToEdit?.codeBlock}
 							modified={normalizedCodeFix}
@@ -171,11 +169,11 @@ export function NrAiComponent(props: NrAiComponentProps) {
 				)}
 			{linesChanged === 0 && <div style={{ marginTop: "10px" }}></div>}
 			<Markdown text={parts?.description ?? ""} />
-			{showFeedback && (
-				<>
-					<NrAiFeedback errorGroupGuid={props.codeErrorId!} />
-				</>
-			)}
+			{/*{showFeedback && (*/}
+			{/*	<>*/}
+			{/*		<NrAiFeedback errorGroupGuid={props.codeErrorId!} />*/}
+			{/*	</>*/}
+			{/*)}*/}
 		</section>
 	);
 }

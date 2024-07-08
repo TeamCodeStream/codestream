@@ -29,7 +29,6 @@ import Tooltip from "../Tooltip";
 import { isFeatureEnabled } from "../../store/apiVersioning/reducer";
 import { getNrCapability } from "@codestream/webview/store/nrCapabilities/thunks";
 import { CommentInput } from "../Discussions/Comment";
-import { Discussion } from "@codestream/webview/store/types";
 import { DiscussionLoadingSkeleton } from "../Discussions/SkeletonLoader";
 import {
 	CodeErrorProps,
@@ -46,19 +45,12 @@ import { Loading } from "@codestream/webview/Container/Loading";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { CSStackTraceLine } from "@codestream/protocols/api";
 import { parseId } from "@codestream/webview/utilities/newRelic";
-import { SocketClient } from "@codestream/webview/Stream/CodeError/socks/SockClient";
-
-let sockClient: SocketClient | undefined;
-
-async function initWebsockets() {
-	if (!sockClient) {
-		sockClient = new SocketClient();
-		await sockClient.connect();
-	}
-}
+import { setActiveDiscussion } from "@codestream/webview/store/discussions/discussionsSlice";
+import useNraiStreaming from "@codestream/webview/Stream/CodeError/socks/useNraiStreaming";
 
 export const CodeError = (props: CodeErrorProps) => {
 	const dispatch = useAppDispatch();
+	const streaming = useNraiStreaming();
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const currentCodeErrorData = state.context.currentCodeErrorData;
@@ -75,6 +67,7 @@ export const CodeError = (props: CodeErrorProps) => {
 			ideName: state.ide.name,
 			grokNraiCapability: state.nrCapabilities.nrai === true,
 			grokFeatureEnabled: isFeatureEnabled(state, "showGrok"),
+			discussion: state.discussions.activeDiscussion,
 		};
 	}, shallowEqual);
 
@@ -89,15 +82,15 @@ export const CodeError = (props: CodeErrorProps) => {
 	const [discussionError, setDiscussionError] = useState<string>();
 	const [stackTraceError, setStackTraceError] = useState<string>();
 
-	const [discussion, setDiscussion] = useState<Discussion | undefined>(undefined);
 	const [discussionIsLoading, setDiscussionIsLoading] = useState<boolean>(false);
 	const [NRAILoading, setNRAILoading] = useState<boolean>(false);
 	const [currentNrAiFile, setCurrentNrAiFile] = useState<string | undefined>(undefined);
 	const [selectedLineIndex, setSelectedLineIndex] = useState<number | undefined>(undefined);
 
+	const { discussion } = derivedState;
+
 	useDidMount(() => {
 		dispatch(getNrCapability("nrai"));
-		initWebsockets();
 	});
 
 	useEffect(() => {
@@ -323,8 +316,8 @@ export const CodeError = (props: CodeErrorProps) => {
 			setDiscussionIsLoading(true);
 
 			const payload: GetErrorInboxCommentsRequest = {
-				errorGroupGuid: errorGroupGuid!,
-				entityGuid: entityGuid!,
+				errorGroupGuid: errorGroupGuid,
+				entityGuid: entityGuid,
 			};
 
 			const response = await HostApi.instance.send(GetErrorInboxCommentsRequestType, payload);
@@ -337,10 +330,19 @@ export const CodeError = (props: CodeErrorProps) => {
 					}
 				);
 			} else {
-				setDiscussion({
-					threadId: response.threadId!,
-					comments: response.comments!,
-				});
+				if (!response.threadId || !response.comments) {
+					handleDiscussionError(
+						"An error occurred while attempting to load this error's discussion.",
+						{ error: new Error("Empty response") }
+					);
+					return;
+				}
+				dispatch(
+					setActiveDiscussion({
+						threadId: response.threadId,
+						comments: response.comments,
+					})
+				);
 			}
 		} catch (ex) {
 			handleDiscussionError("An error occurred while attempting to load this error's discussion.", {
@@ -564,11 +566,11 @@ export const CodeError = (props: CodeErrorProps) => {
 							{<MetaLabel>Discussion</MetaLabel>}
 
 							<DiscussionThread
-								discussion={discussion}
 								file={currentNrAiFile}
 								functionToEdit={derivedState.functionToEdit}
 								isLoading={discussionIsLoading}
 								reloadDiscussion={loadDiscussion}
+								errorGroup={props.errorGroup}
 							/>
 
 							<ComposeWrapper>

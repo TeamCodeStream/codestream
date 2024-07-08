@@ -14,7 +14,6 @@ import Icon from "../Icon";
 import { MarkdownText } from "../MarkdownText";
 import { MessageInput } from "../MessageInput";
 import { AddReactionIcon } from "../Reactions";
-import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
 import { CSCodeError, CSUser } from "@codestream/protocols/api";
 import { AskGrok } from "../NRAI/AskGrok";
 import Tooltip from "../Tooltip";
@@ -166,8 +165,6 @@ const ComposeWrapper = styled.div.attrs(() => ({
 export interface CommentProps {
 	comment: CollaborationComment;
 	editingCommentId?: string;
-	file?: string;
-	functionToEdit?: FunctionToEdit;
 	isLoading?: boolean;
 	reloadDiscussion?: Function;
 }

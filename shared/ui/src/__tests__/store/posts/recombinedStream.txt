@@ -5,7 +5,7 @@ import {
 	NRAI_TIMEOUT,
 	isNrAiStreamDone,
 	RecombinedStream,
-} from "@codestream/webview/store/posts/recombinedStream";
+} from "@codestream/webview/store/discussions/recombinedStream";
 
 describe("RecombinedStream", () => {
 	it("should updateParts", () => {

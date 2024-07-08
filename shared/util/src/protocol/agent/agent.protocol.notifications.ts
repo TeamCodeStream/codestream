@@ -73,7 +73,7 @@ export enum ChangeDataType {
 	ApiCapabilities = "apiCapabilities",
 	Workspace = "workspace",
 	AsyncError = "asyncError",
-	GrokStream = "grokStream",
+	// GrokStream = "grokStream",
 	AnomalyData = "anomalyData"
 }
 
@@ -105,29 +105,29 @@ export interface CSAsyncError {
 	};
 }
 
-export interface CSAsyncGrokError extends CSAsyncError {
-	extra: {
-		codeErrorId: string;
-		topmostPostId: string;
-		postId?: string;
-		streamId?: string;
-	};
-}
+// export interface CSAsyncGrokError extends CSAsyncError {
+// 	extra: {
+// 		codeErrorId: string;
+// 		topmostPostId: string;
+// 		postId?: string;
+// 		streamId?: string;
+// 	};
+// }
 
-export interface CSGrokStream {
-	sequence?: number;
-	content?: {
-		content: string;
-		role: string;
-	};
-	extra: {
-		topmostPostId: string;
-		codeErrorId: string;
-		postId: string;
-		streamId: string;
-		done?: boolean;
-	};
-}
+// export interface CSGrokStream {
+// 	sequence?: number;
+// 	content?: {
+// 		content: string;
+// 		role: string;
+// 	};
+// 	extra: {
+// 		topmostPostId: string;
+// 		codeErrorId: string;
+// 		postId: string;
+// 		streamId: string;
+// 		done?: boolean;
+// 	};
+// }
 
 export interface PostsChangedNotification {
 	type: ChangeDataType.Posts;
@@ -164,15 +164,15 @@ export interface CodeErrorsChangedNotification {
 	data: CSCodeError[];
 }
 
-export interface GrokExceptionChangedNotification {
-	type: ChangeDataType.AsyncError;
-	data: CSAsyncError[];
-}
+// export interface GrokExceptionChangedNotification {
+// 	type: ChangeDataType.AsyncError;
+// 	data: CSAsyncError[];
+// }
 
-export interface GrokStreamChangedNotification {
-	type: ChangeDataType.GrokStream;
-	data: CSGrokStream[];
-}
+// export interface GrokStreamChangedNotification {
+// 	type: ChangeDataType.GrokStream;
+// 	data: CSGrokStream[];
+// }
 
 export interface StreamsChangedNotification {
 	type: ChangeDataType.Streams;
@@ -243,9 +243,9 @@ export type DidChangeDataNotification =
 	| ProvidersChangedNotification
 	| ApiCapabilitiesChangedNotification
 	| CommitsChangedNotification
-	| WorkspaceChangedNotification
-	| GrokExceptionChangedNotification
-	| GrokStreamChangedNotification;
+	| WorkspaceChangedNotification;
+	// | GrokExceptionChangedNotification
+	// | GrokStreamChangedNotification;
 
 export const DidChangeDataNotificationType = new NotificationType<DidChangeDataNotification, void>(
 	"codestream/didChangeData"

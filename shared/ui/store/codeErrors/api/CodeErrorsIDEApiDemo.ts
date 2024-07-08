@@ -13,9 +13,7 @@ import {
 import { CodeErrorsIDEApi } from "@codestream/webview/store/codeErrors/api/CodeErrorsIDEApi";
 import { HostApi } from "@codestream/webview/webview-api";
 import { wait } from "@codestream/webview/utils";
-import { getDemoNrAiStream } from "@codestream/webview/store/codeErrors/api/data/nraiStream";
 import {
-	codeErrorId,
 	parentPostId,
 	postId,
 	streamId,
@@ -38,7 +36,7 @@ class CodeErrorsIDEApiDemo implements CodeErrorsIDEApi {
 		if (!nraiUserId) {
 			return;
 		}
-		const demoGrokStream = getDemoNrAiStream(streamId, postId, parentPostId, codeErrorId);
+		const demoGrokStream = [];
 		HostApi.instance.emit(DidChangeDataNotificationType.method, {
 			type: "posts",
 			data: getAddPostsMain(streamId, postId, parentPostId, nraiUserId),

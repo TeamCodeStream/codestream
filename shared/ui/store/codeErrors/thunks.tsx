@@ -1,6 +1,4 @@
 import {
-	CSAsyncGrokError,
-	CSGrokStream,
 	DidResolveStackTraceLineNotification,
 	GetNewRelicErrorGroupRequest,
 	GetObservabilityErrorsRequest,
@@ -20,13 +18,9 @@ import {
 	handleDirectives,
 	setFunctionToEdit,
 	setFunctionToEditFailed,
-	setGrokError,
-	setGrokLoading,
 } from "@codestream/webview/store/codeErrors/actions";
 import { setCurrentCodeErrorData } from "@codestream/webview/store/context/actions";
 import { createAppAsyncThunk } from "@codestream/webview/store/helper";
-import { appendGrokStreamingResponse } from "@codestream/webview/store/posts/actions";
-import { GrokStreamEvent } from "@codestream/webview/store/posts/types";
 import { highlightRange } from "@codestream/webview/Stream/api-functions";
 import { Position, Range } from "vscode-languageserver-types";
 import { URI } from "vscode-uri";
@@ -35,7 +29,6 @@ import {
 	codeErrorsIDEApi,
 } from "@codestream/webview/store/codeErrors/api/apiResolver";
 import { CodeErrorData } from "@codestream/protocols/webview";
-import { deletePostApi } from "@codestream/webview/store/posts/thunks";
 
 export const updateCodeErrors =
 	(codeErrors: CSCodeError[]) => async (dispatch, getState: () => CodeStreamState) => {
@@ -517,26 +510,18 @@ export const resolveStackTrace = createAppAsyncThunk(
 }; */
 }
 
-export const handleGrokError = (grokError: CSAsyncGrokError) => dispatch => {
-	dispatch(setGrokLoading(false));
-	dispatch(setGrokError(grokError));
-	if (grokError.extra.streamId && grokError.extra.postId) {
-		dispatch(deletePostApi({ streamId: grokError.extra.streamId, postId: grokError.extra.postId }));
-	}
-};
-
-export const handleGrokChonk = (events: CSGrokStream[]) => dispatch => {
-	if (events.length === 0) return;
-	const grokStoreEvents: GrokStreamEvent[] = events.map(e => ({
-		sequence: e.sequence,
-		postId: e.extra.postId,
-		streamId: e.extra.streamId,
-		content: e?.content?.content,
-		done: e.extra.done === true,
-	}));
-
-	dispatch(appendGrokStreamingResponse(grokStoreEvents));
-};
+// export const handleGrokChonk = (events: CSGrokStream[]) => dispatch => {
+// 	if (events.length === 0) return;
+// 	const grokStoreEvents: GrokStreamEvent[] = events.map(e => ({
+// 		sequence: e.sequence,
+// 		postId: e.extra.postId,
+// 		streamId: e.extra.streamId,
+// 		content: e?.content?.content,
+// 		done: e.extra.done === true,
+// 	}));
+//
+// 	dispatch(appendGrokStreamingResponse(grokStoreEvents));
+// };
 
 // TODO async thunk, check demo mode, delegate
 export const doGetObservabilityErrors = createAppAsyncThunk(

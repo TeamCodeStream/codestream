@@ -7,11 +7,9 @@ import * as actions from "./actions";
 import { isPending, Post, PostsActionsType, PostsState } from "./types";
 import { PostPlus } from "@codestream/protocols/agent";
 import {
-	advanceRecombinedStream,
 	extractParts,
 	isNrAiStreamDone,
-	RecombinedStream,
-} from "@codestream/webview/store/posts/recombinedStream";
+} from "@codestream/webview/store/discussions/recombinedStream";
 import { Index } from "@codestream/utils/types";
 
 type PostsActions = ActionType<typeof actions>;
@@ -64,31 +62,31 @@ export function reducePosts(state: PostsState = initialState, action: PostsActio
 			});
 			return nextState;
 		}
-		case PostsActionsType.AppendGrokStreamingResponse: {
-			const nextState: PostsState = {
-				pending: [...state.pending],
-				byStream: { ...state.byStream },
-				streamingPosts: { ...state.streamingPosts },
-				postThreadsLoading: state.postThreadsLoading,
-			};
-			const { streamId, postId } = action.payload[0];
-			const recombinedStream: RecombinedStream = nextState.streamingPosts[postId] ?? {
-				items: [],
-				receivedDoneEvent: false,
-				content: "",
-			};
-			advanceRecombinedStream(recombinedStream, action.payload);
-			// console.debug(`=== recombinedStream ${JSON.stringify(recombinedStream, null, 2)}`);
-			nextState.streamingPosts[postId] = recombinedStream;
-			const post = nextState.byStream[streamId][postId];
-			if (recombinedStream.content && post) {
-				post.text = recombinedStream.content;
-			}
-			if (recombinedStream.parts && post) {
-				post.parts = recombinedStream.parts;
-			}
-			return nextState;
-		}
+		// case PostsActionsType.AppendGrokStreamingResponse: {
+		// 	const nextState: PostsState = {
+		// 		pending: [...state.pending],
+		// 		byStream: { ...state.byStream },
+		// 		streamingPosts: { ...state.streamingPosts },
+		// 		postThreadsLoading: state.postThreadsLoading,
+		// 	};
+		// 	const { streamId, postId } = action.payload[0];
+		// 	const recombinedStream: RecombinedStream = nextState.streamingPosts[postId] ?? {
+		// 		items: [],
+		// 		receivedDoneEvent: false,
+		// 		content: "",
+		// 	};
+		// 	advanceRecombinedStream(recombinedStream, action.payload);
+		// 	// console.debug(`=== recombinedStream ${JSON.stringify(recombinedStream, null, 2)}`);
+		// 	nextState.streamingPosts[postId] = recombinedStream;
+		// 	const post = nextState.byStream[streamId][postId];
+		// 	if (recombinedStream.content && post) {
+		// 		post.text = recombinedStream.content;
+		// 	}
+		// 	if (recombinedStream.parts && post) {
+		// 		post.parts = recombinedStream.parts;
+		// 	}
+		// 	return nextState;
+		// }
 		case PostsActionsType.AddForStream: {
 			const { streamId, posts } = action.payload;
 			const streamPosts = { ...(state.byStream[streamId] || {}) };

@@ -313,7 +313,7 @@ export class DiscussionsProvider {
 			const commentEntities = response.actor.collaboration.commentsByThreadId.entities
 				.filter(e => !e.systemMessageType)
 				.filter(e => e.deactivated === false)
-				.sort((e1, e2) => e1.createdAt - e2.createdAt)
+				.sort((e1, e2) => parseInt(e1.createdAt) - parseInt(e2.createdAt))
 				.map(e => {
 					if (this.userMentionRegExp.test(e.body)) {
 						const modifiedBody = e.body.replace(this.userMentionRegExp, "$1");

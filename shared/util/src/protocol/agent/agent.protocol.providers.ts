@@ -1427,11 +1427,13 @@ export const GetObservabilityErrorsWithoutReposRequestType = new RequestType<
 >("codestream/newrelic/errorsWithoutRepos");
 
 export interface CollaborationComment {
-	body: string;
 	id: string;
-	systemMessageType: string;
+	body: string;
+	createdAt: string;
+	deactivated: boolean;
+	systemMessageType?: string;
 	creator: {
-		email: string;
+		email?: string;
 		name: string;
 		userId: number;
 	};
