@@ -32,7 +32,6 @@ export const NRQLResultsTable = (props: Props) => {
 			const { facet, ...rest } = _;
 			return rest;
 		});
-		// return _results;
 	}, [props.results]);
 
 	const hasKey = (obj, key) => {
