@@ -433,6 +433,7 @@ export const NRQLPanel = (props: {
 						<ResizeEditorContainer ref={editorRef}>
 							{accountId && (
 								<NRQLEditor
+									key={accountId}
 									className="input-text control"
 									defaultValue={props.query || DEFAULT_QUERY}
 									height={`${editorHeight}px`}
