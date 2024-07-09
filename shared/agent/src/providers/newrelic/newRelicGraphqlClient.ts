@@ -108,9 +108,7 @@ export class NewRelicGraphqlClient implements Disposable {
 		private versionInfo: VersionInfo,
 		private isProductionCloud: boolean,
 		private fetchClient: FetchCore
-	) {
-		session.api.baseUrl.includes("");
-	}
+	) {}
 
 	get graphqlUrl() {
 		return this.nrApiConfig.graphqlUrl;

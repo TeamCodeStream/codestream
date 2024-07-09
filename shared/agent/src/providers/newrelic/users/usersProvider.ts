@@ -4,9 +4,9 @@ import {
 	UserSearchRequestType,
 	UserSearchResponse,
 } from "@codestream/protocols/agent";
-import { lsp, lspHandler } from "system/decorators/lsp";
+import { log } from "../../../system/decorators/log";
+import { lsp, lspHandler } from "../../../system/decorators/lsp";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
-import { log } from "system/decorators/log";
 
 @lsp
 export class UsersProvider {

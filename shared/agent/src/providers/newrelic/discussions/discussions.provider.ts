@@ -1,4 +1,4 @@
-import { ContextLogger } from "providers/contextLogger";
+import { ContextLogger } from "../../contextLogger";
 import {
 	CreateCollaborationCommentRequest,
 	CreateCollaborationCommentRequestType,
