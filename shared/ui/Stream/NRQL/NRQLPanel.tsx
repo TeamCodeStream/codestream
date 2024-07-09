@@ -542,11 +542,7 @@ export const NRQLPanel = (props: {
 								)}
 							</>
 						)}
-						{noResults && (
-							<div style={{ textAlign: "center" }}>
-								<NRQLResultsJSON results={noResultResponse} />
-							</div>
-						)}
+						{noResults && <div style={{ textAlign: "center" }}>No results found</div>}
 						{nrqlError && (
 							<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
 								{nrqlError}
