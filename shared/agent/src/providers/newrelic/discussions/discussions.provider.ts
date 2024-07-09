@@ -46,8 +46,6 @@ export class DiscussionsProvider {
 	private grokMentionRegExp =
 		/<collab-mention data-type="GROK_RESPONSE" data-mentionable-item-id="(?<messageId>[^"]+)"\/>/gim;
 
-	private websocketInfo: WebsocketConnectUrl | undefined = undefined;
-
 	constructor(private graphqlClient: NewRelicGraphqlClient) {
 		this.graphqlClient.addHeader("Nerd-Graph-Unsafe-Experimental-Opt-In", "Collaboration,Grok");
 		this.getWebsocketInfo();
@@ -56,9 +54,6 @@ export class DiscussionsProvider {
 	@lspHandler(GetCollaborationWebsocketInfoRequestType)
 	@log()
 	public async getWebsocketInfo(): Promise<WebsocketConnectUrl | undefined> {
-		if (this.websocketInfo) {
-			return this.websocketInfo;
-		}
 		const wsQuery = `{
 			actor {
 				collaboration {
@@ -72,9 +67,9 @@ export class DiscussionsProvider {
 		try {
 			const response = await this.graphqlClient.query<WebsocketInfoResponse>(wsQuery);
 			if (response?.actor?.collaboration?.webSocketConnectUrl?.url) {
-				this.websocketInfo = response.actor.collaboration.webSocketConnectUrl;
-				ContextLogger.debug("getWebsocketInfo success", this.websocketInfo);
-				return this.websocketInfo;
+				const websocketInfo = response.actor.collaboration.webSocketConnectUrl;
+				ContextLogger.debug("getWebsocketInfo success", websocketInfo);
+				return websocketInfo;
 			} else {
 				ContextLogger.warn("getWebsocketInfo failed to get websocket url", response);
 			}

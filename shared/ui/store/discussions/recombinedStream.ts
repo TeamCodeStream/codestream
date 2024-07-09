@@ -54,14 +54,8 @@ export function advanceRecombinedStream(
 	payload: StreamingResponseMsg | CommentMsg
 ) {
 	recombinedStream.lastMessageReceivedAt = Date.now();
-	if (!isCommentMsg(payload)) {
-		recombinedStream.items = recombinedStream.items.concat(payload);
-	}
-	recombinedStream.items.sort(
-		(a, b) =>
-			(a?.sequence_id ?? Number.MAX_SAFE_INTEGER) - (b?.sequence_id ?? Number.MAX_SAFE_INTEGER)
-	);
-	if (isCommentMsg(payload)) {
+	const isComment = isCommentMsg(payload);
+	if (isComment) {
 		const receivedDoneEvent =
 			payload.meta.action === "comment.created" &&
 			payload.meta.threadId === recombinedStream.threadId;
@@ -69,7 +63,14 @@ export function advanceRecombinedStream(
 			console.debug(`advanceRecombinedStream receivedDoneEvent ${receivedDoneEvent}`);
 			recombinedStream.receivedDoneEvent = receivedDoneEvent;
 		}
+		return;
 	}
+	recombinedStream.items = recombinedStream.items.concat(payload);
+	recombinedStream.items.sort(
+		(a, b) =>
+			(a?.sequence_id ?? Number.MAX_SAFE_INTEGER) - (b?.sequence_id ?? Number.MAX_SAFE_INTEGER)
+	);
+
 	const start =
 		recombinedStream.lastContentIndex !== undefined ? recombinedStream.lastContentIndex + 1 : 0;
 	for (let i = start; i < recombinedStream.items.length; i++) {

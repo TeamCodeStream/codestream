@@ -122,8 +122,9 @@ export const discussionSlice = createSlice({
 				? action.payload.meta.threadId
 				: action.payload.conversation_id;
 			const commentId = isCommentMsg(action.payload)
-				? action.payload.id
+				? action.payload.meta.replyTo
 				: action.payload.meta.reply_to_comment_id;
+
 			const recombinedStream: RecombinedStream = state.streamingPosts[threadId] ?? {
 				items: [],
 				receivedDoneEvent: false,
@@ -135,7 +136,7 @@ export const discussionSlice = createSlice({
 			state.streamingPosts[threadId] = recombinedStream;
 			// Find the matching comment in the activeDiscussion and update its parts
 			let comment = state.activeDiscussion.comments.find(comment => comment.id === commentId);
-			if (!comment) {
+			if (!comment && commentId) {
 				// add new comment
 				comment = {
 					id: commentId,
