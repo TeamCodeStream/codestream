@@ -4,6 +4,7 @@ import {
 	InitiateNrAiRequest,
 	InitiateNrAiRequestType,
 	NRErrorResponse,
+	TelemetryData,
 } from "@codestream/protocols/agent";
 import React, { useEffect, useMemo, useState } from "react";
 import { shallowEqual } from "react-redux";
@@ -307,6 +308,12 @@ export const CodeError = (props: CodeErrorProps) => {
 				nrError: response.nrError,
 			});
 		}
+
+		const payload = {
+			event_type: "response",
+		} as TelemetryData;
+
+		HostApi.instance.track("codestream/nrai/error_analysis succeeded", payload);
 
 		setNRAILoading(false);
 	};

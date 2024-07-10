@@ -411,7 +411,13 @@ export class DiscussionsProvider {
 				}
 			);
 
-			return { commentId: initiateNrAiResponse.grokCreateGrokInitiatedConversation.id };
+			if (!initiateNrAiResponse.grokCreateGrokInitiatedConversation.id) {
+				throw new Error("Failed to initialize NRAI");
+			}
+
+			return {
+				commentId: initiateNrAiResponse.grokCreateGrokInitiatedConversation.id,
+			};
 		} catch (ex) {
 			ContextLogger.warn("initializeNrAi failure", {
 				request,
