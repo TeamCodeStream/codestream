@@ -569,7 +569,6 @@ export const CodeError = (props: CodeErrorProps) => {
 								file={currentNrAiFile}
 								functionToEdit={derivedState.functionToEdit}
 								isLoading={discussionIsLoading}
-								reloadDiscussion={loadDiscussion}
 								errorGroup={props.errorGroup}
 							/>
 
@@ -581,7 +580,6 @@ export const CodeError = (props: CodeErrorProps) => {
 									codeError={props.codeError}
 									showGrok={showGrok}
 									isLoading={discussionIsLoading}
-									reloadDiscussion={loadDiscussion}
 								/>
 							</ComposeWrapper>
 						</>

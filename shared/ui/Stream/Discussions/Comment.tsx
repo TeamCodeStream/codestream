@@ -25,6 +25,8 @@ import {
 	currentUserIsAdminSelector,
 } from "@codestream/webview/store/users/reducer";
 import { HostApi } from "@codestream/webview/webview-api";
+import { useDispatch } from "react-redux";
+import { addComment } from "@codestream/webview/store/discussions/discussionsSlice";
 
 const AuthorInfo = styled.div`
 	display: flex;
@@ -166,7 +168,6 @@ export interface CommentProps {
 	comment: CollaborationComment;
 	editingCommentId?: string;
 	isLoading?: boolean;
-	reloadDiscussion?: Function;
 }
 
 export type CommentInputProps = {
@@ -176,10 +177,10 @@ export type CommentInputProps = {
 	showGrok: boolean;
 	threadId: string;
 	isLoading?: boolean;
-	reloadDiscussion?: Function;
 };
 
 export const CommentInput = (props: CommentInputProps) => {
+	const dispatch = useDispatch();
 	const [text, setText] = useState("");
 	const [textForNr, setTextForNr] = useState("");
 
@@ -201,8 +202,12 @@ export const CommentInput = (props: CommentInputProps) => {
 			body: textForNr,
 		});
 
-		if (props.reloadDiscussion) {
-			props.reloadDiscussion();
+		if (response.nrError) {
+		}
+
+		if (response.comment) {
+			dispatch(addComment(response.comment));
+			setText("");
 		}
 	};
 
@@ -295,8 +300,6 @@ export const Comment = forwardRef((props: CommentProps, ref: Ref<HTMLDivElement>
 		const response = await HostApi.instance.send(DeleteCollaborationCommentRequestType, {
 			commentId: props.comment.id,
 		});
-
-		reloadDiscussion();
 	};
 
 	const updateComment = async () => {
@@ -304,15 +307,8 @@ export const Comment = forwardRef((props: CommentProps, ref: Ref<HTMLDivElement>
 			commentId: props.comment.id,
 			body: replaceHtml(newReplyText)!,
 		});
-
-		reloadDiscussion();
 	};
 
-	const reloadDiscussion = () => {
-		if (props.reloadDiscussion) {
-			props.reloadDiscussion();
-		}
-	};
 	const menuItems: MenuItem[] = [];
 
 	// Need to line up user IDs.
@@ -369,11 +365,7 @@ export const Comment = forwardRef((props: CommentProps, ref: Ref<HTMLDivElement>
 			<CommentBody>
 				<div className="bar-left-parent" />
 				<AuthorInfo style={{ fontWeight: 700 }}>
-					{/* {derivedState?.author && (
-						<ProfileLink id={derivedState.author.id || ""}>
-							<Headshot size={20} person={derivedState.author} />{" "}
-						</ProfileLink>
-					)} */}
+					{props.comment.creator && <Headshot size={20} person={props.comment.creator} />}
 					<span className="reply-author">{props.comment.creator.name}</span>
 					{/* <div style={{ marginLeft: "auto", whiteSpace: "nowrap" }}>
 						{menuState.open && (

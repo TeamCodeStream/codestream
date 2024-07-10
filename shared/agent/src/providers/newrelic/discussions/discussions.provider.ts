@@ -1,5 +1,6 @@
 import { ContextLogger } from "../../contextLogger";
 import {
+	CollaborationComment,
 	CreateCollaborationCommentRequest,
 	CreateCollaborationCommentRequestType,
 	CreateCollaborationCommentResponse,
@@ -36,6 +37,7 @@ import {
 	CollaborationContextMetadata,
 	WebsocketInfoResponse,
 	WebsocketConnectUrl,
+	CollaborationCreateCommentResponse,
 } from "./discussions.types";
 
 @lsp
@@ -231,20 +233,27 @@ export class DiscussionsProvider {
 						contextMetadata: $context
 					) {
 						id
+						body
+						createdAt
+						deactivated
+						systemMessageType
+						creator {
+							email
+							name
+							userId
+						}
 					}
 				}`;
 
-			const createCommentResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
-				createCommentQuery,
-				{
+			const createCommentResponse =
+				await this.graphqlClient.mutate<CollaborationCreateCommentResponse>(createCommentQuery, {
 					body,
 					threadId,
 					context: context.metaData,
-				}
-			);
+				});
 
 			return {
-				commentId: createCommentResponse.collaborationCreateComment.id,
+				comment: createCommentResponse.collaborationCreateComment,
 			};
 		} catch (ex) {
 			ContextLogger.warn("createComment failure", {
@@ -254,11 +263,6 @@ export class DiscussionsProvider {
 
 			throw ex;
 		}
-	}
-
-	adjustBodyForNrMarkdown(body: string): string {
-		// turn @Eric Jones into <collab... />
-		return "";
 	}
 
 	/**
@@ -279,33 +283,83 @@ export class DiscussionsProvider {
 				request.entityGuid
 			);
 
-			const commentsQuery = `
-				query($threadId: ID!) {
-					actor {
-						collaboration {
-							commentsByThreadId(threadId: $threadId) {
-								entities {
-									body
-									deactivated
-									id
-									systemMessageType
-									createdAt
-									creator {
-										email
-										name
-										userId
+			let allCommentEntities: CollaborationComment[] = [];
+
+			const initialCommentsQuery = `
+					query($threadId: ID!) {
+						actor {
+							collaboration {
+								commentsByThreadId(threadId: $threadId, first: 50) {
+									nextCursor
+									entities {
+										body
+										deactivated
+										id
+										systemMessageType
+										createdAt
+										creator {
+											email
+											name
+											userId
+										}
 									}
 								}
 							}
 						}
-					}
-				}`;
+					}`;
 
-			const response = await this.graphqlClient.query<CommentsByThreadIdResponse>(commentsQuery, {
-				threadId: bootstrapResponse.threadId,
-			});
+			const initialCommentsResponse = await this.graphqlClient.query<CommentsByThreadIdResponse>(
+				initialCommentsQuery,
+				{
+					threadId: bootstrapResponse.threadId,
+				}
+			);
 
-			const commentEntities = response.actor.collaboration.commentsByThreadId.entities
+			allCommentEntities = allCommentEntities.concat(
+				initialCommentsResponse.actor.collaboration.commentsByThreadId.entities
+			);
+
+			let nextCursor = initialCommentsResponse.actor.collaboration.commentsByThreadId.nextCursor;
+
+			// should only happen if there are more than 50 comments
+			while (nextCursor) {
+				const additionalCommentsQuery = `
+					query($threadId: ID!, $nextCursor: String!) {
+						actor {
+							collaboration {
+								commentsByThreadId(threadId: $threadId, first: 50, nextCursor: $nextCursor) {
+									nextCursor
+									entities {
+										body
+										deactivated
+										id
+										systemMessageType
+										createdAt
+										creator {
+											email
+											name
+											userId
+										}
+									}
+								}
+							}
+						}
+					}`;
+
+				const additionalCommentsResponse =
+					await this.graphqlClient.query<CommentsByThreadIdResponse>(additionalCommentsQuery, {
+						threadId: bootstrapResponse.threadId,
+						nextCursor: nextCursor,
+					});
+
+				allCommentEntities = allCommentEntities.concat(
+					additionalCommentsResponse.actor.collaboration.commentsByThreadId.entities
+				);
+
+				nextCursor = additionalCommentsResponse.actor.collaboration.commentsByThreadId.nextCursor;
+			}
+
+			const commentEntities = allCommentEntities
 				.filter(e => !e.systemMessageType)
 				.filter(e => e.deactivated === false)
 				.sort((e1, e2) => parseInt(e1.createdAt) - parseInt(e2.createdAt))

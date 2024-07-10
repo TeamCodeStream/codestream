@@ -10,7 +10,6 @@ export interface DiscussionThreadProps {
 	functionToEdit?: FunctionToEdit;
 	isLoading?: boolean;
 	errorGroup: NewRelicErrorGroup;
-	reloadDiscussion?: Function;
 }
 
 interface CommentItemProps extends DiscussionThreadProps {
@@ -29,13 +28,7 @@ function CommentItem(props: CommentItemProps) {
 			/>
 		);
 	} else {
-		return (
-			<Comment
-				comment={comment}
-				isLoading={props.isLoading}
-				reloadDiscussion={props.reloadDiscussion}
-			/>
-		);
+		return <Comment comment={comment} isLoading={props.isLoading} />;
 	}
 }
 

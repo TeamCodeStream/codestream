@@ -1493,7 +1493,7 @@ export interface CreateCollaborationCommentRequest {
 }
 
 export interface CreateCollaborationCommentResponse {
-	commentId?: string;
+	comment?: CollaborationComment;
 	nrError?: NRErrorResponse;
 }
 
@@ -1536,9 +1536,7 @@ export const DeleteCollaborationCommentRequestType = new RequestType<
 	void
 >("codestream/newrelic/collaboration/deleteComment");
 
-export interface GetCollaborationWebsocketInfoRequest {
-
-}
+export interface GetCollaborationWebsocketInfoRequest {}
 
 export interface GetCollaborationWebsocketInfoResponse {
 	url: string;

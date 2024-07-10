@@ -1,7 +1,13 @@
+import { CollaborationComment } from "@codestream/protocols/agent";
+
 export interface BaseCollaborationResponse {
 	[key: string]: {
 		id: string;
 	};
+}
+
+export interface CollaborationCreateCommentResponse {
+	collaborationCreateComment: CollaborationComment;
 }
 
 export interface CollaborationContextMetadata {
@@ -26,18 +32,9 @@ export interface CommentsByThreadIdResponse {
 	actor: {
 		collaboration: {
 			commentsByThreadId: {
-				entities: {
-					body: string;
-					deactivated: boolean;
-					id: string;
-					systemMessageType: string;
-					createdAt: string;
-					creator: {
-						email: string;
-						name: string;
-						userId: number;
-					};
-				}[];
+				totalCount?: number;
+				nextCursor?: string;
+				entities: CollaborationComment[];
 			};
 		};
 	};

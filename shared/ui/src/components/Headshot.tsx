@@ -91,6 +91,7 @@ export interface HeadshotProps {
 		email?: string;
 		avatar?: { image?: string; image48?: string };
 		fullName?: string;
+		name?: string;
 		username?: string;
 		color?: number;
 	};
@@ -120,6 +121,9 @@ export const Headshot = styled((props: HeadshotProps) => {
 	if (person.fullName) {
 		initials = person.fullName.replace(/(\w)\w*/g, "$1").replace(/\s/g, "");
 		if (initials.length > 2) initials = initials.substring(0, 2);
+	} else if (person.name) {
+		initials = person.name.replace(/(\w)\w*/g, "$1").replace(/\s/g, "");
+		if (initials.length > 2) initials = initials.substring(0, 2);
 	} else if (person.username) {
 		initials = person.username.charAt(0);
 	}
@@ -131,7 +135,7 @@ export const Headshot = styled((props: HeadshotProps) => {
 		(props.className || "") +
 		(props.addThumbsUp && !props.hardRightBorder ? " make-room-for-thumbs-up" : "");
 
-	const isAI = person.username?.toLowerCase() === "ai";
+	const isAI = person.username?.toLowerCase() === "ai" || person.name?.toLowerCase() === "nrai";
 
 	return (
 		<Root
