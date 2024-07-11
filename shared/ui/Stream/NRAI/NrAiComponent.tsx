@@ -3,7 +3,7 @@ import { NewRelicErrorGroup } from "@codestream/protocols/agent";
 import { MarkdownText } from "@codestream/webview/Stream/MarkdownText";
 import styled, { ThemeContext } from "styled-components";
 import { Button } from "@codestream/webview/src/components/Button";
-import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { replaceSymbol } from "@codestream/webview/store/codeErrors/thunks";
 import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
 import { NrAiCodeBlockLoading, NrAiLoading } from "./NrAiLoading";
@@ -52,34 +52,29 @@ export function NrAiComponent(props: NrAiComponentProps) {
 	const dispatch = useAppDispatch();
 	const monaco = useMonaco();
 
-	// cheat for comments that were queried, not streamed.
-	useDidMount(() => {
-		if (!props.comment.parts) {
-			props.comment.parts = extractParts(props.comment.body);
-		}
-	});
+	const commentParts = props.comment.parts ?? extractParts(props.comment.body);
 
 	const isStreamLoading = useAppSelector(isNraiStreamLoading);
 	// const demoMode = useAppSelector((state: CodeStreamState) => state.codeErrors.demoMode);
 	const hasIntro = useMemo(
-		() => props.comment.parts?.intro && props.comment.parts.intro.length > 0,
-		[props.comment.parts?.intro]
+		() => commentParts?.intro && commentParts.intro.length > 0,
+		[commentParts?.intro]
 	);
 	const hasDescription = useMemo(
-		() => props.comment.parts?.description && props.comment.parts.description.length > 0,
-		[props.comment.parts?.description]
+		() => commentParts?.description && commentParts.description.length > 0,
+		[commentParts?.description]
 	);
 	const showGrokLoader = useMemo(
 		() => !hasIntro && !hasDescription && isStreamLoading,
 		[isStreamLoading, hasIntro, hasDescription]
 	);
 	const showCodeBlockLoader = useMemo(
-		() => !props.comment.parts?.description && isStreamLoading,
-		[isStreamLoading, props.comment.parts?.description]
+		() => !commentParts?.description && isStreamLoading,
+		[isStreamLoading, commentParts?.description]
 	);
 	const showApplyFix = useMemo(
-		() => !!props.comment.parts?.codeFix && !isStreamLoading,
-		[props.comment.parts?.codeFix, isStreamLoading]
+		() => !!commentParts?.codeFix && !isStreamLoading,
+		[commentParts?.codeFix, isStreamLoading]
 	);
 	const themeContext = useContext(ThemeContext);
 	const isTheThemeDark = useMemo(() => {
@@ -97,9 +92,9 @@ export function NrAiComponent(props: NrAiComponentProps) {
 	// }, [props.post.forGrok, isGrokLoading, props.codeErrorId, props.post.parts?.description]);
 
 	const normalizedCodeFix = useMemo(() => {
-		const result = normalizeCodeMarkdown(props.comment.parts?.codeFix);
+		const result = normalizeCodeMarkdown(commentParts?.codeFix);
 		return result;
-	}, [props.comment.parts?.codeFix]);
+	}, [commentParts?.codeFix]);
 
 	const applyFix = useCallback(async () => {
 		if (!props.file || !props.functionToEdit?.symbol || !normalizedCodeFix) {
@@ -156,7 +151,7 @@ export function NrAiComponent(props: NrAiComponentProps) {
 
 				{showGrokLoader && <NrAiLoading />}
 
-				{hasIntro && <Markdown text={props.comment.parts?.intro ?? ""} />}
+				{hasIntro && <Markdown text={commentParts?.intro ?? ""} />}
 
 				{showCodeBlockLoader && <NrAiCodeBlockLoading />}
 				{!showCodeBlockLoader &&
@@ -186,7 +181,7 @@ export function NrAiComponent(props: NrAiComponentProps) {
 					)}
 				{linesChanged === 0 && <div style={{ marginTop: "10px" }}></div>}
 
-				{hasDescription && <Markdown text={props.comment.parts?.description ?? ""} />}
+				{hasDescription && <Markdown text={commentParts?.description ?? ""} />}
 			</CommentBody>
 		</Root>
 
