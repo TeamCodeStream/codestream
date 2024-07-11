@@ -46,7 +46,7 @@ export class DiscussionsProvider {
 	private userMentionRegExp =
 		/<collab-mention data-type="NR_USER" [^>]*data-value="([^"]+)"[^>]*>[^<]*<\/collab-mention>/gim;
 	private grokMentionRegExp =
-		/<collab-mention data-type="GROK_RESPONSE" data-mentionable-item-id="(?<messageId>[^"]+)"\/>/gim;
+		/<collab-mention data-type="GROK_RESPONSE" data-mentionable-item-id="([A-za-z0-9\-]+)"\/>/gim;
 
 	constructor(private graphqlClient: NewRelicGraphqlClient) {
 		this.graphqlClient.addHeader("Nerd-Graph-Unsafe-Experimental-Opt-In", "Collaboration,Grok");
@@ -375,7 +375,7 @@ export class DiscussionsProvider {
 
 			// parse all comments to find grok mentions and replace them with the actual grok messages
 			for (const commentEntity of commentEntities) {
-				const grokMatch = this.grokMentionRegExp.exec(commentEntity.body);
+				const grokMatch = new RegExp(this.grokMentionRegExp).exec(commentEntity.body);
 
 				if (!grokMatch) {
 					continue;

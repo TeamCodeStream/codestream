@@ -52,10 +52,22 @@ export function NrAiComponent(props: NrAiComponentProps) {
 	const dispatch = useAppDispatch();
 	const monaco = useMonaco();
 
-	const commentParts = props.comment.parts ?? extractParts(props.comment.body);
+	const derivedState = useAppSelector(state => {
+		let commentParts = props.comment.parts;
+		if (
+			!commentParts ||
+			(!commentParts.intro && !commentParts.description && !commentParts.codeFix)
+		) {
+			commentParts = extractParts(props.comment.body);
+		}
+		return {
+			isStreamLoading: isNraiStreamLoading(state),
+			demoMode: state.codeErrors.demoMode,
+			commentParts,
+		};
+	});
+	const { commentParts, isStreamLoading } = derivedState;
 
-	const isStreamLoading = useAppSelector(isNraiStreamLoading);
-	// const demoMode = useAppSelector((state: CodeStreamState) => state.codeErrors.demoMode);
 	const hasIntro = useMemo(
 		() => commentParts?.intro && commentParts.intro.length > 0,
 		[commentParts?.intro]

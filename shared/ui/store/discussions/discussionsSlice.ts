@@ -4,7 +4,6 @@ import { CollaborationComment } from "@codestream/protocols/agent";
 import { PostParts } from "@codestream/protocols/api";
 import {
 	advanceRecombinedStream,
-	extractParts,
 	RecombinedStream,
 } from "@codestream/webview/store/discussions/recombinedStream";
 import { CodeStreamState } from "@codestream/webview/store";
@@ -78,13 +77,6 @@ export const discussionSlice = createSlice({
 	reducers: {
 		resetDiscussions: () => initialState,
 		setActiveDiscussion: (state, action: PayloadAction<Discussion>) => {
-			// See if we need to parse out nrai parts on 0th comment
-			if (action.payload.comments.length > 0) {
-				const comment = action.payload.comments[0];
-				if (comment.creator.name === "NRAI") {
-					comment.parts = extractParts(comment.body);
-				}
-			}
 			state.activeDiscussion = action.payload;
 		},
 		addComment: (state, action: PayloadAction<CollaborationComment>) => {
