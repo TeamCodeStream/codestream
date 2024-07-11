@@ -46,10 +46,16 @@ const OptionName = styled.div`
 	overflow: hidden;
 `;
 
+const OptionRemote = styled.div`
+	color: var(--text-color-subtle);
+	font-size: smaller;
+`;
+
 const Option = (props: OptionProps) => {
 	const children = (
 		<>
 			<OptionName>{props.data?.label}</OptionName>
+			<OptionRemote>{props.data?.remote}</OptionRemote>
 		</>
 	);
 	return <components.Option {...props} children={children} />;
@@ -70,12 +76,11 @@ export const formatRepoResponse = (response, repos) => {
 				const remoteUrl = remote.rawUrl;
 				if (remoteUrl && id) {
 					const name = repos[id]?.name || repo.name || "repo";
-					const label = `${name} (${remoteUrl})`;
 					results.push({
 						...repo,
 						key: btoa(remoteUrl),
 						remote: remoteUrl,
-						label: label,
+						label: name,
 						name: name,
 						value: name,
 					});
