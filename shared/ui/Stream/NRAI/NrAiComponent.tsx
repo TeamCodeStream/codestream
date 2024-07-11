@@ -3,7 +3,7 @@ import { NewRelicErrorGroup } from "@codestream/protocols/agent";
 import { MarkdownText } from "@codestream/webview/Stream/MarkdownText";
 import styled, { ThemeContext } from "styled-components";
 import { Button } from "@codestream/webview/src/components/Button";
-import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import { replaceSymbol } from "@codestream/webview/store/codeErrors/thunks";
 import { FunctionToEdit } from "@codestream/webview/store/codeErrors/types";
 import { NrAiCodeBlockLoading, NrAiLoading } from "./NrAiLoading";
@@ -11,12 +11,14 @@ import { DiffEditor, useMonaco } from "@monaco-editor/react";
 import { isDarkTheme } from "@codestream/webview/src/themes";
 import { HostApi } from "@codestream/webview/webview-api";
 import { URI } from "vscode-uri";
-import { MarkdownContent } from "../Discussions/Comment";
+import { AuthorInfo, CommentBody, MarkdownContent, Root } from "../Discussions/Comment";
 import { normalizeCodeMarkdown } from "./patchHelper";
 import {
 	CSCollaborationComment,
 	isNraiStreamLoading,
 } from "@codestream/webview/store/discussions/discussionsSlice";
+import { extractParts } from "@codestream/webview/store/discussions/recombinedStream";
+import { Headshot } from "@codestream/webview/src/components/Headshot";
 
 export const DiffSection = styled.div`
 	margin: 10px 0;
@@ -30,7 +32,7 @@ export const ButtonRow = styled.div`
 `;
 
 export type NrAiComponentProps = {
-	post: CSCollaborationComment;
+	comment: CSCollaborationComment;
 	// postText: string;
 	errorGroup: NewRelicErrorGroup;
 	// codeErrorId?: string;
@@ -49,27 +51,35 @@ function Markdown(props: { text: string }) {
 export function NrAiComponent(props: NrAiComponentProps) {
 	const dispatch = useAppDispatch();
 	const monaco = useMonaco();
+
+	// cheat for comments that were queried, not streamed.
+	useDidMount(() => {
+		if (!props.comment.parts) {
+			props.comment.parts = extractParts(props.comment.body);
+		}
+	});
+
 	const isStreamLoading = useAppSelector(isNraiStreamLoading);
 	// const demoMode = useAppSelector((state: CodeStreamState) => state.codeErrors.demoMode);
 	const hasIntro = useMemo(
-		() => props.post.parts?.intro && props.post.parts.intro.length > 0,
-		[props.post.parts?.intro]
+		() => props.comment.parts?.intro && props.comment.parts.intro.length > 0,
+		[props.comment.parts?.intro]
 	);
 	const hasDescription = useMemo(
-		() => props.post.parts?.description && props.post.parts.description.length > 0,
-		[props.post.parts?.description]
+		() => props.comment.parts?.description && props.comment.parts.description.length > 0,
+		[props.comment.parts?.description]
 	);
 	const showGrokLoader = useMemo(
 		() => !hasIntro && !hasDescription && isStreamLoading,
 		[isStreamLoading, hasIntro, hasDescription]
 	);
 	const showCodeBlockLoader = useMemo(
-		() => !props.post.parts?.description && isStreamLoading,
-		[isStreamLoading, props.post.parts?.description]
+		() => !props.comment.parts?.description && isStreamLoading,
+		[isStreamLoading, props.comment.parts?.description]
 	);
 	const showApplyFix = useMemo(
-		() => !!props.post.parts?.codeFix && !isStreamLoading,
-		[props.post.parts?.codeFix, isStreamLoading]
+		() => !!props.comment.parts?.codeFix && !isStreamLoading,
+		[props.comment.parts?.codeFix, isStreamLoading]
 	);
 	const themeContext = useContext(ThemeContext);
 	const isTheThemeDark = useMemo(() => {
@@ -86,12 +96,10 @@ export function NrAiComponent(props: NrAiComponentProps) {
 	// 	);
 	// }, [props.post.forGrok, isGrokLoading, props.codeErrorId, props.post.parts?.description]);
 
-	const parts = props.post.parts;
-
 	const normalizedCodeFix = useMemo(() => {
-		const result = normalizeCodeMarkdown(props.post.parts?.codeFix);
+		const result = normalizeCodeMarkdown(props.comment.parts?.codeFix);
 		return result;
-	}, [props.post.parts?.codeFix]);
+	}, [props.comment.parts?.codeFix]);
 
 	const applyFix = useCallback(async () => {
 		if (!props.file || !props.functionToEdit?.symbol || !normalizedCodeFix) {
@@ -138,42 +146,86 @@ export function NrAiComponent(props: NrAiComponentProps) {
 	}, [monaco?.editor.getDiffEditors()]);
 
 	return (
-		<section className="nrai-post">
-			{showGrokLoader && <NrAiLoading />}
-			{hasIntro && <Markdown text={parts?.intro ?? ""} />}
-			{showCodeBlockLoader && <NrAiCodeBlockLoading />}
-			{!showCodeBlockLoader &&
-				props.file &&
-				props.functionToEdit?.codeBlock &&
-				normalizedCodeFix && (
-					<DiffSection>
-						<DiffEditor
-							original={props.functionToEdit?.codeBlock}
-							modified={normalizedCodeFix}
-							className="customDiffEditor"
-							options={{
-								renderSideBySide: false,
-								renderOverviewRuler: false,
-								folding: false,
-								lineNumbers: "off",
-								readOnly: true,
-								scrollBeyondLastLine: false,
-								automaticLayout: true,
-							}}
-							theme={isTheThemeDark ? "vs-dark" : "vs"}
-						/>
-						<ButtonRow>
-							{showApplyFix && <Button onClick={() => applyFix()}>Apply Fix</Button>}
-						</ButtonRow>
-					</DiffSection>
-				)}
-			{linesChanged === 0 && <div style={{ marginTop: "10px" }}></div>}
-			<Markdown text={parts?.description ?? ""} />
-			{/*{showFeedback && (*/}
-			{/*	<>*/}
-			{/*		<NrAiFeedback errorGroupGuid={props.codeErrorId!} />*/}
-			{/*	</>*/}
-			{/*)}*/}
-		</section>
+		<Root>
+			<CommentBody>
+				<div className="bar-left-parent" />
+				<AuthorInfo style={{ fontWeight: 700 }}>
+					{props.comment.creator && <Headshot size={20} person={props.comment.creator} />}
+					<span className="reply-author">{props.comment.creator.name}</span>
+				</AuthorInfo>
+
+				{showGrokLoader && <NrAiLoading />}
+
+				{hasIntro && <Markdown text={props.comment.parts?.intro ?? ""} />}
+
+				{showCodeBlockLoader && <NrAiCodeBlockLoading />}
+				{!showCodeBlockLoader &&
+					props.file &&
+					props.functionToEdit?.codeBlock &&
+					normalizedCodeFix && (
+						<DiffSection>
+							<DiffEditor
+								original={props.functionToEdit?.codeBlock}
+								modified={normalizedCodeFix}
+								className="customDiffEditor"
+								options={{
+									renderSideBySide: false,
+									renderOverviewRuler: false,
+									folding: false,
+									lineNumbers: "off",
+									readOnly: true,
+									scrollBeyondLastLine: false,
+									automaticLayout: true,
+								}}
+								theme={isTheThemeDark ? "vs-dark" : "vs"}
+							/>
+							<ButtonRow>
+								{showApplyFix && <Button onClick={() => applyFix()}>Apply Fix</Button>}
+							</ButtonRow>
+						</DiffSection>
+					)}
+				{linesChanged === 0 && <div style={{ marginTop: "10px" }}></div>}
+
+				{hasDescription && <Markdown text={props.comment.parts?.description ?? ""} />}
+			</CommentBody>
+		</Root>
+
+		// <section className="nrai-post">
+		// 	{showGrokLoader && <NrAiLoading />}
+		// 	{hasIntro && <Markdown text={parts?.intro ?? ""} />}
+		// 	{showCodeBlockLoader && <NrAiCodeBlockLoading />}
+		// 	{!showCodeBlockLoader &&
+		// 		props.file &&
+		// 		props.functionToEdit?.codeBlock &&
+		// 		normalizedCodeFix && (
+		// 			<DiffSection>
+		// 				<DiffEditor
+		// 					original={props.functionToEdit?.codeBlock}
+		// 					modified={normalizedCodeFix}
+		// 					className="customDiffEditor"
+		// 					options={{
+		// 						renderSideBySide: false,
+		// 						renderOverviewRuler: false,
+		// 						folding: false,
+		// 						lineNumbers: "off",
+		// 						readOnly: true,
+		// 						scrollBeyondLastLine: false,
+		// 						automaticLayout: true,
+		// 					}}
+		// 					theme={isTheThemeDark ? "vs-dark" : "vs"}
+		// 				/>
+		// 				<ButtonRow>
+		// 					{showApplyFix && <Button onClick={() => applyFix()}>Apply Fix</Button>}
+		// 				</ButtonRow>
+		// 			</DiffSection>
+		// 		)}
+		// 	{linesChanged === 0 && <div style={{ marginTop: "10px" }}></div>}
+		// 	<Markdown text={parts?.description ?? ""} />
+		// 	{/*{showFeedback && (*/}
+		// 	{/*	<>*/}
+		// 	{/*		<NrAiFeedback errorGroupGuid={props.codeErrorId!} />*/}
+		// 	{/*	</>*/}
+		// 	{/*)}*/}
+		// </section>
 	);
 }

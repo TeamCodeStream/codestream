@@ -28,7 +28,7 @@ import { HostApi } from "@codestream/webview/webview-api";
 import { useDispatch } from "react-redux";
 import { addComment } from "@codestream/webview/store/discussions/discussionsSlice";
 
-const AuthorInfo = styled.div`
+export const AuthorInfo = styled.div`
 	display: flex;
 	align-items: flex-start;
 
@@ -43,7 +43,7 @@ const AuthorInfo = styled.div`
 	}
 `;
 
-const Root = styled.div`
+export const Root = styled.div`
 	padding-bottom: 10px;
 	padding-top: 10px;
 	display: flex;

@@ -21,7 +21,7 @@ function CommentItem(props: CommentItemProps) {
 	if (comment.creator.name === "NRAI") {
 		return (
 			<NrAiComponent
-				post={comment}
+				comment={comment}
 				errorGroup={props.errorGroup}
 				functionToEdit={props.functionToEdit}
 				file={props.file}
