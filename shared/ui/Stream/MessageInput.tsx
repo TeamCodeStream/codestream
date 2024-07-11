@@ -1,5 +1,5 @@
 import cx from "classnames";
-import React, { useCallback, useEffect, ReactNode, SyntheticEvent, useRef, useState } from "react";
+import React, { useCallback, useEffect, SyntheticEvent, useRef, useState } from "react";
 import { shallowEqual } from "react-redux";
 import { Attachment, CSMe } from "@codestream/protocols/api";
 import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
@@ -12,7 +12,6 @@ import {
 } from "../utils";
 import { AtMentionsPopup, Mention } from "./AtMentionsPopup";
 import EmojiPicker from "./EmojiPicker";
-import Button from "./Button";
 import Icon from "./Icon";
 import {
 	UploadFileRequest,
@@ -20,7 +19,6 @@ import {
 	UserSearchRequestType,
 } from "@codestream/protocols/agent";
 import { currentNrUserIdSelector } from "../store/users/reducer";
-import { MarkdownText } from "./MarkdownText";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import Tooltip from "./Tooltip";
 import { HostApi } from "../webview-api";
@@ -83,14 +81,12 @@ export const MessageInput = (props: MessageInputProps) => {
 		};
 	}, shallowEqual);
 
-	// const [teammates, setTeammates] = useState<NewRelicUser[]>([]);
 	const textAreaRef = useRef<HTMLTextAreaElement>(null);
 	const disposables: Disposable[] = [];
 	const [emojiOpen, setEmojiOpen] = useState(false);
 	const [attachOpen, setAttachOpen] = useState(false);
 	const [formatCode, setFormatCode] = useState(false);
 	const [insertPrefix, setInsertPrefix] = useState("");
-	const [isPreviewing, _setIsPreviewing] = useState(false);
 	const [isDropTarget, setIsDropTarget] = useState(false);
 	const [isPasteEvent, setIsPasteEvent] = useState(false);
 	const [currentPopup, setCurrentPopup] = useState<PopupType>();
@@ -143,7 +139,6 @@ export const MessageInput = (props: MessageInputProps) => {
 	// insert the given text at the cursor of the input field
 	// after first deleting the text in toDelete
 	const insertTextAtCursor = (text: string, toDelete = "") => {
-		if (isPreviewing) return;
 		if (!textAreaRef.current) return;
 		if (document.activeElement !== textAreaRef.current) {
 			textAreaRef.current.focus();
@@ -171,8 +166,6 @@ export const MessageInput = (props: MessageInputProps) => {
 	};
 
 	const insertNewlineAtCursor = () => {
-		if (isPreviewing) return;
-
 		let sel, range;
 		sel = window.getSelection();
 
@@ -385,7 +378,6 @@ export const MessageInput = (props: MessageInputProps) => {
 			} else if ((event.key === "Enter" || event.which === 13) && event.metaKey && multiCompose) {
 				// command-enter should submit for multiCompose
 				event.preventDefault();
-				setIsPreviewing(false);
 				const { onSubmit } = props;
 				onSubmit && onSubmit(event);
 			}
@@ -502,11 +494,9 @@ export const MessageInput = (props: MessageInputProps) => {
 			(event.ctrlKey || event.metaKey || !multiCompose)
 		) {
 			event.preventDefault();
-			setIsPreviewing(false);
 			const { onSubmit } = props;
 			onSubmit && onSubmit(event);
 		} else if (event.key == "Escape" && multiCompose && props.onDismiss) {
-			setIsPreviewing(false);
 			props.onDismiss();
 		}
 
@@ -582,28 +572,6 @@ export const MessageInput = (props: MessageInputProps) => {
 		);
 	};
 
-	const renderTextReplaceCodeBlocks = () => {
-		const text = replaceHtml(textAreaRef?.current?.value ?? "") ?? "";
-
-		if (!props.renderCodeBlock) return <MarkdownText text={text} inline={false} />;
-
-		const blocks: ReactNode[] = [];
-		const groups = text.split(/\[#(\d+)]/);
-		let index = 0;
-		while (index < groups.length) {
-			blocks.push(<MarkdownText text={groups[index]} inline={false} />);
-			if (index + 1 < groups.length) {
-				const markerIndex = parseInt(groups[index + 1], 10);
-				if (markerIndex > 0) {
-					blocks.push(props.renderCodeBlock(markerIndex - 1, true));
-				}
-			}
-			index += 2;
-		}
-		if (props.renderCodeBlocks) blocks.push(props.renderCodeBlocks());
-		return <>{blocks}</>;
-	};
-
 	const handleDragEnter = () => setIsDropTarget(true);
 	const handleDragLeave = () => setIsDropTarget(false);
 	const handleDrop = e => {
@@ -645,25 +613,6 @@ export const MessageInput = (props: MessageInputProps) => {
 		if (textAreaRef?.current) {
 			onChangeWrapper(textAreaRef?.current?.value, formatCode);
 		}
-	};
-
-	const renderExitPreview = () => {
-		return (
-			<div className="button-group float-wrap">
-				<Button
-					data-testid="exit-preview-button"
-					type="submit"
-					className="control-button"
-					style={{ width: "100px" }}
-					onClick={e => {
-						setIsPreviewing(false);
-						focus();
-					}}
-				>
-					Exit Preview
-				</Button>
-			</div>
-		);
 	};
 
 	useDidMount(() => {
@@ -711,16 +660,6 @@ export const MessageInput = (props: MessageInputProps) => {
 		};
 	});
 
-	const setIsPreviewing = value => {
-		_setIsPreviewing(value);
-		if (props.setIsPreviewing) props.setIsPreviewing(value);
-	};
-
-	const handleClickPreview = () => {
-		setIsPreviewing(!isPreviewing);
-		focus();
-	};
-
 	const handleChangeFiles = () => {
 		const attachElement = document.getElementById("attachment") as HTMLInputElement;
 		if (!attachElement) return;
@@ -746,19 +685,6 @@ export const MessageInput = (props: MessageInputProps) => {
 		setEmojiMenuTarget(event.target);
 	};
 
-	const handleClickAtMentions = () => {
-		if (currentPopup) {
-			focus(() => {
-				setInsertPrefix("");
-				hidePopup();
-			});
-		} else
-			focus(() => {
-				setInsertPrefix("@");
-				showPopupSelectors("", "at-mentions");
-			});
-	};
-
 	const { placeholder, text, __onDidRender } = props;
 
 	__onDidRender &&
@@ -776,39 +702,8 @@ export const MessageInput = (props: MessageInputProps) => {
 				onKeyDown={handleKeyDown}
 				style={{ position: "relative" }}
 			>
-				{!isPreviewing && !isDropTarget && (
+				{!isDropTarget && (
 					<div key="message-attach-icons" className="message-attach-icons">
-						<Icon
-							data-testid="markdown-preview-icon"
-							key="preview"
-							name="markdown"
-							title={
-								<div style={{ textAlign: "center" }}>
-									Click to Preview
-									<div style={{ paddingTop: "5px" }}>
-										<a href="https://www.markdownguide.org/cheat-sheet/">Markdown help</a>
-									</div>
-								</div>
-							}
-							placement="top"
-							align={{ offset: [5, 0] }}
-							delay={1}
-							className={cx("preview", { hover: isPreviewing })}
-							onClick={handleClickPreview}
-						/>
-
-						<Icon
-							key="mention"
-							name="mention"
-							data-testid="mention-icon"
-							title="Mention a teammate"
-							placement="topRight"
-							align={{ offset: [18, 0] }}
-							delay={1}
-							className={cx("mention", { hover: currentPopup === "at-mentions" })}
-							onClick={handleClickAtMentions}
-						/>
-
 						<Icon
 							key="smiley"
 							name="smiley"
@@ -825,14 +720,6 @@ export const MessageInput = (props: MessageInputProps) => {
 						{emojiOpen && (
 							<EmojiPicker addEmoji={addEmoji} target={emojiMenuTarget} autoFocus={true} />
 						)}
-					</div>
-				)}
-				{isPreviewing && (
-					<div
-						data-testid="markdown-preview-text"
-						className={cx("message-input preview", { "format-code": formatCode })}
-					>
-						{renderTextReplaceCodeBlocks()}
 					</div>
 				)}
 				{derivedState.attachFilesEnabled && props.setAttachments && (
@@ -857,7 +744,6 @@ export const MessageInput = (props: MessageInputProps) => {
 							{
 								"format-code": formatCode,
 								invisible: isDropTarget,
-								hide: isPreviewing,
 							}
 						)}
 						onDragEnter={handleDragEnter}
@@ -873,7 +759,6 @@ export const MessageInput = (props: MessageInputProps) => {
 				</AtMentionsPopup>
 			</div>
 			{renderAttachedFiles()}
-			{isPreviewing && renderExitPreview()}
 		</>
 	);
 };
