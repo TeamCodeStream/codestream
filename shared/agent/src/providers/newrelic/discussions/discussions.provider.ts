@@ -420,19 +420,7 @@ export class DiscussionsProvider {
 	@log()
 	async initializeNrAi(request: InitiateNrAiRequest): Promise<InitiateNrAiResponse> {
 		try {
-			const codeMarkId = await this.createCodeMark({
-				codeBlock: request.codeBlock,
-				fileUri: request.fileUri,
-				permalink: request.permalink,
-				repo: request.repo,
-				sha: request.sha,
-			});
-
-			const context = await this.generateContext(
-				request.entityGuid,
-				request.errorGroupGuid,
-				codeMarkId
-			);
+			const context = await this.generateContext(request.entityGuid, request.errorGroupGuid);
 
 			const initiateNrAiQuery = `
 				mutation($threadId: ID!, $prompt:String!, $context: GrokRawContextMetadata!) {

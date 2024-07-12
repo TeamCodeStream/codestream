@@ -266,21 +266,8 @@ export const CodeError = (props: CodeErrorProps) => {
 			return;
 		}
 
-		// must have repo information to initialize NRAI
-		if (!repoInfo?.name || !repoInfo.url || !sha) {
-			return;
-		}
-
 		initializeNrAiAnalysis();
-	}, [
-		discussion,
-		derivedState.functionToEdit,
-		derivedState.functionToEditFailed,
-		showGrok,
-		repoInfo?.name,
-		repoInfo?.url,
-		sha,
-	]);
+	}, [discussion, derivedState.functionToEdit, derivedState.functionToEditFailed, showGrok]);
 
 	const initializeNrAiAnalysis = async () => {
 		setNRAILoading(true);
@@ -294,10 +281,6 @@ export const CodeError = (props: CodeErrorProps) => {
 			stackTrace: stackTraceLines.join("\n"),
 			errorText: `${props.codeError.title} ${props.codeError?.text}`,
 			language: derivedState!.functionToEdit!.language,
-			fileUri: derivedState!.functionToEdit!.uri,
-			permalink: `https://${repoInfo?.url!}`,
-			repo: `https://${repoInfo?.url!}`,
-			sha: sha!,
 		};
 
 		// send the payload to the agent

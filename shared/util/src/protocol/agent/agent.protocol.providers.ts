@@ -1443,14 +1443,10 @@ export interface InitiateNrAiRequest {
 	entityGuid: string;
 	errorGroupGuid: string;
 
-	fileUri: string;
 	codeBlock: string;
 	stackTrace: string;
 	errorText: string;
 	language?: string;
-	permalink: string;
-	repo: string;
-	sha: string;
 
 	threadId: string;
 }
