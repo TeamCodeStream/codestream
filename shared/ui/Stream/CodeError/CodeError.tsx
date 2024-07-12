@@ -46,7 +46,10 @@ import { Loading } from "@codestream/webview/Container/Loading";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { CSStackTraceLine } from "@codestream/protocols/api";
 import { parseId } from "@codestream/webview/utilities/newRelic";
-import { setActiveDiscussion } from "@codestream/webview/store/discussions/discussionsSlice";
+import {
+	isNraiStreamLoading,
+	setActiveDiscussion,
+} from "@codestream/webview/store/discussions/discussionsSlice";
 import useNraiStreaming from "@codestream/webview/Stream/CodeError/socks/useNraiStreaming";
 
 export const CodeError = (props: CodeErrorProps) => {
@@ -69,6 +72,7 @@ export const CodeError = (props: CodeErrorProps) => {
 			grokNraiCapability: state.nrCapabilities.nrai === true,
 			grokFeatureEnabled: isFeatureEnabled(state, "showGrok"),
 			discussion: state.discussions.activeDiscussion,
+			isNraiStreamLoading: isNraiStreamLoading(state),
 		};
 	}, shallowEqual);
 
@@ -84,7 +88,7 @@ export const CodeError = (props: CodeErrorProps) => {
 	const [stackTraceError, setStackTraceError] = useState<string>();
 
 	const [discussionIsLoading, setDiscussionIsLoading] = useState<boolean>(false);
-	const [NRAILoading, setNRAILoading] = useState<boolean>(false);
+	const [isNrAiLoading, setIsNrAiLoading] = useState<boolean>(false);
 	const [currentNrAiFile, setCurrentNrAiFile] = useState<string | undefined>(undefined);
 	const [selectedLineIndex, setSelectedLineIndex] = useState<number | undefined>(undefined);
 
@@ -201,7 +205,7 @@ export const CodeError = (props: CodeErrorProps) => {
 		return result;
 	}, [derivedState.grokNraiCapability, derivedState.grokFeatureEnabled]);
 
-	const repoInfo = useMemo(() => {
+	const repoName = useMemo(() => {
 		if (!derivedState.repos || !repoId) {
 			return undefined;
 		}
@@ -211,10 +215,7 @@ export const CodeError = (props: CodeErrorProps) => {
 			return undefined;
 		}
 
-		return {
-			name: repo.name,
-			url: repo.remotes[0].normalizedUrl,
-		};
+		return repo.name;
 	}, [derivedState.repos, repoId]);
 
 	const logError = (
@@ -256,6 +257,13 @@ export const CodeError = (props: CodeErrorProps) => {
 	}, [accountId, entityGuid, errorGroupGuid]);
 
 	useEffect(() => {
+		// already going
+		// we're already in the loading process
+		// not watching these either, because once they're false, the next blocks for comment length should be sufficient.
+		if (isNrAiLoading || derivedState.isNraiStreamLoading) {
+			return;
+		}
+
 		// discussion is no good
 		if (!discussion || !discussion.threadId || discussion.comments.length > 0) {
 			return;
@@ -270,35 +278,41 @@ export const CodeError = (props: CodeErrorProps) => {
 	}, [discussion, derivedState.functionToEdit, derivedState.functionToEditFailed, showGrok]);
 
 	const initializeNrAiAnalysis = async () => {
-		setNRAILoading(true);
+		try {
+			setIsNrAiLoading(true);
 
-		const initiateNrAiPayload: InitiateNrAiRequest = {
-			errorGroupGuid: errorGroupGuid!,
-			entityGuid: entityGuid!,
-			threadId: discussion!.threadId,
+			const initiateNrAiPayload: InitiateNrAiRequest = {
+				errorGroupGuid: errorGroupGuid!,
+				entityGuid: entityGuid!,
+				threadId: discussion!.threadId,
 
-			codeBlock: derivedState!.functionToEdit!.codeBlock,
-			stackTrace: stackTraceLines.join("\n"),
-			errorText: `${props.codeError.title} ${props.codeError?.text}`,
-			language: derivedState!.functionToEdit!.language,
-		};
+				codeBlock: derivedState!.functionToEdit!.codeBlock,
+				stackTrace: stackTraceLines.join("\n"),
+				errorText: `${props.codeError.title} ${props.codeError?.text}`,
+				language: derivedState!.functionToEdit!.language,
+			};
 
-		// send the payload to the agent
-		const response = await HostApi.instance.send(InitiateNrAiRequestType, initiateNrAiPayload);
+			// send the payload to the agent
+			const response = await HostApi.instance.send(InitiateNrAiRequestType, initiateNrAiPayload);
 
-		if (response.nrError) {
+			if (response.nrError) {
+				handleDiscussionError("An error occurred while attempting to initiate NRAI.", {
+					nrError: response.nrError,
+				});
+			} else {
+				const payload = {
+					event_type: "response",
+				} as TelemetryData;
+
+				HostApi.instance.track("codestream/nrai/error_analysis succeeded", payload);
+			}
+		} catch (ex) {
 			handleDiscussionError("An error occurred while attempting to initiate NRAI.", {
-				nrError: response.nrError,
+				error: ex,
 			});
+		} finally {
+			setIsNrAiLoading(false);
 		}
-
-		const payload = {
-			event_type: "response",
-		} as TelemetryData;
-
-		HostApi.instance.track("codestream/nrai/error_analysis succeeded", payload);
-
-		setNRAILoading(false);
 	};
 
 	const loadDiscussion = async () => {
@@ -622,10 +636,10 @@ export const CodeError = (props: CodeErrorProps) => {
 							);
 						})}
 
-					{repoInfo && (
+					{repoName && (
 						<DataRow data-testid="code-error-repo">
 							<DataLabel>Repo:</DataLabel>
-							<DataValue>{repoInfo.name}</DataValue>
+							<DataValue>{repoName}</DataValue>
 						</DataRow>
 					)}
 
