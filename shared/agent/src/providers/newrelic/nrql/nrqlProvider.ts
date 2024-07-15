@@ -179,9 +179,6 @@ export class NrNRQLProvider {
 	transformQuery(nrql: string) {
 		let query = this.replaceDoubleQuotesWithSingle(nrql);
 		query = this.removeNrqlComments(query);
-
-		// let query = this.removeNrqlComments(nrql);
-
 		query = escapeNrql(query);
 		query = query.replace(/[\n\r]/g, " ").trim();
 		return query;
