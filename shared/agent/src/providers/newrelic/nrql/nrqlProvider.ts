@@ -132,7 +132,21 @@ export class NrNRQLProvider {
 	}
 
 	replaceDoubleQuotesWithSingle(query: string): string {
-		return query.replace(/"/g, "'");
+		let result = "";
+		let insideSingleQuotes = false;
+
+		for (let i = 0; i < query.length; i++) {
+			if (query[i] === "'") {
+				insideSingleQuotes = !insideSingleQuotes;
+			}
+			if (query[i] === '"' && !insideSingleQuotes) {
+				result += "'";
+			} else {
+				result += query[i];
+			}
+		}
+
+		return result;
 	}
 
 	/**
@@ -165,6 +179,9 @@ export class NrNRQLProvider {
 	transformQuery(nrql: string) {
 		let query = this.replaceDoubleQuotesWithSingle(nrql);
 		query = this.removeNrqlComments(query);
+
+		// let query = this.removeNrqlComments(nrql);
+
 		query = escapeNrql(query);
 		query = query.replace(/[\n\r]/g, " ").trim();
 		return query;
