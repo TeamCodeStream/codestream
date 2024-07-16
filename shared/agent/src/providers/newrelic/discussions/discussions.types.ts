@@ -39,6 +39,14 @@ export interface CommentsByThreadIdResponse {
 	};
 }
 
+export interface CommentByCommentIdResponse {
+	actor: {
+		collaboration: {
+			commentByCommentId: CollaborationComment;
+		};
+	};
+}
+
 export interface ThreadsByContextIdResponse {
 	actor: {
 		collaboration: {

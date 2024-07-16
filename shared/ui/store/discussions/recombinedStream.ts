@@ -1,9 +1,5 @@
 import { PostParts } from "@codestream/protocols/api";
-import {
-	CommentMsg,
-	isCommentMsg,
-	StreamingResponseMsg,
-} from "@codestream/webview/store/discussions/discussionsSlice";
+import { StreamingResponseMsg } from "@codestream/webview/store/discussions/discussionsSlice";
 
 export const NRAI_TIMEOUT = 2 * 60 * 1000; // 2 minutes
 
@@ -12,7 +8,7 @@ export type RecombinedStream = {
 	threadId: string;
 	content: string;
 	parts?: PostParts;
-	receivedDoneEvent: boolean;
+	finalMessageReceived: boolean;
 	lastContentIndex?: number;
 	lastMessageReceivedAt?: number;
 };
@@ -51,20 +47,19 @@ export function extractParts(content: string): PostParts {
 
 export function advanceRecombinedStream(
 	recombinedStream: RecombinedStream,
-	payload: StreamingResponseMsg | CommentMsg
+	payload: StreamingResponseMsg
 ) {
 	recombinedStream.lastMessageReceivedAt = Date.now();
-	const isComment = isCommentMsg(payload);
-	if (isComment) {
-		const receivedDoneEvent =
-			payload.meta.action === "comment.created" &&
-			payload.meta.threadId === recombinedStream.threadId;
-		if (receivedDoneEvent) {
-			console.debug(`advanceRecombinedStream receivedDoneEvent ${receivedDoneEvent}`);
-			recombinedStream.receivedDoneEvent = receivedDoneEvent;
-		}
+
+	if (isNrAiStreamDone(recombinedStream)) {
 		return;
 	}
+
+	if (payload.last_message) {
+		console.debug(`advanceRecombinedStream finalMessageReceived`);
+		recombinedStream.finalMessageReceived = true;
+	}
+
 	recombinedStream.items = recombinedStream.items.concat(payload);
 	recombinedStream.items.sort(
 		(a, b) =>
@@ -98,5 +93,5 @@ export function isNrAiStreamDone(stream: RecombinedStream) {
 			return false;
 		}
 	}
-	return stream.receivedDoneEvent;
+	return stream.finalMessageReceived;
 }

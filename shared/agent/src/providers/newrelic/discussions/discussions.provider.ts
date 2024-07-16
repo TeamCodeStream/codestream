@@ -10,6 +10,12 @@ import {
 	DeleteCollaborationCommentRequest,
 	DeleteCollaborationCommentRequestType,
 	DeleteCollaborationCommentResponse,
+	DeleteCollaborationThreadRequest,
+	DeleteCollaborationThreadRequestType,
+	DeleteCollaborationThreadResponse,
+	GetCollaborationCommentRequest,
+	GetCollaborationCommentRequestType,
+	GetCollaborationCommentResponse,
 	GetCollaborationWebsocketInfoRequestType,
 	GetErrorInboxCommentsRequest,
 	GetErrorInboxCommentsRequestType,
@@ -38,6 +44,7 @@ import {
 	WebsocketInfoResponse,
 	WebsocketConnectUrl,
 	CollaborationCreateCommentResponse,
+	CommentByCommentIdResponse,
 } from "./discussions.types";
 
 @lsp
@@ -270,6 +277,87 @@ export class DiscussionsProvider {
 		}
 	}
 
+	@lspHandler(GetCollaborationCommentRequestType)
+	@log()
+	async getSingleCommentById(
+		request: GetCollaborationCommentRequest
+	): Promise<GetCollaborationCommentResponse> {
+		try {
+			const getSingleCommentQuery = `
+			query($commentId: ID!) {
+				actor {
+					collaboration {
+						commentById(id: $commentId) {
+							body
+							deactivated
+							id
+							systemMessageType
+							createdAt
+							creator {
+								email
+								name
+								userId
+							}
+						}
+					}
+				}
+			}`;
+
+			const getSingleCommentResponse = await this.graphqlClient.query<CommentByCommentIdResponse>(
+				getSingleCommentQuery,
+				{
+					commentId: request.commentId,
+				}
+			);
+
+			let comment = getSingleCommentResponse.actor.collaboration.commentByCommentId;
+
+			comment = this.parseCommentForMentions(comment);
+
+			return {
+				comment: comment,
+			};
+		} catch (ex) {
+			ContextLogger.warn("getSingleCommentById failure", {
+				request,
+				error: ex,
+			});
+
+			return { nrError: mapNRErrorResponse(ex) };
+		}
+	}
+
+	private parseCommentForMentions(comment: CollaborationComment): CollaborationComment {
+		if (this.userMentionRegExp.test(comment.body)) {
+			const modifiedBody = comment.body.replace(this.userMentionRegExp, "$1");
+
+			comment.body = modifiedBody;
+		}
+
+		return comment;
+	}
+
+	private async parseCommentForGrok(comment: CollaborationComment): Promise<CollaborationComment> {
+		const grokMatch = new RegExp(this.grokMentionRegExp).exec(comment.body);
+
+		if (!grokMatch) {
+			return comment;
+		}
+
+		const grokCommentId = grokMatch[1];
+		const grokMessagesForId = await this.getGrokMessages(grokCommentId);
+
+		comment.body =
+			grokMessagesForId.messages
+				?.map(m => {
+					return `${m.content}`;
+				})
+				.join("\n\n") ?? "";
+		comment.creator.name = "NRAI";
+		comment.creator.userId = -1;
+
+		return comment;
+	}
 	/**
 	 * Primary endpoint for getting comments for a given error group.
 	 * This method will bootstrap the discussion if it doesn't exist, and return the comments.
@@ -377,34 +465,12 @@ export class DiscussionsProvider {
 					return e;
 				})
 				.map(e => {
-					if (this.userMentionRegExp.test(e.body)) {
-						const modifiedBody = e.body.replace(this.userMentionRegExp, "$1");
-
-						e.body = modifiedBody;
-					}
-
-					return e;
+					return this.parseCommentForMentions(e);
 				});
 
 			// parse all comments to find grok mentions and replace them with the actual grok messages
-			for (const commentEntity of commentEntities) {
-				const grokMatch = new RegExp(this.grokMentionRegExp).exec(commentEntity.body);
-
-				if (!grokMatch) {
-					continue;
-				}
-
-				const grokCommentId = grokMatch[1];
-				const grokMessagesForId = await this.getGrokMessages(grokCommentId);
-
-				commentEntity.body =
-					grokMessagesForId.messages
-						?.map(m => {
-							return `${m.content}`;
-						})
-						.join("\n\n") ?? "";
-				commentEntity.creator.name = "NRAI";
-				commentEntity.creator.userId = -1;
+			for (let commentEntity of commentEntities) {
+				commentEntity = await this.parseCommentForGrok(commentEntity);
 			}
 
 			const comments = commentEntities.filter(e => e.creator.userId != 0);

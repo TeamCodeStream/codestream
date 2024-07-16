@@ -1,6 +1,7 @@
 import { SocketClient } from "@codestream/webview/Stream/CodeError/socks/SockClient";
 import { useAppDispatch, useDidMount } from "@codestream/webview/utilities/hooks";
 import {
+	appendRealTimeComment,
 	appendStreamingResponse,
 	CommentMsg,
 	StreamingResponseMsg,
@@ -8,17 +9,23 @@ import {
 
 let sockClient: SocketClient | undefined;
 
-async function initWebsockets(handler: (data: StreamingResponseMsg) => void) {
+async function initWebsockets(
+	grokStreamHandler: (data: StreamingResponseMsg) => void,
+	commentHandler: (data: CommentMsg) => void
+) {
 	if (!sockClient) {
 		sockClient = new SocketClient();
 		sockClient.onEvent(
 			{
 				eventName: "GROKSTREAM",
-				handler,
+				handler: grokStreamHandler,
 			},
 			"codestream-non-nerdpack"
 		);
-		sockClient.onEvent({ eventName: "COMMENT", handler }, "codestream-non-nerdpack");
+		sockClient.onEvent(
+			{ eventName: "COMMENT", handler: commentHandler },
+			"codestream-non-nerdpack"
+		);
 		await sockClient.init();
 	}
 }
@@ -26,15 +33,17 @@ async function initWebsockets(handler: (data: StreamingResponseMsg) => void) {
 export default function useNraiStreaming() {
 	const dispatch = useAppDispatch();
 
-	const handler = async (data: StreamingResponseMsg | CommentMsg) => {
-		// console.log("GROKSTREAM hook", data);
+	const grokStreamHandler = async (data: StreamingResponseMsg) => {
 		dispatch(appendStreamingResponse(data));
 	};
 
+	const commentHandler = async (data: CommentMsg) => {
+		dispatch(appendRealTimeComment(data));
+	};
+
 	useDidMount(() => {
-		initWebsockets(handler);
+		initWebsockets(grokStreamHandler, commentHandler);
 	});
 
-	// console.debug("*** useNraiStreaming");
 	return {};
 }
