@@ -20,6 +20,11 @@ import { EllipsisMenu } from "./EllipsisMenu";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 import { parseId } from "../utilities/newRelic";
+import { TourTip } from "../src/components/TourTip";
+import { Tip, Step, Subtext } from "./ReviewNav";
+import { Button } from "../src/components/Button";
+import { setUserPreference } from "./actions";
+import { getSidebarLocation } from "../store/editorContext/reducer";
 
 const sum = (total, num) => total + Math.round(num);
 
@@ -55,6 +60,10 @@ export function GlobalNav() {
 			ideName: state.ide.name,
 			showNrqlBuilder: state.ide.name === "VSC" || state.ide.name === "JETBRAINS",
 			showLogSearch: state.ide.name === "VSC" || state.ide.name === "JETBRAINS",
+			// o11yTour: state.preferences.o11yTour ? state.preferences.o11yTour : "globalNav",
+			// @TODO: undo this when done developing
+			o11yTour: "globalNav",
+			sidebarLocation: getSidebarLocation(state),
 		};
 	});
 
@@ -127,8 +136,29 @@ export function GlobalNav() {
 	// Plural handling
 	const tooltipText = inviteCount < 2 ? "Invitation" : "Invitations";
 
-	// const selected = panel => activePanel === panel && !currentPullRequestId && !currentReviewId; // && !plusMenuOpen && !menuOpen;
-	const selected = panel => false;
+	const globalNavTourTipTitle =
+		derivedState.o11yTour === "globalNav" &&
+		derivedState.showNrqlBuilder &&
+		derivedState.showLogSearch ? (
+			<Tip>
+				<Step>1</Step>
+				<div>
+					Log Search & Query Builder
+					<Subtext>
+						Search logs for any service or entity. Run NRQL queries, and share them with the team
+						via .nrql files.
+					</Subtext>
+					<Button
+						onClick={() => {
+							dispatch(setUserPreference({ prefPath: ["o11yTour"], value: "services" }));
+						}}
+					>
+						Next &gt;
+					</Button>
+				</div>
+			</Tip>
+		) : undefined;
+
 	return React.useMemo(() => {
 		if (activePanel === WebviewPanels.Onboard) return null;
 		else if (activePanel === WebviewPanels.OnboardNewRelic) return null;
@@ -195,47 +225,58 @@ export function GlobalNav() {
 						)}
 					</label>
 
-					{derivedState.showNrqlBuilder && (
-						<label onClick={launchNrqlEditor} id="global-nav-query-label">
-							<span>
-								<Icon
-									name="terminal"
-									title="Query your data"
-									placement="bottom"
-									delay={1}
-									trigger={["hover"]}
-								/>
-							</span>
-						</label>
-					)}
+					<TourTip title={globalNavTourTipTitle} placement={"bottomLeft"}>
+						<div
+							style={{
+								backgroundColor: globalNavTourTipTitle
+									? "var(--panel-tool-background-color)"
+									: "inherit",
+								borderRadius: globalNavTourTipTitle ? "2px" : "none",
+								padding: globalNavTourTipTitle ? "1px 0px 0px 2px" : 0,
+							}}
+						>
+							{derivedState.showNrqlBuilder && (
+								<label onClick={launchNrqlEditor} id="global-nav-query-label">
+									<span>
+										<Icon
+											name="terminal"
+											title="Query your data"
+											placement="bottom"
+											delay={1}
+											trigger={["hover"]}
+										/>
+									</span>
+								</label>
+							)}
 
-					{derivedState.showLogSearch && (
-						<label onClick={launchLogSearch} id="global-nav-logs-label">
-							<span>
-								<Icon
-									name="logs"
-									title="View Logs"
-									placement="bottom"
-									delay={1}
-									trigger={["hover"]}
-								/>
-							</span>
-						</label>
-					)}
+							{derivedState.showLogSearch && (
+								<label onClick={launchLogSearch} id="global-nav-logs-label">
+									<span>
+										<Icon
+											name="logs"
+											title="View Logs"
+											placement="bottom"
+											delay={1}
+											trigger={["hover"]}
+										/>
+									</span>
+								</label>
+							)}
+						</div>
+					</TourTip>
 				</nav>
 			);
 		}
 	}, [
 		activePanel,
-
 		derivedState.currentEntityGuid,
 		currentReviewId,
 		currentCodeErrorGuid,
 		currentPullRequestId,
-
 		plusMenuOpen,
 		teamMenuOpen,
 		ellipsisMenuOpen,
 		inviteCount,
+		derivedState.o11yTour,
 	]);
 }

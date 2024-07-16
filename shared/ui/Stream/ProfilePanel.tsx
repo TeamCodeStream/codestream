@@ -199,6 +199,7 @@ export const ProfilePanel = () => {
 		if (derivedState.demoMode) {
 			dispatch(setUserPreference({ prefPath: ["hideCodeErrorInstructions"], value: false }));
 			dispatch(setUserPreference({ prefPath: ["hideReviewInstructions"], value: false }));
+			dispatch(setUserPreference({ prefPath: ["o11yTour"], value: "globalNav" }));
 		}
 	};
 
