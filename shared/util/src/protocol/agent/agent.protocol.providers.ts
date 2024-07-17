@@ -1500,21 +1500,21 @@ export const CreateCollaborationCommentRequestType = new RequestType<
 	void
 >("codestream/newrelic/collaboration/createComment");
 
-export interface DeleteCollaborationThreadRequest {
+export interface CloseCollaborationThreadRequest {
 	threadId: string;
 }
 
-export interface DeleteCollaborationThreadResponse {
-	threadId?: string;
+export interface CloseCollaborationThreadResponse {
+	success?: boolean;
 	nrError?: NRErrorResponse;
 }
 
-export const DeleteCollaborationThreadRequestType = new RequestType<
-	DeleteCollaborationThreadRequest,
-	DeleteCollaborationThreadResponse,
+export const CloseCollaborationThreadRequestType = new RequestType<
+	CloseCollaborationThreadRequest,
+	CloseCollaborationThreadResponse,
 	void,
 	void
->("codestream/newrelic/collaboration/deleteThread");
+>("codestream/newrelic/collaboration/closeThread");
 
 export interface DeleteCollaborationCommentRequest {
 	commentId: string;

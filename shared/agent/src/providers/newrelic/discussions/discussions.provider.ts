@@ -4,12 +4,12 @@ import {
 	CreateCollaborationCommentRequest,
 	CreateCollaborationCommentRequestType,
 	CreateCollaborationCommentResponse,
+	CloseCollaborationThreadRequest,
+	CloseCollaborationThreadRequestType,
+	CloseCollaborationThreadResponse,
 	DeleteCollaborationCommentRequest,
 	DeleteCollaborationCommentRequestType,
 	DeleteCollaborationCommentResponse,
-	DeleteCollaborationThreadRequest,
-	DeleteCollaborationThreadRequestType,
-	DeleteCollaborationThreadResponse,
 	GetCollaborationWebsocketInfoRequestType,
 	GetErrorInboxCommentsRequest,
 	GetErrorInboxCommentsRequestType,
@@ -128,6 +128,8 @@ export class DiscussionsProvider {
 	 *
 	 * Note, this doesn't _actually_ delete it, but rather deactivates it.
 	 *
+	 * UNUSED
+	 *
 	 * @param {DeleteCollaborationCommentRequest} request
 	 * @returns a promise that includes the deleted comment's ID, which you'll already have.
 	 */
@@ -167,40 +169,43 @@ export class DiscussionsProvider {
 	}
 
 	/**
-	 * For a given thread ID, delete the thread.
+	 * For a given thread ID, closes the thread.
 	 *
-	 * Note, this doesn't _actually_ delete it, but rather deactivates it
-	 *
-	 * @param {DeleteCollaborationThreadRequest} request
-	 * @returns a promise that includes the original thread's ID, which you'll already have.
+	 * @param {CloseCollaborationThreadRequest} request
+	 * @returns a promise that indicates success or contains the error.
 	 */
-	@lspHandler(DeleteCollaborationThreadRequestType)
+	@lspHandler(CloseCollaborationThreadRequestType)
 	@log()
-	async deleteCollaborationThread(
-		request: DeleteCollaborationThreadRequest
-	): Promise<DeleteCollaborationThreadResponse> {
+	async closeCollaborationThread(
+		request: CloseCollaborationThreadRequest
+	): Promise<CloseCollaborationThreadResponse> {
 		try {
-			const threadId = request.threadId;
-
-			const deleteThreadQuery = `
+			const updateThreadStatusQuery = `
 				mutation($threadId: ID!) {
-					collaborationDeactivateThread(id: $threadId) {
+					collaborationUpdateThreadStatus(
+						id: $threadId
+						status: CLOSED
+					) {
 						id
 					}
 				}`;
 
-			const deleteThreadResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
-				deleteThreadQuery,
+			const updateThreadResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
+				updateThreadStatusQuery,
 				{
-					threadId,
+					threadId: request.threadId,
 				}
 			);
 
+			if (!updateThreadResponse.collaborationUpdateThreadStatus.id) {
+				throw new Error("Failed to close thread");
+			}
+
 			return {
-				threadId: deleteThreadResponse.collaborationDeactivateThread.id,
+				success: true,
 			};
 		} catch (ex) {
-			ContextLogger.warn("deleteCollaborationThread failure", {
+			ContextLogger.warn("closeCollaborationThread failure", {
 				request,
 				error: ex,
 			});

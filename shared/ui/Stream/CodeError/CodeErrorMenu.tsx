@@ -1,6 +1,4 @@
 import React, { useMemo, useRef, useState } from "react";
-import { shallowEqual } from "react-redux";
-import { CodeStreamState } from "@codestream/webview/store";
 import { currentUserIsAdminSelector } from "@codestream/webview/store/users/reducer";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { DropdownButton, DropdownButtonItems } from "../DropdownButton";
@@ -8,19 +6,18 @@ import Icon from "../Icon";
 import Menu from "../Menu";
 import copy from "copy-to-clipboard";
 import { CodeErrorMenuProps } from "./CodeError.Types";
+import { confirmPopup } from "../Confirm";
+import { HostApi } from "@codestream/webview/webview-api";
+import { CloseCollaborationThreadRequestType } from "@codestream/protocols/agent";
+import { resetDiscussions } from "@codestream/webview/store/discussions/discussionsSlice";
+import { closeAllPanels } from "@codestream/webview/store/context/thunks";
+import { closeAllModals } from "@codestream/webview/store/context/actions";
 
 export const CodeErrorMenu = (props: CodeErrorMenuProps) => {
 	const dispatch = useAppDispatch();
 	const isAdmin = useAppSelector(currentUserIsAdminSelector);
-	const derivedState = useAppSelector((state: CodeStreamState) => {
-		return {
-			entityGuid: state.context.currentEntityGuid!,
-			currentUserId: state.session.userId!,
-			currentUser: state.users[state.session.userId!],
-		};
-	}, shallowEqual);
+	const discussion = useAppSelector(state => state.discussions.activeDiscussion);
 
-	const [isLoading, setIsLoading] = useState(false);
 	const [menuState, setMenuState] = useState<{ open: boolean; target?: any }>({
 		open: false,
 		target: undefined,
@@ -28,23 +25,32 @@ export const CodeErrorMenu = (props: CodeErrorMenuProps) => {
 
 	const permalinkRef = useRef<HTMLTextAreaElement>(null);
 
+	const closeDiscussion = (threadId?: string) => {
+		if (!threadId) return;
+
+		HostApi.instance
+			.send(CloseCollaborationThreadRequestType, {
+				threadId,
+			})
+			.then(response => {
+				if (response.nrError) {
+					console.error(response.nrError);
+					return;
+				}
+
+				if (response.success) {
+					dispatch(resetDiscussions());
+					dispatch(closeAllPanels());
+					dispatch(closeAllModals());
+				}
+			})
+			.catch(error => {
+				console.error(error);
+			});
+	};
+
 	const menuItems = useMemo(() => {
 		const items: DropdownButtonItems[] = [];
-
-		// if (props.errorGroup) {
-		// 	items.push({
-		// 		label: "Refresh",
-		// 		icon: <Icon name="refresh" />,
-		// 		key: "refresh",
-		// 		action: async () => {
-		// 			setIsLoading(true);
-		// 			await dispatch(
-		// 				fetchErrorGroup({ codeError: props.codeError, entityGuid: derivedState.entityGuid })
-		// 			);
-		// 			setIsLoading(false);
-		// 		},
-		// 	});
-		// }
 
 		if (props.codeError?.permalink) {
 			items.push({
@@ -57,36 +63,33 @@ export const CodeErrorMenu = (props: CodeErrorMenuProps) => {
 			});
 		}
 
-		// Our 'isAdmin' flag doesn't seem to match what NR1 is expecting, so it doesn't work
-		// if (isAdmin) {
-		// 	items.push({
-		// 		label: "Delete All Comments",
-		// 		icon: <Icon name="trash" />,
-		// 		key: "deleteAll-permalink",
-		// 		action: () => {
-		// 			confirmPopup({
-		// 				title: "Are you sure?",
-		// 				message:
-		// 					"This will delete all comments in this conversation. Deleting a comment cannot be undone.",
-		// 				centered: true,
-		// 				buttons: [
-		// 					{ label: "Go Back", className: "control-button" },
-		// 					{
-		// 						label: "Delete Comments",
-		// 						className: "delete",
-		// 						wait: true,
-		// 						action: async () => {
-		// 							//await deleteThread();
-		// 						},
-		// 					},
-		// 				],
-		// 			});
-		// 		},
-		// 	});
-		// }
+		if (discussion && isAdmin) {
+			items.push({
+				label: "Close Discussion",
+				key: "close-discussion",
+				action: () => {
+					confirmPopup({
+						title: "Are you sure?",
+						message: "This will close the discussion. Are you sure?",
+						centered: true,
+						buttons: [
+							{ label: "Go Back", className: "control-button" },
+							{
+								label: "Close Discussion",
+								className: "delete",
+								wait: true,
+								action: () => {
+									closeDiscussion(discussion?.threadId);
+								},
+							},
+						],
+					});
+				},
+			});
+		}
 
 		return items;
-	}, []);
+	}, [props.codeError, discussion?.threadId, isAdmin]);
 
 	if (props.isCollapsed) {
 		return (
@@ -108,13 +111,12 @@ export const CodeErrorMenu = (props: CodeErrorMenuProps) => {
 				<DropdownButton
 					items={menuItems}
 					selectedKey={props.errorGroup?.state || "UNKNOWN"}
-					isLoading={isLoading}
 					variant="secondary"
 					size="compact"
 					noChevronDown
 					wrap
 				>
-					<Icon loading={isLoading} name="kebab-horizontal" />
+					<Icon name="kebab-horizontal" />
 				</DropdownButton>
 			)}
 			<textarea
