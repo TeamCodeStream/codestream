@@ -580,25 +580,26 @@ export class DiscussionsProvider {
 	 */
 	private async generateContext(
 		entityGuid: string,
-		errorGroupGuid: string,
-		codeMarkId?: string
+		errorGroupGuid: string
 	): Promise<CollaborationContext> {
 		try {
-			const { accountId, domain, type } = { ...parseId(entityGuid) };
+			const accountId = parseId(entityGuid)!.accountId;
 
 			const contextMetadata: CollaborationContextMetadata = {
 				accountId: accountId!,
 				entityGuid: entityGuid,
 				nerdletId: "errors-inbox.error-group-details",
-				pageId: [errorGroupGuid, `${domain}-${type}`.toLocaleUpperCase()],
+				id: errorGroupGuid,
 			};
 
-			const contextHash = await generateHash(contextMetadata);
+			const contextHash = await generateHash({
+				accountId: accountId!,
+				entityGuid: entityGuid,
+				nerdletId: "errors-inbox.error-group-details",
 
-			// hash doesn't include codeMarkId, so we only need to add it to the metadata
-			if (codeMarkId) {
-				contextMetadata["codeMarkId"] = codeMarkId;
-			}
+				//id to pageId for the actual hashing
+				pageId: errorGroupGuid,
+			});
 
 			return {
 				id: contextHash,

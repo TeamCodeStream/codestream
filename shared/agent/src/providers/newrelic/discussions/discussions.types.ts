@@ -14,8 +14,7 @@ export interface CollaborationContextMetadata {
 	accountId: number;
 	entityGuid: string;
 	nerdletId: string;
-	pageId: string[];
-	codeMarkId?: string;
+	id: string;
 }
 
 export interface CollaborationContext {
