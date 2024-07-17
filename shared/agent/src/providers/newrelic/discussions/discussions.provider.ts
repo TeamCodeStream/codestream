@@ -369,13 +369,21 @@ export class DiscussionsProvider {
 				.filter(e => e.deactivated === false)
 				.sort((e1, e2) => parseInt(e1.createdAt) - parseInt(e2.createdAt))
 				.map(e => {
+					// strip trailing <br> from the message body
+					if (e.body.endsWith("<br>")) {
+						e.body = e.body.substring(0, e.body.length - 4);
+					}
+
+					return e;
+				})
+				.map(e => {
 					if (this.userMentionRegExp.test(e.body)) {
 						const modifiedBody = e.body.replace(this.userMentionRegExp, "$1");
 
 						e.body = modifiedBody;
 					}
 
-					return { ...e };
+					return e;
 				});
 
 			// parse all comments to find grok mentions and replace them with the actual grok messages
