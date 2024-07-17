@@ -25,6 +25,7 @@ import { Tip, Step, Subtext } from "./ReviewNav";
 import { Button } from "../src/components/Button";
 import { setUserPreference } from "./actions";
 import { getSidebarLocation } from "../store/editorContext/reducer";
+import { isEmpty as _isEmpty } from "lodash-es";
 
 const sum = (total, num) => total + Math.round(num);
 
@@ -42,6 +43,8 @@ export function GlobalNav() {
 				}
 			});
 		}
+
+		const hasEntityAccounts = !_isEmpty(state.context.entityAccounts);
 
 		return {
 			currentUserId: state.session.userId,
@@ -64,6 +67,7 @@ export function GlobalNav() {
 			// @TODO: undo this when done developing
 			o11yTour: "globalNav",
 			sidebarLocation: getSidebarLocation(state),
+			hasEntityAccounts,
 		};
 	});
 
@@ -139,7 +143,8 @@ export function GlobalNav() {
 	const globalNavTourTipTitle =
 		derivedState.o11yTour === "globalNav" &&
 		derivedState.showNrqlBuilder &&
-		derivedState.showLogSearch ? (
+		derivedState.showLogSearch &&
+		derivedState.hasEntityAccounts ? (
 			<Tip>
 				<Step>1</Step>
 				<div>
@@ -154,6 +159,26 @@ export function GlobalNav() {
 						}}
 					>
 						Next &gt;
+					</Button>
+				</div>
+			</Tip>
+		) : derivedState.o11yTour === "globalNav" &&
+		  derivedState.showNrqlBuilder &&
+		  derivedState.showLogSearch &&
+		  !derivedState.hasEntityAccounts ? (
+			<Tip>
+				<div>
+					Log Search & Query Builder
+					<Subtext>
+						Search logs for any service or entity. Run NRQL queries, and share them with the team
+						via .nrql files.
+					</Subtext>
+					<Button
+						onClick={() => {
+							dispatch(setUserPreference({ prefPath: ["o11yTour"], value: "" }));
+						}}
+					>
+						Done!
 					</Button>
 				</div>
 			</Tip>
