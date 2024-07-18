@@ -28,7 +28,7 @@ import {
 } from "@codestream/protocols/agent";
 import cx from "classnames";
 import { head as _head, isEmpty as _isEmpty } from "lodash-es";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
 import { setEditorContext } from "../store/editorContext/actions";
@@ -80,7 +80,7 @@ import { ObservabilityPreview } from "@codestream/webview/Stream/ObservabilityPr
 import { ObservabilityLoadingServiceEntities } from "@codestream/webview/Stream/ObservabilityLoading";
 import { ObservabilityServiceSearch } from "./ObservabilityServiceSearch";
 import { ObservabilityServiceEntity } from "./ObservabilityServiceEntity";
-import { StepTwoPerformanceData, StepTwoEntityAssociator } from "./O11yTourTips";
+import { StepTwoPerformanceData, StepTwoEntityAssociator, StepThree } from "./O11yTourTips";
 import { TourTip } from "../src/components/TourTip";
 
 interface Props {
@@ -1199,6 +1199,10 @@ export const Observability = React.memo((props: Props) => {
 		}
 	};
 
+	const serviceSearchTourTipTitle = useMemo(() => {
+		return derivedState.o11yTour === "service-search" ? <StepThree /> : undefined;
+	}, [derivedState.o11yTour]);
+
 	return (
 		<Root>
 			<div style={{ overflowY: "hidden" }}>
@@ -1218,34 +1222,36 @@ export const Observability = React.memo((props: Props) => {
 					)}
 			</div>
 
-			<ObservabilityServiceSearch
-				anomalyDetectionSupported={anomalyDetectionSupported}
-				calculatingAnomalies={calculatingAnomalies}
-				currentRepoId={currentRepoId || ""}
-				entityGoldenMetrics={entityGoldenMetrics}
-				entityGoldenMetricsErrors={entityGoldenMetricsErrors}
-				errorInboxError={errorInboxError}
-				handleClickTopLevelService={handleClickTopLevelService}
-				hasServiceLevelObjectives={hasServiceLevelObjectives}
-				loadingGoldenMetrics={loadingGoldenMetrics}
-				loadingPane={loadingPane}
-				noErrorsAccess={noErrorsAccess}
-				observabilityAnomalies={observabilityAnomalies}
-				observabilityAssignments={observabilityAssignments}
-				observabilityErrors={observabilityErrors}
-				observabilityErrorsError={observabilityErrorsError}
-				recentIssues={recentIssues}
-				serviceLevelObjectiveError={serviceLevelObjectiveError}
-				serviceLevelObjectives={serviceLevelObjectives}
-				setIsVulnPresent={setIsVulnPresent}
-				isVulnPresent={isVulnPresent}
-				showErrors={false}
-				expandedEntity={expandedEntity}
-				setExpandedEntityCallback={setExpandedEntity}
-				setExpandedEntityUserPrefCallback={setExpandedEntityUserPref}
-				setCurrentRepoIdCallback={setCurrentRepoId}
-				doRefreshCallback={doRefresh}
-			/>
+			<TourTip title={serviceSearchTourTipTitle} placement={"bottom"}>
+				<ObservabilityServiceSearch
+					anomalyDetectionSupported={anomalyDetectionSupported}
+					calculatingAnomalies={calculatingAnomalies}
+					currentRepoId={currentRepoId || ""}
+					entityGoldenMetrics={entityGoldenMetrics}
+					entityGoldenMetricsErrors={entityGoldenMetricsErrors}
+					errorInboxError={errorInboxError}
+					handleClickTopLevelService={handleClickTopLevelService}
+					hasServiceLevelObjectives={hasServiceLevelObjectives}
+					loadingGoldenMetrics={loadingGoldenMetrics}
+					loadingPane={loadingPane}
+					noErrorsAccess={noErrorsAccess}
+					observabilityAnomalies={observabilityAnomalies}
+					observabilityAssignments={observabilityAssignments}
+					observabilityErrors={observabilityErrors}
+					observabilityErrorsError={observabilityErrorsError}
+					recentIssues={recentIssues}
+					serviceLevelObjectiveError={serviceLevelObjectiveError}
+					serviceLevelObjectives={serviceLevelObjectives}
+					setIsVulnPresent={setIsVulnPresent}
+					isVulnPresent={isVulnPresent}
+					showErrors={false}
+					expandedEntity={expandedEntity}
+					setExpandedEntityCallback={setExpandedEntity}
+					setExpandedEntityUserPrefCallback={setExpandedEntityUserPref}
+					setCurrentRepoIdCallback={setCurrentRepoId}
+					doRefreshCallback={doRefresh}
+				/>
+			</TourTip>
 
 			{observabilityRepos.map(repo => {
 				const repoIsCollapsed = currentRepoId !== repo.repoId;
@@ -1254,14 +1260,14 @@ export const Observability = React.memo((props: Props) => {
 				const isNotFollowing = !derivedState.followedRepos.some(_ => _.guid === repo.repoGuid);
 				const repoHasEntityAccounts = repo.entityAccounts.length > 0;
 
-				const getTourTipTitle = () => {
+				const getServiceTourTipTitle = () => {
 					if (tourTipRepo === repo.repoId && derivedState.o11yTour === "services") {
 						return repoHasEntityAccounts ? <StepTwoPerformanceData /> : <StepTwoEntityAssociator />;
 					}
 					return undefined;
 				};
 
-				const tourTipTitle = getTourTipTitle();
+				const serviceTourTipTitle = getServiceTourTipTitle();
 
 				return (
 					<>
@@ -1274,7 +1280,7 @@ export const Observability = React.memo((props: Props) => {
 											style={{ transform: "scale(0.7)", display: "inline-block" }}
 											name="repo"
 										/>{" "}
-										<TourTip title={tourTipTitle} placement={"bottomLeft"}>
+										<TourTip title={serviceTourTipTitle} placement={"bottomLeft"}>
 											<span
 												style={{
 													fontSize: "11px",

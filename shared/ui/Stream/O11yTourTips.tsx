@@ -41,7 +41,7 @@ export const StepOneEnd = () => {
 				</Subtext>
 				<Button
 					onClick={() => {
-						dispatch(setUserPreference({ prefPath: ["o11yTour"], value: "" }));
+						dispatch(setUserPreference({ prefPath: ["o11yTour"], value: "done" }));
 					}}
 				>
 					Done!
@@ -110,7 +110,7 @@ export const StepThree = () => {
 					onClick={e => {
 						e.preventDefault();
 						e.stopPropagation();
-						dispatch(setUserPreference({ prefPath: ["o11yTour"], value: "" }));
+						dispatch(setUserPreference({ prefPath: ["o11yTour"], value: "done" }));
 					}}
 				>
 					Done!
