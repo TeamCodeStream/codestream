@@ -81,6 +81,7 @@ import { ObservabilityLoadingServiceEntities } from "@codestream/webview/Stream/
 import { ObservabilityServiceSearch } from "./ObservabilityServiceSearch";
 import { ObservabilityServiceEntity } from "./ObservabilityServiceEntity";
 import { StepTwoPerformanceData, StepTwoEntityAssociator } from "./O11yTourTips";
+import { TourTip } from "../src/components/TourTip";
 
 interface Props {
 	paneState: PaneState;
@@ -285,6 +286,7 @@ export const Observability = React.memo((props: Props) => {
 	const [isVulnPresent, setIsVulnPresent] = useState(false);
 	const { activeO11y } = derivedState;
 	const [hasDetectedTeamAnomalies, setHasDetectedTeamAnomalies] = useState(false);
+	const [tourTipRepo, setTourTipRepo] = useMemoizedState<string | undefined>(undefined);
 
 	const buildFilters = (repoIds: string[]) => {
 		return repoIds.map(repoId => {
@@ -1087,6 +1089,33 @@ export const Observability = React.memo((props: Props) => {
 		dispatch(setEntityAccounts(entityAccounts));
 	}, [observabilityRepos]);
 
+	useEffect(() => {
+		let repoWithEntityAccounts;
+
+		for (const repo of observabilityRepos) {
+			if (repo.repoId === currentRepoId && repo.entityAccounts.length > 0) {
+				setTourTipRepo(currentRepoId);
+				return; // Exit hook early if the currentRepoId has entityAccounts
+			}
+
+			if (!repoWithEntityAccounts && repo.entityAccounts.length > 0) {
+				repoWithEntityAccounts = repo.repoId;
+			}
+		}
+
+		// If currentRepoId does not have entityAccounts, set to first repo with entityAccounts
+		if (repoWithEntityAccounts) {
+			setTourTipRepo(repoWithEntityAccounts);
+		} else {
+			// If no repo has entityAccounts, set to currentRepoId
+			if (currentRepoId) {
+				setTourTipRepo(currentRepoId);
+			} else {
+				setTourTipRepo(undefined);
+			}
+		}
+	}, [observabilityRepos, currentRepoId]);
+
 	const handleClickFollowRepo = (repoObject: { name: string; guid: string }) => {
 		const { followedRepos } = derivedState;
 		const exists = followedRepos.some(
@@ -1170,12 +1199,6 @@ export const Observability = React.memo((props: Props) => {
 		}
 	};
 
-	const globalNavTourTipTitle =
-		derivedState.o11yTour === "services" && derivedState.hasEntityAccounts ? (
-			<StepTwoPerformanceData />
-		) : derivedState.o11yTour === "services" && !derivedState.hasEntityAccounts ? (
-			<StepTwoEntityAssociator />
-		) : undefined;
 	return (
 		<Root>
 			<div style={{ overflowY: "hidden" }}>
@@ -1229,6 +1252,16 @@ export const Observability = React.memo((props: Props) => {
 				const isLoadingCurrentRepo =
 					loadingEntities === repo.repoId || (isRefreshing && !repoIsCollapsed);
 				const isNotFollowing = !derivedState.followedRepos.some(_ => _.guid === repo.repoGuid);
+				const repoHasEntityAccounts = repo.entityAccounts.length > 0;
+
+				const getTourTipTitle = () => {
+					if (tourTipRepo === repo.repoId && derivedState.o11yTour === "services") {
+						return repoHasEntityAccounts ? <StepTwoPerformanceData /> : <StepTwoEntityAssociator />;
+					}
+					return undefined;
+				};
+
+				const tourTipTitle = getTourTipTitle();
 
 				return (
 					<>
@@ -1241,15 +1274,17 @@ export const Observability = React.memo((props: Props) => {
 											style={{ transform: "scale(0.7)", display: "inline-block" }}
 											name="repo"
 										/>{" "}
-										<span
-											style={{
-												fontSize: "11px",
-												fontWeight: "bold",
-												margin: "1px 2px 0px 0px",
-											}}
-										>
-											{repo.repoName?.toUpperCase()}
-										</span>
+										<TourTip title={tourTipTitle} placement={"bottomLeft"}>
+											<span
+												style={{
+													fontSize: "11px",
+													fontWeight: "bold",
+													margin: "1px 2px 0px 0px",
+												}}
+											>
+												{repo.repoName?.toUpperCase()}
+											</span>
+										</TourTip>
 										<span
 											style={{
 												fontSize: "11px",

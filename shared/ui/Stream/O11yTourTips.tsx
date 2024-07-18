@@ -56,12 +56,14 @@ export const StepTwoPerformanceData = () => {
 
 	return (
 		<Tip>
-			<Step>1</Step>
+			<Step>2</Step>
 			<div>
 				Contextual observability
 				<Subtext>See performance data for the services built from this repo.</Subtext>
 				<Button
-					onClick={() => {
+					onClick={e => {
+						e.preventDefault();
+						e.stopPropagation();
 						dispatch(setUserPreference({ prefPath: ["o11yTour"], value: "service-search" }));
 					}}
 				>
@@ -77,12 +79,14 @@ export const StepTwoEntityAssociator = () => {
 
 	return (
 		<Tip>
-			<Step>1</Step>
+			<Step>2</Step>
 			<div>
 				Contextual observability
 				<Subtext>Select the service built from this repo to see how its performing.</Subtext>
 				<Button
-					onClick={() => {
+					onClick={e => {
+						e.preventDefault();
+						e.stopPropagation();
 						dispatch(setUserPreference({ prefPath: ["o11yTour"], value: "service-search" }));
 					}}
 				>
@@ -103,7 +107,9 @@ export const StepThree = () => {
 				Performance data for any service
 				<Subtext>See performance data for any APM, Browser, or OTel service. </Subtext>
 				<Button
-					onClick={() => {
+					onClick={e => {
+						e.preventDefault();
+						e.stopPropagation();
 						dispatch(setUserPreference({ prefPath: ["o11yTour"], value: "" }));
 					}}
 				>
