@@ -88,8 +88,8 @@ export class DiscussionsProvider {
 	/**
 	 * For a given comment by its ID, update the body of the comment.
 	 *
-	 * @param {UpdateCollaborationCommentRequest} request
-	 * @returns a promise that includes the comment's ID, which you'll already have.
+	 * @param request `UpdateCollaborationCommentRequest`
+	 * @returns `Promise<UpdateCollaborationCommentResponse>`
 	 */
 	@lspHandler(UpdateCollaborationCommentRequestType)
 	@log()
@@ -134,8 +134,8 @@ export class DiscussionsProvider {
 	 *
 	 * UNUSED
 	 *
-	 * @param {DeleteCollaborationCommentRequest} request
-	 * @returns a promise that includes the deleted comment's ID, which you'll already have.
+	 * @param request `DeleteCollaborationCommentRequest`
+	 * @returns `Promise<DeleteCollaborationCommentResponse>`
 	 */
 	@lspHandler(DeleteCollaborationCommentRequestType)
 	@log()
@@ -175,8 +175,8 @@ export class DiscussionsProvider {
 	/**
 	 * For a given thread ID, closes the thread.
 	 *
-	 * @param {CloseCollaborationThreadRequest} request
-	 * @returns a promise that indicates success or contains the error.
+	 * @param request `CloseCollaborationThreadRequest`
+	 * @returns `Promise<CloseCollaborationThreadResponse>`
 	 */
 	@lspHandler(CloseCollaborationThreadRequestType)
 	@log()
@@ -221,8 +221,8 @@ export class DiscussionsProvider {
 	/**
 	 * Creates a comment on a given thread.
 	 *
-	 * @param {CreateCollaborationCommentRequest} request
-	 * @returns a promise that includes the newly created comment's ID.
+	 * @param request `CreateCollaborationCommentRequest`
+	 * @returns `Promise<CreateCollaborationCommentResponse>`
 	 */
 	@lspHandler(CreateCollaborationCommentRequestType)
 	@log()
@@ -274,6 +274,12 @@ export class DiscussionsProvider {
 		}
 	}
 
+	/**
+	 * Retrives a single comment by the given ID
+	 *
+	 * @param request `GetCollaborationCommentRequest`
+	 * @returns `Promise<GetCollaborationCommentResponse>`
+	 */
 	@lspHandler(GetCollaborationCommentRequestType)
 	@log()
 	async getSingleCommentById(
@@ -309,8 +315,7 @@ export class DiscussionsProvider {
 
 			let comment = getSingleCommentResponse.actor.collaboration.commentById;
 
-			comment = this.parseCommentForMentions(comment);
-			comment = this.stripComment(comment);
+			comment = await this.parseComment(comment);
 
 			return {
 				comment: comment,
@@ -329,8 +334,8 @@ export class DiscussionsProvider {
 	 * Primary endpoint for getting comments for a given error group.
 	 * This method will bootstrap the discussion if it doesn't exist, and return the comments.
 	 *
-	 * @param {GetErrorInboxCommentsRequest} request
-	 * @returns a promise that includes the threadId and all the associated comments, in order.
+	 * @param request `GetErrorInboxCommentsRequest`
+	 * @returns `Promise<GetErrorInboxCommentsResponse>`
 	 */
 	@lspHandler(GetErrorInboxCommentsRequestType)
 	@log()
@@ -422,17 +427,10 @@ export class DiscussionsProvider {
 			const commentEntities = allCommentEntities
 				.filter(e => !e.systemMessageType)
 				.filter(e => e.deactivated === false)
-				.sort((e1, e2) => parseInt(e1.createdAt) - parseInt(e2.createdAt))
-				.map(e => {
-					return this.stripComment(e);
-				})
-				.map(e => {
-					return this.parseCommentForMentions(e);
-				});
+				.sort((e1, e2) => parseInt(e1.createdAt) - parseInt(e2.createdAt));
 
-			// parse all comments to find grok mentions and replace them with the actual grok messages
 			for (let commentEntity of commentEntities) {
-				commentEntity = await this.parseCommentForGrok(commentEntity);
+				commentEntity = await this.parseComment(commentEntity);
 			}
 
 			const comments = commentEntities.filter(e => e.creator.userId != 0);
@@ -454,8 +452,8 @@ export class DiscussionsProvider {
 	/**
 	 * Initializes NRAI for a given thread so that it becomes the first comment
 	 *
-	 * @param {InitiateNrAiRequest} request
-	 * @returns a promise that includes the ID for the grok message
+	 * @param request `InitiateNrAiRequest`
+	 * @returns `Promise<InitiateNrAiResponse>`
 	 */
 	@lspHandler(InitiateNrAiRequestType)
 	@log()
@@ -511,15 +509,12 @@ export class DiscussionsProvider {
 		}
 	}
 
-	private stripComment(e: CollaborationComment): CollaborationComment {
-		// strip trailing <br> from the message body
-		if (e.body.endsWith("<br>")) {
-			e.body = e.body.substring(0, e.body.length - 4);
-		}
-
-		return e;
-	}
-
+	/**
+	 * For a given messageId, found in the mention of a comment, retrieve the grok messages.
+	 *
+	 * @param grokMessageId `string`
+	 * @returns `Promise<GrokMessage>`
+	 */
 	private async getGrokMessages(grokMessageId: string): Promise<GrokMessage> {
 		try {
 			const getGrokMessagesQuery = `
@@ -556,6 +551,48 @@ export class DiscussionsProvider {
 		}
 	}
 
+	/**
+	 * Helper method which chains all individual helper functions responsible
+	 * for parsing a comment of any mentions, grok messages, files, or special formatting.
+	 *
+	 * This method should be called for every comment we want to display to the user.
+	 *
+	 * @param comment `CollaborationComment`
+	 * @returns `Promise<CollaborationComment>`
+	 */
+	private async parseComment(comment: CollaborationComment): Promise<CollaborationComment> {
+		comment = this.stripComment(comment);
+		comment = this.parseCommentForMentions(comment);
+		comment = await this.parseCommentForGrok(comment);
+
+		return comment;
+	}
+
+	/**
+	 * Use `parseComment` instead of this method directly
+	 *
+	 * Cleans up any fluff in the actual message body.
+	 *
+	 * @param comment `CollaborationComment`
+	 * @returns `CollaborationComment`
+	 */
+	private stripComment(comment: CollaborationComment): CollaborationComment {
+		// strip trailing <br> from the message body
+		if (comment.body.endsWith("<br>")) {
+			comment.body = comment.body.substring(0, comment.body.length - 4);
+		}
+
+		return comment;
+	}
+
+	/**
+	 * Use `parseComment` instead of this method directly
+	 *
+	 * Transforms any mentions in the comment body to just the name of the user.
+	 *
+	 * @param comment `CollaborationComment`
+	 * @returns `CollaborationComment`
+	 */
 	private parseCommentForMentions(comment: CollaborationComment): CollaborationComment {
 		if (this.userMentionRegExp.test(comment.body)) {
 			const modifiedBody = comment.body.replace(this.userMentionRegExp, "$1");
@@ -566,6 +603,15 @@ export class DiscussionsProvider {
 		return comment;
 	}
 
+	/**
+	 * Use `parseComment` instead of this method directly
+	 *
+	 * For a given comment, if it contains a grok mention, retrieve the grok messages
+	 * and replace the comment body with them.
+	 *
+	 * @param comment `CollaborationComment`
+	 * @returns `Promise<CollaborationComment>`
+	 */
 	private async parseCommentForGrok(comment: CollaborationComment): Promise<CollaborationComment> {
 		const grokMatch = new RegExp(this.grokMentionRegExp).exec(comment.body);
 
@@ -592,9 +638,9 @@ export class DiscussionsProvider {
 	 * This is called as part of the bootstrapping method, as a thread must exist to add comments, but a user doesn't
 	 * need to be concerned with that aspect of it, so we'll just always create one on their behalf if need be.
 	 *
-	 * @param {string} entityGuid
-	 * @param {string} errorGroupGuid
-	 * @returns a promise that includes the threadId of the newly created thread.
+	 * @param entityGuid `string`
+	 * @param errorGroupGuid `string`
+	 * @returns `Promise<string>`
 	 */
 	private async createThread(entityGuid: string, errorGroupGuid: string): Promise<string> {
 		try {
@@ -651,9 +697,9 @@ export class DiscussionsProvider {
 	 * Most, but not all, mutations require a context to be passed in.
 	 * This method generates that context for a given entityGuid and errorGroupGuid.
 	 *
-	 * @param {string} entityGuid
-	 * @param {string} errorGroupGuid
-	 * @returns a promise that includes the context hash, which is the ID of the context, and the context metadata.
+	 * @param entityGuid `string`
+	 * @param errorGroupGuid `string`
+	 * @returns `Promise<CollaborationContext>`
 	 */
 	private async generateContext(
 		entityGuid: string,
@@ -697,9 +743,9 @@ export class DiscussionsProvider {
 	 * When the IDE calls for comments for a given error group, we need to ensure certain criteria are met and exist.
 	 * This method exists and handles all the bootstrapping; use it in between ANY calls to get comments.
 	 *
-	 * @param {string} errorGroupGuid
-	 * @param {string} entityGuid
-	 * @returns a promise that includes the threadId and the context.
+	 * @param errorGroupGuid `string`
+	 * @param entityGuid `string`
+	 * @returns `Promise<BootStrapResponse>`
 	 */
 	private async bootstrapCollaborationDiscussionForError(
 		errorGroupGuid: string,
@@ -771,56 +817,6 @@ export class DiscussionsProvider {
 			ContextLogger.warn("bootstrapCollaborationDiscussion failure", {
 				errorGroupGuid,
 				entityGuid,
-				error: ex,
-			});
-
-			throw ex;
-		}
-	}
-
-	/**
-	 * Creates a codemark for a given code block to be used with NRAI
-	 *
-	 * @param {CreateCodeMarkRequest} request
-	 * @returns a promise that resolves to the codeMarkId that was created
-	 */
-	private async createCodeMark(request: {
-		codeBlock: string;
-		fileUri: string;
-		permalink: string;
-		repo: string;
-		sha: string;
-	}): Promise<string> {
-		try {
-			const createCodeMarkQuery = `
-				mutation($code:String!, $file:String!, $permalink:String!, $repo:String!, $sha:String!) {
-					collaborationCreateCodeMark(
-						code: $code
-						file: $file
-						permalink: $permalink
-						repo: $repo
-						sha: $sha
-					) 
-					{
-						id
-					}
-				}`;
-
-			const createCodeMarkResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
-				createCodeMarkQuery,
-				{
-					code: request.codeBlock,
-					file: request.fileUri,
-					permalink: request.permalink,
-					repo: request.repo,
-					sha: request.sha,
-				}
-			);
-
-			return createCodeMarkResponse.collaborationCreateCodeMark.id;
-		} catch (ex) {
-			ContextLogger.warn("createCodeMark failure", {
-				request,
 				error: ex,
 			});
 
