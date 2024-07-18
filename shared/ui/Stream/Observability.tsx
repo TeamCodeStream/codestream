@@ -80,6 +80,7 @@ import { ObservabilityPreview } from "@codestream/webview/Stream/ObservabilityPr
 import { ObservabilityLoadingServiceEntities } from "@codestream/webview/Stream/ObservabilityLoading";
 import { ObservabilityServiceSearch } from "./ObservabilityServiceSearch";
 import { ObservabilityServiceEntity } from "./ObservabilityServiceEntity";
+import { StepTwoPerformanceData, StepTwoEntityAssociator } from "./O11yTourTips";
 
 interface Props {
 	paneState: PaneState;
@@ -198,6 +199,7 @@ export const Observability = React.memo((props: Props) => {
 		const team = state.teams[state.context.currentTeamId] || {};
 		const company =
 			!_isEmpty(state.companies) && !_isEmpty(team) ? state.companies[team.companyId] : undefined;
+		const hasEntityAccounts = !_isEmpty(state.context.entityAccounts);
 
 		return {
 			sessionStart: state.context.sessionStart,
@@ -226,6 +228,8 @@ export const Observability = React.memo((props: Props) => {
 			currentServiceSearchEntity: state.context.currentServiceSearchEntity,
 			repoFollowingType: preferences?.repoFollowingType || "AUTO",
 			followedRepos: preferences?.followedRepos || [],
+			o11yTour: preferences?.o11yTour || "",
+			hasEntityAccounts,
 		};
 	}, shallowEqual);
 
@@ -1164,10 +1168,14 @@ export const Observability = React.memo((props: Props) => {
 				setCurrentRepo(currentRepo, scmInfo);
 			}
 		}
-
-		//await fetchDocumentMarkers(textEditorUri);
 	};
 
+	const globalNavTourTipTitle =
+		derivedState.o11yTour === "services" && derivedState.hasEntityAccounts ? (
+			<StepTwoPerformanceData />
+		) : derivedState.o11yTour === "services" && !derivedState.hasEntityAccounts ? (
+			<StepTwoEntityAssociator />
+		) : undefined;
 	return (
 		<Root>
 			<div style={{ overflowY: "hidden" }}>

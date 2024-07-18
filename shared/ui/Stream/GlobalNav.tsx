@@ -21,12 +21,9 @@ import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 import { parseId } from "../utilities/newRelic";
 import { TourTip } from "../src/components/TourTip";
-import { Tip, Step, Subtext } from "./ReviewNav";
-import { Button } from "../src/components/Button";
-import { setUserPreference } from "./actions";
 import { getSidebarLocation } from "../store/editorContext/reducer";
 import { isEmpty as _isEmpty } from "lodash-es";
-
+import { StepOneContinue, StepOneEnd } from "./O11yTourTips";
 const sum = (total, num) => total + Math.round(num);
 
 export function GlobalNav() {
@@ -63,9 +60,7 @@ export function GlobalNav() {
 			ideName: state.ide.name,
 			showNrqlBuilder: state.ide.name === "VSC" || state.ide.name === "JETBRAINS",
 			showLogSearch: state.ide.name === "VSC" || state.ide.name === "JETBRAINS",
-			// o11yTour: state.preferences.o11yTour ? state.preferences.o11yTour : "globalNav",
-			// @TODO: undo this when done developing
-			o11yTour: "globalNav",
+			o11yTour: state.preferences.o11yTour ? state.preferences.o11yTour : "globalNav",
 			sidebarLocation: getSidebarLocation(state),
 			hasEntityAccounts,
 		};
@@ -145,43 +140,12 @@ export function GlobalNav() {
 		derivedState.showNrqlBuilder &&
 		derivedState.showLogSearch &&
 		derivedState.hasEntityAccounts ? (
-			<Tip>
-				<Step>1</Step>
-				<div>
-					Log Search & Query Builder
-					<Subtext>
-						Search logs for any service or entity. Run NRQL queries, and share them with the team
-						via .nrql files.
-					</Subtext>
-					<Button
-						onClick={() => {
-							dispatch(setUserPreference({ prefPath: ["o11yTour"], value: "services" }));
-						}}
-					>
-						Next &gt;
-					</Button>
-				</div>
-			</Tip>
+			<StepOneContinue />
 		) : derivedState.o11yTour === "globalNav" &&
 		  derivedState.showNrqlBuilder &&
 		  derivedState.showLogSearch &&
 		  !derivedState.hasEntityAccounts ? (
-			<Tip>
-				<div>
-					Log Search & Query Builder
-					<Subtext>
-						Search logs for any service or entity. Run NRQL queries, and share them with the team
-						via .nrql files.
-					</Subtext>
-					<Button
-						onClick={() => {
-							dispatch(setUserPreference({ prefPath: ["o11yTour"], value: "" }));
-						}}
-					>
-						Done!
-					</Button>
-				</div>
-			</Tip>
+			<StepOneEnd />
 		) : undefined;
 
 	return React.useMemo(() => {
