@@ -1223,34 +1223,44 @@ export const Observability = React.memo((props: Props) => {
 			</div>
 
 			<TourTip title={serviceSearchTourTipTitle} placement={"bottom"}>
-				<ObservabilityServiceSearch
-					anomalyDetectionSupported={anomalyDetectionSupported}
-					calculatingAnomalies={calculatingAnomalies}
-					currentRepoId={currentRepoId || ""}
-					entityGoldenMetrics={entityGoldenMetrics}
-					entityGoldenMetricsErrors={entityGoldenMetricsErrors}
-					errorInboxError={errorInboxError}
-					handleClickTopLevelService={handleClickTopLevelService}
-					hasServiceLevelObjectives={hasServiceLevelObjectives}
-					loadingGoldenMetrics={loadingGoldenMetrics}
-					loadingPane={loadingPane}
-					noErrorsAccess={noErrorsAccess}
-					observabilityAnomalies={observabilityAnomalies}
-					observabilityAssignments={observabilityAssignments}
-					observabilityErrors={observabilityErrors}
-					observabilityErrorsError={observabilityErrorsError}
-					recentIssues={recentIssues}
-					serviceLevelObjectiveError={serviceLevelObjectiveError}
-					serviceLevelObjectives={serviceLevelObjectives}
-					setIsVulnPresent={setIsVulnPresent}
-					isVulnPresent={isVulnPresent}
-					showErrors={false}
-					expandedEntity={expandedEntity}
-					setExpandedEntityCallback={setExpandedEntity}
-					setExpandedEntityUserPrefCallback={setExpandedEntityUserPref}
-					setCurrentRepoIdCallback={setCurrentRepoId}
-					doRefreshCallback={doRefresh}
-				/>
+				<div
+					style={{
+						backgroundColor: serviceSearchTourTipTitle
+							? "var(--panel-tool-background-color)"
+							: "inherit",
+						borderRadius: serviceSearchTourTipTitle ? "2px" : "none",
+						padding: serviceSearchTourTipTitle ? "1px 0px 4px 2px" : 0,
+					}}
+				>
+					<ObservabilityServiceSearch
+						anomalyDetectionSupported={anomalyDetectionSupported}
+						calculatingAnomalies={calculatingAnomalies}
+						currentRepoId={currentRepoId || ""}
+						entityGoldenMetrics={entityGoldenMetrics}
+						entityGoldenMetricsErrors={entityGoldenMetricsErrors}
+						errorInboxError={errorInboxError}
+						handleClickTopLevelService={handleClickTopLevelService}
+						hasServiceLevelObjectives={hasServiceLevelObjectives}
+						loadingGoldenMetrics={loadingGoldenMetrics}
+						loadingPane={loadingPane}
+						noErrorsAccess={noErrorsAccess}
+						observabilityAnomalies={observabilityAnomalies}
+						observabilityAssignments={observabilityAssignments}
+						observabilityErrors={observabilityErrors}
+						observabilityErrorsError={observabilityErrorsError}
+						recentIssues={recentIssues}
+						serviceLevelObjectiveError={serviceLevelObjectiveError}
+						serviceLevelObjectives={serviceLevelObjectives}
+						setIsVulnPresent={setIsVulnPresent}
+						isVulnPresent={isVulnPresent}
+						showErrors={false}
+						expandedEntity={expandedEntity}
+						setExpandedEntityCallback={setExpandedEntity}
+						setExpandedEntityUserPrefCallback={setExpandedEntityUserPref}
+						setCurrentRepoIdCallback={setCurrentRepoId}
+						doRefreshCallback={doRefresh}
+					/>
+				</div>
 			</TourTip>
 
 			{observabilityRepos.map(repo => {
