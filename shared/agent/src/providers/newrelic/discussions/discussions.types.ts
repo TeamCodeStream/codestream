@@ -42,7 +42,7 @@ export interface CommentsByThreadIdResponse {
 export interface CommentByCommentIdResponse {
 	actor: {
 		collaboration: {
-			commentByCommentId: CollaborationComment;
+			commentById: CollaborationComment;
 		};
 	};
 }

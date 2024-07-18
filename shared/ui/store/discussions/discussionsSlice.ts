@@ -2,7 +2,6 @@ import { Discussion } from "@codestream/webview/store/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {
 	CollaborationComment,
-	GetCollaborationCommentRequestType,
 } from "@codestream/protocols/agent";
 import { PostParts } from "@codestream/protocols/api";
 import {
@@ -10,7 +9,6 @@ import {
 	RecombinedStream,
 } from "@codestream/webview/store/discussions/recombinedStream";
 import { CodeStreamState } from "@codestream/webview/store";
-import { HostApi } from "@codestream/webview/webview-api";
 
 export interface SetCommentBodyArgs {
 	body: string;
@@ -104,39 +102,6 @@ export const discussionSlice = createSlice({
 				}
 			}
 		},
-		appendRealTimeComment: (state, action: PayloadAction<CommentMsg>) => {
-			if (!state.activeDiscussion) return;
-
-			if (state.activeDiscussion.threadId !== action.payload.meta.threadId) return;
-
-			const commentId = action.payload.id;
-
-			const comment = state.activeDiscussion.comments.find(comment => comment.id === commentId);
-
-			// comment already added; author doesn't matter; bail
-			if (comment) return;
-
-			// grok streams handled by appendStreamingResponse
-			if (action.payload.meta.body.includes("GROK_RESPONSE")) {
-				return;
-			}
-
-			// with those basic checks out of the way, now we need the real comment
-			HostApi.instance
-				.send(GetCollaborationCommentRequestType, {
-					commentId,
-				})
-				.then(response => {
-					if (response.comment) {
-						state.activeDiscussion?.comments.push(response.comment);
-					} else if (response.nrError) {
-						console.error(response.nrError);
-					}
-				})
-				.catch(error => {
-					console.error(error);
-				});
-		},
 		appendStreamingResponse: (state, action: PayloadAction<StreamingResponseMsg>) => {
 			if (!state.activeDiscussion) return;
 			// Lookup streamingPosts by threadId (conversation_id)
@@ -192,7 +157,6 @@ export const {
 	editComment,
 	setCommentBody,
 	resetDiscussions,
-	appendRealTimeComment,
 	appendStreamingResponse,
 } = discussionSlice.actions;
 export default discussionSlice.reducer;

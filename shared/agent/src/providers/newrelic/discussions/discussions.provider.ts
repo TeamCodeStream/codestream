@@ -307,9 +307,10 @@ export class DiscussionsProvider {
 				}
 			);
 
-			let comment = getSingleCommentResponse.actor.collaboration.commentByCommentId;
+			let comment = getSingleCommentResponse.actor.collaboration.commentById;
 
 			comment = this.parseCommentForMentions(comment);
+			comment = this.stripComment(comment);
 
 			return {
 				comment: comment,
@@ -324,37 +325,6 @@ export class DiscussionsProvider {
 		}
 	}
 
-	private parseCommentForMentions(comment: CollaborationComment): CollaborationComment {
-		if (this.userMentionRegExp.test(comment.body)) {
-			const modifiedBody = comment.body.replace(this.userMentionRegExp, "$1");
-
-			comment.body = modifiedBody;
-		}
-
-		return comment;
-	}
-
-	private async parseCommentForGrok(comment: CollaborationComment): Promise<CollaborationComment> {
-		const grokMatch = new RegExp(this.grokMentionRegExp).exec(comment.body);
-
-		if (!grokMatch) {
-			return comment;
-		}
-
-		const grokCommentId = grokMatch[1];
-		const grokMessagesForId = await this.getGrokMessages(grokCommentId);
-
-		comment.body =
-			grokMessagesForId.messages
-				?.map(m => {
-					return `${m.content}`;
-				})
-				.join("\n\n") ?? "";
-		comment.creator.name = "NRAI";
-		comment.creator.userId = -1;
-
-		return comment;
-	}
 	/**
 	 * Primary endpoint for getting comments for a given error group.
 	 * This method will bootstrap the discussion if it doesn't exist, and return the comments.
@@ -454,12 +424,7 @@ export class DiscussionsProvider {
 				.filter(e => e.deactivated === false)
 				.sort((e1, e2) => parseInt(e1.createdAt) - parseInt(e2.createdAt))
 				.map(e => {
-					// strip trailing <br> from the message body
-					if (e.body.endsWith("<br>")) {
-						e.body = e.body.substring(0, e.body.length - 4);
-					}
-
-					return e;
+					return this.stripComment(e);
 				})
 				.map(e => {
 					return this.parseCommentForMentions(e);
@@ -546,6 +511,15 @@ export class DiscussionsProvider {
 		}
 	}
 
+	private stripComment(e: CollaborationComment): CollaborationComment {
+		// strip trailing <br> from the message body
+		if (e.body.endsWith("<br>")) {
+			e.body = e.body.substring(0, e.body.length - 4);
+		}
+
+		return e;
+	}
+
 	private async getGrokMessages(grokMessageId: string): Promise<GrokMessage> {
 		try {
 			const getGrokMessagesQuery = `
@@ -580,6 +554,38 @@ export class DiscussionsProvider {
 
 			throw ex;
 		}
+	}
+
+	private parseCommentForMentions(comment: CollaborationComment): CollaborationComment {
+		if (this.userMentionRegExp.test(comment.body)) {
+			const modifiedBody = comment.body.replace(this.userMentionRegExp, "$1");
+
+			comment.body = modifiedBody;
+		}
+
+		return comment;
+	}
+
+	private async parseCommentForGrok(comment: CollaborationComment): Promise<CollaborationComment> {
+		const grokMatch = new RegExp(this.grokMentionRegExp).exec(comment.body);
+
+		if (!grokMatch) {
+			return comment;
+		}
+
+		const grokCommentId = grokMatch[1];
+		const grokMessagesForId = await this.getGrokMessages(grokCommentId);
+
+		comment.body =
+			grokMessagesForId.messages
+				?.map(m => {
+					return `${m.content}`;
+				})
+				.join("\n\n") ?? "";
+		comment.creator.name = "NRAI";
+		comment.creator.userId = -1;
+
+		return comment;
 	}
 
 	/**

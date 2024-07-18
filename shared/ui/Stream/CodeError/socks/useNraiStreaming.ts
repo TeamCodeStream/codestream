@@ -1,11 +1,11 @@
 import { SocketClient } from "@codestream/webview/Stream/CodeError/socks/SockClient";
 import { useAppDispatch, useDidMount } from "@codestream/webview/utilities/hooks";
 import {
-	appendRealTimeComment,
 	appendStreamingResponse,
 	CommentMsg,
 	StreamingResponseMsg,
 } from "@codestream/webview/store/discussions/discussionsSlice";
+import { fetchComment } from "@codestream/webview/store/discussions/thunks";
 
 let sockClient: SocketClient | undefined;
 
@@ -38,7 +38,7 @@ export default function useNraiStreaming() {
 	};
 
 	const commentHandler = async (data: CommentMsg) => {
-		dispatch(appendRealTimeComment(data));
+		dispatch(fetchComment(data));
 	};
 
 	useDidMount(() => {
