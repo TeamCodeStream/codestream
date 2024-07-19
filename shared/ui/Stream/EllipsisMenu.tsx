@@ -27,7 +27,7 @@ const RegionSubtext = styled.div`
 	color: var(--text-color-subtle);
 `;
 
-const LabelTopStyle = styled.div`
+const TopLabelStyle = styled.div`
 	small {
 		font-size: smaller;
 		color: var(--text-color-subtle);
@@ -276,12 +276,12 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		...[
 			{
 				label: (
-					<LabelTopStyle>
+					<TopLabelStyle>
 						<big>{derivedState.currentOrg?.organization_name}</big>
 						{derivedState.currentHost && derivedState.hasMultipleEnvironments && (
 							<small> ({derivedState.currentHost.name})</small>
 						)}
-					</LabelTopStyle>
+					</TopLabelStyle>
 				),
 				key: "companyHeader",
 				noHover: true,
