@@ -27,6 +27,17 @@ const RegionSubtext = styled.div`
 	color: var(--text-color-subtle);
 `;
 
+const LabelTopStyle = styled.div`
+	small {
+		font-size: smaller;
+		color: var(--text-color-subtle);
+	}
+	big {
+		font-size: larger;
+		color: var(--text-color-highlight);
+	}
+`;
+
 export const MailHighlightedIconWrapper = styled.div`
 	right: 4px;
 	border-radius: 50%;
@@ -265,14 +276,12 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		...[
 			{
 				label: (
-					<>
-						<h3>
-							{derivedState.currentOrg?.organization_name}
-							{derivedState.currentHost && derivedState.hasMultipleEnvironments && (
-								<small> ({derivedState.currentHost.name})</small>
-							)}
-						</h3>
-					</>
+					<LabelTopStyle>
+						<big>{derivedState.currentOrg?.organization_name}</big>
+						{derivedState.currentHost && derivedState.hasMultipleEnvironments && (
+							<small> ({derivedState.currentHost.name})</small>
+						)}
+					</LabelTopStyle>
 				),
 				key: "companyHeader",
 				noHover: true,
