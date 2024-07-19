@@ -283,6 +283,13 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				noHover: true,
 				disabled: true,
 			},
+			{
+				label: <small>{derivedState.currentUserEmail}</small>,
+				key: "email",
+				noHover: true,
+				disabled: true,
+			},
+			{ label: "-" },
 
 			buildSwitchTeamMenuItem(),
 			{ label: "-" },
