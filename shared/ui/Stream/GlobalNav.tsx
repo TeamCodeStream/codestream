@@ -46,7 +46,6 @@ export function GlobalNav() {
 		return {
 			currentUserId: state.session.userId,
 			activePanel: state.context.panelStack[0],
-
 			currentReviewId: state.context.currentReviewId,
 			currentCodeErrorGuid: state.context.currentCodeErrorGuid,
 
@@ -60,7 +59,9 @@ export function GlobalNav() {
 			ideName: state.ide.name,
 			showNrqlBuilder: state.ide.name === "VSC" || state.ide.name === "JETBRAINS",
 			showLogSearch: state.ide.name === "VSC" || state.ide.name === "JETBRAINS",
-			o11yTour: state.preferences.o11yTour ? state.preferences.o11yTour : "globalNav",
+			//@TODO: enable once we get the okay from Dave
+			// o11yTour: state.preferences.o11yTour ? state.preferences.o11yTour : "globalNav",
+			o11yTour: undefined,
 			sidebarLocation: getSidebarLocation(state),
 			hasEntityAccounts,
 		};
@@ -70,15 +71,8 @@ export function GlobalNav() {
 	const [plusMenuOpen, setPlusMenuOpen] = React.useState();
 	const [teamMenuOpen, setTeamMenuOpen] = React.useState();
 
-	const {
-		activePanel,
-		eligibleJoinCompanies,
-		inviteCount,
-
-		currentReviewId,
-		currentCodeErrorGuid,
-		currentPullRequestId,
-	} = derivedState;
+	const { activePanel, inviteCount, currentReviewId, currentCodeErrorGuid, currentPullRequestId } =
+		derivedState;
 
 	const toggleEllipsisMenu = event => {
 		setEllipsisMenuOpen(ellipsisMenuOpen ? undefined : event.target.closest("label"));
