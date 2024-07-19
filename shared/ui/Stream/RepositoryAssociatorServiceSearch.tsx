@@ -58,8 +58,6 @@ const OptionRemote = styled.div`
 `;
 
 const Option = (props: OptionProps) => {
-	if (!props.data) return <div>&nbsp;</div>;
-
 	const children = (
 		<div>
 			<div title={props.data?.remote}>
