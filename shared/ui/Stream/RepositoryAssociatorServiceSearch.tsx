@@ -49,14 +49,24 @@ const OptionName = styled.div`
 const OptionRemote = styled.div`
 	color: var(--text-color-subtle);
 	font-size: smaller;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	direction: rtl;
+	text-align: left;
+	max-width: 100%;
 `;
 
 const Option = (props: OptionProps) => {
+	if (!props.data) return <div>&nbsp;</div>;
+
 	const children = (
-		<>
-			<OptionName>{props.data?.label}</OptionName>
-			<OptionRemote>{props.data?.remote}</OptionRemote>
-		</>
+		<div>
+			<div title={props.data?.remote}>
+				<OptionName>{props.data?.label}</OptionName>
+				<OptionRemote>{props.data?.remote}</OptionRemote>
+			</div>
+		</div>
 	);
 	return <components.Option {...props} children={children} />;
 };
