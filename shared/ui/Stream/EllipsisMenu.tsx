@@ -12,7 +12,7 @@ import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/ho
 import { WebviewPanels, SidebarPanes, CSPossibleAuthDomain } from "@codestream/protocols/api";
 import { CodeStreamState } from "../store";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
-import { openModal, setProfileUser } from "../store/context/actions";
+import { openModal } from "../store/context/actions";
 import { HostApi } from "../webview-api";
 import { openPanel } from "./actions";
 import Icon from "./Icon";
@@ -261,43 +261,6 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 
 	const menuItems = [] as any;
 
-	interface SubmenuOption {
-		label: string;
-		action?: () => void;
-	}
-	let accountSubmenu: SubmenuOption[] = [];
-
-	accountSubmenu = [
-		{
-			label: "View Profile",
-			action: () => {
-				dispatch(setProfileUser(derivedState.currentUserId));
-				popup(WebviewModals.Profile);
-			},
-		},
-		{ label: "Change Profile Photo", action: () => popup(WebviewModals.ChangeAvatar) },
-		{ label: "Change Username", action: () => popup(WebviewModals.ChangeUsername) },
-		{ label: "-" },
-		{ label: "Sign Out", action: () => handleLogout() },
-	];
-
-	menuItems.push({
-		label: "Account",
-		action: "account",
-		submenu: [
-			{
-				label: "View Profile",
-				action: () => {
-					dispatch(setProfileUser(derivedState.currentUserId));
-					popup(WebviewModals.Profile);
-				},
-			},
-			{ label: "Change Username", action: () => popup(WebviewModals.ChangeUsername) },
-			{ label: "-" },
-			{ label: "Sign Out", action: () => dispatch(logout()) },
-		],
-	});
-
 	if (derivedState.showNotificationsMenu) {
 		menuItems.push({
 			label: "Notifications",
@@ -307,7 +270,6 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 
 	menuItems.push(
 		...[
-			{ label: "-" },
 			{
 				label: (
 					<>
@@ -370,6 +332,8 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		},
 		{ label: "-" }
 	);
+
+	menuItems.push({ label: "Sign Out", action: () => handleLogout() });
 
 	let versionStatement = `CodeStream version ${derivedState.pluginVersion}`;
 	if (!derivedState.isProductionCloud || derivedState.hasMultipleEnvironments) {
