@@ -261,13 +261,6 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 
 	const menuItems = [] as any;
 
-	if (derivedState.showNotificationsMenu) {
-		menuItems.push({
-			label: "Notifications",
-			action: () => dispatch(openModal(WebviewModals.Notifications)),
-		});
-	}
-
 	menuItems.push(
 		...[
 			{
@@ -296,6 +289,13 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			{ label: "-" },
 		].filter(Boolean)
 	);
+
+	if (derivedState.showNotificationsMenu) {
+		menuItems.push({
+			label: "Notifications",
+			action: () => dispatch(openModal(WebviewModals.Notifications)),
+		});
+	}
 
 	menuItems.push({
 		label: "Help",
