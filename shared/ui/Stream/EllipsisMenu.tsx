@@ -273,10 +273,12 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			{
 				label: (
 					<>
-						<h3>{derivedState.currentOrg?.organization_name}</h3>
-						{derivedState.currentHost && derivedState.hasMultipleEnvironments && (
-							<small>{derivedState.currentHost.name}</small>
-						)}
+						<h3>
+							{derivedState.currentOrg?.organization_name}
+							{derivedState.currentHost && derivedState.hasMultipleEnvironments && (
+								<small> ({derivedState.currentHost.name})</small>
+							)}
+						</h3>
 					</>
 				),
 				key: "companyHeader",
@@ -289,56 +291,52 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				noHover: true,
 				disabled: true,
 			},
-			{ label: "-" },
 
 			buildSwitchTeamMenuItem(),
 			{ label: "-" },
 		].filter(Boolean)
 	);
 
-	menuItems.push(
-		{
-			label: "Help",
-			key: "help",
-			submenu: [
-				{
-					label: "What's New",
-					key: "whatsnew",
-					action: () => {
-						HostApi.instance.notify(OpenEditorViewNotificationType, {
-							panel: "whatsnew",
-							title: "What's New",
-							entryPoint: "profile",
-							ide: {
-								name: derivedState.ide.name,
-							},
-						});
-					},
+	menuItems.push({
+		label: "Help",
+		key: "help",
+		submenu: [
+			{
+				label: "What's New",
+				key: "whatsnew",
+				action: () => {
+					HostApi.instance.notify(OpenEditorViewNotificationType, {
+						panel: "whatsnew",
+						title: "What's New",
+						entryPoint: "profile",
+						ide: {
+							name: derivedState.ide.name,
+						},
+					});
 				},
-				{
-					label: "Documentation",
-					key: "documentation",
-					action: () => openUrl("https://docs.newrelic.com/docs/codestream"),
-				},
-				//{
-				//	label: "Keybindings",
-				//	key: "keybindings",
-				//	action: () => dispatch(openModal(WebviewModals.Keybindings)),
-				//},
-				// {
-				// 	label: "Getting Started Guide",
-				// 	key: "getting-started",
-				// 	action: () => dispatch(openPanel(WebviewPanels.GettingStarted))
-				// },
-				{
-					label: "Support",
-					key: "issue",
-					action: () => openUrl("https://one.newrelic.com/help-xp"),
-				},
-			],
-		},
-		{ label: "-" }
-	);
+			},
+			{
+				label: "Documentation",
+				key: "documentation",
+				action: () => openUrl("https://docs.newrelic.com/docs/codestream"),
+			},
+			//{
+			//	label: "Keybindings",
+			//	key: "keybindings",
+			//	action: () => dispatch(openModal(WebviewModals.Keybindings)),
+			//},
+			// {
+			// 	label: "Getting Started Guide",
+			// 	key: "getting-started",
+			// 	action: () => dispatch(openPanel(WebviewPanels.GettingStarted))
+			// },
+			{
+				label: "Support",
+				key: "issue",
+				action: () => openUrl("https://one.newrelic.com/help-xp"),
+			},
+		],
+	});
 
 	menuItems.push({ label: "Sign Out", action: () => handleLogout() });
 
