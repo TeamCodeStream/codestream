@@ -1,3 +1,4 @@
+import { UpdateTeamSettingsRequestType } from "@codestream/protocols/agent";
 import { sortBy as _sortBy } from "lodash-es";
 import React from "react";
 import styled from "styled-components";
@@ -6,13 +7,14 @@ import {
 	OpenUrlRequestType,
 	OpenEditorViewNotificationType,
 } from "@codestream/protocols/webview";
-import { switchToTeamSSO } from "@codestream/webview/store/session/thunks";
+import { logout, switchToTeamSSO } from "@codestream/webview/store/session/thunks";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { WebviewPanels, SidebarPanes, CSPossibleAuthDomain } from "@codestream/protocols/api";
 import { CodeStreamState } from "../store";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
-import { openModal } from "../store/context/actions";
+import { openModal, setProfileUser } from "../store/context/actions";
 import { HostApi } from "../webview-api";
+import { openPanel } from "./actions";
 import Icon from "./Icon";
 import Menu from "./Menu";
 import { AVAILABLE_PANES } from "./Sidebar";
@@ -239,11 +241,62 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		};
 	};
 
+	const go = (panel: WebviewPanels) => dispatch(openPanel(panel));
+	const popup = (modal: WebviewModals) => dispatch(openModal(modal));
+
 	const openUrl = url => {
 		HostApi.instance.send(OpenUrlRequestType, { url });
 	};
 
+	const changeXray = async value => {
+		await HostApi.instance.send(UpdateTeamSettingsRequestType, {
+			teamId: derivedState.team.id,
+			settings: { xray: value },
+		});
+	};
+
+	const handleLogout = async () => {
+		dispatch(logout());
+	};
+
 	const menuItems = [] as any;
+
+	interface SubmenuOption {
+		label: string;
+		action?: () => void;
+	}
+	let accountSubmenu: SubmenuOption[] = [];
+
+	accountSubmenu = [
+		{
+			label: "View Profile",
+			action: () => {
+				dispatch(setProfileUser(derivedState.currentUserId));
+				popup(WebviewModals.Profile);
+			},
+		},
+		{ label: "Change Profile Photo", action: () => popup(WebviewModals.ChangeAvatar) },
+		{ label: "Change Username", action: () => popup(WebviewModals.ChangeUsername) },
+		{ label: "-" },
+		{ label: "Sign Out", action: () => handleLogout() },
+	];
+
+	menuItems.push({
+		label: "Account",
+		action: "account",
+		submenu: [
+			{
+				label: "View Profile",
+				action: () => {
+					dispatch(setProfileUser(derivedState.currentUserId));
+					popup(WebviewModals.Profile);
+				},
+			},
+			{ label: "Change Username", action: () => popup(WebviewModals.ChangeUsername) },
+			{ label: "-" },
+			{ label: "Sign Out", action: () => dispatch(logout()) },
+		],
+	});
 
 	if (derivedState.showNotificationsMenu) {
 		menuItems.push({
