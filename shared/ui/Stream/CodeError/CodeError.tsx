@@ -287,7 +287,7 @@ export const CodeError = (props: CodeErrorProps) => {
 				threadId: discussion!.threadId,
 
 				codeBlock: derivedState!.functionToEdit!.codeBlock,
-				stackTrace: stackTraceLines.join("\n"),
+				stackTrace: stackTraceText ?? "",
 				errorText: `${props.codeError.title} ${props.codeError?.text}`,
 				language: derivedState!.functionToEdit!.language,
 			};
