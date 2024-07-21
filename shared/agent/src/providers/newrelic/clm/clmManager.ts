@@ -122,7 +122,10 @@ export class ClmManager implements Disposable {
 		const cacheKey =
 			resolutionMethod === "filePath"
 				? [filePath, request.languageId].join("-")
-				: [Object.values(request.locator!).join("-"), request.languageId].join("-");
+				: [
+						request.locator ? Object.values(request.locator).join("-") : "nolocator",
+						request.languageId,
+				  ].join("-");
 
 		if (request.resetCache) {
 			Logger.log("getFileLevelTelemetry: resetting cache", {
