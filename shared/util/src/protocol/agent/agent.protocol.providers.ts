@@ -1443,7 +1443,7 @@ export interface InitiateNrAiRequest {
 	entityGuid: string;
 	errorGroupGuid: string;
 
-	codeBlock: string;
+	codeBlock?: string;
 	stackTrace: string;
 	errorText: string;
 	language?: string;

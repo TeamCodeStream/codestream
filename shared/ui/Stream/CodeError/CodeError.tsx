@@ -270,12 +270,12 @@ export const CodeError = (props: CodeErrorProps) => {
 		}
 
 		// grok no good
-		if (!showGrok || derivedState.functionToEditFailed || !derivedState.functionToEdit) {
+		if (!showGrok) {
 			return;
 		}
 
 		initializeNrAiAnalysis();
-	}, [discussion, derivedState.functionToEdit, derivedState.functionToEditFailed, showGrok]);
+	}, [discussion, showGrok]);
 
 	const initializeNrAiAnalysis = async () => {
 		try {
@@ -286,7 +286,7 @@ export const CodeError = (props: CodeErrorProps) => {
 				entityGuid: entityGuid!,
 				threadId: discussion!.threadId,
 
-				codeBlock: derivedState!.functionToEdit!.codeBlock,
+				codeBlock: derivedState.functionToEdit?.codeBlock,
 				stackTrace: stackTraceText ?? "",
 				errorText: `${props.codeError.title} ${props.codeError?.text}`,
 				language: derivedState!.functionToEdit!.language,

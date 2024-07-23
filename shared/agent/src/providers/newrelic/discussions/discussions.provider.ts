@@ -481,7 +481,10 @@ export class DiscussionsProvider {
 			}
 
 			prompt += `\n\nAnalyze this stack trace:\n\`\`\`\n${request.errorText}\n${request.stackTrace}\n\`\`\``;
-			prompt += `\n\nAnd fix the following code, but only if a fix is truly needed:\n\`\`\`\n${request.codeBlock}\n\`\`\``;
+
+			if (request.codeBlock) {
+				prompt += `\n\nAnd fix the following code, but only if a fix is truly needed:\n\`\`\`\n${request.codeBlock}\n\`\`\``;
+			}
 
 			const initiateNrAiResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
 				initiateNrAiQuery,
