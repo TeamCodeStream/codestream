@@ -48,6 +48,7 @@ import { CSStackTraceLine } from "@codestream/protocols/api";
 import { parseId } from "@codestream/webview/utilities/newRelic";
 import {
 	isNraiStreamLoading,
+	resetDiscussions,
 	setActiveDiscussion,
 } from "@codestream/webview/store/discussions/discussionsSlice";
 import useNraiStreaming from "@codestream/webview/Stream/CodeError/socks/useNraiStreaming";
@@ -95,6 +96,7 @@ export const CodeError = (props: CodeErrorProps) => {
 	const { discussion } = derivedState;
 
 	useDidMount(() => {
+		dispatch(resetDiscussions());
 		dispatch(getNrCapability("nrai"));
 	});
 
