@@ -145,6 +145,35 @@ export const isMultiSelect = array => {
 	return isMultiSelect;
 };
 
+/**
+ * @param dataResults
+ * @param dataKeys
+ * @returns array
+ *
+ * General idea is sometimes the value of a result can be an object with
+ * a single key value pair.  We to extract that value and make it readable
+ * for recharts data.
+ *
+ * EX:
+ * [{
+ *   "beginTimeSeconds": 1721747515,
+ *   "endTimeSeconds": 1721747575,
+ *   "result": {
+ *      "75": 8.53125
+ *    }
+ * },...]
+ *
+ * turns into:
+ *
+ * [{
+ *    "beginTimeSeconds": 1721747515,
+ *    "endTimeSeconds": 1721747575,
+ *    "result": 8.53125
+ * },..]
+ *
+ * We can lose the 75 as its not relevant to the results/UX
+ *
+ */
 export const flattenResultsWithObjects = (dataResults, dataKeys) => {
 	let _dataResults = dataResults;
 	_dataResults.forEach(item => {
