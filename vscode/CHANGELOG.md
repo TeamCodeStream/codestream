@@ -1,5 +1,17 @@
 # Change Log
 
+## [15.12.0] - 2024-7-25
+
+### Changed
+
+- Error discussions are now tied to New Relic's collaboration tools, with discussions accessible from both CodeStream and New Relic on the web
+
+### Fixed
+
+- Fixes an issue with FACET value duplicated in query results in table visualization
+- Fixes an issue with the submission of queries via the Enter key changing the account selection
+- Fixes an issue with the display of charts in code-level metrics details view in JetBrains IDEs
+
 ## [15.11.0] - 2024-7-8
 
 ### Added
