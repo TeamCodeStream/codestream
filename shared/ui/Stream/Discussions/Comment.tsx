@@ -363,7 +363,6 @@ export const Comment = forwardRef((props: CommentProps, ref: Ref<HTMLDivElement>
 	return (
 		<Root ref={ref}>
 			<CommentBody>
-				<div className="bar-left-parent" />
 				<AuthorInfo style={{ fontWeight: 700 }}>
 					{props.comment.creator && <Headshot size={20} person={props.comment.creator} />}
 					<span className="reply-author">{props.comment.creator.name}</span>

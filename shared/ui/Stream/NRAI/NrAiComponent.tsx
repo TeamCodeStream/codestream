@@ -21,7 +21,7 @@ import { extractParts } from "@codestream/webview/store/discussions/recombinedSt
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 
 export const DiffSection = styled.div`
-	margin: 10px 0;
+	margin: 10px 0 10px 27px;
 `;
 
 export const ButtonRow = styled.div`
@@ -155,7 +155,6 @@ export function NrAiComponent(props: NrAiComponentProps) {
 	return (
 		<Root>
 			<CommentBody>
-				<div className="bar-left-parent" />
 				<AuthorInfo style={{ fontWeight: 700 }}>
 					{props.comment.creator && <Headshot size={20} person={props.comment.creator} />}
 					<span className="reply-author">{props.comment.creator.name}</span>
