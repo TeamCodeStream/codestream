@@ -649,8 +649,9 @@ export class DiscussionsProvider {
 			const createThreadQuery = `
 				mutation($contextId: ID!, $contextMetadata: CollaborationRawContextMetadata!) {
 					collaborationCreateThread(
-						contextId: $contextId, 
+						contextId: $contextId 
 						contextMetadata: $contextMetadata
+						visibility: "PUBLIC"
 					) {
 						id
 					}
@@ -664,24 +665,7 @@ export class DiscussionsProvider {
 				}
 			);
 
-			const updateThreadStatusQuery = `
-				mutation($threadId: ID!) {
-					collaborationUpdateThreadStatus(
-						id: $threadId
-						status: OPEN
-					) {
-						id
-					}
-				}`;
-
-			const updateThreadResponse = await this.graphqlClient.mutate<BaseCollaborationResponse>(
-				updateThreadStatusQuery,
-				{
-					threadId: createThreadResponse.collaborationCreateThread.id,
-				}
-			);
-
-			return updateThreadResponse.collaborationUpdateThreadStatus.id;
+			return createThreadResponse.collaborationCreateThread.id;
 		} catch (ex) {
 			ContextLogger.warn("createThread failure", {
 				errorGroupGuid,
