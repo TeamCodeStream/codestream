@@ -1,8 +1,6 @@
 import { Discussion } from "@codestream/webview/store/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import {
-	CollaborationComment,
-} from "@codestream/protocols/agent";
+import { CollaborationComment } from "@codestream/protocols/agent";
 import { PostParts } from "@codestream/protocols/api";
 import {
 	advanceRecombinedStream,
@@ -126,7 +124,7 @@ export const discussionSlice = createSlice({
 					createdAt: Date.now().toString(),
 					deactivated: false,
 					creator: {
-						name: "NRAI",
+						name: "AI",
 						userId: -1,
 					},
 					body: "",
@@ -136,7 +134,7 @@ export const discussionSlice = createSlice({
 			if (comment) {
 				comment.parts = recombinedStream.parts;
 				comment.body = recombinedStream.content;
-				comment.creator.name = "NRAI";
+				comment.creator.name = "AI";
 			}
 		},
 	},

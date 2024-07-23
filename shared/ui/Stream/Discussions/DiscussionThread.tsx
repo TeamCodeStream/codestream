@@ -18,7 +18,7 @@ interface CommentItemProps extends DiscussionThreadProps {
 
 function CommentItem(props: CommentItemProps) {
 	const { comment } = props;
-	if (comment.creator.name === "NRAI") {
+	if (comment.creator.name === "AI") {
 		return (
 			<NrAiComponent
 				comment={comment}

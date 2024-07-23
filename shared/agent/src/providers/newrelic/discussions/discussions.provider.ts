@@ -628,7 +628,7 @@ export class DiscussionsProvider {
 					return `${m.content}`;
 				})
 				.join("\n\n") ?? "";
-		comment.creator.name = "NRAI";
+		comment.creator.name = "AI";
 		comment.creator.userId = -1;
 
 		return comment;

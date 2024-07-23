@@ -135,7 +135,7 @@ export const Headshot = styled((props: HeadshotProps) => {
 		(props.className || "") +
 		(props.addThumbsUp && !props.hardRightBorder ? " make-room-for-thumbs-up" : "");
 
-	const isAI = person.username?.toLowerCase() === "ai" || person.name?.toLowerCase() === "nrai";
+	const isAI = person.username?.toLowerCase() === "ai";
 
 	return (
 		<Root

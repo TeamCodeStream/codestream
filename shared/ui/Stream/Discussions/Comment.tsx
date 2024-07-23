@@ -436,7 +436,7 @@ export const Comment = forwardRef((props: CommentProps, ref: Ref<HTMLDivElement>
 					<MarkdownContent className="reply-content-container">
 						<MarkdownText
 							text={postText}
-							includeCodeBlockCopy={props.comment.creator.name === "NRAI"}
+							includeCodeBlockCopy={props.comment.creator.name === "AI"}
 							className="reply-markdown-content"
 						/>
 					</MarkdownContent>
