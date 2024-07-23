@@ -19,6 +19,7 @@ import {
 	getUniqueDataKeyAndFacetValues,
 	formatXAxisTime,
 	isMultiSelect,
+	flattenResultsWithObjects,
 } from "./utils";
 import { EventTypeTooltip } from "./EventTypeTooltip";
 import { EventTypeLegend } from "./EventTypeLegend";
@@ -154,7 +155,7 @@ export const NRQLResultsLine: React.FC<NRQLResultsLineProps> = ({
 						<LineChart
 							width={500}
 							height={300}
-							data={results}
+							data={flattenResultsWithObjects(results, dataKeys)}
 							margin={{ top: 5, right: 0, left: 0, bottom: 5 }}
 						>
 							<CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />

@@ -144,3 +144,17 @@ export const isMultiSelect = array => {
 	}
 	return isMultiSelect;
 };
+
+export const flattenResultsWithObjects = (dataResults, dataKeys) => {
+	let _dataResults = dataResults;
+	_dataResults.forEach(item => {
+		dataKeys.forEach(key => {
+			if (item.hasOwnProperty(key) && typeof item[key] === "object") {
+				const keyValue = Object.keys(item[key])[0];
+				item[key] = item[key][keyValue];
+			}
+		});
+	});
+
+	return _dataResults;
+};
