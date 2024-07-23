@@ -72,36 +72,6 @@ export const Root = styled.div`
 		margin-right: 5px;
 	}
 
-	.bar-left-not-last-child {
-		width: 2px;
-		height: 100%;
-		position: absolute;
-		top: 0px;
-		left: 9px;
-		background: var(--text-color);
-		opacity: 0.25;
-	}
-
-	.bar-left-last-child {
-		width: 2px;
-		height: 27px;
-		position: absolute;
-		top: 0px;
-		left: 9px;
-		background: var(--text-color);
-		opacity: 0.25;
-	}
-
-	.bar-left-connector {
-		width: 19px;
-		height: 2px;
-		position: absolute;
-		top: 25px;
-		left: 11px;
-		background: var(--text-color);
-		opacity: 0.25;
-	}
-
 	.related {
 		margin: 10px 0;
 	}
@@ -132,16 +102,6 @@ export const CommentBody = styled.span`
 	:hover .icon.reply:hover,
 	:hover ${AddReactionIcon}:hover {
 		opacity: 1;
-	}
-
-	.bar-left-parent {
-		width: 2px;
-		height: calc(100% - 20px);
-		position: absolute;
-		top: 20px;
-		left: 9px;
-		background: var(--text-color);
-		opacity: 0.25;
 	}
 `;
 
