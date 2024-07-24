@@ -43,14 +43,12 @@ import {
 	WebsocketConnectUrl,
 	WebsocketInfoResponse,
 } from "./discussions.types";
+import * as htmlparser2 from "htmlparser2";
 
 @lsp
 export class DiscussionsProvider {
 	// TODO fix brittleness - relies on the properties of the collab-mention tag being in the right order...
-	private userMentionRegExp =
-		/<collab-mention data-type="NR_USER" [^>]*data-value="([^"]+)"[^>]*>[^<]*<\/collab-mention>/gim;
-	private grokMentionRegExp =
-		/<collab-mention data-value="@AI" data-type="NR_BOT" data-mentionable-item-id="([A-za-z0-9-_]+)"[^>]*>[^<]*<\/collab-mention>/gim;
+	private collabTagRegex = /<collab-mention.*?<\/collab-mention>/ims;
 	private grokResponseRegExp =
 		/<collab-mention data-type="GROK_RESPONSE" data-mentionable-item-id="([A-za-z0-9-]+)"\/>/gim;
 
@@ -600,13 +598,27 @@ export class DiscussionsProvider {
 	 * @param comment `CollaborationComment`
 	 * @returns `CollaborationComment`
 	 */
-	private parseCommentForMentions(comment: CollaborationComment): CollaborationComment {
-		if (this.userMentionRegExp.test(comment.body)) {
-			comment.body = comment.body.replace(this.userMentionRegExp, "$1");
+	public parseCommentForMentions(comment: CollaborationComment): CollaborationComment {
+		let match: RegExpExecArray | null;
+
+		while ((match = this.collabTagRegex.exec(comment.body)) !== null) {
+			match?.forEach(e => {
+				const dom = htmlparser2.parseDocument(e);
+				const element = htmlparser2.DomUtils.findOne(
+					elem => elem.type === htmlparser2.ElementType.Tag && elem.name === "collab-mention",
+					dom.children,
+					true
+				);
+				if (!element) {
+					return;
+				}
+				const dataValue = htmlparser2.DomUtils.getAttributeValue(element, "data-value");
+				if (dataValue) {
+					comment.body = comment.body.replace(e, dataValue + " ");
+				}
+			});
 		}
-		if (this.grokMentionRegExp.test(comment.body)) {
-			comment.body = comment.body.replace(this.grokMentionRegExp, "@AI");
-		}
+
 		return comment;
 	}
 
