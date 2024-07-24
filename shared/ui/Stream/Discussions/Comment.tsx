@@ -133,7 +133,7 @@ export type CommentInputProps = {
 	errorGroupGuid: string;
 	entityGuid: string;
 	codeError: CSCodeError;
-	showGrok: boolean;
+	useNrAi: boolean;
 	threadId: string;
 	isLoading?: boolean;
 };
@@ -181,7 +181,7 @@ export const CommentInput = (props: CommentInputProps) => {
 				placeholder="Add a comment..."
 				onChange={setText}
 				onSubmit={createComment}
-				suggestGrok={props.showGrok}
+				suggestGrok={props.useNrAi}
 			/>
 			<ButtonRow
 				style={{
@@ -211,7 +211,7 @@ export const CommentInput = (props: CommentInputProps) => {
 						Comment
 					</Button>
 				</Tooltip>
-				{props.showGrok && (
+				{props.useNrAi && (
 					<Button
 						style={{ marginLeft: 0 }}
 						onClick={() => setIsAskGrokOpen(true)}

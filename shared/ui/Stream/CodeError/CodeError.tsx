@@ -27,7 +27,6 @@ import { Icon } from "../Icon";
 import { DiscussionThread } from "../Discussions/DiscussionThread";
 import Timestamp from "../Timestamp";
 import Tooltip from "../Tooltip";
-import { isFeatureEnabled } from "../../store/apiVersioning/reducer";
 import { getNrCapability } from "@codestream/webview/store/nrCapabilities/thunks";
 import { CommentInput } from "../Discussions/Comment";
 import { DiscussionLoadingSkeleton } from "../Discussions/SkeletonLoader";
@@ -72,7 +71,6 @@ export const CodeError = (props: CodeErrorProps) => {
 			hideCodeErrorInstructions: state.preferences.hideCodeErrorInstructions,
 			ideName: state.ide.name,
 			grokNraiCapability: state.nrCapabilities.nrai === true,
-			grokFeatureEnabled: isFeatureEnabled(state, "showGrok"),
 			discussion: state.discussions.activeDiscussion,
 			isNraiStreamLoading: isNraiStreamLoading(state),
 		};
@@ -208,10 +206,9 @@ export const CodeError = (props: CodeErrorProps) => {
 		});
 	};
 
-	const showGrok = useMemo(() => {
-		const result = derivedState.grokNraiCapability || derivedState.grokFeatureEnabled;
-		return result;
-	}, [derivedState.grokNraiCapability, derivedState.grokFeatureEnabled]);
+	const useNrAi = useMemo(() => {
+		return derivedState.grokNraiCapability;
+	}, [derivedState.grokNraiCapability]);
 
 	const repoName = useMemo(() => {
 		if (!derivedState.repos || !repoId) {
@@ -277,15 +274,15 @@ export const CodeError = (props: CodeErrorProps) => {
 			return;
 		}
 
-		// grok no good
-		if (!showGrok) {
+		// NRAI no good
+		if (!useNrAi) {
 			return;
 		}
 
 		if (derivedState.functionToEditFailed || derivedState.functionToEdit) {
 			initializeNrAiAnalysis();
 		}
-	}, [discussion, showGrok, derivedState.functionToEditFailed, derivedState.functionToEdit]);
+	}, [discussion, useNrAi, derivedState.functionToEditFailed, derivedState.functionToEdit]);
 
 	const initializeNrAiAnalysis = async () => {
 		try {
@@ -592,7 +589,7 @@ export const CodeError = (props: CodeErrorProps) => {
 									entityGuid={entityGuid}
 									errorGroupGuid={errorGroupGuid}
 									codeError={props.codeError}
-									showGrok={showGrok}
+									useNrAi={useNrAi}
 									isLoading={discussionIsLoading}
 								/>
 							</ComposeWrapper>
