@@ -69,7 +69,9 @@ export function HeadshotName(props: HeadshotNameProps) {
 				/>
 			</HeadshotWrapper>
 			{!props.noName && (
-				<span className={cx("headshot-name", { "at-mention me": me })}>{person.username}</span>
+				<span className={cx("headshot-name", { "at-mention me": me })}>
+					{person.fullName || person.username}
+				</span>
 			)}
 		</Root>
 	);
