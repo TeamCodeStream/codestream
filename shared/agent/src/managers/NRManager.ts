@@ -248,10 +248,7 @@ export class NRManager {
 				}) not found in your editor. Open it in order to navigate the stack trace.`,
 			});
 		}
-		setNotification({
-			message: `[Associate a build sha or release tag with your errors] so that CodeStream can help make sure you’re looking at the right version of the code.`,
-			helpUrl: CONFIGURE_ERROR_REF_HELP_URL,
-		});
+
 		if (!ref) {
 			setNotification({
 				message: `[Associate a build sha or release tag with your errors] so that CodeStream can help make sure you’re looking at the right version of the code.`,

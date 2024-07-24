@@ -557,7 +557,7 @@ export function CodeErrorNavigator(props: Props) {
 		if (derivedState.demoMode || derivedState.errorsDemoMode.enabled) return null;
 
 		const items: WarningOrError[] = [];
-		if (repoNotification) {
+		if (repoNotification && !repoWarning) {
 			items.push(repoNotification);
 		}
 
