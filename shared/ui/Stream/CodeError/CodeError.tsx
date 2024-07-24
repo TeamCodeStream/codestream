@@ -116,8 +116,8 @@ export const CodeError = (props: CodeErrorProps) => {
 
 		try {
 			let foundNrAiLine: CSStackTraceLine | undefined = undefined;
-			let foundNrAiLineIndex: number | undefined = undefined;
-			let foundLineIndex: number | undefined = undefined;
+			let foundNrAiLineIndex: number = -1;
+			let foundLineIndex: number = -1;
 
 			let lineIndex = 0;
 			const lineCount = stackTraceLines.length || 0;
@@ -144,7 +144,7 @@ export const CodeError = (props: CodeErrorProps) => {
 				}
 
 				// find a line we can jump to in the IDE
-				if (!foundLineIndex) {
+				if (foundLineIndex >= 0) {
 					foundLineIndex = lineIndex;
 					break;
 				}
@@ -153,7 +153,7 @@ export const CodeError = (props: CodeErrorProps) => {
 			}
 
 			// we found what we need for NRAI, so use it for everything
-			if (foundNrAiLine && foundNrAiLineIndex) {
+			if (foundNrAiLine && foundNrAiLineIndex >= 0) {
 				setCurrentNrAiFile(foundNrAiLine.fileFullPath);
 				setSelectedLineIndex(foundNrAiLineIndex);
 
@@ -175,7 +175,7 @@ export const CodeError = (props: CodeErrorProps) => {
 			}
 
 			// we didn't find a method we can copy for AI usage, so just jump to the first line we can
-			if (foundLineIndex) {
+			if (foundLineIndex >= 0) {
 				setSelectedLineIndex(foundLineIndex);
 				dispatch(
 					jumpToStackLine({
