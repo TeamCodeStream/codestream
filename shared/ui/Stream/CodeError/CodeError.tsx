@@ -77,7 +77,6 @@ export const CodeError = (props: CodeErrorProps) => {
 			hideCodeErrorInstructions: state.preferences.hideCodeErrorInstructions,
 			ideName: state.ide.name,
 			grokNraiCapability: state.nrCapabilities.nrai === true,
-			grokFeatureEnabled: isFeatureEnabled(state, "showGrok"),
 			discussion,
 			isNraiStreamLoading: isNraiStreamLoading(state),
 			aiCommentParts,
