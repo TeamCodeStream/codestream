@@ -52,6 +52,7 @@ import {
 	setActiveDiscussion,
 } from "@codestream/webview/store/discussions/discussionsSlice";
 import useNraiStreaming from "@codestream/webview/Stream/CodeError/socks/useNraiStreaming";
+import { setFunctionToEditFailed } from "@codestream/webview/store/codeErrors/actions";
 
 export const CodeError = (props: CodeErrorProps) => {
 	const dispatch = useAppDispatch();
@@ -188,8 +189,13 @@ export const CodeError = (props: CodeErrorProps) => {
 
 				return;
 			}
+
+			// if we got this far, we weren't able to find anything useful, so set to failed
+			// to let AI do its thing regardless
+			dispatch(setFunctionToEditFailed(true));
 		} catch (ex) {
 			handleStackTraceError("An error occurred while attempting to process the stack trace.", ex);
+			dispatch(setFunctionToEditFailed(true));
 		}
 	};
 
