@@ -276,8 +276,10 @@ export const CodeError = (props: CodeErrorProps) => {
 			return;
 		}
 
-		initializeNrAiAnalysis();
-	}, [discussion, showGrok]);
+		if (derivedState.functionToEditFailed || derivedState.functionToEdit) {
+			initializeNrAiAnalysis();
+		}
+	}, [discussion, showGrok, derivedState.functionToEditFailed, derivedState.functionToEdit]);
 
 	const initializeNrAiAnalysis = async () => {
 		try {
@@ -291,7 +293,7 @@ export const CodeError = (props: CodeErrorProps) => {
 				codeBlock: derivedState.functionToEdit?.codeBlock,
 				stackTrace: stackTraceText ?? "",
 				errorText: `${props.codeError.title} ${props.codeError?.text}`,
-				language: derivedState!.functionToEdit!.language,
+				language: derivedState.functionToEdit?.language,
 			};
 
 			// send the payload to the agent
