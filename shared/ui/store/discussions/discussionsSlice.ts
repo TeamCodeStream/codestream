@@ -145,31 +145,24 @@ export const discussionSlice = createSlice({
 	},
 });
 
+function isFalsyOrUndefined(value) {
+	return value === null || value === undefined || value === false;
+}
+
 export const isNraiStreamLoading = (state: CodeStreamState) => {
 	const discussions = state.discussions;
-	if (!discussions.activeDiscussion) return undefined;
-	return (
-		//  iterate over all the conversations for the threadId and check for any finalMessageReceived === true
+
+	if (_isEmpty(discussions.streamingPosts) || _isEmpty(discussions.activeDiscussion)) {
+		return undefined;
+	}
+
+	const finalMessageReceived =
 		Object.values(discussions.streamingPosts[discussions.activeDiscussion.threadId] ?? {}).some(
 			stream => stream.finalMessageReceived
-		) || false
-	);
-};
+		) || false;
 
-// function isFalsyOrUndefined(value) {
-// 	return value === null || value === undefined || value === false;
-// }
-//
-// export const isNraiStreamLoading = ({ discussions }: CodeStreamState) => {
-// 	if (_isEmpty(discussions.streamingPosts) || _isEmpty(discussions.activeDiscussion)) {
-// 		return undefined;
-// 	}
-//
-// 	const { threadId } = discussions.activeDiscussion;
-// 	const finalMessageReceived = discussions.streamingPosts[threadId]?.finalMessageReceived;
-//
-// 	return isFalsyOrUndefined(finalMessageReceived);
-// };
+	return isFalsyOrUndefined(finalMessageReceived);
+};
 
 export const {
 	setActiveDiscussion,
