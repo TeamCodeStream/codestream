@@ -293,7 +293,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				noHover: true,
 				disabled: true,
 			},
-
+			{ label: "-" },
 			buildSwitchTeamMenuItem(),
 			{ label: "-" },
 		].filter(Boolean)
