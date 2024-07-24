@@ -146,8 +146,8 @@ export const isMultiSelect = array => {
 };
 
 /**
- * @param dataResults
- * @param dataKeys
+ * @param dataResults array
+ * @param dataKeys array
  * @returns array
  *
  * General idea is sometimes the value of a result can be an object with
@@ -176,8 +176,9 @@ export const isMultiSelect = array => {
  */
 export const flattenResultsWithObjects = (dataResults, dataKeys) => {
 	let _dataResults = dataResults;
+	let _dataKeys = dataKeys;
 	_dataResults.forEach(item => {
-		dataKeys.forEach(key => {
+		_dataKeys.forEach(key => {
 			if (item.hasOwnProperty(key) && typeof item[key] === "object") {
 				const keyValue = Object.keys(item[key])[0];
 				item[key] = item[key][keyValue];
