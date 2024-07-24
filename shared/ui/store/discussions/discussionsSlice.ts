@@ -7,6 +7,7 @@ import {
 	RecombinedStream,
 } from "@codestream/webview/store/discussions/recombinedStream";
 import { CodeStreamState } from "@codestream/webview/store";
+import { isEmpty as _isEmpty } from "lodash-es";
 
 export interface SetCommentBodyArgs {
 	body: string;
@@ -154,6 +155,21 @@ export const isNraiStreamLoading = (state: CodeStreamState) => {
 		) || false
 	);
 };
+
+// function isFalsyOrUndefined(value) {
+// 	return value === null || value === undefined || value === false;
+// }
+//
+// export const isNraiStreamLoading = ({ discussions }: CodeStreamState) => {
+// 	if (_isEmpty(discussions.streamingPosts) || _isEmpty(discussions.activeDiscussion)) {
+// 		return undefined;
+// 	}
+//
+// 	const { threadId } = discussions.activeDiscussion;
+// 	const finalMessageReceived = discussions.streamingPosts[threadId]?.finalMessageReceived;
+//
+// 	return isFalsyOrUndefined(finalMessageReceived);
+// };
 
 export const {
 	setActiveDiscussion,

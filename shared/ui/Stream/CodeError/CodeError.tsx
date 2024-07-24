@@ -6,7 +6,7 @@ import {
 	NRErrorResponse,
 	TelemetryData,
 } from "@codestream/protocols/agent";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { shallowEqual } from "react-redux";
 import { OpenEditorViewNotificationType } from "@codestream/protocols/webview";
 import { CardFooter, getCardProps } from "@codestream/webview/src/components/Card";
@@ -56,10 +56,16 @@ import { setFunctionToEditFailed } from "@codestream/webview/store/codeErrors/ac
 export const CodeError = (props: CodeErrorProps) => {
 	const dispatch = useAppDispatch();
 	const streaming = useNraiStreaming();
+	const footerRef = useRef<HTMLDivElement>(null);
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const currentCodeErrorData = state.context.currentCodeErrorData;
 		const parsed = parseId(currentCodeErrorData?.entityGuid);
+		const discussion = state.discussions.activeDiscussion;
+		const comments = discussion?.comments || [];
+		const aiCommentParts = comments
+			? comments.find(obj => obj.creator.name === "AI")?.parts
+			: undefined;
 
 		return {
 			entityDomain: currentCodeErrorData?.domain,
@@ -71,8 +77,10 @@ export const CodeError = (props: CodeErrorProps) => {
 			hideCodeErrorInstructions: state.preferences.hideCodeErrorInstructions,
 			ideName: state.ide.name,
 			grokNraiCapability: state.nrCapabilities.nrai === true,
-			discussion: state.discussions.activeDiscussion,
+			grokFeatureEnabled: isFeatureEnabled(state, "showGrok"),
+			discussion,
 			isNraiStreamLoading: isNraiStreamLoading(state),
+			aiCommentParts,
 		};
 	}, shallowEqual);
 
@@ -260,6 +268,20 @@ export const CodeError = (props: CodeErrorProps) => {
 
 		loadDiscussion();
 	}, [accountId, entityGuid, errorGroupGuid]);
+
+	useEffect(() => {
+		if (footerRef.current) {
+			const footerElement = footerRef.current;
+			if (footerElement) {
+				footerElement.scrollIntoView({ behavior: "smooth", block: "end" });
+				footerElement.scrollTop += 1000;
+			}
+		}
+	}, [
+		derivedState.isNraiStreamLoading,
+		derivedState.aiCommentParts?.description,
+		derivedState.aiCommentParts?.intro,
+	]);
 
 	useEffect(() => {
 		// already going
@@ -557,7 +579,7 @@ export const CodeError = (props: CodeErrorProps) => {
 		}
 
 		return (
-			<>
+			<div ref={footerRef}>
 				{discussionError && (
 					<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
 						<h4>{discussionError}</h4>
@@ -596,7 +618,7 @@ export const CodeError = (props: CodeErrorProps) => {
 						</>
 					)}
 				</CardFooter>
-			</>
+			</div>
 		);
 	};
 
@@ -608,61 +630,63 @@ export const CodeError = (props: CodeErrorProps) => {
 				</DelayedRender>
 			)}
 
-			<MinimumWidthCard {...getCardProps(props)} noCard={!props.isCollapsed}>
-				{props.codeError?.text && (
-					<Message
-						data-testid="code-error-text"
+			<div ref={footerRef}>
+				<MinimumWidthCard {...getCardProps(props)} noCard={!props.isCollapsed}>
+					{props.codeError?.text && (
+						<Message
+							data-testid="code-error-text"
+							style={{
+								opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25",
+							}}
+						>
+							{props.codeError.text}
+						</Message>
+					)}
+
+					<div
 						style={{
+							minHeight: props.errorGroup ? "18px" : "initial",
 							opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25",
 						}}
 					>
-						{props.codeError.text}
-					</Message>
-				)}
+						{props.errorGroup &&
+							props.errorGroup.attributes &&
+							Object.keys(props.errorGroup.attributes).map(key => {
+								const value: { type: string; value: any } = props.errorGroup.attributes![key];
+								return (
+									<DataRow>
+										<DataLabel>{key}:</DataLabel>
+										<DataValue>
+											{value.type === "timestamp" && (
+												<Timestamp className="no-padding" time={value.value as number} />
+											)}
+											{value.type !== "timestamp" && <>{value.value}</>}
+										</DataValue>
+									</DataRow>
+								);
+							})}
 
-				<div
-					style={{
-						minHeight: props.errorGroup ? "18px" : "initial",
-						opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25",
-					}}
-				>
-					{props.errorGroup &&
-						props.errorGroup.attributes &&
-						Object.keys(props.errorGroup.attributes).map(key => {
-							const value: { type: string; value: any } = props.errorGroup.attributes![key];
-							return (
-								<DataRow>
-									<DataLabel>{key}:</DataLabel>
-									<DataValue>
-										{value.type === "timestamp" && (
-											<Timestamp className="no-padding" time={value.value as number} />
-										)}
-										{value.type !== "timestamp" && <>{value.value}</>}
-									</DataValue>
-								</DataRow>
-							);
-						})}
+						{repoName && (
+							<DataRow data-testid="code-error-repo">
+								<DataLabel>Repo:</DataLabel>
+								<DataValue>{repoName}</DataValue>
+							</DataRow>
+						)}
 
-					{repoName && (
-						<DataRow data-testid="code-error-repo">
-							<DataLabel>Repo:</DataLabel>
-							<DataValue>{repoName}</DataValue>
-						</DataRow>
-					)}
+						{sha && (
+							<DataRow data-testid="code-error-ref">
+								<DataLabel>Build:</DataLabel>
+								<DataValue>{sha?.substring(0, 7)}</DataValue>
+							</DataRow>
+						)}
+					</div>
 
-					{sha && (
-						<DataRow data-testid="code-error-ref">
-							<DataLabel>Build:</DataLabel>
-							<DataValue>{sha?.substring(0, 7)}</DataValue>
-						</DataRow>
-					)}
-				</div>
-
-				{stackTraceLines && renderStackTraceLines()}
-				{!stackTraceLines && stackTraceText && renderStackTraceText()}
-				{renderLogsIcon()}
-				{renderFooter()}
-			</MinimumWidthCard>
+					{stackTraceLines && renderStackTraceLines()}
+					{!stackTraceLines && stackTraceText && renderStackTraceText()}
+					{renderLogsIcon()}
+					{renderFooter()}
+				</MinimumWidthCard>
+			</div>
 		</>
 	);
 };
