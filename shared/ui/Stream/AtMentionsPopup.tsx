@@ -29,7 +29,6 @@ export interface AtMentionsPopupProps {
 	selected?: string;
 	on?: string;
 	prefix?: string;
-	users?: any;
 	items: Mention[];
 }
 

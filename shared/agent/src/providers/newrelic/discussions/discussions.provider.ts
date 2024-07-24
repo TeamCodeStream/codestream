@@ -1,12 +1,12 @@
 import { ContextLogger } from "../../contextLogger";
 import {
+	CloseCollaborationThreadRequest,
+	CloseCollaborationThreadRequestType,
+	CloseCollaborationThreadResponse,
 	CollaborationComment,
 	CreateCollaborationCommentRequest,
 	CreateCollaborationCommentRequestType,
 	CreateCollaborationCommentResponse,
-	CloseCollaborationThreadRequest,
-	CloseCollaborationThreadRequestType,
-	CloseCollaborationThreadResponse,
 	DeleteCollaborationCommentRequest,
 	DeleteCollaborationCommentRequestType,
 	DeleteCollaborationCommentResponse,
@@ -30,31 +30,32 @@ import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 import { generateHash } from "./discussions.utils";
 import { mapNRErrorResponse, parseId } from "../utils";
 import {
-	CommentsByThreadIdResponse,
-	ThreadsByContextIdResponse,
-	BootStrapResponse,
 	BaseCollaborationResponse,
+	BootStrapResponse,
 	CollaborationContext,
-	GrokMessage,
-	GrokMessagesByIds,
 	CollaborationContextMetadata,
-	WebsocketInfoResponse,
-	WebsocketConnectUrl,
 	CollaborationCreateCommentResponse,
 	CommentByCommentIdResponse,
+	CommentsByThreadIdResponse,
+	GrokMessage,
+	GrokMessagesByIds,
+	ThreadsByContextIdResponse,
+	WebsocketConnectUrl,
+	WebsocketInfoResponse,
 } from "./discussions.types";
 
 @lsp
 export class DiscussionsProvider {
-	// relies on the properties of the collab-mention tag being in the right order...
+	// TODO fix brittleness - relies on the properties of the collab-mention tag being in the right order...
 	private userMentionRegExp =
 		/<collab-mention data-type="NR_USER" [^>]*data-value="([^"]+)"[^>]*>[^<]*<\/collab-mention>/gim;
 	private grokMentionRegExp =
-		/<collab-mention data-type="GROK_RESPONSE" data-mentionable-item-id="([A-za-z0-9\-]+)"\/>/gim;
+		/<collab-mention data-value="@AI" data-type="NR_BOT" data-mentionable-item-id="([A-za-z0-9-_]+)"[^>]*>[^<]*<\/collab-mention>/gim;
+	private grokResponseRegExp =
+		/<collab-mention data-type="GROK_RESPONSE" data-mentionable-item-id="([A-za-z0-9-]+)"\/>/gim;
 
 	constructor(private graphqlClient: NewRelicGraphqlClient) {
 		this.graphqlClient.addHeader("Nerd-Graph-Unsafe-Experimental-Opt-In", "Collaboration,Grok");
-		this.getWebsocketInfo();
 	}
 
 	@lspHandler(GetCollaborationWebsocketInfoRequestType)
@@ -238,6 +239,7 @@ export class DiscussionsProvider {
 				mutation($body: String!, $threadId: ID!, $context: CollaborationRawContextMetadata!) {
 					collaborationCreateComment(
 						body: $body
+						assistant: "nrai:codestream"
 						threadId: $threadId
 						contextMetadata: $context
 					) {
@@ -261,6 +263,7 @@ export class DiscussionsProvider {
 					context: context.metaData,
 				});
 
+			await this.parseComment(createCommentResponse.collaborationCreateComment);
 			return {
 				comment: createCommentResponse.collaborationCreateComment,
 			};
@@ -465,7 +468,8 @@ export class DiscussionsProvider {
 				mutation($threadId: ID!, $prompt:String!, $context: GrokRawContextMetadata!) {
 					grokCreateGrokInitiatedConversation(
 						threadId: $threadId
-						prompt: $prompt 
+						assistant: "nrai:codestream"
+						prompt: $prompt
 						context: $context
 					) 
 					{
@@ -598,11 +602,11 @@ export class DiscussionsProvider {
 	 */
 	private parseCommentForMentions(comment: CollaborationComment): CollaborationComment {
 		if (this.userMentionRegExp.test(comment.body)) {
-			const modifiedBody = comment.body.replace(this.userMentionRegExp, "$1");
-
-			comment.body = modifiedBody;
+			comment.body = comment.body.replace(this.userMentionRegExp, "$1");
 		}
-
+		if (this.grokMentionRegExp.test(comment.body)) {
+			comment.body = comment.body.replace(this.grokMentionRegExp, "@AI");
+		}
 		return comment;
 	}
 
@@ -616,7 +620,7 @@ export class DiscussionsProvider {
 	 * @returns `Promise<CollaborationComment>`
 	 */
 	private async parseCommentForGrok(comment: CollaborationComment): Promise<CollaborationComment> {
-		const grokMatch = new RegExp(this.grokMentionRegExp).exec(comment.body);
+		const grokMatch = new RegExp(this.grokResponseRegExp).exec(comment.body);
 
 		if (!grokMatch) {
 			return comment;

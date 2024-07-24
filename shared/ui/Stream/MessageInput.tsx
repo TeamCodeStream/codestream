@@ -53,7 +53,6 @@ interface MessageInputProps {
 	placeholder?: string;
 	suggestGrok?: boolean;
 	onChange?(text: string, formatCode: boolean): void;
-	onChangeForNrBody?(text: string): void;
 	onKeypress?(event: React.KeyboardEvent): void;
 	onEmptyUpArrow?(event: React.KeyboardEvent): void;
 	onDismiss?(): void;
@@ -102,26 +101,9 @@ export const MessageInput = (props: MessageInputProps) => {
 			text = text.replace(/```\s*?```/g, "```");
 			text = text.replace(/```(\s*?(<div>|<\/div>)+\s*?)*?```/g, "```");
 		}
-		if (props.onChangeForNrBody) {
-			let nrText = transformMentions(text);
-			props.onChangeForNrBody(nrText);
-		}
 
 		text = text.replace(/@([^|]+)\|(\d+|\w+)\|/g, "@$1");
 		props.onChange(text, formatCode);
-	}
-
-	// Turns an at-mention string like @eric into the appropriate nr friendly custom tag with an accountId
-	// There is a special case for AI
-	function transformMentions(input) {
-		return input
-			.replace(
-				/(\s|^)(@AI)(\s|$)/gi,
-				'$1<collab-mention data-value=\\"@AI\\" data-type=\\"NR_BOT\\" data-mentionable-item-id=\\"NR_BOT\\">AI</collab-mention>$3'
-			)
-			.replace(/(\s|^)(@([^|]+)\|(\d+)\|)(\s|$)/g, (match, p1, p2, p3, p4, p5) => {
-				return `${p1}<collab-mention data-value=\\\"@${p3}\\\" data-type=\\\"NR_USER\\\" data-mentionable-item-id=\\\"${p4}\\\">${p3}</collab-mention>${p5}`;
-			});
 	}
 
 	// this is asynchronous so callers should provide a callback for code that depends on the completion of this
@@ -421,9 +403,9 @@ export const MessageInput = (props: MessageInputProps) => {
 		}
 	}
 
-	const fetchTeammates = async prefix => {
+	const fetchTeammates = async (prefix: string) => {
 		HostApi.instance.send(UserSearchRequestType, { query: prefix }).then(response => {
-			const users = response.users.map(user => {
+			const users: Mention[] = response.users.map(user => {
 				return {
 					id: user.id?.toString(),
 					headshot: { email: user.email, name: user.name },
@@ -432,13 +414,13 @@ export const MessageInput = (props: MessageInputProps) => {
 				};
 			});
 
-			const selected = users[0].id;
-
 			setCurrentPopup("at-mentions");
 			setPopupPrefix(prefix);
 			setPopupItems(users);
 			setPopupIndex(0);
-			setSelectedPopupItem(selected);
+			if (!_isEmpty(users) && users[0].id) {
+				setSelectedPopupItem(users[0].id);
+			}
 		});
 	};
 

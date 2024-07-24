@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import { describe, expect } from "@jest/globals";
-import { arrayDiff, asPastedText, escapeHtml, replaceHtml } from "../../utils";
+import { arrayDiff, asPastedText, escapeHtml, replaceHtml, transformMentions } from "../../utils";
 import { parseId } from "@codestream/webview/utilities/newRelic";
 
 describe("utils", () => {
@@ -163,5 +163,17 @@ describe("utils", () => {
 	test(".parseId(%s) (strict=false) (bad input)", () => {
 		// missing the last char, but still works for accountId
 		expect(parseId("MXxBUE18QVBQTElDQVRJT058Mj", false)?.accountId).toEqual(1);
+	});
+	test("transformMentions AI", () => {
+		const text = "@AI what is code?";
+		const transformed = transformMentions(text);
+		expect(transformed).toBe(
+			'<collab-mention data-value="@AI" data-type="NR_BOT" data-mentionable-item-id="NR_BOT"> AI </collab-mention> what is code?'
+		);
+	});
+	test("no transformMentions when no AI", () => {
+		const text = "@SaulGoodman what is ethics?";
+		const transformed = transformMentions(text);
+		expect(transformed).toBe("@SaulGoodman what is ethics?");
 	});
 });

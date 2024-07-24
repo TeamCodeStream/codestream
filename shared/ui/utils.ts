@@ -366,7 +366,7 @@ export function escapeHtml(text: string) {
 export function replaceHtml(text: string) {
 	const domParser = new DOMParser();
 	/*
-    // Because this stuff is sensitive, I'm leaving this comment here, but 
+    // Because this stuff is sensitive, I'm leaving this comment here, but
     // this code fails to account for newlines created via Shift-Enter
 
     //input text's newlines will be created with <div> or <br> tags
@@ -567,4 +567,13 @@ export function getDomainFromEmail(email: string): string | null {
 		return matches[1];
 	}
 	return null;
+}
+
+// Turns an at-mention string like @eric into the appropriate nr friendly custom tag with an accountId
+// There is a special case for AI
+export function transformMentions(input: string) {
+	return input.replace(
+		/(\s|^)(@AI)(\s|$)/gi,
+		'$1<collab-mention data-value="@AI" data-type="NR_BOT" data-mentionable-item-id="NR_BOT"> AI </collab-mention>$3'
+	);
 }

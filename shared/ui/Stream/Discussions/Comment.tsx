@@ -7,7 +7,7 @@ import {
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { CodeStreamState } from "@codestream/webview/store";
 import { useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
-import { escapeHtml, replaceHtml } from "@codestream/webview/utils";
+import { escapeHtml, replaceHtml, transformMentions } from "@codestream/webview/utils";
 import React, { forwardRef, Ref, useState } from "react";
 import styled from "styled-components";
 import Icon from "../Icon";
@@ -26,7 +26,6 @@ import {
 } from "@codestream/webview/store/users/reducer";
 import { HostApi } from "@codestream/webview/webview-api";
 import { useDispatch } from "react-redux";
-import { addComment } from "@codestream/webview/store/discussions/discussionsSlice";
 
 export const AuthorInfo = styled.div`
 	display: flex;
@@ -142,7 +141,6 @@ export type CommentInputProps = {
 export const CommentInput = (props: CommentInputProps) => {
 	const dispatch = useDispatch();
 	const [text, setText] = useState("");
-	const [textForNr, setTextForNr] = useState("");
 
 	const [isAskGrokOpen, setIsAskGrokOpen] = useState(false);
 
@@ -155,6 +153,8 @@ export const CommentInput = (props: CommentInputProps) => {
 	const createComment = async () => {
 		if (text.length === 0) return;
 
+		const textForNr = transformMentions(text);
+
 		const response = await HostApi.instance.send(CreateCollaborationCommentRequestType, {
 			entityGuid: props.entityGuid,
 			errorGroupGuid: props.errorGroupGuid,
@@ -163,10 +163,11 @@ export const CommentInput = (props: CommentInputProps) => {
 		});
 
 		if (response.nrError) {
+			// TODO do something with the error
 		}
 
 		if (response.comment) {
-			dispatch(addComment(response.comment));
+			// dispatch(addComment(response.comment)); // Obsolete with websocket handling new messages
 			setText("");
 		}
 	};
@@ -179,7 +180,6 @@ export const CommentInput = (props: CommentInputProps) => {
 				text={text}
 				placeholder="Add a comment..."
 				onChange={setText}
-				onChangeForNrBody={setTextForNr}
 				onSubmit={createComment}
 				suggestGrok={props.showGrok}
 			/>

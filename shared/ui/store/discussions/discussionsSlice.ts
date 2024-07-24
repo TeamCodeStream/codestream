@@ -49,15 +49,9 @@ export interface StreamingResponseMsg {
 	type: "GROKSTREAM";
 }
 
-export interface StreamingPost {
-	items: StreamingResponseMsg[];
-	receivedDoneEvent: boolean;
-	content: string;
-}
-
 interface DiscussionState {
 	activeDiscussion: Discussion | undefined;
-	streamingPosts: { [key: string]: RecombinedStream };
+	streamingPosts: { [key: string]: { [key: string]: RecombinedStream } };
 }
 
 export const initialState: DiscussionState = {
@@ -76,6 +70,10 @@ export const discussionSlice = createSlice({
 		addComment: (state, action: PayloadAction<CollaborationComment>) => {
 			if (state.activeDiscussion) {
 				state.activeDiscussion.comments.push(action.payload);
+				// Sort by createdAt
+				state.activeDiscussion.comments.sort((a, b) => {
+					return parseInt(a.createdAt) - parseInt(b.createdAt);
+				});
 			}
 		},
 		editComment: (state, action: PayloadAction<CollaborationComment>) => {
@@ -104,9 +102,15 @@ export const discussionSlice = createSlice({
 			if (!state.activeDiscussion) return;
 			// Lookup streamingPosts by threadId (conversation_id)
 			const threadId = action.payload.conversation_id;
-			const commentId = action.payload.meta.reply_to_comment_id;
+			// commentId doesn't exist until streaming is done. But we need a reliable unique id so hijack
+			// the reply_to_comment_id for now.
+			// TODO maybe on final COMMENT message, we can remove the reply-to- id and use the proper commentId as this will break delete / edit comments
+			const commentId = "reply-to-" + action.payload.meta.reply_to_comment_id;
 
-			const recombinedStream: RecombinedStream = state.streamingPosts[threadId] ?? {
+			if (!state.streamingPosts[threadId]) {
+				state.streamingPosts[threadId] = {};
+			}
+			const recombinedStream: RecombinedStream = state.streamingPosts[threadId][commentId] ?? {
 				items: [],
 				receivedDoneEvent: false,
 				content: "",
@@ -114,7 +118,7 @@ export const discussionSlice = createSlice({
 			};
 			// recombinedStream gets updated in place
 			advanceRecombinedStream(recombinedStream, action.payload);
-			state.streamingPosts[threadId] = recombinedStream;
+			state.streamingPosts[threadId][commentId] = recombinedStream;
 			// Find the matching comment in the activeDiscussion and update its parts
 			let comment = state.activeDiscussion.comments.find(comment => comment.id === commentId);
 			if (!comment && commentId) {
@@ -144,8 +148,10 @@ export const isNraiStreamLoading = (state: CodeStreamState) => {
 	const discussions = state.discussions;
 	if (!discussions.activeDiscussion) return undefined;
 	return (
-		discussions.streamingPosts[discussions.activeDiscussion.threadId]?.finalMessageReceived ===
-		false
+		//  iterate over all the conversations for the threadId and check for any finalMessageReceived === true
+		Object.values(discussions.streamingPosts[discussions.activeDiscussion.threadId] ?? {}).some(
+			stream => stream.finalMessageReceived
+		) || false
 	);
 };
 
