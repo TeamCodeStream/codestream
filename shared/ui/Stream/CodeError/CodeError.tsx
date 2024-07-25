@@ -107,13 +107,11 @@ export const CodeError = (props: CodeErrorProps) => {
 	});
 
 	useEffect(() => {
-		const stackTraceHasUserLines = stackTraceLines?.some(_ => _.resolved);
+		const stackTraceHasBeenResolved = stackTraceLines.every(_ => _.resolved !== undefined);
 
-		if (stackTraceHasUserLines && !selectedLineIndex) {
+		if (stackTraceHasBeenResolved && !selectedLineIndex) {
 			initializeStackTrace();
 			scrollToStackTrace();
-		} else {
-			dispatch(setFunctionToEditFailed(true));
 		}
 	}, [{ ...Object.values(stackTraceLines) }]);
 

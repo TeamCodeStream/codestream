@@ -405,44 +405,36 @@ export class NRManager {
 
 				if (!line.error && matchingRepoPath && parsedStackInfo.language) {
 					let resolvedLine: CSStackTraceLine;
-					if (resolveStackTracePathsResponse.notImplemented) {
-						// TODO remove if block once ResolveStackTracePathsRequestType is implemented in VS
-						resolvedLine = await this.resolveStackTraceLine(
-							line,
-							ref,
-							matchingRepoPath,
-							parsedStackInfo.language
-						);
-					} else {
-						const resolvedPath = resolveStackTracePathsResponse.resolvedPaths[i];
-						if (resolvedPath) {
-							const pathExists = await this.resolvePathAtRef(resolvedPath, ref);
-							if (pathExists) {
-								resolvedLine = {
-									fileFullPath: resolvedPath,
-									fileRelativePath: path.relative(matchingRepoPath, resolvedPath),
-									line: line.line,
-									column: line.column,
-									resolved: true,
-									warning: commitSha ? undefined : "Missing sha",
-								};
-							} else {
-								resolvedLine = {
-									error: `Unable to find matching file in revision ${ref} for path ${line.fileFullPath}`,
-								};
-							}
+					const resolvedPath = resolveStackTracePathsResponse.resolvedPaths[i];
+					if (resolvedPath) {
+						const pathExists = await this.resolvePathAtRef(resolvedPath, ref);
+						if (pathExists) {
+							resolvedLine = {
+								fileFullPath: resolvedPath,
+								fileRelativePath: path.relative(matchingRepoPath, resolvedPath),
+								line: line.line,
+								column: line.column,
+								resolved: true,
+								warning: commitSha ? undefined : "Missing sha",
+							};
 						} else {
 							resolvedLine = {
-								error: `Unable to find matching file for path ${line.fileFullPath}`,
+								error: `Unable to find matching file in revision ${ref} for path ${line.fileFullPath}`,
+								resolved: false,
 							};
 						}
+					} else {
+						resolvedLine = {
+							error: `Unable to find matching file for path ${line.fileFullPath}`,
+							resolved: false,
+						};
+					}
 
-						if (resolvedLine.error) {
-							Logger.log(`Stack trace line failed to resolve: ${resolvedLine.error}`);
-						} else {
-							const loggableLine = `${resolvedLine.fileRelativePath}:${resolvedLine.line}:${resolvedLine.column}`;
-							Logger.log(`Stack trace line resolved: ${loggableLine}`);
-						}
+					if (resolvedLine.error) {
+						Logger.log(`Stack trace line failed to resolve: ${resolvedLine.error}`);
+					} else {
+						const loggableLine = `${resolvedLine.fileRelativePath}:${resolvedLine.line}:${resolvedLine.column}`;
+						Logger.log(`Stack trace line resolved: ${loggableLine}`);
 					}
 
 					session.agent.sendNotification(DidResolveStackTraceLineNotificationType, {
