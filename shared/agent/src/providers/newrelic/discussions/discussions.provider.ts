@@ -44,6 +44,9 @@ import {
 	WebsocketInfoResponse,
 } from "./discussions.types";
 import * as htmlparser2 from "htmlparser2";
+import { Logger } from "../../../logger";
+
+const MAX_MENTIONS = 50;
 
 @lsp
 export class DiscussionsProvider {
@@ -601,6 +604,7 @@ export class DiscussionsProvider {
 	 */
 	public parseCommentForMentions(comment: CollaborationComment): CollaborationComment {
 		let match: RegExpExecArray | null;
+		let i = 0;
 
 		while ((match = this.collabTagRegex.exec(comment.body)) !== null) {
 			match?.forEach(e => {
@@ -634,8 +638,17 @@ export class DiscussionsProvider {
 							`(screenshot attached; viewable through New Relic One)\n`
 						);
 						break;
+					default:
+						Logger.log(`Unknown mention type ${dataType}`);
+						comment.body = comment.body.replace(e, "(unknown mention type)");
+						break;
 				}
 			});
+			i++;
+			if (i > MAX_MENTIONS) {
+				// If a replacement isn't made fore some reason this will infinite loop, this is a safeguard.
+				break;
+			}
 		}
 
 		return comment;
