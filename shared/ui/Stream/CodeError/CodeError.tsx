@@ -577,6 +577,10 @@ export const CodeError = (props: CodeErrorProps) => {
 			return null;
 		}
 
+		const footerClassName = derivedState.isNraiStreamLoading
+			? "ai-loading replies-to-review"
+			: "ai-not-loading replies-to-review";
+
 		return (
 			<div ref={footerRef}>
 				{discussionError && (
@@ -585,10 +589,7 @@ export const CodeError = (props: CodeErrorProps) => {
 					</div>
 				)}
 
-				<CardFooter
-					className={"grok-not-loading" + " replies-to-review"}
-					style={{ borderTop: "none", marginTop: 0 }}
-				>
+				<CardFooter className={footerClassName} style={{ borderTop: "none", marginTop: 0 }}>
 					{!discussion && discussionIsLoading && (
 						<DiscussionLoadingSkeleton></DiscussionLoadingSkeleton>
 					)}

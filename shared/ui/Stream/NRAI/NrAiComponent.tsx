@@ -153,7 +153,7 @@ export function NrAiComponent(props: NrAiComponentProps) {
 	}, [monaco?.editor.getDiffEditors()]);
 
 	return (
-		<Root>
+		<Root className="nrai-post">
 			<CommentBody>
 				<AuthorInfo style={{ fontWeight: 700 }}>
 					{props.comment.creator && <Headshot size={20} person={props.comment.creator} />}
@@ -195,43 +195,5 @@ export function NrAiComponent(props: NrAiComponentProps) {
 				{hasDescription && <Markdown text={commentParts?.description ?? ""} />}
 			</CommentBody>
 		</Root>
-
-		// <section className="nrai-post">
-		// 	{showGrokLoader && <NrAiLoading />}
-		// 	{hasIntro && <Markdown text={parts?.intro ?? ""} />}
-		// 	{showCodeBlockLoader && <NrAiCodeBlockLoading />}
-		// 	{!showCodeBlockLoader &&
-		// 		props.file &&
-		// 		props.functionToEdit?.codeBlock &&
-		// 		normalizedCodeFix && (
-		// 			<DiffSection>
-		// 				<DiffEditor
-		// 					original={props.functionToEdit?.codeBlock}
-		// 					modified={normalizedCodeFix}
-		// 					className="customDiffEditor"
-		// 					options={{
-		// 						renderSideBySide: false,
-		// 						renderOverviewRuler: false,
-		// 						folding: false,
-		// 						lineNumbers: "off",
-		// 						readOnly: true,
-		// 						scrollBeyondLastLine: false,
-		// 						automaticLayout: true,
-		// 					}}
-		// 					theme={isTheThemeDark ? "vs-dark" : "vs"}
-		// 				/>
-		// 				<ButtonRow>
-		// 					{showApplyFix && <Button onClick={() => applyFix()}>Apply Fix</Button>}
-		// 				</ButtonRow>
-		// 			</DiffSection>
-		// 		)}
-		// 	{linesChanged === 0 && <div style={{ marginTop: "10px" }}></div>}
-		// 	<Markdown text={parts?.description ?? ""} />
-		// 	{/*{showFeedback && (*/}
-		// 	{/*	<>*/}
-		// 	{/*		<NrAiFeedback errorGroupGuid={props.codeErrorId!} />*/}
-		// 	{/*	</>*/}
-		// 	{/*)}*/}
-		// </section>
 	);
 }

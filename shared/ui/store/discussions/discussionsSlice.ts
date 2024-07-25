@@ -103,6 +103,8 @@ export const discussionSlice = createSlice({
 			if (!state.activeDiscussion) return;
 			// Lookup streamingPosts by threadId (conversation_id)
 			const threadId = action.payload.conversation_id;
+			// Bail conditions
+			if (!threadId || threadId !== state.activeDiscussion.threadId) return;
 			// commentId doesn't exist until streaming is done. But we need a reliable unique id so hijack
 			// the reply_to_comment_id for now.
 			// TODO maybe on final COMMENT message, we can remove the reply-to- id and use the proper commentId as this will break delete / edit comments
@@ -145,10 +147,6 @@ export const discussionSlice = createSlice({
 	},
 });
 
-function isFalsyOrUndefined(value) {
-	return value === null || value === undefined || value === false;
-}
-
 export const isNraiStreamLoading = (state: CodeStreamState) => {
 	const discussions = state.discussions;
 
@@ -156,12 +154,10 @@ export const isNraiStreamLoading = (state: CodeStreamState) => {
 		return undefined;
 	}
 
-	const finalMessageReceived =
-		Object.values(discussions.streamingPosts[discussions.activeDiscussion.threadId] ?? {}).some(
-			stream => stream.finalMessageReceived
-		) || false;
-
-	return isFalsyOrUndefined(finalMessageReceived);
+	const allStreamsDone = Object.values(
+		discussions.streamingPosts[discussions.activeDiscussion.threadId] ?? {}
+	).every(stream => stream.finalMessageReceived);
+	return !allStreamsDone;
 };
 
 export const {
