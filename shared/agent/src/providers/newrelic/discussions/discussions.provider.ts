@@ -48,7 +48,7 @@ import * as htmlparser2 from "htmlparser2";
 @lsp
 export class DiscussionsProvider {
 	// TODO fix brittleness - relies on the properties of the collab-mention tag being in the right order...
-	private collabTagRegex = /<collab-mention.*?<\/collab-mention>/ims;
+	private collabTagRegex = /<collab-mention data-type="(NR_USER|FILE)".*?<\/collab-mention>/ims;
 	private grokResponseRegExp =
 		/<collab-mention data-type="GROK_RESPONSE" data-mentionable-item-id="([A-za-z0-9-]+)"\/>/gim;
 
@@ -609,12 +609,29 @@ export class DiscussionsProvider {
 					dom.children,
 					true
 				);
+
 				if (!element) {
 					return;
 				}
-				const dataValue = htmlparser2.DomUtils.getAttributeValue(element, "data-value");
-				if (dataValue) {
-					comment.body = comment.body.replace(e, dataValue + " ");
+
+				const dataType = htmlparser2.DomUtils.getAttributeValue(element, "data-type");
+				switch (dataType) {
+					case "NR_USER":
+						const dataValue = htmlparser2.DomUtils.getAttributeValue(element, "data-value");
+						if (dataValue) {
+							comment.body = comment.body.replace(e, dataValue + " ");
+						} else {
+							// if we failed to find the data-value, we still have to strip the mention
+							// so we don't end up in an infinite loop.
+							comment.body = comment.body.replace(e, " ");
+						}
+						break;
+					case "FILE":
+						comment.body = comment.body.replace(
+							e,
+							`(screenshot attached; viewable through New Relic One)\n`
+						);
+						break;
 				}
 			});
 		}
