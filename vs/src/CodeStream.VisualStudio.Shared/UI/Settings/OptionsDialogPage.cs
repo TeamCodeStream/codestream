@@ -20,9 +20,9 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings
 		private TraceLevel _traceLevel = TraceLevel.Info;
 
 #if DEBUG
-		private string _serverUrl = "https://codestream-pd.staging-service.nr-ops.net";
+		private string _serverUrl = "https://codestream-api-v2-pd.staging-service.nr-ops.net";
 #else
-		private string _serverUrl = "https://codestream-us1.service.newrelic.com";
+		private string _serverUrl = "https://codestream-api-v2-us1.service.newrelic.com";
 #endif
 		private bool _disableStrictSsl;
 		private bool _proxyStrictSsl;

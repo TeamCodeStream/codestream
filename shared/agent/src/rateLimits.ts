@@ -13,6 +13,11 @@ const codestreamOrigins = new Set([
 	"https://codestream-qa.staging-service.nr-ops.net",
 	"https://codestream-eu1.service.eu.newrelic.com",
 	"https://codestream-us1.service.newrelic.com",
+	"https://codestream-api-v2-pd.staging-service.nr-ops.net",
+	"https://codestream-api-v2-us1.service.newrelic.com",
+	"https://codestream-api-v2-eu1.service.eu.newrelic.com",
+	"https://codestream-api-v2-qa.staging-service.nr-ops.net",
+	"https://codestream-api-v2-stg.staging-service.nr-ops.net",
 ]);
 
 // Rate limits - this is per RATE_LIMIT_INTERVAL seconds

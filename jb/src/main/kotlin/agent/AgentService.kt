@@ -129,10 +129,13 @@ data class CrashDetails (val details: String, val dateTime: OffsetDateTime)
 val TEST_MODE = System.getenv("TEST_MODE") == "true"
 
 val serverUrlMigrations = hashMapOf(
-    "https://staging-api.codestream.us" to "https://codestream-stg.staging-service.newrelic.com",
-    "https://api.codestream.com" to "https://codestream-us1.service.newrelic.com",
-    "https://eu-api.codestream.com" to "https://codestream-eu1.service.eu.newrelic.com",
-    "https://codestream.eu.service.newrelic.com" to "https://codestream-eu1.service.eu.newrelic.com"
+	"https://staging-api.codestream.us" to "https://codestream-api-v2-stg.staging-service.nr-ops.net",
+	"https://api.codestream.com" to "https://codestream-api-v2-us1.service.newrelic.com",
+	"https://eu-api.codestream.com" to "https://codestream-api-v2-eu1.service.eu.newrelic.com",
+	"https://codestream.eu.service.newrelic.com" to "https://codestream-api-v2-eu1.service.eu.newrelic.com",
+	"https://codestream-us1.service.newrelic.com" to "https://codestream-api-v2-us1.service.newrelic.com",
+	"https://codestream-eu1.service.eu.newrelic.com" to "https://codestream-api-v2-eu1.service.eu.newrelic.com",
+	"https://codestream-stg.staging-service.newrelic.com" to "https://codestream-api-v2-stg.staging-service.nr-ops.net"
 )
 
 class AgentService(private val project: Project) : Disposable {
