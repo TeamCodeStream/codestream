@@ -164,7 +164,7 @@ export function CodeErrorNavigator(props: Props) {
 			currentMethodLevelTelemetry: state.context.currentMethodLevelTelemetry,
 			currentObservabilityAnomaly: state.context.currentObservabilityAnomaly,
 			sessionStart: state.context.sessionStart,
-			hideCodeErrorInstructions: state.preferences.hideCodeErrorInstructions,
+			hideCodeErrorInstructions: true, // TODO NR-295770 fix and revert
 			codeError: codeError,
 			currentCodemarkId: state.context.currentCodemarkId,
 			errorGroup: errorGroup,
