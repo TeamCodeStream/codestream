@@ -112,6 +112,8 @@ export const CodeError = (props: CodeErrorProps) => {
 		if (stackTraceHasUserLines && !selectedLineIndex) {
 			initializeStackTrace();
 			scrollToStackTrace();
+		} else {
+			dispatch(setFunctionToEditFailed(true));
 		}
 	}, [{ ...Object.values(stackTraceLines) }]);
 
