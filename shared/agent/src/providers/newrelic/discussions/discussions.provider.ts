@@ -48,7 +48,7 @@ import * as htmlparser2 from "htmlparser2";
 @lsp
 export class DiscussionsProvider {
 	// TODO fix brittleness - relies on the properties of the collab-mention tag being in the right order...
-	private collabTagRegex = /<collab-mention data-type="(NR_USER|FILE)".*?<\/collab-mention>/ims;
+	private collabTagRegex = /<collab-mention .*data-type="(NR_USER|FILE)".*?<\/collab-mention>/ims;
 	private grokResponseRegExp =
 		/<collab-mention data-type="GROK_RESPONSE" data-mentionable-item-id="([A-za-z0-9-]+)"\/>/gim;
 
