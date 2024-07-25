@@ -48,7 +48,8 @@ import * as htmlparser2 from "htmlparser2";
 @lsp
 export class DiscussionsProvider {
 	// TODO fix brittleness - relies on the properties of the collab-mention tag being in the right order...
-	private collabTagRegex = /<collab-mention.*?data-type="(NR_USER|FILE)".*?<\/collab-mention>/ims;
+	private collabTagRegex =
+		/<collab-mention.*?data-type="(NR_USER|FILE|NR_BOT)".*?<\/collab-mention>/ims;
 	private grokResponseRegExp =
 		/<collab-mention data-type="GROK_RESPONSE" data-mentionable-item-id="([A-za-z0-9-]+)"\/>/gim;
 
@@ -617,6 +618,7 @@ export class DiscussionsProvider {
 				const dataType = htmlparser2.DomUtils.getAttributeValue(element, "data-type");
 				switch (dataType) {
 					case "NR_USER":
+					case "NR_BOT":
 						const dataValue = htmlparser2.DomUtils.getAttributeValue(element, "data-value");
 						if (dataValue) {
 							comment.body = comment.body.replace(e, dataValue + " ");
