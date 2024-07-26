@@ -96,6 +96,8 @@ export const CodeError = (props: CodeErrorProps) => {
 
 	const [discussionIsLoading, setDiscussionIsLoading] = useState<boolean>(false);
 	const [isNrAiLoading, setIsNrAiLoading] = useState<boolean>(false);
+	const [nraiSubmitted, setNraiSubmitted] = useState<boolean>(false);
+	const [stackTraceInitialized, setStackTraceInitialized] = useState<boolean>(false);
 	const [currentNrAiFile, setCurrentNrAiFile] = useState<string | undefined>(undefined);
 	const [selectedLineIndex, setSelectedLineIndex] = useState<number | undefined>(undefined);
 
@@ -107,6 +109,9 @@ export const CodeError = (props: CodeErrorProps) => {
 	});
 
 	useEffect(() => {
+		if (stackTraceInitialized) {
+			return;
+		}
 		const stackTraceHasBeenResolved = stackTraceLines.every(_ => _.resolved !== undefined);
 
 		if (stackTraceHasBeenResolved && !selectedLineIndex) {
@@ -116,9 +121,10 @@ export const CodeError = (props: CodeErrorProps) => {
 	}, [{ ...Object.values(stackTraceLines) }]);
 
 	const initializeStackTrace = () => {
-		if (!stackTraceLines) {
+		if (!stackTraceLines || stackTraceInitialized) {
 			return;
 		}
+		setStackTraceInitialized(true);
 
 		try {
 			let foundNrAiLine: CSStackTraceLine | undefined = undefined;
@@ -286,7 +292,7 @@ export const CodeError = (props: CodeErrorProps) => {
 		// already going
 		// we're already in the loading process
 		// not watching these either, because once they're false, the next blocks for comment length should be sufficient.
-		if (isNrAiLoading || derivedState.isNraiStreamLoading) {
+		if (isNrAiLoading || derivedState.isNraiStreamLoading || nraiSubmitted) {
 			return;
 		}
 
@@ -308,6 +314,10 @@ export const CodeError = (props: CodeErrorProps) => {
 	const initializeNrAiAnalysis = async () => {
 		try {
 			setIsNrAiLoading(true);
+			if (nraiSubmitted) {
+				return;
+			}
+			setNraiSubmitted(true);
 
 			const initiateNrAiPayload: InitiateNrAiRequest = {
 				errorGroupGuid: errorGroupGuid!,
