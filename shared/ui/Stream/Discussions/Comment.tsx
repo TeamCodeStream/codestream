@@ -8,7 +8,7 @@ import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { CodeStreamState } from "@codestream/webview/store";
 import { useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import { escapeHtml, replaceHtml, transformMentions } from "@codestream/webview/utils";
-import React, { forwardRef, Ref, useState } from "react";
+import React, { forwardRef, Ref, useEffect, useState } from "react";
 import styled from "styled-components";
 import Icon from "../Icon";
 import { MarkdownText } from "../MarkdownText";
@@ -143,6 +143,7 @@ export const CommentInput = (props: CommentInputProps) => {
 	const [text, setText] = useState("");
 
 	const [isAskGrokOpen, setIsAskGrokOpen] = useState(false);
+	const [isLoadingComment, setIsLoadingComment] = useState(false);
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
@@ -150,9 +151,17 @@ export const CommentInput = (props: CommentInputProps) => {
 		};
 	});
 
+	const discussion = useAppSelector(state => state.discussions.activeDiscussion);
+
+	useEffect(() => {
+		if (discussion?.threadId) {
+			setIsLoadingComment(false);
+		}
+	}, [discussion?.comments?.length]);
+
 	const createComment = async () => {
 		if (text.length === 0) return;
-
+		setIsLoadingComment(true);
 		const textForNr = transformMentions(text);
 
 		const response = await HostApi.instance.send(CreateCollaborationCommentRequestType, {
@@ -164,6 +173,7 @@ export const CommentInput = (props: CommentInputProps) => {
 
 		if (response.nrError) {
 			// TODO do something with the error
+			setIsLoadingComment(false);
 		}
 
 		if (response.comment) {
@@ -203,11 +213,7 @@ export const CommentInput = (props: CommentInputProps) => {
 					placement="bottomRight"
 					delay={1}
 				>
-					<Button
-						disabled={text.length === 0}
-						onClick={createComment}
-						isLoading={derivedState.isLoading}
-					>
+					<Button disabled={text.length === 0} onClick={createComment} isLoading={isLoadingComment}>
 						Comment
 					</Button>
 				</Tooltip>
@@ -215,7 +221,7 @@ export const CommentInput = (props: CommentInputProps) => {
 					<Button
 						style={{ marginLeft: 0 }}
 						onClick={() => setIsAskGrokOpen(true)}
-						isLoading={derivedState.isLoading}
+						isLoading={isLoadingComment}
 					>
 						<Icon name="nrai" />
 						<span style={{ paddingLeft: "4px" }}>Ask AI</span>
