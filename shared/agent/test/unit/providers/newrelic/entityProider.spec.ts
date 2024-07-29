@@ -34,13 +34,13 @@ describe("EntityProvider.getEntitiesById", () => {
 		expect(response).toEqual(results);
 		expect(mockNewRelicGraphqlClient.query).toHaveBeenCalled();
 
-		jest.restoreAllMocks();
+		jest.resetAllMocks();
 
 		response = await entityProvider.getEntitiesById({ guids: ["1", "2", "3"] });
 		expect(response).toEqual(results);
 		expect(mockNewRelicGraphqlClient.query).not.toHaveBeenCalled();
 
-		jest.restoreAllMocks();
+		jest.resetAllMocks();
 
 		response = await entityProvider.getEntitiesById({ guids: ["1"] });
 		expect(response).toEqual({ entities: [{ guid: "1" }] });
