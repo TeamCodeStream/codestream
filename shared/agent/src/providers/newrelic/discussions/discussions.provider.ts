@@ -40,6 +40,7 @@ import {
 	GrokMessage,
 	GrokMessagesByIds,
 	ThreadsByContextIdResponse,
+	ThreadsType,
 	WebsocketConnectUrl,
 	WebsocketInfoResponse,
 } from "./discussions.types";
@@ -809,11 +810,13 @@ export class DiscussionsProvider {
 				contextMetadata: context.metaData,
 			});
 
-			const getThreadsQuery = `
+			const getThreadsInitialQuery = `
 				query($contextId: ID!){
 					actor {
 						collaboration {
-							threadsByContextId(contextId: $contextId) {
+							threadsByContextId(contextId: $contextId, first: 50) {
+								nextCursor
+								totalCount
 								entities {
 									id
 									latestCommentTime
@@ -825,18 +828,53 @@ export class DiscussionsProvider {
 					}
 				}`;
 
-			const getThreadsResponse = await this.graphqlClient.query<ThreadsByContextIdResponse>(
-				getThreadsQuery,
+			const getThreadsQuery = `
+				query($contextId: ID!, $nextCursor: String!){
+					actor {
+						collaboration {
+							threadsByContextId(contextId: $contextId, first: 50, nextCursor: $nextCursor) {
+								nextCursor
+								totalCount
+								entities {
+									id
+									latestCommentTime
+									status
+									deactivated
+								}
+							}
+						}
+					}
+				}`;
+
+			const allThreads: ThreadsType[] = [];
+
+			const getInitialThreadsResponse = await this.graphqlClient.query<ThreadsByContextIdResponse>(
+				getThreadsInitialQuery,
 				{
 					contextId: context.id,
 				}
 			);
 
-			const mostRecentThread =
-				getThreadsResponse?.actor?.collaboration?.threadsByContextId?.entities
-					.filter(t => t?.deactivated === false && t?.status.toLocaleLowerCase() === "open")
-					.sort((t1, t2) => t1?.latestCommentTime - t2?.latestCommentTime)
-					.pop();
+			allThreads.push(...getInitialThreadsResponse.actor.collaboration.threadsByContextId.entities);
+
+			let nextCursor = getInitialThreadsResponse.actor.collaboration.threadsByContextId.nextCursor;
+
+			while (nextCursor) {
+				const getThreadsResponse = await this.graphqlClient.query<ThreadsByContextIdResponse>(
+					getThreadsQuery,
+					{
+						contextId: context.id,
+						nextCursor: nextCursor,
+					}
+				);
+				allThreads.push(...getThreadsResponse.actor.collaboration.threadsByContextId.entities);
+				nextCursor = getThreadsResponse.actor.collaboration.threadsByContextId.nextCursor;
+			}
+
+			const mostRecentThread = allThreads
+				.filter(t => t?.deactivated === false && t?.status.toLocaleLowerCase() === "open")
+				.sort((t1, t2) => t1?.latestCommentTime - t2?.latestCommentTime)
+				.pop();
 
 			let mostRecentThreadId = mostRecentThread?.id;
 

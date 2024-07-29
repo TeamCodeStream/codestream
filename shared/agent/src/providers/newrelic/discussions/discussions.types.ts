@@ -47,16 +47,20 @@ export interface CommentByCommentIdResponse {
 	};
 }
 
+export interface ThreadsType {
+	deactivated: boolean;
+	id: string;
+	latestCommentTime: number;
+	status: string;
+}
+
 export interface ThreadsByContextIdResponse {
 	actor: {
 		collaboration: {
 			threadsByContextId: {
-				entities: {
-					deactivated: boolean;
-					id: string;
-					latestCommentTime: number;
-					status: string;
-				}[];
+				nextCursor?: string;
+				totalCount?: number;
+				entities: ThreadsType[];
 			};
 		};
 	};
