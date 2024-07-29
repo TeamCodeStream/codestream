@@ -73,9 +73,7 @@ import {
 	demoEntityId,
 	setApiCurrentEntityId,
 	setApiCurrentRepoId,
-	setApiDemoMode,
 } from "@codestream/webview/store/codeErrors/api/apiResolver";
-import { setDemoMode } from "@codestream/webview/store/codeErrors/actions";
 import { ObservabilityPreview } from "@codestream/webview/Stream/ObservabilityPreview";
 import { ObservabilityLoadingServiceEntities } from "@codestream/webview/Stream/ObservabilityLoading";
 import { ObservabilityServiceSearch } from "./ObservabilityServiceSearch";
@@ -705,14 +703,14 @@ export const Observability = React.memo((props: Props) => {
 	}
 
 	function doSetDemoMode(value: boolean) {
-		dispatch(setDemoMode(value));
-		setApiDemoMode(value);
-		if (currentRepoId) {
-			setApiCurrentRepoId(currentRepoId);
-		}
-		if (expandedEntity) {
-			setApiCurrentEntityId(expandedEntity);
-		}
+		// dispatch(setDemoMode(value));
+		// setApiDemoMode(value);
+		// if (currentRepoId) {
+		// 	setApiCurrentRepoId(currentRepoId);
+		// }
+		// if (expandedEntity) {
+		// 	setApiCurrentEntityId(expandedEntity);
+		// }
 	}
 
 	useEffect(() => {

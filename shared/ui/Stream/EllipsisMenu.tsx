@@ -19,8 +19,6 @@ import Icon from "./Icon";
 import Menu from "./Menu";
 import { AVAILABLE_PANES } from "./Sidebar";
 import { EMPTY_STATUS } from "./StartWork";
-import { setApiDemoMode } from "@codestream/webview/store/codeErrors/api/apiResolver";
-import { setDemoMode } from "@codestream/webview/store/codeErrors/actions";
 import { shallowEqual } from "react-redux";
 
 const RegionSubtext = styled.div`
@@ -379,9 +377,9 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 	}
 	const demoClick = e => {
 		e.preventDefault();
-		const nextDemoMode = !derivedState.demoMode.enabled;
-		setApiDemoMode(nextDemoMode);
-		dispatch(setDemoMode(nextDemoMode));
+		// const nextDemoMode = !derivedState.demoMode.enabled;
+		// setApiDemoMode(nextDemoMode);
+		// dispatch(setDemoMode(nextDemoMode));
 	};
 
 	const text = (
