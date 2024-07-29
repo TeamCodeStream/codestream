@@ -84,6 +84,18 @@ export interface GrokMessagesByIds {
 	};
 }
 
+export interface AttachmentById {
+	actor: {
+		collaboration: {
+			fileById: {
+				id: string;
+				fileName: string;
+				filePath: string;
+			};
+		};
+	};
+}
+
 export interface WebsocketConnectUrl {
 	NRConnectionId: string;
 	url: string;

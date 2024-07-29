@@ -9,7 +9,7 @@ jest.mock("../../../../src/providers/newrelic/newRelicGraphqlClient");
 const mockNewRelicGraphqlClient = mockDeep<NewRelicGraphqlClient>();
 
 describe("DiscussionsProvider", () => {
-	it("parseCommentForMentions handles multiple mentions with attributes in different order", () => {
+	it("parseCommentForMentions handles multiple mentions with attributes in different order", async () => {
 		const discussionsProvider = new DiscussionsProvider(mockNewRelicGraphqlClient);
 		const comment: CollaborationComment = {
 			id: "id",
@@ -23,7 +23,7 @@ describe("DiscussionsProvider", () => {
 				userId: 2346,
 			},
 		};
-		const result = discussionsProvider.parseCommentForMentions(comment);
+		const result = await discussionsProvider.parseCommentForMentions(comment);
 		expect(result.body).toEqual("@wmiraglia+pd4 test 2 @wmiraglia+pd3 test 3");
 	});
 });
