@@ -26,6 +26,7 @@ import {
 } from "@codestream/webview/store/users/reducer";
 import { HostApi } from "@codestream/webview/webview-api";
 import { useDispatch } from "react-redux";
+import { Attachments } from "../Attachments";
 
 export const AuthorInfo = styled.div`
 	display: flex;
@@ -398,6 +399,8 @@ export const Comment = forwardRef((props: CommentProps, ref: Ref<HTMLDivElement>
 							includeCodeBlockCopy={props.comment.creator.name === "AI"}
 							className="reply-markdown-content"
 						/>
+
+						<Attachments attachments={props.comment.attachments} />
 					</MarkdownContent>
 				)}
 			</CommentBody>

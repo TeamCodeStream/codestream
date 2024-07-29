@@ -53,7 +53,6 @@ import { useAppDispatch, useDidMount } from "@codestream/webview/utilities/hooks
 import { capitalize, emptyArray, mapFilter, replaceHtml } from "@codestream/webview/utils";
 import { HostApi } from "@codestream/webview/webview-api";
 import { getPost } from "../../store/posts/reducer";
-import { Attachments } from "../Attachments";
 import Button from "../Button";
 import {
 	BigTitle,
@@ -789,7 +788,7 @@ const BaseReview = (props: BaseReviewProps) => {
 							<Reactions className="reactions no-pad-left" post={props.post} />
 						</div>
 					)}
-					{!props.collapsed && props.post && <Attachments post={props.post as CSPost} />}
+					{/* {!props.collapsed && props.post && <Attachments post={props.post as CSPost} />} */}
 					{!props.collapsed && (hasTags || hasReviewers) && (
 						<MetaRow>
 							{hasTags && (

@@ -56,7 +56,6 @@ import { HostApi } from "../webview-api";
 import { fetchThread, setUserPreference } from "./actions";
 import { SetUserPreferenceRequest } from "./actions.types";
 import { getDocumentFromMarker } from "./api-functions";
-import { Attachments } from "./Attachments";
 import CodemarkDetails from "./CodemarkDetails";
 import { confirmPopup } from "./Confirm";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
@@ -1632,7 +1631,7 @@ export class Codemark extends React.Component<Props, State> {
 									</div>
 								)}
 								{this.renderTagsAndAssigneesSelected(codemark)}
-								{this.props.post && <Attachments post={this.props.post} />}
+								{/* {this.props.post && <Attachments post={this.props.post} />} */}
 								{description && (
 									<div className="related">
 										<div className="related-label">Description</div>

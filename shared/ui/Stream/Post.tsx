@@ -23,7 +23,6 @@ import {
 import { escapeHtml, replaceHtml, safe } from "../utils";
 import { HostApi } from "../webview-api";
 import { editPost } from "./actions";
-import { Attachments } from "./Attachments";
 import Button from "./Button";
 import CodemarkActions from "./CodemarkActions";
 import { confirmPopup } from "./Confirm";
@@ -801,7 +800,7 @@ export function Post(props: PostProps) {
 					{renderCodeBlockFile()}
 				</div>
 				{/*!props.showDetails &&*/ codeBlock}
-				{derivedState.post && <Attachments post={derivedState.post} />}
+				{/* {derivedState.post && <Attachments post={derivedState.post} />} */}
 			</div>
 			{derivedState.post && <Reactions post={derivedState.post} />}
 		</div>

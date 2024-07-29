@@ -53,10 +53,11 @@ const MAX_MENTIONS = 50;
 @lsp
 export class DiscussionsProvider {
 	// TODO fix brittleness - relies on the properties of the collab-mention tag being in the right order...
-	private collabTagRegex =
-		/<collab-mention.*?data-type="(NR_USER|FILE|NR_BOT)".*?<\/collab-mention>/ims;
+	private collabTagRegex = /<collab-mention.*?data-type="(NR_USER|NR_BOT)".*?<\/collab-mention>/ims;
 	private grokResponseRegExp =
 		/<collab-mention data-type="GROK_RESPONSE" data-mentionable-item-id="([A-za-z0-9-]+)"\/>/gim;
+	private attachmentRegExp =
+		/<collab-mention.*?data-type="FILE".*?data-mentionable-item-id="([A-za-z0-9-]+)".*?<\/collab-mention>/gim;
 
 	constructor(private graphqlClient: NewRelicGraphqlClient) {
 		this.graphqlClient.addHeader("Nerd-Graph-Unsafe-Experimental-Opt-In", "Collaboration,Grok");
@@ -572,9 +573,10 @@ export class DiscussionsProvider {
 	 * @returns `Promise<CollaborationComment>`
 	 */
 	private async parseComment(comment: CollaborationComment): Promise<CollaborationComment> {
-		comment = this.stripComment(comment);
-		comment = await this.parseCommentForMentions(comment);
+		comment = this.parseCommentForMentions(comment);
+		comment = await this.parseCommentForAttachments(comment);
 		comment = await this.parseCommentForGrok(comment);
+		comment = this.stripComment(comment);
 
 		return comment;
 	}
@@ -588,10 +590,13 @@ export class DiscussionsProvider {
 	 * @returns `CollaborationComment`
 	 */
 	private stripComment(comment: CollaborationComment): CollaborationComment {
-		// strip trailing <br> from the message body
+		comment.body = comment.body.trim();
+
 		if (comment.body.endsWith("<br>")) {
 			comment.body = comment.body.substring(0, comment.body.length - 4);
 		}
+
+		comment.body = comment.body.trim();
 
 		return comment;
 	}
@@ -604,14 +609,12 @@ export class DiscussionsProvider {
 	 * @param comment `CollaborationComment`
 	 * @returns `CollaborationComment`
 	 */
-	public async parseCommentForMentions(
-		comment: CollaborationComment
-	): Promise<CollaborationComment> {
+	public parseCommentForMentions(comment: CollaborationComment): CollaborationComment {
 		let match: RegExpExecArray | null;
 		let i = 0;
 
 		while ((match = this.collabTagRegex.exec(comment.body)) !== null) {
-			match?.forEach(async e => {
+			match?.forEach(e => {
 				const dom = htmlparser2.parseDocument(e);
 				const element = htmlparser2.DomUtils.findOne(
 					elem => elem.type === htmlparser2.ElementType.Tag && elem.name === "collab-mention",
@@ -634,19 +637,6 @@ export class DiscussionsProvider {
 							// if we failed to find the data-value, we still have to strip the mention
 							// so we don't end up in an infinite loop.
 							comment.body = comment.body.replace(e, " ");
-						}
-						break;
-					case "FILE":
-						const fileId = htmlparser2.DomUtils.getAttributeValue(
-							element,
-							"data-mentionable-item-id"
-						);
-						if (fileId) {
-							const attachment = await this.getFileData(fileId);
-							comment.attachments?.push(attachment);
-							comment.body = comment.body.replace(e, ``);
-						} else {
-							comment.body = comment.body.replace(e, "(unknown attachment)");
 						}
 						break;
 					default:
@@ -693,6 +683,36 @@ export class DiscussionsProvider {
 
 			throw ex;
 		}
+	}
+
+	/**
+	 * Use `parseComment` instead of this method directly
+	 *
+	 * For a given comment, if it contains a grok mention, retrieve the grok messages
+	 * and replace the comment body with them.
+	 *
+	 * @param comment `CollaborationComment`
+	 * @returns `Promise<CollaborationComment>`
+	 */
+	private async parseCommentForAttachments(
+		comment: CollaborationComment
+	): Promise<CollaborationComment> {
+		const attachmentMatch = new RegExp(this.attachmentRegExp).exec(comment.body);
+
+		if (!attachmentMatch) {
+			return comment;
+		}
+
+		const fileId = attachmentMatch[1];
+		const attachment = await this.getFileData(fileId);
+
+		if (!comment.attachments) {
+			comment.attachments = [];
+		}
+		comment.attachments.push(attachment);
+		comment.body = comment.body.replace(attachmentMatch[0], "");
+
+		return comment;
 	}
 
 	/**
