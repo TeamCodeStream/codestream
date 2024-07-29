@@ -1,5 +1,11 @@
 # Change Log
 
+## [15.13.0] - 2024-8-1
+
+### Changed
+
+- Update extensions for new API server
+
 ## [15.12.0] - 2024-7-29
 
 ### Changed
