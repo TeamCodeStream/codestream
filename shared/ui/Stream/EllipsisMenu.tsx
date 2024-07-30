@@ -277,23 +277,21 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			{
 				label: (
 					<TopLabelStyle>
-						<big>{derivedState.currentOrg?.organization_name}</big>
-						{derivedState.currentHost && derivedState.hasMultipleEnvironments && (
-							<small> ({derivedState.currentHost.name})</small>
-						)}
+						<div>
+							<big>{derivedState.currentOrg?.organization_name}</big>
+							{derivedState.currentHost && derivedState.hasMultipleEnvironments && (
+								<small> ({derivedState.currentHost.name})</small>
+							)}
+						</div>
+
+						<small>{derivedState.currentUserEmail}</small>
 					</TopLabelStyle>
 				),
 				key: "companyHeader",
 				noHover: true,
 				disabled: true,
 			},
-			{
-				label: <small>{derivedState.currentUserEmail}</small>,
-				key: "email",
-				noHover: true,
-				disabled: true,
-			},
-			{ label: "-" },
+
 			buildSwitchTeamMenuItem(),
 			{ label: "-" },
 		].filter(Boolean)
