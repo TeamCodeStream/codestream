@@ -15,6 +15,10 @@ import {
 import { openModal } from "../store/context/actions";
 import { WebviewModals } from "@codestream/protocols/webview";
 import { parseId } from "../utilities/newRelic";
+import { CodeErrorTimeWindow } from "@codestream/protocols/api";
+import { setUserPreference } from "./actions";
+import { InlineMenu } from "../src/components/controls/InlineMenu";
+import styled from "styled-components";
 
 interface Props {
 	observabilityAssignments?: ObservabilityErrorCore[];
@@ -25,13 +29,24 @@ interface Props {
 	hasRepoAssociated?: boolean;
 }
 
+const SubtleDropdown = styled.span`
+	color: var(--text-color-subtle);
+	font-size: 11px;
+`;
+
 export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 	const dispatch = useAppDispatch();
 	const derivedState = useAppSelector((state: CodeStreamState) => {
+		const timeWindow =
+			state.preferences.codeErrorTimeWindow &&
+			Object.values(CodeErrorTimeWindow).includes(state.preferences.codeErrorTimeWindow)
+				? state.preferences.codeErrorTimeWindow
+				: CodeErrorTimeWindow.ThreeDays;
 		const accountId = parseId(state.context.currentEntityGuid!)?.accountId;
 		return {
 			accountId,
 			sessionStart: state.context.sessionStart,
+			timeWindow,
 		};
 	}, shallowEqual);
 
@@ -50,6 +65,12 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 	if (!filteredAssignments) {
 		return null;
 	}
+	const timeWindowItems = Object.values(CodeErrorTimeWindow).map(_ => ({
+		label: _,
+		key: _,
+		checked: derivedState.timeWindow === _,
+		action: () => dispatch(setUserPreference({ prefPath: ["codeErrorTimeWindow"], value: _ })),
+	}));
 
 	const popup = (modal: WebviewModals) => dispatch(openModal(modal));
 
@@ -64,9 +85,21 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 			>
 				{expanded && <Icon name="chevron-down-thin" />}
 				{!expanded && <Icon name="chevron-right-thin" />}
-				<span data-testid={`assigned-errors-${props.entityGuid}`} style={{ marginLeft: "2px" }}>
+				<span
+					data-testid={`assigned-errors-${props.entityGuid}`}
+					style={{ marginLeft: "2px", marginRight: "5px" }}
+				>
 					Assigned to Me
 				</span>
+				<InlineMenu
+					title="Time Range"
+					noFocusOnSelect
+					items={timeWindowItems}
+					align="bottomRight"
+					className="dropdown"
+				>
+					<SubtleDropdown>{derivedState.timeWindow}</SubtleDropdown>
+				</InlineMenu>
 			</Row>
 			{expanded && (
 				<>
@@ -111,16 +144,16 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 																data: {
 																	multipleRepos: response?.relatedRepos?.length > 1,
 																	relatedRepos: response?.relatedRepos,
+																	timestamp: _.lastOccurrence,
 																	sessionStart: derivedState.sessionStart,
 																	occurrenceId: response.occurrenceId,
 																	openType: "Observability Section",
 																	remote: _?.remote || undefined,
 																	stackSourceMap: response?.stackSourceMap,
 																	domain: props.domain,
-																accountId: derivedState.accountId,
-																entityGuid: props.entityGuid,
-																errorGroupGuid: _.errorGroupGuid,
-                                                                    
+																	accountId: derivedState.accountId,
+																	entityGuid: props.entityGuid,
+																	errorGroupGuid: _.errorGroupGuid,
 																},
 															})
 														);
@@ -131,7 +164,6 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 													console.error(ex);
 												} finally {
 													setIsLoadingErrorGroupGuid("");
-
 												}
 											}
 										}}
