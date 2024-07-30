@@ -84,6 +84,14 @@ namespace CodeStream.VisualStudio.Shared.Packages
 					"https://codestream-api-v2-eu1.service.eu.newrelic.com"
 				},
 				{
+					"https://codestream-pd.staging-service.nr-ops.net",
+					"https://codestream-api-v2-pd.staging-service.nr-ops.net"
+				},
+				{
+					"https://codestream-qa.staging-service.nr-ops.net",
+					"https://codestream-api-v2-qa.staging-service.nr-ops.net"
+				},
+				{
 					"https://codestream.eu.service.newrelic.com",
 					"https://codestream-api-v2-eu1.service.eu.newrelic.com"
 				},

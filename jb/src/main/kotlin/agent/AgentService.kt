@@ -132,6 +132,8 @@ val serverUrlMigrations = hashMapOf(
 	"https://staging-api.codestream.us" to "https://codestream-api-v2-stg.staging-service.nr-ops.net",
 	"https://api.codestream.com" to "https://codestream-api-v2-us1.service.newrelic.com",
 	"https://eu-api.codestream.com" to "https://codestream-api-v2-eu1.service.eu.newrelic.com",
+	"https://codestream-pd.staging-service.nr-ops.net" to "https://codestream-api-v2-pd.staging-service.nr-ops.net",
+	"https://codestream-qa.staging-service.nr-ops.net" to "https://codestream-api-v2-qa.staging-service.nr-ops.net",
 	"https://codestream.eu.service.newrelic.com" to "https://codestream-api-v2-eu1.service.eu.newrelic.com",
 	"https://codestream-us1.service.newrelic.com" to "https://codestream-api-v2-us1.service.newrelic.com",
 	"https://codestream-eu1.service.eu.newrelic.com" to "https://codestream-api-v2-eu1.service.eu.newrelic.com",
