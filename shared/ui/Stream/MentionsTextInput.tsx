@@ -4,38 +4,14 @@ import { Mention, MentionsInput } from "react-mentions";
 import { UserSearchRequestType } from "@codestream/protocols/agent";
 import { HostApi } from "../webview-api";
 
-interface Comment {
-	username: string;
-	comment: string;
-}
-
 export const MentionsTextInput = () => {
-	const [formState, setFormState] = useState({
-		username: "",
-		comment: "",
-	});
-
-	const [comments, setComments] = useState<Comment[]>([]);
+	const [comment, setComment] = useState<string>("");
+	const [nrComment, setNrComment] = useState<string>("");
 
 	const submit = e => {
 		e.preventDefault();
-		if (formState.username === "" || formState.comment === "") {
-			alert("Please fill in all fields");
-			return;
-		}
 
-		setComments(comments => [
-			...comments,
-			{
-				username: formState.username,
-				comment: formState.comment,
-			},
-		]);
-
-		setFormState({
-			username: "",
-			comment: "",
-		});
+		setComment("");
 	};
 
 	const fetchUsers = async (query: string, callback: Function) => {
@@ -54,22 +30,28 @@ export const MentionsTextInput = () => {
 				callback([]);
 			}
 		} else if (_query === "ai") {
-			callback({ display: "AI", id: "nrai" });
+			callback([{ display: "AI", id: "nrai" }]);
 		} else {
-			return;
+			callback([]);
 		}
 	};
 
+	const handleChange = e => {
+		let comment = e.target.value;
+		setComment(comment);
+		setNrComment(comment);
+		console.warn(comment);
+	};
+
 	return (
-		<div className="message-input">
+		<div>
 			<MentionsInput
 				placeholder="Add a comment..."
-				value={formState.comment}
-				onChange={e => setFormState({ ...formState, comment: e.target.value })}
-				style={messageInputStyle}
+				value={comment}
+				onChange={e => handleChange(e)}
 				a11ySuggestionsListLabel={"Suggested mentions"}
 			>
-				<Mention style={mentionStyle} data={fetchUsers} />
+				<Mention data={fetchUsers} />
 			</MentionsInput>
 			<button onClick={submit}>Submit</button>
 		</div>
@@ -78,7 +60,7 @@ export const MentionsTextInput = () => {
 
 const messageInputStyle = {
 	// control: {
-	// 	backgroundColor: "#fff",
+	// 	backgroundColor: "var(--app-background-color)",
 	// 	fontSize: 16,
 	// },
 
@@ -96,11 +78,9 @@ const messageInputStyle = {
 			border: "1px solid silver",
 		},
 	},
-
 	"&singleLine": {
 		display: "inline-block",
 		width: 180,
-
 		highlighter: {
 			padding: 1,
 			border: "2px inset transparent",
@@ -110,10 +90,9 @@ const messageInputStyle = {
 			border: "2px inset",
 		},
 	},
-
 	suggestions: {
 		list: {
-			// backgroundColor: "white",
+			backgroundColor: "var(--app-background-color)",
 			border: "1px solid rgba(0,0,0,0.15)",
 			fontSize: 16,
 		},
@@ -128,5 +107,9 @@ const messageInputStyle = {
 };
 
 const mentionStyle = {
-	backgroundColor: "#cee4e5",
+	backgroundColor: "color: rgb(97, 175, 239)",
+	color: "var(--text-color-highlight)",
 };
+
+// var(--text-color-highlight)
+// var(--app-background-color)
