@@ -41,7 +41,7 @@ export const MentionsTextInput = () => {
 	const fetchUsers = async (query: string, callback: Function) => {
 		let _query = query.toLowerCase();
 
-		if (_query.length > 2 || _query === "ai") {
+		if (_query.length > 2) {
 			try {
 				const response = await HostApi.instance.send(UserSearchRequestType, { query: _query });
 				const users = response.users.map(user => ({
@@ -53,6 +53,8 @@ export const MentionsTextInput = () => {
 				console.error("Error fetching teammates:", error);
 				callback([]);
 			}
+		} else if (_query === "ai") {
+			callback({ display: "AI", id: "nrai" });
 		} else {
 			return;
 		}
