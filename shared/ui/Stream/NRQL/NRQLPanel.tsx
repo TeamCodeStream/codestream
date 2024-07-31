@@ -506,6 +506,7 @@ export const NRQLPanel = (props: {
 										width={width || "100%"}
 										height={trimmedHeight}
 										results={results}
+										facet={facet}
 									/>
 								)}
 								{resultsTypeGuess.selected === "billboard" && (

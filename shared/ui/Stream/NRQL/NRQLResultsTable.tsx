@@ -22,17 +22,37 @@ interface Props {
 	results: NRQLResult[];
 	width: number | string;
 	height: number | string;
+	facet?: string | string[];
 }
 
 export const NRQLResultsTable = (props: Props) => {
 	const [showCopyIcon, setShowCopyIcon] = useState<[number, number][]>([]);
 
 	const results = useMemo(() => {
-		return props.results.map(_ => {
-			const { facet, ...rest } = _;
-			return rest;
+		if (!props.facet) return props.results;
+
+		return props.results.map(result => {
+			const { facet, ...rest } = result;
+
+			if (Array.isArray(facet) && facet.length > 1) {
+				const facetObj = facet.reduce((acc, value, index) => {
+					if (props.facet && props.facet[index]) {
+						acc[props.facet[index]] = value;
+					}
+					return acc;
+				}, {});
+
+				// Return the object with the rest of the properties and the mapped facet values
+				return {
+					...rest,
+					...facetObj,
+				};
+			} else {
+				// If facet is not an array with more than one element, remove it from results/display
+				return rest;
+			}
 		});
-	}, [props.results]);
+	}, [props.results, props.facet]);
 
 	const hasKey = (obj, key) => {
 		return obj.hasOwnProperty(key);
