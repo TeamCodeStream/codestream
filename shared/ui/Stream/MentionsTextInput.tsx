@@ -1,13 +1,23 @@
 import React from "react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Mention, MentionsInput } from "react-mentions";
-import { UserSearchRequestType } from "@codestream/protocols/agent";
+import {
+	CreateCollaborationCommentRequestType,
+	UserSearchRequestType,
+} from "@codestream/protocols/agent";
 import { HostApi } from "../webview-api";
 import { Emoji, emojis } from "./emojis";
+import { debounce as _debounce } from "lodash";
 
-export const MentionsTextInput = () => {
+interface MentionsTextInputProps {
+	onSubmit?: Function;
+	entityGuid?: string;
+	errorGroupGuid?: string;
+	threadId?: string;
+}
+
+export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 	const [comment, setComment] = useState<string>("");
-	const [nrComment, setNrComment] = useState<string>("");
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const neverMatchingRegex = /($a)/;
 
@@ -31,12 +41,14 @@ export const MentionsTextInput = () => {
 			}
 		} else if (_query === "ai") {
 			setIsLoading(false);
-			callback([{ display: "AI", id: "nrai" }]);
+			callback([{ display: "AI", id: "NR_BOT" }]);
 		} else {
 			setIsLoading(false);
 			callback([]);
 		}
 	};
+
+	const debouncedFetchUsers = useCallback(_debounce(fetchUsers, 300), []);
 
 	const fetchEmojis = (query, callback) => {
 		if (query.length === 0) return;
@@ -52,17 +64,29 @@ export const MentionsTextInput = () => {
 	const handleChange = e => {
 		let comment = e.target.value;
 		setComment(comment);
-		setNrComment(comment);
 		console.warn(comment);
 	};
 
-	const handleSubmit = e => {
+	const handleSubmit = async e => {
 		e.preventDefault();
 
-		//submit nrcomment to nr
+		if (comment.length === 0) return;
+
+		if (props.onSubmit) {
+			props.onSubmit();
+			return;
+		}
+
+		if (props.entityGuid && props.errorGroupGuid && props.threadId) {
+			await HostApi.instance.send(CreateCollaborationCommentRequestType, {
+				entityGuid: props.entityGuid,
+				errorGroupGuid: props.errorGroupGuid,
+				threadId: props.threadId,
+				body: comment,
+			});
+		}
 
 		setComment("");
-		setNrComment("");
 	};
 
 	return (
@@ -75,7 +99,12 @@ export const MentionsTextInput = () => {
 				isLoading={isLoading}
 				style={messageInputStyle}
 			>
-				<Mention trigger="@" style={mentionStyle} data={fetchUsers} />
+				<Mention
+					trigger="@"
+					style={mentionStyle}
+					data={debouncedFetchUsers}
+					markup='<collab-mention data-value="@__display__" data-type="__id__" data-mentionable-item-id="__id__">__display__</collab-mention>'
+				/>
 				<Mention
 					trigger=":"
 					style={mentionStyle}
