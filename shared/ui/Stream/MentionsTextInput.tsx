@@ -26,24 +26,21 @@ export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 
 		if (_query.length > 2) {
 			console.warn("eric loading true");
-			setIsLoading(true);
+			callback([{ display: "loading...", id: "loading" }]);
+
 			try {
 				const response = await HostApi.instance.send(UserSearchRequestType, { query: _query });
 				const users = response.users.map(user => ({
 					display: user.name,
 					id: user.id?.toString(),
 				}));
-				setIsLoading(false);
 				callback(users);
 			} catch (error) {
-				setIsLoading(false);
 				callback([]);
 			}
 		} else if (_query === "ai") {
-			setIsLoading(false);
 			callback([{ display: "AI", id: "NR_BOT" }]);
 		} else {
-			setIsLoading(false);
 			callback([]);
 		}
 	};
@@ -65,6 +62,13 @@ export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 		let comment = e.target.value;
 		setComment(comment);
 		console.warn(comment);
+	};
+
+	const renderSuggestion = entry => {
+		if (entry.id === "loading") {
+			return <div style={{ pointerEvents: "none" }}>Loading...</div>;
+		}
+		return <div>{entry.display}</div>;
 	};
 
 	const handleSubmit = async e => {
@@ -104,6 +108,7 @@ export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 					style={mentionStyle}
 					data={debouncedFetchUsers}
 					markup='<collab-mention data-value="@__display__" data-type="__id__" data-mentionable-item-id="__id__">__display__</collab-mention>'
+					renderSuggestion={renderSuggestion}
 				/>
 				<Mention
 					trigger=":"
