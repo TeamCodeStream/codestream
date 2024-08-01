@@ -16,8 +16,6 @@ import { openModal } from "../store/context/actions";
 import { WebviewModals } from "@codestream/protocols/webview";
 import { parseId } from "../utilities/newRelic";
 import { CodeErrorTimeWindow } from "@codestream/protocols/api";
-import { setUserPreference } from "./actions";
-import { InlineMenu } from "../src/components/controls/InlineMenu";
 import styled from "styled-components";
 
 interface Props {
@@ -65,12 +63,6 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 	if (!filteredAssignments) {
 		return null;
 	}
-	const timeWindowItems = Object.values(CodeErrorTimeWindow).map(_ => ({
-		label: _,
-		key: _,
-		checked: derivedState.timeWindow === _,
-		action: () => dispatch(setUserPreference({ prefPath: ["codeErrorTimeWindow"], value: _ })),
-	}));
 
 	const popup = (modal: WebviewModals) => dispatch(openModal(modal));
 
@@ -91,15 +83,6 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 				>
 					Assigned to Me
 				</span>
-				<InlineMenu
-					title="Time Range"
-					noFocusOnSelect
-					items={timeWindowItems}
-					align="bottomRight"
-					className="dropdown"
-				>
-					<SubtleDropdown>{derivedState.timeWindow}</SubtleDropdown>
-				</InlineMenu>
 			</Row>
 			{expanded && (
 				<>
