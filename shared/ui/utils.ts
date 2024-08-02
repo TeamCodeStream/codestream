@@ -577,3 +577,12 @@ export function transformMentions(input: string) {
 		'$1<collab-mention data-value="@AI" data-type="NR_BOT" data-mentionable-item-id="NR_BOT"> AI </collab-mention>$3'
 	);
 }
+
+// @TODO: Remove above function for this one once text input is depreciated
+export function transformAtMentions(input: string): string {
+	const mentionPattern = /@\[[^\]]+\]\((<collab-mention[^>]+>[^<]+<\/collab-mention>)\)/g;
+	const transformedString = input.replace(mentionPattern, (match, p1) => {
+		return p1;
+	});
+	return transformedString;
+}

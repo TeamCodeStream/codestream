@@ -8,6 +8,8 @@ import {
 import { HostApi } from "../webview-api";
 import { Emoji, emojis } from "./emojis";
 import { debounce as _debounce } from "lodash";
+import { transformAtMentions } from "@codestream/webview/utils";
+import Headshot from "./Headshot";
 
 interface MentionsTextInputProps {
 	onSubmit?: Function;
@@ -18,7 +20,6 @@ interface MentionsTextInputProps {
 
 export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 	const [comment, setComment] = useState<string>("");
-	const [nrComment, setNrComment] = useState<string>("");
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const neverMatchingRegex = /($a)/;
 
@@ -32,20 +33,16 @@ export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 			try {
 				const response = await HostApi.instance.send(UserSearchRequestType, { query: _query });
 				const users = response.users.map(user => {
-					const userName = user.name;
+					const userName = user?.name;
 					const userId = user.id?.toString();
+					const email = user?.email;
 					const display = userName;
-
-					const id = `<collab-mention data-value="@${userName}" data-type="${userId}" data-mentionable-item-id="${userId}">${userName}</collab-mention>`;
-
-					// <collab-mention data-value="@__display__" data-type="__id__" data-mentionable-item-id="__id__">__display__</collab-mention>
-
-					// const displayTest = `<collab-mention data-value="@${userName}`
-					// const idTest = `" data-type="${userId}" data-mentionable-item-id="${userId}">${userName}</collab-mention>`
-
+					const id = `<collab-mention data-value="@${userName}" data-type="NR_USER" data-mentionable-item-id="${userId}">${userName}</collab-mention>`;
 					return {
 						display,
 						id,
+						email,
+						headshot: { email, name: userName },
 					};
 				});
 				callback(users);
@@ -53,7 +50,12 @@ export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 				callback([]);
 			}
 		} else if (_query === "ai") {
-			callback([{ display: "AI", id: "NR_BOT" }]);
+			callback([
+				{
+					display: "AI",
+					id: `<collab-mention data-value="@AI" data-type="NR_BOT" data-mentionable-item-id="NR_BOT">AI</collab-mention>`,
+				},
+			]);
 		} else {
 			callback([]);
 		}
@@ -74,11 +76,7 @@ export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 
 	const handleChange = e => {
 		let comment = e.target.value;
-
-		// setNrComment to something better
-
 		setComment(comment);
-		console.warn(comment);
 	};
 
 	const handleSubmit = async e => {
@@ -92,16 +90,32 @@ export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 		}
 
 		if (props.entityGuid && props.errorGroupGuid && props.threadId) {
+			const nrFriendlyComment = transformAtMentions(comment);
+
 			await HostApi.instance.send(CreateCollaborationCommentRequestType, {
 				entityGuid: props.entityGuid,
 				errorGroupGuid: props.errorGroupGuid,
 				threadId: props.threadId,
-				body: comment,
+				body: nrFriendlyComment,
 			});
 		}
 
 		setComment("");
 	};
+
+	const renderSuggestion = suggestion => (
+		<div style={{ display: "flex" }}>
+			{suggestion.email && (
+				<>
+					<span style={{ marginRight: "6px" }}>
+						<Headshot size={18} person={suggestion.headshot} />
+					</span>
+					<span style={{ marginRight: "6px" }}>{suggestion.email}</span>
+				</>
+			)}
+			<span className="subtle">{suggestion.display}</span>
+		</div>
+	);
 
 	return (
 		<div>
@@ -118,6 +132,8 @@ export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 					style={mentionStyle}
 					data={debouncedFetchUsers}
 					markup="@[__display__](__id__)"
+					renderSuggestion={renderSuggestion}
+					appendSpaceOnAdd={true}
 				/>
 				<Mention
 					trigger=":"
@@ -132,93 +148,42 @@ export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 	);
 };
 
-// <collab-mention data-value="@__display__" data-type="__id__" data-mentionable-item-id="__id__">__display__</collab-mention>
-
 const messageInputStyle = {
-	// control: {
-	// 	backgroundColor: "var(--app-background-color)",
-	// 	fontSize: 16,
-	// },
-	// loadingIndicator: {
-	// 	spinner: {
-	// 		marginTop: 4,
-	// 		marginBottom: 4,
-
-	// 		width: 100,
-	// 		height: 8,
-
-	// 		textAlign: "center",
-	// 		fontSize: "11px",
-
-	// 		element: {
-	// 			display: "inline-block",
-
-	// 			backgroundColor: "#999",
-
-	// 			height: "100%",
-	// 			width: 2,
-
-	// 			marginLeft: 3,
-	// 			marginRight: 3,
-
-	// 			animation: "x 1.2s infinite ease-in-out",
-	// 		},
-
-	// 		element2: { animationDelay: "-1.1s" },
-	// 		element3: { animationDelay: "-1.0s" },
-	// 		element4: { animationDelay: "-0.9s" },
-	// 		element5: { animationDelay: "-0.8s" },
-	// 	},
-	// },
-
 	"&multiLine": {
 		control: {
 			fontFamily: "monospace",
-			minHeight: 60,
+			minHeight: 80,
 		},
-		highlighter: {
-			padding: 9,
-			border: "1px solid transparent",
-		},
+		// highlighter: {
+		// 	padding: "9px 12px 9px 12px !important",
+		// 	border: "1px solid transparent",
+		// },
 		input: {
-			padding: 9,
-			border: "1px solid silver",
-		},
-	},
-	"&singleLine": {
-		display: "inline-block",
-		width: 180,
-		highlighter: {
-			padding: 1,
-			border: "2px inset transparent",
-		},
-		input: {
-			padding: 1,
-			border: "2px inset",
+			padding: "9px 12px 9px 12px !important",
+			border: "1px solid var(--base-border-color)",
 		},
 	},
 	suggestions: {
 		list: {
 			backgroundColor: "var(--app-background-color)",
-			border: "1px solid rgba(0,0,0,0.15)",
+			border: "1px solid var(--base-border-color)",
 			fontSize: "16",
 			maxHeight: "300px",
 			overflowY: "auto",
 		},
 		item: {
 			padding: "5px 15px",
-			borderBottom: "1px solid rgba(0,0,0,0.15)",
+			borderBottom: "1px solid var(--base-border-color)",
 			"&focused": {
-				backgroundColor: "#cee4e5",
+				backgroundColor: "var(--app-background-color-hover)",
 			},
 		},
 	},
 };
 
 const mentionStyle = {
-	// backgroundColor: "color: rgb(97, 175, 239)",
-	// color: "var(--text-color-highlight)",
+	backgroundColor: "var(--button-background-color-hover)",
+	color: "var(--text-color-highlight)",
+	borderRadius: "4px",
+	// padding: "1px 2px",
 };
-
-// var(--text-color-highlight)
-// var(--app-background-color)
