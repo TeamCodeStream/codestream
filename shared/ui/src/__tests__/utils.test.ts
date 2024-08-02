@@ -164,16 +164,11 @@ describe("utils", () => {
 		// missing the last char, but still works for accountId
 		expect(parseId("MXxBUE18QVBQTElDQVRJT058Mj", false)?.accountId).toEqual(1);
 	});
-	test("transformMentions AI", () => {
-		const text = "@AI what is code?";
+	test("remove non id information from mention", () => {
+		const text = `hello @[Eric Jones](<collab-mention data-value="@Eric Jones" data-type="NR_USER" data-mentionable-item-id="1000024919">Eric Jones</collab-mention>)`;
 		const transformed = transformMentions(text);
 		expect(transformed).toBe(
-			'<collab-mention data-value="@AI" data-type="NR_BOT" data-mentionable-item-id="NR_BOT"> AI </collab-mention> what is code?'
+			`hello <collab-mention data-value="@Eric Jones" data-type="NR_USER" data-mentionable-item-id="1000024919">Eric Jones</collab-mention>`
 		);
-	});
-	test("no transformMentions when no AI", () => {
-		const text = "@SaulGoodman what is ethics?";
-		const transformed = transformMentions(text);
-		expect(transformed).toBe("@SaulGoodman what is ethics?");
 	});
 });
