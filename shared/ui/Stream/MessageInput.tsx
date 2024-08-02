@@ -21,7 +21,6 @@ import Tooltip from "./Tooltip";
 import { HostApi } from "../webview-api";
 import { useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import { isEmpty as _isEmpty, debounce as _debounce } from "lodash-es";
-import { MentionsTextInput } from "./MentionsTextInput";
 
 const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.json");
 
@@ -737,10 +736,7 @@ export const MessageInput = (props: MessageInputProps) => {
 					/>
 				</AtMentionsPopup>
 			</div> */}
-			<div>
-				<MentionsTextInput />
-			</div>
-			{renderAttachedFiles()}
+			{/* {renderAttachedFiles()} */}
 		</>
 	);
 };

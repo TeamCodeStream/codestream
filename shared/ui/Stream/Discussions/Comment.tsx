@@ -27,6 +27,7 @@ import {
 import { HostApi } from "@codestream/webview/webview-api";
 import { useDispatch } from "react-redux";
 import { Attachments } from "../Attachments";
+import { MentionsTextInput } from "../MentionsTextInput";
 
 export const AuthorInfo = styled.div`
 	display: flex;
@@ -163,13 +164,14 @@ export const CommentInput = (props: CommentInputProps) => {
 	const createComment = async () => {
 		if (text.length === 0) return;
 		setIsLoadingComment(true);
-		const textForNr = transformMentions(text);
+
+		const nrFriendlyComment = transformMentions(text);
 
 		const response = await HostApi.instance.send(CreateCollaborationCommentRequestType, {
 			entityGuid: props.entityGuid,
 			errorGroupGuid: props.errorGroupGuid,
 			threadId: props.threadId,
-			body: textForNr,
+			body: nrFriendlyComment,
 		});
 
 		if (response.nrError) {
@@ -186,14 +188,8 @@ export const CommentInput = (props: CommentInputProps) => {
 	return (
 		<>
 			{isAskGrokOpen && <AskGrok setText={setText} onClose={() => setIsAskGrokOpen(false)} />}
-			<MessageInput
-				multiCompose
-				text={text}
-				placeholder="Add a comment..."
-				onChange={setText}
-				onSubmit={createComment}
-				suggestGrok={props.useNrAi}
-			/>
+
+			<MentionsTextInput value={text} setTextCallback={setText} />
 			<ButtonRow
 				style={{
 					margin: 0,

@@ -25,7 +25,6 @@ import {
 import { useDidMount } from "../utilities/hooks";
 import { isEmpty as _isEmpty } from "lodash-es";
 import { CodeErrorTimeWindow } from "@codestream/protocols/api";
-import { MentionsTextInput } from "./MentionsTextInput";
 
 interface Props {
 	anomalyDetectionSupported: boolean;
@@ -251,10 +250,6 @@ export const ObservabilityServiceSearch = React.memo((props: Props) => {
 						<ObservabilityServiceEntity {...observabilityServiceEntityProps} />
 					</>
 				)}
-				<div>
-					<span>MentionsTextInput</span>
-					<MentionsTextInput />
-				</div>
 			</PaneNode>
 		</>
 	);

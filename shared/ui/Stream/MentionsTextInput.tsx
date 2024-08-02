@@ -2,24 +2,20 @@ import React from "react";
 import { useCallback, useState } from "react";
 import { Mention, MentionsInput } from "react-mentions";
 import {
-	CreateCollaborationCommentRequestType,
 	UserSearchRequestType,
 } from "@codestream/protocols/agent";
 import { HostApi } from "../webview-api";
 import { Emoji, emojis } from "./emojis";
 import { debounce as _debounce } from "lodash";
-import { transformAtMentions } from "@codestream/webview/utils";
 import Headshot from "./Headshot";
 
 interface MentionsTextInputProps {
 	onSubmit?: Function;
-	entityGuid?: string;
-	errorGroupGuid?: string;
-	threadId?: string;
+	setTextCallback: Function;
+	value: string;
 }
 
 export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
-	const [comment, setComment] = useState<string>("");
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const neverMatchingRegex = /($a)/;
 
@@ -27,15 +23,14 @@ export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 		let _query = query.toLowerCase();
 
 		if (_query.length > 2) {
-			console.warn("eric loading true");
 			callback([{ display: "loading...", id: "loading" }]);
 
 			try {
 				const response = await HostApi.instance.send(UserSearchRequestType, { query: _query });
 				const users = response.users.map(user => {
-					const userName = user?.name;
-					const userId = user.id?.toString();
-					const email = user?.email;
+					const userName = user?.name || user?.email || "";
+					const userId = user.id?.toString() || "";
+					const email = user?.email || "";
 					const display = userName;
 					const id = `<collab-mention data-value="@${userName}" data-type="NR_USER" data-mentionable-item-id="${userId}">${userName}</collab-mention>`;
 					return {
@@ -76,31 +71,7 @@ export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 
 	const handleChange = e => {
 		let comment = e.target.value;
-		setComment(comment);
-	};
-
-	const handleSubmit = async e => {
-		e.preventDefault();
-
-		if (comment.length === 0) return;
-
-		if (props.onSubmit) {
-			props.onSubmit();
-			return;
-		}
-
-		if (props.entityGuid && props.errorGroupGuid && props.threadId) {
-			const nrFriendlyComment = transformAtMentions(comment);
-
-			await HostApi.instance.send(CreateCollaborationCommentRequestType, {
-				entityGuid: props.entityGuid,
-				errorGroupGuid: props.errorGroupGuid,
-				threadId: props.threadId,
-				body: nrFriendlyComment,
-			});
-		}
-
-		setComment("");
+		props.setTextCallback(comment);
 	};
 
 	const renderSuggestion = suggestion => (
@@ -121,7 +92,7 @@ export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 		<div>
 			<MentionsInput
 				placeholder="Add a comment..."
-				value={comment}
+				value={props.value}
 				onChange={e => handleChange(e)}
 				isLoading={isLoading}
 				style={mentionInputStyle}
@@ -136,7 +107,6 @@ export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 				/>
 				<Mention trigger=":" data={fetchEmojis} markup="__id__" regex={neverMatchingRegex} />
 			</MentionsInput>
-			{/* <button onClick={handleSubmit}>Submit</button> */}
 		</div>
 	);
 };
@@ -146,13 +116,13 @@ const mentionInputStyle = {
 		boxSizing: "border-box",
 		padding: 9,
 		border: "1px solid transparent",
-		lineHeight: "1.2em", // Ensure this matches your input field's line height
+		lineHeight: "1.2em",
 	},
 	input: {
 		boxSizing: "border-box",
 		padding: 9,
 		border: "1px solid silver",
-		lineHeight: "1.2em", // Ensure this matches your highlighter's line height
+		lineHeight: "1.2em",
 	},
 	"&multiLine": {
 		control: {
