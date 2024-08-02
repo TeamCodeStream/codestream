@@ -569,17 +569,8 @@ export function getDomainFromEmail(email: string): string | null {
 	return null;
 }
 
-// Turns an at-mention string like @eric into the appropriate nr friendly custom tag with an accountId
-// There is a special case for AI
-export function transformMentions(input: string) {
-	return input.replace(
-		/(\s|^)(@AI)(\s|$)/gi,
-		'$1<collab-mention data-value="@AI" data-type="NR_BOT" data-mentionable-item-id="NR_BOT"> AI </collab-mention>$3'
-	);
-}
-
-// @TODO: Remove above function for this one once text input is depreciated
-export function transformAtMentions(input: string): string {
+// Parses out "id" from mention markup string
+export function transformMentions(input: string): string {
 	const mentionPattern = /@\[[^\]]+\]\((<collab-mention[^>]+>[^<]+<\/collab-mention>)\)/g;
 	const transformedString = input.replace(mentionPattern, (match, p1) => {
 		return p1;
