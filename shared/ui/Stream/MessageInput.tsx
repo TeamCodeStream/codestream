@@ -1,4 +1,3 @@
-import cx from "classnames";
 import React, { useCallback, useEffect, SyntheticEvent, useRef, useState } from "react";
 import { shallowEqual } from "react-redux";
 import { Attachment, CSMe } from "@codestream/protocols/api";
@@ -8,10 +7,8 @@ import {
 	debounceAndCollectToAnimationFrame,
 	Disposable,
 	replaceHtml,
-	emptyArray,
 } from "../utils";
-import { AtMentionsPopup, Mention } from "./AtMentionsPopup";
-import EmojiPicker from "./EmojiPicker";
+import { Mention } from "./AtMentionsPopup";
 import Icon from "./Icon";
 import {
 	UploadFileRequest,
@@ -23,8 +20,8 @@ import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import Tooltip from "./Tooltip";
 import { HostApi } from "../webview-api";
 import { useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
-import { AutoHeightTextArea } from "@codestream/webview/src/components/AutoHeightTextArea";
 import { isEmpty as _isEmpty, debounce as _debounce } from "lodash-es";
+import { MentionsTextInput } from "./MentionsTextInput";
 
 const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.json");
 
@@ -678,7 +675,7 @@ export const MessageInput = (props: MessageInputProps) => {
 
 	return (
 		<>
-			<div
+			{/* <div
 				className="message-input-wrapper"
 				onKeyPress={handleKeyPress}
 				onKeyDown={handleKeyDown}
@@ -739,6 +736,9 @@ export const MessageInput = (props: MessageInputProps) => {
 						ref={textAreaRef}
 					/>
 				</AtMentionsPopup>
+			</div> */}
+			<div>
+				<MentionsTextInput />
 			</div>
 			{renderAttachedFiles()}
 		</>

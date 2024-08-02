@@ -123,9 +123,8 @@ export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 				placeholder="Add a comment..."
 				value={comment}
 				onChange={e => handleChange(e)}
-				a11ySuggestionsListLabel={"Suggested mentions"}
 				isLoading={isLoading}
-				style={messageInputStyle}
+				style={mentionInputStyle}
 			>
 				<Mention
 					trigger="@"
@@ -135,32 +134,38 @@ export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 					renderSuggestion={renderSuggestion}
 					appendSpaceOnAdd={true}
 				/>
-				<Mention
-					trigger=":"
-					style={mentionStyle}
-					data={fetchEmojis}
-					markup="__id__"
-					regex={neverMatchingRegex}
-				/>
+				<Mention trigger=":" data={fetchEmojis} markup="__id__" regex={neverMatchingRegex} />
 			</MentionsInput>
-			<button onClick={handleSubmit}>Submit</button>
+			{/* <button onClick={handleSubmit}>Submit</button> */}
 		</div>
 	);
 };
 
-const messageInputStyle = {
+const mentionInputStyle = {
+	highlighter: {
+		boxSizing: "border-box",
+		padding: 9,
+		border: "1px solid transparent",
+		lineHeight: "1.2em", // Ensure this matches your input field's line height
+	},
+	input: {
+		boxSizing: "border-box",
+		padding: 9,
+		border: "1px solid silver",
+		lineHeight: "1.2em", // Ensure this matches your highlighter's line height
+	},
 	"&multiLine": {
 		control: {
-			fontFamily: "monospace",
 			minHeight: 80,
 		},
-		// highlighter: {
-		// 	padding: "9px 12px 9px 12px !important",
-		// 	border: "1px solid transparent",
-		// },
+		highlighter: {
+			padding: 9,
+			border: "1px solid transparent",
+		},
 		input: {
-			padding: "9px 12px 9px 12px !important",
+			padding: 9,
 			border: "1px solid var(--base-border-color)",
+			color: "var(--text-color)",
 		},
 	},
 	suggestions: {
@@ -185,5 +190,4 @@ const mentionStyle = {
 	backgroundColor: "var(--button-background-color-hover)",
 	color: "var(--text-color-highlight)",
 	borderRadius: "4px",
-	// padding: "1px 2px",
 };
