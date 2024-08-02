@@ -18,6 +18,7 @@ interface MentionsTextInputProps {
 
 export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 	const [comment, setComment] = useState<string>("");
+	const [nrComment, setNrComment] = useState<string>("");
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const neverMatchingRegex = /($a)/;
 
@@ -30,10 +31,23 @@ export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 
 			try {
 				const response = await HostApi.instance.send(UserSearchRequestType, { query: _query });
-				const users = response.users.map(user => ({
-					display: user.name,
-					id: user.id?.toString(),
-				}));
+				const users = response.users.map(user => {
+					const userName = user.name;
+					const userId = user.id?.toString();
+					const display = userName;
+
+					const id = `<collab-mention data-value="@${userName}" data-type="${userId}" data-mentionable-item-id="${userId}">${userName}</collab-mention>`;
+
+					// <collab-mention data-value="@__display__" data-type="__id__" data-mentionable-item-id="__id__">__display__</collab-mention>
+
+					// const displayTest = `<collab-mention data-value="@${userName}`
+					// const idTest = `" data-type="${userId}" data-mentionable-item-id="${userId}">${userName}</collab-mention>`
+
+					return {
+						display,
+						id,
+					};
+				});
 				callback(users);
 			} catch (error) {
 				callback([]);
@@ -60,15 +74,11 @@ export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 
 	const handleChange = e => {
 		let comment = e.target.value;
+
+		// setNrComment to something better
+
 		setComment(comment);
 		console.warn(comment);
-	};
-
-	const renderSuggestion = entry => {
-		if (entry.id === "loading") {
-			return <div style={{ pointerEvents: "none" }}>Loading...</div>;
-		}
-		return <div>{entry.display}</div>;
 	};
 
 	const handleSubmit = async e => {
@@ -107,8 +117,7 @@ export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 					trigger="@"
 					style={mentionStyle}
 					data={debouncedFetchUsers}
-					markup='<collab-mention data-value="@__display__" data-type="__id__" data-mentionable-item-id="__id__">__display__</collab-mention>'
-					renderSuggestion={renderSuggestion}
+					markup="@[__display__](__id__)"
 				/>
 				<Mention
 					trigger=":"
@@ -122,6 +131,8 @@ export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 		</div>
 	);
 };
+
+// <collab-mention data-value="@__display__" data-type="__id__" data-mentionable-item-id="__id__">__display__</collab-mention>
 
 const messageInputStyle = {
 	// control: {
