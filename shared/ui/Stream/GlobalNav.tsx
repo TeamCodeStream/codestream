@@ -59,9 +59,7 @@ export function GlobalNav() {
 			ideName: state.ide.name,
 			showNrqlBuilder: state.ide.name === "VSC" || state.ide.name === "JETBRAINS",
 			showLogSearch: state.ide.name === "VSC" || state.ide.name === "JETBRAINS",
-			//@TODO: enable once we get the okay from Dave
-			// o11yTour: state.preferences.o11yTour ? state.preferences.o11yTour : "globalNav",
-			o11yTour: undefined,
+			o11yTour: state.preferences.o11yTour ? state.preferences.o11yTour : "globalNav",
 			sidebarLocation: getSidebarLocation(state),
 			hasEntityAccounts,
 		};
