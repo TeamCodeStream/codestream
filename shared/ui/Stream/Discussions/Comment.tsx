@@ -219,11 +219,7 @@ export const CommentInput = (props: CommentInputProps) => {
 					</Button>
 				</Tooltip>
 				{props.useNrAi && (
-					<Button
-						style={{ marginLeft: 0 }}
-						onClick={() => setIsAskGrokOpen(true)}
-						isLoading={isLoadingComment}
-					>
+					<Button style={{ marginLeft: 0 }} onClick={() => setIsAskGrokOpen(true)}>
 						<Icon name="nrai" />
 						<span style={{ paddingLeft: "4px" }}>Ask AI</span>
 					</Button>
