@@ -2519,19 +2519,22 @@ export class CodeStreamApiProvider implements ApiProvider {
 			let resp: Response | undefined;
 			let retryCount = 0;
 			let triedRefresh = false;
+			let responseBody = "";
 			if (json === undefined) {
 				while (!resp) {
 					[resp, retryCount] = await this.fetchClient.fetchCore(0, absoluteUrl, init);
+					if (!resp.ok) {
+						const resp2 = resp.clone();
+						responseBody = (await resp2.text()) ?? "";
+					}
 					if (
 						!triedRefresh &&
 						!resp.ok &&
-						resp.status === 403 &&
+						(resp.status === 403 || resp.status === 401) &&
 						refreshToken &&
 						init?.headers instanceof Headers
 					) {
-						const resp2 = resp.clone();
-						const jsonData = (await resp2.json()) as { error: string };
-						if (jsonData?.error && jsonData.error.match(/token expired/)) {
+						if (responseBody.match(/token expired/) || resp.status === 401) {
 							Logger.log(
 								"On CodeStream API request, token was found to be expired, attempting to refresh..."
 							);
@@ -2541,9 +2544,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 								Logger.log("NR access token successfully refreshed, trying request again...");
 								token = tokenInfo.accessToken;
 								if (tokenInfo.tokenType === CSAccessTokenType.ACCESS_TOKEN) {
-									init.headers.set("x-access-token", token);
+									init?.headers.set("x-access-token", token);
 								} else {
-									init.headers.set("x-id-token", token);
+									init?.headers.set("x-id-token", token);
 								}
 								//init.headers.set("Authorization", `Bearer ${token}`);
 								triedRefresh = true;
@@ -2552,6 +2555,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 								Logger.warn("Exception thrown refreshing NR access token:", ex);
 								// allow the original (failed) flow to continue, more meaningful than throwing an exception on refresh
 							}
+						} else {
+							Logger.warn(`Non-expired token found with ${resp.status} error, not refreshing`);
 						}
 					}
 				}
@@ -2577,14 +2582,14 @@ export class CodeStreamApiProvider implements ApiProvider {
 					} catch (ex) {
 						Logger.error(
 							ex,
-							`API(${id}): ${method} ${sanitizedUrl}: Middleware(${mw.name}).onResponse FAILED`
+							`API(${id}): ${method} ${this.baseUrl} ${sanitizedUrl}: Middleware(${mw.name}).onResponse FAILED`
 						);
 					}
 				}
 			}
 
 			if (resp !== undefined && !resp.ok) {
-				traceResult = `API(${id}): FAILED(${retryCount}x) ${method} ${sanitizedUrl}`;
+				traceResult = `API(${id}): FAILED(${retryCount}x) ${method} ${this.baseUrl} ${sanitizedUrl} ${resp.status}`;
 				Container.instance().errorReporter.reportBreadcrumb({
 					message: traceResult,
 					category: "apiErrorResponse",

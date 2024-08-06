@@ -11,11 +11,7 @@ import {
 } from "@codestream/protocols/webview";
 import { updateConfigs } from "@codestream/webview/store/configs/slice";
 import { setIde } from "@codestream/webview/store/ide/slice";
-import {
-	BootstrapInHostResponse,
-	SignedInBootstrapData,
-	UpdateServerUrlRequestType,
-} from "../ipc/host.protocol";
+import { BootstrapInHostResponse, SignedInBootstrapData } from "../ipc/host.protocol";
 import {
 	apiCapabilitiesUpdated,
 	apiUpgradeRecommended,
@@ -87,23 +83,6 @@ export const bootstrap = (data?: SignedInBootstrapData) => async (dispatch, getS
 	if (!data.preferences.hasDoneNRLogin) {
 		await dispatch(logout());
 		return;
-	}
-
-	if (
-		data.configs.serverUrl &&
-		data.companies &&
-		data.companies.length &&
-		data.companies[0].switchToServerUrl &&
-		data.configs.serverUrl !== data.companies[0].switchToServerUrl
-	) {
-		console.log(
-			`This org uses a different server URL (${data.configs.serverUrl}), switching to ${data.companies[0].switchToServerUrl}...`
-		);
-		HostApi.instance.send(UpdateServerUrlRequestType, {
-			serverUrl: data.companies[0].switchToServerUrl,
-			copyToken: true,
-			currentTeamId: data.teams[0].id,
-		});
 	}
 
 	dispatch(bootstrapUsers(data.users));
