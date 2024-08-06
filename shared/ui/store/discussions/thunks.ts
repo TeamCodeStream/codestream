@@ -39,7 +39,7 @@ export const fetchComment = createAppAsyncThunk<void, CommentMsg>(
 			return;
 		}
 
-		if (response.comment.creator.userId === 0) {
+		if (response.comment.creator.userId === "0") {
 			// not an error, but we don't want to show these
 			return;
 		}

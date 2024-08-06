@@ -20,7 +20,7 @@ describe("DiscussionsProvider", () => {
 			deactivated: false,
 			creator: {
 				name: "bob mcgee",
-				userId: 2346,
+				userId: "2346",
 			},
 		};
 		const result = await discussionsProvider.parseCommentForMentions(comment);

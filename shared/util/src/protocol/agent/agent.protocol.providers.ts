@@ -1441,8 +1441,9 @@ export interface CollaborationComment {
 	creator: {
 		email?: string;
 		name: string;
-		userId: number;
+		userId: string;
 	};
+	externalApplicationType?: string;
 	attachments?: CollaborationAttachment[];
 }
 

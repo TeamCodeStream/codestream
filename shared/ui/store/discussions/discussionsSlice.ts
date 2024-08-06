@@ -132,7 +132,7 @@ export const discussionSlice = createSlice({
 					deactivated: false,
 					creator: {
 						name: "AI",
-						userId: -1,
+						userId: "-1",
 					},
 					body: "",
 				};
