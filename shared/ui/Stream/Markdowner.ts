@@ -170,7 +170,7 @@ export function useMarkdownifyToHtml() {
 			const me = derivedState.currentUsername;
 			const regExp = derivedState.usernameRegExp;
 
-			const regex = /@(?:AI\b|[\w'.-]+ [\w'.-]+)/gi;
+			const regex = /@\w*[a-zA-Z0-9_.+-]*/gi;
 
 			return markdownify(text, options).replace(regex, (match, name) => {
 				const isMe = me.localeCompare(name, undefined, { sensitivity: "accent" }) === 0;
