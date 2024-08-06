@@ -10,7 +10,6 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { shallowEqual } from "react-redux";
 import { OpenEditorViewNotificationType } from "@codestream/protocols/webview";
 import { CardFooter, getCardProps } from "@codestream/webview/src/components/Card";
-import { TourTip } from "@codestream/webview/src/components/TourTip";
 import { CodeStreamState } from "@codestream/webview/store";
 import { copySymbolFromIde, jumpToStackLine } from "@codestream/webview/store/codeErrors/thunks";
 import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
@@ -504,44 +503,42 @@ export const CodeError = (props: CodeErrorProps) => {
 					<MetaSection>
 						<Meta id="stack-trace">
 							<MetaLabel>Stack Trace</MetaLabel>
-							<TourTip placement="bottom">
-								<ClickLines tabIndex={0} className="code">
-									{(stackTraceLines || []).map((line, i) => {
-										if (!line || !line.fileFullPath) return null;
+							<ClickLines tabIndex={0} className="code">
+								{(stackTraceLines || []).map((line, i) => {
+									if (!line || !line.fileFullPath) return null;
 
-										const className = i === selectedLineIndex ? "monospace li-active" : "monospace";
-										const mline = line.fileFullPath.replace(/\s\s\s\s+/g, "     ");
-										return !line.resolved || props.stackFrameClickDisabled ? (
-											<Tooltip
-												key={"tooltipline-" + i}
-												title={line.error}
-												placement="bottom"
-												delay={1}
-											>
-												<DisabledClickLine key={"disabled-line" + i} className="monospace">
-													<span>
-														<span style={{ opacity: ".6" }}>{line.fullMethod}</span>({mline}:
-														<strong>{line.line}</strong>
-														{line.column ? `:${line.column}` : null})
-													</span>
-												</DisabledClickLine>
-											</Tooltip>
-										) : (
-											<ClickLine
-												key={"click-line" + i}
-												className={className}
-												onClick={e => onClickStackLine(e, i)}
-											>
+									const className = i === selectedLineIndex ? "monospace li-active" : "monospace";
+									const mline = line.fileFullPath.replace(/\s\s\s\s+/g, "     ");
+									return !line.resolved || props.stackFrameClickDisabled ? (
+										<Tooltip
+											key={"tooltipline-" + i}
+											title={line.error}
+											placement="bottom"
+											delay={1}
+										>
+											<DisabledClickLine key={"disabled-line" + i} className="monospace">
 												<span>
-													<span style={{ opacity: ".6" }}>{line.method}</span>({mline}:
+													<span style={{ opacity: ".6" }}>{line.fullMethod}</span>({mline}:
 													<strong>{line.line}</strong>
 													{line.column ? `:${line.column}` : null})
 												</span>
-											</ClickLine>
-										);
-									})}
-								</ClickLines>
-							</TourTip>
+											</DisabledClickLine>
+										</Tooltip>
+									) : (
+										<ClickLine
+											key={"click-line" + i}
+											className={className}
+											onClick={e => onClickStackLine(e, i)}
+										>
+											<span>
+												<span style={{ opacity: ".6" }}>{line.method}</span>({mline}:
+												<strong>{line.line}</strong>
+												{line.column ? `:${line.column}` : null})
+											</span>
+										</ClickLine>
+									);
+								})}
+							</ClickLines>
 						</Meta>
 					</MetaSection>
 				)}
@@ -562,19 +559,17 @@ export const CodeError = (props: CodeErrorProps) => {
 					<MetaSection>
 						<Meta id="stack-trace">
 							<MetaLabel>Stack Trace</MetaLabel>
-							<TourTip placement="bottom">
-								<ClickLines id="stack-trace" className="code" tabIndex={0}>
-									{stackTraceText!.split("\n").map((line: string, i) => {
-										if (!line) return null;
-										const mline = line.replace(/\s\s\s\s+/g, "     ");
-										return (
-											<DisabledClickLine key={"disabled-line" + i} className="monospace">
-												<span style={{ opacity: ".75" }}>{mline}</span>
-											</DisabledClickLine>
-										);
-									})}
-								</ClickLines>
-							</TourTip>
+							<ClickLines id="stack-trace" className="code" tabIndex={0}>
+								{stackTraceText!.split("\n").map((line: string, i) => {
+									if (!line) return null;
+									const mline = line.replace(/\s\s\s\s+/g, "     ");
+									return (
+										<DisabledClickLine key={"disabled-line" + i} className="monospace">
+											<span style={{ opacity: ".75" }}>{mline}</span>
+										</DisabledClickLine>
+									);
+								})}
+							</ClickLines>
 						</Meta>
 					</MetaSection>
 				)}
