@@ -1,5 +1,12 @@
 # Change Log
 
+## [15.13.1] - 2024-8-7
+
+### Fixed
+
+- Fix migrated AI posts not showing up
+- Fix issue with getting logged out after closing IDE
+
 ## [15.13.0] - 2024-8-1
 
 ### Changed
@@ -48,7 +55,7 @@
 
 ### Fixed
 
-- Fixes an issue rendering query results as pie charts 
+- Fixes an issue rendering query results as pie charts
 - Fixes an issue with labels missing from bar charts
 - Fixes an issue with slashes in queries not being properly escaped
 - Fixes an issue where adding TIMESERIES to a query generated a table by default instead of a line chart
@@ -81,7 +88,7 @@
 ### Fixed
 
 - Fixes an issue where NRAI would suggest a code fix when one wasn't needed
-- Fixes an issue where the query builder wouldn't wrap text 
+- Fixes an issue where the query builder wouldn't wrap text
 - Fixes an issue where a log search submitted via Enter key would get re-submitted
 
 ## [15.6.0] - 2024-4-4
