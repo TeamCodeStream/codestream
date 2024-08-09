@@ -437,7 +437,9 @@ export default class Menu extends Component {
 
 	changeSearchValue = q => {
 		this.setState({ q });
-		if (this.props.onChangeSearch) this.props.onChangeSearch(q);
+		if (this.props.onChangeSearch) {
+			this.props.onChangeSearch(q);
+		}
 	};
 
 	renderSubmenu = (parentItem, grandParentItem, grandGrandParentItem) => {
@@ -464,9 +466,12 @@ export default class Menu extends Component {
 				return false;
 			} else if (q.length && item.skipSearch) {
 				return false;
-			} else if (item.searchLabel !== undefined && !item.searchLabel.toLowerCase().includes(q)) {
+			} else if (
+				!this.props.noSearchTermFilter &&
+				item.searchLabel !== undefined &&
+				!item.searchLabel.toLowerCase().includes(q)
+			) {
 				return false;
-				// maxitems doesn't work yet....
 			} else if (count < this.props.startItem || count > this.props.maxItems) {
 				return false;
 			} else {

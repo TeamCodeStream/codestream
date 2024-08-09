@@ -837,7 +837,7 @@ export function CodeErrorNavigator(props: Props) {
 					className={hoverButton === "resolution" ? "pulse" : ""}
 					style={{ marginLeft: "auto", marginRight: "13px", whiteSpace: "nowrap", flexGrow: 0 }}
 				>
-					<TourTip align={{ offset: [-10, 5] }} title={resolutionTip} placement="bottomLeft">
+					<TourTip title={resolutionTip} placement="bottomLeft">
 						<Icon
 							className="clickable resolution"
 							name="x"

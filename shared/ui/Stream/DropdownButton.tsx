@@ -28,6 +28,7 @@ export interface DropdownButtonItems {
 export interface DropdownButtonProps extends ButtonProps {
 	items: DropdownButtonItems[];
 	title?: string;
+	onChangeSearch?: Function;
 	spread?: boolean;
 	splitDropdown?: boolean;
 	splitDropdownInstantAction?: boolean;
@@ -42,6 +43,7 @@ export interface DropdownButtonProps extends ButtonProps {
 	preventStopPropagation?: boolean;
 	onButtonClicked?: Function;
 	noChevronDown?: boolean;
+	noSearchTermFilter?: boolean;
 }
 
 // operates in two modes. if splitDropdown is false (the default), it's a dropdown menu.
@@ -147,12 +149,14 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 					action={maybeToggleMenu}
 					target={buttonRef.current}
 					title={props.title}
+					onChangeSearch={props?.onChangeSearch}
 					items={items}
 					noCloseIcon={props.noCloseIcon}
 					focusOnSelect={buttonRef.current}
 					wrap={props.wrap}
 					isMultiSelect={props.isMultiSelect}
 					itemsRange={props.itemsRange}
+					noSearchTermFilter={props?.noSearchTermFilter}
 				/>
 			)}
 		</Root>

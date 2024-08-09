@@ -1,13 +1,10 @@
 import React from "react";
 import { useCallback, useState } from "react";
 import { Mention, MentionsInput } from "react-mentions";
-import {
-	UserSearchRequestType,
-} from "@codestream/protocols/agent";
-import { HostApi } from "../webview-api";
 import { Emoji, emojis } from "./emojis";
 import { debounce as _debounce } from "lodash";
 import Headshot from "./Headshot";
+import { useUserSearch } from "./RequestTypeHooks/useUserSearch";
 
 interface MentionsTextInputProps {
 	onSubmit?: Function;
@@ -18,46 +15,12 @@ interface MentionsTextInputProps {
 export const MentionsTextInput: React.FC<MentionsTextInputProps> = props => {
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const neverMatchingRegex = /($a)/;
+	const { fetchUsers } = useUserSearch();
 
-	const fetchUsers = async (query: string, callback: Function) => {
-		let _query = query.toLowerCase();
-
-		if (_query.length > 2) {
-			callback([{ display: "loading...", id: "loading" }]);
-
-			try {
-				const response = await HostApi.instance.send(UserSearchRequestType, { query: _query });
-				const users = response.users.map(user => {
-					const userName = user?.name || user?.email || "";
-					const userId = user.id?.toString() || "";
-					const email = user?.email || "";
-					const display = userName;
-					const id = `<collab-mention data-value="@${userName}" data-type="NR_USER" data-mentionable-item-id="${userId}">${userName}</collab-mention>`;
-					return {
-						display,
-						id,
-						email,
-						headshot: { email, name: userName },
-					};
-				});
-				callback(users);
-			} catch (error) {
-				callback([]);
-			}
-		} else if (_query === "ai") {
-			callback([
-				{
-					display: "AI",
-					id: `<collab-mention data-value="@AI" data-type="NR_BOT" data-mentionable-item-id="NR_BOT">AI</collab-mention>`,
-				},
-			]);
-		} else {
-			callback([]);
-		}
-	};
-
-	const debouncedFetchUsers = useCallback(_debounce(fetchUsers, 300), []);
-
+	const debouncedFetchUsers = useCallback(
+		_debounce((query, callback) => fetchUsers(query, "mentions", callback), 300),
+		[]
+	);
 	const fetchEmojis = (query, callback) => {
 		if (query.length === 0) return;
 

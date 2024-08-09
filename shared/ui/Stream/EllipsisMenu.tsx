@@ -13,6 +13,7 @@ import { WebviewPanels, SidebarPanes, CSPossibleAuthDomain } from "@codestream/p
 import { CodeStreamState } from "../store";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { openModal } from "../store/context/actions";
+import { setUserPreference } from "./actions";
 import { HostApi } from "../webview-api";
 import { openPanel } from "./actions";
 import Icon from "./Icon";
@@ -20,6 +21,7 @@ import Menu from "./Menu";
 import { AVAILABLE_PANES } from "./Sidebar";
 import { EMPTY_STATUS } from "./StartWork";
 import { shallowEqual } from "react-redux";
+import { isCurrentUserInternal } from "../store/users/reducer";
 
 const RegionSubtext = styled.div`
 	font-size: smaller;
@@ -131,6 +133,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			ide: state.ide,
 			demoMode: state.codeErrors.demoMode,
 			showNotificationsMenu,
+			isInternalUser: isCurrentUserInternal(state),
 		};
 	}, shallowEqual);
 
@@ -351,16 +354,22 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 	if (!derivedState.isProductionCloud || derivedState.hasMultipleEnvironments) {
 		versionStatement += ` (${derivedState.environment.toLocaleUpperCase()})`;
 	}
+
 	const demoClick = e => {
 		e.preventDefault();
 		// const nextDemoMode = !derivedState.demoMode.enabled;
 		// setApiDemoMode(nextDemoMode);
 		// dispatch(setDemoMode(nextDemoMode));
+		// dispatch(setUserPreference({ prefPath: ["demoMode"], value: !derivedState.demoMode }));
+		if (derivedState.isInternalUser) {
+			dispatch(setUserPreference({ prefPath: ["hideCodeErrorInstructions"], value: false }));
+			dispatch(setUserPreference({ prefPath: ["o11yTour"], value: "globalNav" }));
+		}
 	};
 
 	const text = (
 		<span style={{ fontSize: "smaller" }} onClick={demoClick}>
-			{versionStatement}
+			{versionStatement} asdfasdf
 		</span>
 	);
 	menuItems.push({ label: text, action: "", noHover: true, disabled: true });

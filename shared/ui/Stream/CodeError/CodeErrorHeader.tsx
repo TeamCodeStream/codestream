@@ -1,8 +1,5 @@
-import {
-	DidChangeObservabilityDataNotificationType,
-	GetNewRelicAssigneesRequestType,
-} from "@codestream/protocols/agent";
-import React, { useState } from "react";
+import { DidChangeObservabilityDataNotificationType } from "@codestream/protocols/agent";
+import React, { useCallback, useEffect, useState } from "react";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { HealthIcon } from "@codestream/webview/src/components/HealthIcon";
@@ -11,9 +8,7 @@ import { api } from "@codestream/webview/store/codeErrors/thunks";
 import { getTeamMembers, isCurrentUserInternal } from "@codestream/webview/store/users/reducer";
 import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";
-import { invite } from "../actions";
 import { BigTitle, Header, HeaderActions } from "../Codemark/BaseCodemark";
-import { confirmPopup } from "../Confirm";
 import { DropdownButton, DropdownButtonItems } from "../DropdownButton";
 import Icon from "../Icon";
 import { Link } from "../Link";
@@ -26,8 +21,8 @@ import {
 	STATES_TO_DISPLAY_STRINGS,
 } from "./CodeError.Types";
 import { CodeErrorMenu } from "./CodeErrorMenu";
-
-// if child props are passed in, we assume they are the action buttons/menu for the header
+import { debounce as _debounce } from "lodash-es";
+import { useUserSearch } from "../RequestTypeHooks/useUserSearch";
 
 export const CodeErrorHeader = (props: CodeErrorHeaderProps) => {
 	const dispatch = useAppDispatch();
@@ -35,14 +30,8 @@ export const CodeErrorHeader = (props: CodeErrorHeaderProps) => {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const allTeamMembers = getTeamMembers(state);
 		const teamMembers = allTeamMembers.filter(_ => _.username !== "AI");
-
-		const user = state.users[state.session.userId!];
 		const teamId = state.context.currentTeamId;
 		const team = state.teams[teamId];
-
-		const eligibleJoinCompanies = user?.eligibleJoinCompanies;
-		const eligibleCompany = eligibleJoinCompanies?.find(_ => team.companyId === _.id);
-
 		const company = state.companies[team.companyId];
 
 		return {
@@ -59,6 +48,7 @@ export const CodeErrorHeader = (props: CodeErrorHeaderProps) => {
 	const [states, setStates] = useState<DropdownButtonItems[] | undefined>(undefined);
 	const [isStateChanging, setIsStateChanging] = useState(false);
 	const [isAssigneeChanging, setIsAssigneeChanging] = useState(false);
+	const { userSearchResults, fetchUsers } = useUserSearch();
 
 	const notify = (emailAddress?: string) => {
 		// if no email address or it's you
@@ -96,49 +86,9 @@ export const CodeErrorHeader = (props: CodeErrorHeaderProps) => {
 				setIsAssigneeChanging(false);
 			}, 1);
 		};
-		// if it's me, or someone that is already on the team -- just assign them without asking to invite
-		if (
-			derivedState.emailAddress.toLowerCase() === emailAddress.toLowerCase() ||
-			derivedState.teamMembers.find(_ => _.email.toLowerCase() === emailAddress.toLowerCase())
-		) {
-			_setAssignee(assigneeType);
-			return;
-		}
 
-		confirmPopup({
-			title: "Invite to CodeStream?",
-			message: (
-				<span>
-					Assign the error to <b>{emailAddress}</b> and invite them to join CodeStream
-				</span>
-			),
-			centered: true,
-			buttons: [
-				{
-					label: "Cancel",
-					className: "control-button btn-secondary",
-				},
-				{
-					label: "Invite",
-					className: "control-button",
-					wait: true,
-					action: () => {
-						dispatch(
-							invite({
-								email: emailAddress,
-								inviteType: "error",
-							})
-						);
-						// HostApi.instance.track("Teammate Invited", {
-						// 	"Invitee Email Address": emailAddress,
-						// 	"Invitation Method": "Error Assignment",
-						// });
-						// "upgrade" them to an invitee
-						_setAssignee("Invitee");
-					},
-				},
-			],
-		});
+		_setAssignee(assigneeType);
+		return;
 	};
 
 	const removeAssignee = async (
@@ -208,7 +158,7 @@ export const CodeErrorHeader = (props: CodeErrorHeaderProps) => {
 		if (props.isCollapsed) return;
 
 		let assigneeItems: DropdownButtonItems[] = [
-			{ type: "search", label: "", placeholder: "Search...", key: "search" },
+			{ type: "search", label: "", placeholder: "Search (3 char min)...", key: "search" },
 		];
 
 		let assigneeEmail;
@@ -244,51 +194,14 @@ export const CodeErrorHeader = (props: CodeErrorHeaderProps) => {
 			});
 		}
 
-		let { users } = await HostApi.instance.send(GetNewRelicAssigneesRequestType, {});
-		if (assigneeEmail) {
-			users = users.filter(_ => _.email !== assigneeEmail);
-		}
-
-		let usersFromGitNotOnTeam = users.filter(ufg => {
-			return !derivedState.teamMembers.some(tm => tm.email === ufg.email) && ufg.group === "GIT";
-		});
-
-		if (usersFromGitNotOnTeam.length && !derivedState.isNonCsOrg) {
-			// take no more than 5
-			usersFromGitNotOnTeam = usersFromGitNotOnTeam.slice(0, 5);
-			assigneeItems.push({ label: "-", key: "sep-git" });
-			assigneeItems.push({
-				label: (
-					<span style={{ fontSize: "10px", fontWeight: "bold", opacity: 0.7 }}>
-						SUGGESTIONS FROM GIT
-					</span>
-				),
-				noHover: true,
-				disabled: true,
-			});
-			assigneeItems = assigneeItems.concat(
-				usersFromGitNotOnTeam.map(_ => {
-					const label = _.displayName || _.email;
-					return {
-						icon: <Headshot size={16} display="inline-block" person={{ email: _.email }} />,
-						key: _.id || `git-${_.email}`,
-						label: label,
-						searchLabel: _.displayName || _.email,
-						subtext: label === _.email ? undefined : _.email,
-						action: () => setAssignee(_.email, "Teammate"),
-					};
-				})
-			);
-		}
-
-		let usersFromCodeStream = derivedState.teamMembers;
+		let usersFromCodeStream = userSearchResults || [];
 
 		if (assigneeEmail) {
 			// if we have an assignee don't re-include them here
 			usersFromCodeStream = usersFromCodeStream.filter(_ => _.email !== assigneeEmail);
 		}
 
-		if (usersFromCodeStream.length) {
+		if (usersFromCodeStream.length && usersFromCodeStream.length > 0) {
 			assigneeItems.push({ label: "-", key: "sep-nr" });
 			assigneeItems.push({
 				label: (
@@ -306,7 +219,7 @@ export const CodeErrorHeader = (props: CodeErrorHeaderProps) => {
 						icon: <Headshot size={16} display="inline-block" person={{ email: _.email }} />,
 						key: _.id,
 						label: _.fullName || _.email,
-						searchLabel: _.fullName || _.username,
+						searchLabel: _.fullName || _.email,
 						subtext: label === _.email ? undefined : _.email,
 						action: () => setAssignee(_.email, "Teammate"),
 					};
@@ -322,6 +235,15 @@ export const CodeErrorHeader = (props: CodeErrorHeaderProps) => {
 		buildStates();
 		buildAssignees();
 	});
+
+	const debouncedFetchUsers = useCallback(
+		_debounce(query => fetchUsers(query, "default"), 300),
+		[]
+	);
+
+	useEffect(() => {
+		buildAssignees();
+	}, [userSearchResults]);
 
 	const title = (props.codeError?.title || "").split(/(\.)/).map(part => (
 		<>
@@ -413,8 +335,10 @@ export const CodeErrorHeader = (props: CodeErrorHeaderProps) => {
 						<DropdownButton
 							title="Assignee"
 							items={items}
+							onChangeSearch={debouncedFetchUsers}
 							variant="secondary"
 							size="compact"
+							noSearchTermFilter={true}
 							noChevronDown={!errorGroupHasNoAssignee()}
 						>
 							<div
