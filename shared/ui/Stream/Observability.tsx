@@ -391,10 +391,6 @@ export const Observability = React.memo((props: Props) => {
 		}
 	};
 
-	const _bootstrapNrCapabilities = async () => {
-		dispatch(bootstrapNrCapabilities());
-	};
-
 	const getEntityCount = async (force = false) => {
 		try {
 			const { entityCount } = await HostApi.instance.send(GetEntityCountRequestType, { force });
@@ -414,12 +410,7 @@ export const Observability = React.memo((props: Props) => {
 		setGenericError(undefined);
 		setLoadingEntities(currentRepoId);
 		try {
-			await Promise.all([
-				loadAssignments(),
-				fetchObservabilityRepos(force),
-				getEntityCount(true),
-				_bootstrapNrCapabilities(),
-			]);
+			await Promise.all([loadAssignments(), fetchObservabilityRepos(force), getEntityCount(true)]);
 			console.debug(`o11y: Promise.all finished`);
 		} finally {
 			setLoadingEntities(undefined);
@@ -462,6 +453,13 @@ export const Observability = React.memo((props: Props) => {
 			disposable1 && disposable1.dispose();
 		};
 	});
+
+	useEffect(() => {
+		if (currentEntityAccounts && currentEntityAccounts.length > 0) {
+			const accountIds = currentEntityAccounts.map(_ => _.accountId);
+			dispatch(bootstrapNrCapabilities(accountIds));
+		}
+	}, [currentEntityAccounts]);
 
 	useEffect(() => {
 		// must use a type check for === false or we might get a double update when previousNewRelicIsConnected is undefined (before its set)

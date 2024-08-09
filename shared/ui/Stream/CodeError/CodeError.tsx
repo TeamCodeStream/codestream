@@ -75,7 +75,7 @@ export const CodeError = (props: CodeErrorProps) => {
 			repos: state.repos,
 			hideCodeErrorInstructions: state.preferences.hideCodeErrorInstructions,
 			ideName: state.ide.name,
-			grokNraiCapability: state.nrCapabilities.nrai === true,
+			useNrAi: state.nrCapabilities.nrai?.[props.errorGroup.accountId] === true,
 			discussion,
 			isNraiStreamLoading: isNraiStreamLoading(state),
 			aiCommentParts,
@@ -104,8 +104,11 @@ export const CodeError = (props: CodeErrorProps) => {
 
 	useDidMount(() => {
 		dispatch(resetDiscussions());
-		dispatch(getNrCapability("nrai"));
 	});
+
+	useEffect(() => {
+		dispatch(getNrCapability({ capability: "nrai", accountId: props.errorGroup.accountId }));
+	}, [props.errorGroup.accountId]);
 
 	useEffect(() => {
 		if (stackTraceInitialized) {
@@ -218,10 +221,6 @@ export const CodeError = (props: CodeErrorProps) => {
 		});
 	};
 
-	const useNrAi = useMemo(() => {
-		return derivedState.grokNraiCapability;
-	}, [derivedState.grokNraiCapability]);
-
 	const repoName = useMemo(() => {
 		if (!derivedState.repos || !repoId) {
 			return undefined;
@@ -301,14 +300,19 @@ export const CodeError = (props: CodeErrorProps) => {
 		}
 
 		// NRAI no good
-		if (!useNrAi) {
+		if (!derivedState.useNrAi) {
 			return;
 		}
 
 		if (derivedState.functionToEditFailed || derivedState.functionToEdit) {
 			initializeNrAiAnalysis();
 		}
-	}, [discussion, useNrAi, derivedState.functionToEditFailed, derivedState.functionToEdit]);
+	}, [
+		discussion,
+		derivedState.useNrAi,
+		derivedState.functionToEditFailed,
+		derivedState.functionToEdit,
+	]);
 
 	const initializeNrAiAnalysis = async () => {
 		try {
@@ -616,7 +620,7 @@ export const CodeError = (props: CodeErrorProps) => {
 									entityGuid={entityGuid}
 									errorGroupGuid={errorGroupGuid}
 									codeError={props.codeError}
-									useNrAi={useNrAi}
+									useNrAi={derivedState.useNrAi}
 									isLoading={discussionIsLoading}
 								/>
 							</ComposeWrapper>

@@ -16,12 +16,13 @@ import { Logger } from "../../logger";
 import { InternalError, ReportSuppressedMessages } from "../../agentError";
 import { makeHtmlLoggable } from "@codestream/utils/system/string";
 import { Functions } from "../../system/function";
-import { isEmpty as _isEmpty } from "lodash";
+import { isEmpty as _isEmpty, camelCase } from "lodash";
 import {
 	GraphqlNrqlError,
 	GraphqlNrqlTimeoutError,
 	isGraphqlNrqlError,
 	AccessTokenError,
+	CapabilityScopeType,
 } from "./newrelic.types";
 import * as Dom from "graphql-request/dist/types.dom";
 import { ContextLogger } from "../contextLogger";
@@ -30,6 +31,9 @@ import { NrApiConfig, PRODUCTION_EU_GRAPHQL_URL, PRODUCTION_US_GRAPHQL_URL } fro
 import { FetchCore } from "../../system/fetchCore";
 import { isSuppressedException } from "../../system/suppressedNetworkExceptions";
 import { tokenHolder } from "./TokenHolder";
+
+const ENTITLEMENT_PREFIX = "Entitlement";
+const FEATURE_FLAG_PREFIX = "FeatureFlag";
 
 const ignoredErrors = [GraphqlNrqlTimeoutError];
 
@@ -684,6 +688,147 @@ export class NewRelicGraphqlClient implements Disposable {
 		}
 
 		return results;
+	}
+
+	async getCapabilities<C extends string>(
+		names: C[],
+		scopeType: CapabilityScopeType,
+		scopeId: number | string
+	): Promise<Record<C, boolean>> {
+		if (names.length === 0) return {} as Record<C, boolean>;
+
+		const result = await this.query<{
+			actor?: {
+				capabilities?: {
+					name: C;
+				}[];
+			};
+		}>(
+			`{
+				actor {
+					capabilities(scopeType: ${scopeType}, scopeId: "${scopeId}", filter: { names: [${names.map(
+						name => `"${name}"`
+					)}] }) {
+						name
+					}
+				}
+			}`
+		);
+
+		const data = result.actor?.capabilities;
+		if (!data || data.length === 0) return {} as Record<C, boolean>;
+
+		return data.reduce(
+			(acc, data) => ({
+				...acc,
+				[data.name]: true,
+			}),
+			{} as Record<C, boolean>
+		);
+	}
+
+	async getEntitlements<E extends string>(names: E[]): Promise<Record<E, boolean>> {
+		function getVariableName(c: string) {
+			const snakeCaseName = c.replace(/\./g, "_");
+			const pascalCaseName = (x => x.charAt(0).toUpperCase() + x.slice(1))(
+				camelCase(snakeCaseName)
+			);
+
+			return `${ENTITLEMENT_PREFIX}${pascalCaseName}`;
+		}
+
+		if (names.length === 0) return {} as Record<E, boolean>;
+
+		const entitlementSubqueries = names
+			.map(
+				name => `
+					${getVariableName(name)}: entitlement(name: "${name}") {
+						name
+						value
+					}
+				`
+			)
+			.join("\n");
+
+		const result = await this.query<{
+			currentUser?: {
+				crossAccount?: Record<E, { name: E; value: boolean }>;
+			};
+		}>(
+			`{
+				currentUser {
+					crossAccount {
+						${entitlementSubqueries}
+					}
+				}
+			}`
+		);
+		const entitlementsData: Record<string, { name: E; value: boolean }> | undefined =
+			result?.currentUser?.crossAccount;
+		if (!entitlementsData) return {} as Record<E, boolean>;
+
+		return Object.values(entitlementsData).reduce(
+			(acc, data: { name: E; value: boolean }) => {
+				if (!data) return acc;
+				return {
+					...acc,
+					[data.name]: data.value,
+				};
+			},
+			{} as Record<E, boolean>
+		);
+	}
+
+	async getFeatureFlags<F extends string>(flags: F[]): Promise<Record<F, boolean>> {
+		function getVariableName(c: string) {
+			const snakeCaseName = c.replace(/\./g, "_");
+			const pascalCaseName = (x => x.charAt(0).toUpperCase() + x.slice(1))(
+				camelCase(snakeCaseName)
+			);
+
+			return `${FEATURE_FLAG_PREFIX}${pascalCaseName}`;
+		}
+
+		if (flags.length === 0) return {} as Record<F, boolean>;
+
+		const ffSubqueries = flags
+			.map(
+				name => `
+					${getVariableName(name)}: featureFlag(name: "${name}") {
+						name
+						value
+					}
+				`
+			)
+			.join("\n");
+
+		const result = await this.query<{
+			currentUser?: {
+				crossAccount?: Record<F, { name: F; value: boolean }>;
+			};
+		}>(
+			`{
+				currentUser {
+					crossAccount {
+						${ffSubqueries}
+					}
+				}
+			}`
+		);
+		const ffData: Record<string, { name: F; value: boolean }> | undefined =
+			result?.currentUser?.crossAccount;
+		if (!ffData) return {} as Record<F, boolean>;
+
+		return Object.values(ffData).reduce(
+			(acc, data: { name: F; value: boolean }) => {
+				if (!data) return acc;
+				return {
+					...acc,
+					[data.name]: !!data.value,
+				};
+			},
+			{} as Record<F, boolean>
+		);
 	}
 
 	errorLogIfNotIgnored(ex: Error, message: string, ...params: any[]): void {

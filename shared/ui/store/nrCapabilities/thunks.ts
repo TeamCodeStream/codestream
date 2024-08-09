@@ -5,23 +5,23 @@ import { GetNewRelicAIEligibilityRequestType } from "@codestream/protocols/agent
 import { updateNrCapabilities } from "./actions";
 import { createAppAsyncThunk } from "../helper";
 
-export const bootstrapNrCapabilities = () => async (dispatch: AppDispatch) => {
-	Promise.all([dispatch(getNrCapability("nrai"))]);
+export const bootstrapNrCapabilities = (accountIds: number[]) => async (dispatch: AppDispatch) => {
+	Promise.all(accountIds.map(_ => dispatch(getNrCapability({ capability: "nrai", accountId: _ }))));
 };
 
-export const getNrCapability = createAppAsyncThunk<boolean, keyof NrCapabilitiesState>(
-	"nrCapabilities/get",
-	async (capability, { getState, dispatch }) => {
-		const { nrCapabilities } = getState();
-		if (nrCapabilities[capability] !== undefined) {
-			return !!nrCapabilities[capability];
-		}
-		let value: boolean;
-		switch (capability) {
-			case "nrai":
-				value = await HostApi.instance.send(GetNewRelicAIEligibilityRequestType, undefined);
-				dispatch(updateNrCapabilities({ nrai: value }));
-				return value;
-		}
+export const getNrCapability = createAppAsyncThunk<
+	boolean,
+	{ capability: keyof NrCapabilitiesState; accountId: number }
+>("nrCapabilities/get", async ({ capability, accountId }, { getState, dispatch }) => {
+	const { nrCapabilities } = getState();
+	if (nrCapabilities[capability]?.[accountId] !== undefined) {
+		return !!nrCapabilities[capability]?.[accountId];
 	}
-);
+	let value: boolean;
+	switch (capability) {
+		case "nrai":
+			value = await HostApi.instance.send(GetNewRelicAIEligibilityRequestType, { accountId });
+			dispatch(updateNrCapabilities({ nrai: { ...nrCapabilities.nrai, [accountId]: value } }));
+			return value;
+	}
+});

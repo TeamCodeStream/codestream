@@ -195,6 +195,14 @@ export interface RepoEntitiesByRemotesResponse {
 	remotes?: string[];
 }
 
+export enum CapabilityScopeType {
+	ACCOUNT = "ACCOUNT",
+	ACTOR = "ACTOR",
+	GLOBAL = "GLOBAL",
+	GROUP = "GROUP",
+	ORGANIZATION = "ORGANIZATION",
+}
+
 export type ClmSpanData = {
 	name: string;
 	"code.function": string;

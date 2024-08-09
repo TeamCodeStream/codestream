@@ -3,5 +3,7 @@ export enum NrCapabilitiesActionsTypes {
 }
 
 export type NrCapabilitiesState = {
-	nrai?: boolean;
+	nrai?: {
+		[accountId: number]: boolean;
+	};
 };
